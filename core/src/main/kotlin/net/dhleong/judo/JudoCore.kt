@@ -105,7 +105,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     override fun feedKey(stroke: KeyStroke, remap: Boolean) {
-//        echo("## feed $stroke")
+//        echo("## feedKey($stroke)")
         if (stroke.keyCode == KeyEvent.VK_ESCAPE) {
             activateMode(normalMode)
             return

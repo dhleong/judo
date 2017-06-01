@@ -52,5 +52,57 @@ class InputBuffer {
 
     override fun toString() = buffer.toString()
 
-    val size: Int = buffer.length
+    val size: Int
+        get() = buffer.length
+
+    /*
+     Cursor movement
+     */
+
+    fun moveCursor(distance: Int) {
+        cursor = maxOf(
+            0,
+            minOf(size, cursor + distance)
+        )
+    }
+
+    fun moveCursorToEnd() {
+        cursor = size
+    }
+
+    fun moveCursorToStart() {
+        cursor = 0
+    }
+
+    fun moveWord() {
+        var hitNonWord = false
+        while (cursor in 0..(size - 2)) {
+            if (!hitNonWord && !Character.isJavaIdentifierPart(buffer[cursor])) {
+                hitNonWord = true
+            }
+
+            ++cursor
+
+            val isIdentifier = Character.isJavaIdentifierPart(buffer[cursor])
+            val isWhitespace = !isIdentifier && Character.isWhitespace(buffer[cursor])
+            if (!isWhitespace && (!isIdentifier || hitNonWord)) {
+                return
+            }
+        }
+    }
+
+    fun moveWordBack() {
+        var hitWord = false
+        while (cursor in 1..size) {
+            --cursor
+
+            val isIdentifier = Character.isJavaIdentifierPart(buffer[cursor])
+            if (hitWord && !isIdentifier) {
+                ++cursor
+                return
+            } else if (isIdentifier) {
+                hitWord = true
+            }
+        }
+    }
 }

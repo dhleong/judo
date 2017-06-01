@@ -19,11 +19,11 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
         keys(":") to { core -> core.enterMode("cmd") },
 
         keys("a") to { core ->
-            buffer.cursor = minOf(buffer.size, buffer.cursor + 1)
+            buffer.moveCursor(1)
             core.enterMode("insert")
         },
         keys("A") to { core ->
-            buffer.cursor = buffer.size
+            buffer.moveCursorToEnd()
             core.enterMode("insert")
         },
 
@@ -32,17 +32,24 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
             core.enterMode("insert")
         },
 
-        keys("d", "d") to { core ->
+        keys("d", "d") to { _ ->
             buffer.clear()
         },
 
         keys("i") to { core -> core.enterMode("insert") },
         keys("I") to { core ->
-            buffer.cursor = 0
+            buffer.moveCursorToStart()
             core.enterMode("insert")
         },
 
-        keys("ctrl C") to { core -> clearBuffer() }
+        // TODO counts?
+        keys("b") to { _ -> buffer.moveWordBack() },
+        keys("w") to { _ -> buffer.moveWord() },
+
+        keys("0") to { _ -> buffer.moveCursorToStart() },
+        keys("$") to { _ -> buffer.moveCursorToEnd() },
+
+        keys("ctrl C") to { _ -> clearBuffer() }
     )
 
     private val input = MutableKeys()
