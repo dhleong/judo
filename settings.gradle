@@ -1,5 +1,4 @@
 include 'judo'
 include 'core'
-include 'cmd'
 include 'model'
 

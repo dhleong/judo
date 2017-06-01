@@ -14,10 +14,10 @@ sourceCompatibility = 1.8
 
 dependencies {
     compile project(':model')
-    compile project(':cmd')
 
     compile deps.kotlin
     compile deps.jline
+    compile deps.jython
 
     testCompile deps.test.junit
     testCompile deps.test.assertj
