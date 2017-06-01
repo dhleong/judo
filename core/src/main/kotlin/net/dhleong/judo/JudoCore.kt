@@ -46,7 +46,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         val connection = CommonsNetConnection(address, port)
         connection.onDisconnect = { echo("Disconnected from $connection") }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
-        connection.forEachLine(renderer::appendOutputLine)
+        connection.forEachLine(renderer::appendOutput)
 
         this.connection = connection
     }
@@ -123,6 +123,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     override fun quit() {
+        connection?.close()
         renderer.close()
         running = false
     }

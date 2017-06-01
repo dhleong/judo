@@ -25,6 +25,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
+    // TODO circular buffer with max size
     private val output = mutableListOf<String>()
     private var scrollbackTop = 0
 
@@ -36,14 +37,11 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val workspace = mutableListOf<String>()
 
     init {
-        if (terminal is DumbTerminal) {
-            throw IllegalArgumentException("Unsupported terminal type ${terminal.name}")
-        }
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
         terminal.enterRawMode()
 
         terminal.puts(InfoCmp.Capability.enter_ca_mode)
-        terminal.puts(InfoCmp.Capability.keypad_xmit);
+        terminal.puts(InfoCmp.Capability.keypad_xmit)
         terminal.writer().flush()
 
         resize()
@@ -57,6 +55,28 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         terminal.close()
     }
 
+    override fun appendOutput(buffer: CharArray, count: Int) {
+        var lastLineEnd = 0
+        for (i in 0 until count) {
+            when (buffer[i]) {
+                '\n' -> {
+                    if (i >= lastLineEnd) {
+                        appendOutputLine(buffer.substring(lastLineEnd, i))
+                        lastLineEnd = i + 1
+                    }
+                }
+                '\r' -> {
+                    appendOutputLine(buffer.substring(lastLineEnd, i))
+                    lastLineEnd = i + 2
+                }
+            }
+        }
+
+        if (lastLineEnd < count) {
+            appendOutputLine(buffer.substring(lastLineEnd, count))
+        }
+    }
+
     override fun appendOutputLine(line: String) {
         val atBottom = scrollbackTop + outputWindowHeight == output.size
         output.add(line)
@@ -66,6 +86,12 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
 
         display()
+    }
+
+    override fun validate() {
+        if (terminal is DumbTerminal) {
+            throw IllegalArgumentException("Unsupported terminal type ${terminal.name}")
+        }
     }
 
     override fun updateInputLine(line: String, cursor: Int) {
@@ -100,6 +126,10 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 
+    fun getOutputLines(): List<String> = output.toList()
+
+    fun getScrollbackTop(): Int = scrollbackTop
+
     private fun resize() {
         val size = terminal.size
         windowSize.copy(size)
@@ -112,13 +142,20 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     private fun handleSignal(signal: Terminal.Signal) {
         try {
-            resize()
+            when (signal) {
+                Terminal.Signal.WINCH -> resize()
+                else -> {
+                    // TODO ?
+                }
+            }
         } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
     private fun display() {
+        if (outputWindowHeight <= 0) return
+
         workspace.clear()
 
         workspace.addAll(
@@ -142,5 +179,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         window.updateAnsi(workspace, cursorPos)
         terminal.flush()
     }
-
 }
+
+private fun CharArray.substring(start: Int, end: Int) =
+    String(this, start, end - start)

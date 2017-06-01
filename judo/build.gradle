@@ -22,6 +22,7 @@ dependencies {
     compile deps.jline
 
     testCompile deps.test.junit
+    testCompile deps.test.assertj
 }
 
 // required for self-executable jar to work

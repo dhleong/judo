@@ -32,20 +32,21 @@ abstract class Connection : Closeable {
         writer.flush()
     }
 
-    fun forEachLine(onNewLine: (String) -> Unit) {
+    fun forEachLine(onNewLine: (CharArray, Int) -> Unit) {
         val reader = BufferedReader(InputStreamReader(input))
         readerThread = thread {
             try {
+                val buffer = CharArray(1024)
                 while (!isClosed) {
                     // FIXME actually we don't always get a full line
-                    val read = reader.readLine()
-                    if (read == null) {
+                    val read = reader.read(buffer)
+                    if (read == -1) {
                         isClosed = true
                         onDisconnect?.invoke()
                         break
+                    } else if (read > 0) {
+                        onNewLine(buffer, read)
                     }
-
-                    onNewLine(read.trim())
                 }
             } catch (e: IOException) {
                 onError?.invoke(e)

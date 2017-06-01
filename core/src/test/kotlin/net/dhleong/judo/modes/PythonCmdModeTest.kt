@@ -15,6 +15,14 @@ class PythonCmdModeTest {
     val maps = ArrayList<Array<Any>>()
 
     val mode = PythonCmdMode(object : IJudoCore {
+        override fun connect(address: String, port: Int) {
+            TODO("not implemented")
+        }
+
+        override fun disconnect() {
+            TODO("not implemented")
+        }
+
         override fun quit() {
             TODO("not implemented")
         }

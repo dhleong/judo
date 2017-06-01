@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import org.apache.commons.net.telnet.TelnetClient
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -17,12 +18,17 @@ class CommonsNetConnection(address: String, port: Int) : Connection() {
     }
 
     override fun close() {
-        client.disconnect()
-        input.close()
-        output.close()
+        try {
+            client.disconnect()
+            input.close()
+            output.flush()
+            output.close()
+        } catch (e: IOException) {
+            // ignore?
+        }
     }
 
     override fun toString(): String {
-        return "[${client.remoteAddress}:${client.remotePort}"
+        return "[${client.remoteAddress}:${client.remotePort}]"
     }
 }

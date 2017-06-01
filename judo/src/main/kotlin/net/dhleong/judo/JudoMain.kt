@@ -9,6 +9,7 @@ fun main(args: Array<String>) {
     System.setProperty("apple.awt.UIElement", "true")
 
     val renderer = JLineRenderer()
+    renderer.validate()
 
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
@@ -17,5 +18,17 @@ fun main(args: Array<String>) {
     })
 
     val judo = JudoCore(renderer)
+
+    if (args.size == 2) {
+        try {
+            val host = args[0]
+            val port = args[1].toInt()
+            judo.connect(host, port)
+        } catch (e: NumberFormatException) {
+            System.err.println("Invalid port: ${args[1]}")
+            System.exit(1)
+        }
+    }
+
     judo.readKeys(renderer)
 }
