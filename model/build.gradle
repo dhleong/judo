@@ -1,0 +1,20 @@
+version 'unspecified'
+
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${vs.kotlin}"
+    }
+}
+
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+
+sourceCompatibility = 1.8
+
+dependencies {
+    compile deps.kotlin
+
+    testCompile deps.test.junit
+}
+

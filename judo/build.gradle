@@ -1,0 +1,35 @@
+group 'net.dhleong'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${vs.kotlin}"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'kotlin'
+
+sourceCompatibility = 1.8
+
+mainClassName = 'net.dhleong.judo.JudoMainKt'
+
+dependencies {
+    compile project(':core')
+
+    compile deps.kotlin
+    compile deps.jline
+
+    testCompile deps.test.junit
+}
+
+// required for self-executable jar to work
+jar {
+    manifest {
+        //noinspection GroovyAssignabilityCheck
+        attributes 'Main-Class': mainClassName
+    }
+
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}

@@ -1,0 +1,35 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+allprojects {
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    }
+    repositories {
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext.vs = [
+    kotlin: '1.1.2-2',
+
+    jline: '3.3.0',
+    jython: '2.7.1b3',
+]
+
+ext.deps = [
+    kotlin: "org.jetbrains.kotlin:kotlin-stdlib-jre8:${vs.kotlin}",
+    jline: "org.jline:jline:${vs.jline}",
+    jython: "org.python:jython:${vs.jython}",
+
+    test: [
+        assertj: 'org.assertj:assertj-core:2.4.1',
+        junit: 'junit:junit:4.12',
+    ],
+]
+
