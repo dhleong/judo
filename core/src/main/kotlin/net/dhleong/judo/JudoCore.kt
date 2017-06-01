@@ -7,6 +7,8 @@ import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.PythonCmdMode
+import net.dhleong.judo.net.CommonsNetConnection
+import net.dhleong.judo.net.Connection
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -31,10 +33,32 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private var running = true
 
-    private var connection: Any? = null // FIXME TODO
+    private var connection: Connection? = null
 
     init {
         activateMode(currentMode)
+    }
+
+    override fun connect(address: String, port: Int) {
+        disconnect()
+        echo("Connecting to $address:$port...")
+
+        val connection = CommonsNetConnection(address, port)
+        connection.onDisconnect = { echo("Disconnected from $connection") }
+        connection.onError = { appendError(it, "NETWORK ERROR: ")}
+        connection.forEachLine(renderer::appendOutputLine)
+
+        this.connection = connection
+    }
+
+    override fun disconnect() {
+        connection?.let {
+            it.onDisconnect = null
+            it.onError = null
+            it.close()
+            connection = null
+            echo("Disconnected from $it.")
+        }
     }
 
     override fun echo(vararg objects: Any?) {
@@ -73,15 +97,15 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     override fun send(text: String) {
         val toSend = aliases.process(text)
         connection?.let {
-            TODO("implement send")
-//            return
+            it.send(toSend)
+            return
         }
 
         appendError(Error("Not connected."))
     }
 
     override fun feedKey(stroke: KeyStroke, remap: Boolean) {
-        echo("## feed $stroke")
+//        echo("## feed $stroke")
         if (stroke.keyCode == KeyEvent.VK_ESCAPE) {
             activateMode(normalMode)
             return
@@ -119,14 +143,12 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     private fun activateMode(mode: Mode) {
-        echo("Activate ${mode.name}")
         currentMode = mode
         mode.onEnter()
 
         renderer.updateInputLine(buffer.toString(), buffer.cursor)
 
         if (mode is BaseCmdMode) {
-            echo("Activate CMD")
             renderer.updateStatusLine(":", 1)
         } else {
             renderer.updateStatusLine("[${mode.name.toUpperCase()}]")

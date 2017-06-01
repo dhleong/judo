@@ -18,12 +18,16 @@ task clean(type: Delete) {
 ext.vs = [
     kotlin: '1.1.2-2',
 
+    commonsNet: '3.6',
     jline: '3.3.0',
     jython: '2.7.1b3',
 ]
 
 ext.deps = [
     kotlin: "org.jetbrains.kotlin:kotlin-stdlib-jre8:${vs.kotlin}",
+
+    commonsNet: "commons-net:commons-net:${vs.commonsNet}",
+
     jline: "org.jline:jline:${vs.jline}",
     jython: "org.python:jython:${vs.jython}",
 

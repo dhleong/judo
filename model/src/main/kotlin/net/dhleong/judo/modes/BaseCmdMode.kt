@@ -40,7 +40,6 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
     }
 
     private fun exitMode() {
-        judo.echo("exit cmd")
         judo.enterMode("normal") // TODO return to previous mode?
     }
 

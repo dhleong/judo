@@ -18,6 +18,7 @@ dependencies {
     compile deps.kotlin
     compile deps.jline
     compile deps.jython
+    compile deps.commonsNet
 
     testCompile deps.test.junit
     testCompile deps.test.assertj

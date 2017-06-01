@@ -35,7 +35,11 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
                 it[2] as String,
                 it[3] as Boolean)
         }
+
+        python["connect"] = asUnitPyFn<Any> { judo.connect(it[0] as String, it[1] as Int) }
+        python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
         python["echo"] = asUnitPyFn<Any> { judo.echo(*it) }
+        python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0]) }
     }
 
