@@ -1,5 +1,7 @@
 package net.dhleong.judo
 
+import org.jline.terminal.Attributes
+import org.jline.terminal.Attributes.*
 import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
@@ -9,6 +11,7 @@ import org.jline.utils.InfoCmp
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.IOException
+import java.util.EnumSet
 import javax.swing.KeyStroke
 
 
@@ -30,7 +33,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     // TODO circular buffer with max size
     private val output = mutableListOf<String>()
-    private var scrollbackTop = 0
+    private var scrollbackBottom = 0
 
     private var hadPartialLine = false
 
@@ -40,23 +43,35 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private var isCursorOnStatus = false
 
     private val workspace = mutableListOf<String>()
+    private val originalAttributes: Attributes
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
         terminal.enterRawMode()
 
+        originalAttributes = terminal.attributes
+        val newAttr = Attributes(originalAttributes)
+        newAttr.setLocalFlags(EnumSet.of(LocalFlag.ICANON, LocalFlag.ECHO, LocalFlag.IEXTEN), false)
+        newAttr.setInputFlags(EnumSet.of(InputFlag.IXON, InputFlag.ICRNL, InputFlag.INLCR), false)
+        newAttr.setControlChar(ControlChar.VMIN, 1)
+        newAttr.setControlChar(ControlChar.VTIME, 0)
+        newAttr.setControlChar(ControlChar.VINTR, 0)
+        terminal.attributes = newAttr
+
         terminal.puts(InfoCmp.Capability.enter_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_xmit)
-        terminal.writer().flush()
+        terminal.flush()
 
         resize()
     }
 
     override fun close() {
         window.clear()
+
         terminal.puts(InfoCmp.Capability.exit_ca_mode)
-        terminal.puts(InfoCmp.Capability.key_exit)
-        terminal.writer().flush()
+        terminal.puts(InfoCmp.Capability.keypad_local)
+        terminal.flush()
+        terminal.attributes = originalAttributes
         terminal.close()
     }
 
@@ -128,7 +143,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     }
 
     override fun readKey(): KeyStroke {
-        val char = terminal.input().read()
+        val char = terminal.reader().read()
         return when (char) {
             27 -> KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
             127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
@@ -143,9 +158,31 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 
+    override fun scrollLines(count: Int) {
+        scrollbackBottom = maxOf(
+            0,
+            minOf(
+                output.size - outputWindowHeight,
+                scrollbackBottom + count)
+        )
+        display()
+    }
+
+    override fun scrollPages(count: Int) {
+        scrollLines(outputWindowHeight * count)
+    }
+
+    override fun scrollToBottom() {
+        scrollbackBottom = 0
+        display()
+    }
+
     fun getOutputLines(): List<String> = output.toList()
 
-    fun getScrollbackTop(): Int = scrollbackTop
+    /**
+     * How many lines we've scrolled back
+     */
+    override fun getScrollback(): Int = scrollbackBottom
 
     private fun resize() {
         val size = terminal.size
@@ -176,8 +213,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         workspace.clear()
 
         workspace.addAll(
-            output.drop(scrollbackTop)
-                .take(outputWindowHeight)
+            output.dropLast(scrollbackBottom)
+                .takeLast(outputWindowHeight)
         )
 
         (workspace.size..outputWindowHeight).forEach {
@@ -197,18 +234,36 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         terminal.flush()
     }
 
+    /**
+     * Wrapper for [appendOutputLineInternal] that hard-wraps
+     * lines based on current window width
+     */
     private fun appendOutputLineInternal(line: String) {
+        // TODO
+//        if (line.length > windowWidth) {
+//            for (i in 0 until line.length - windowWidth step windowWidth) {
+//                appendOutputLineSingle(line.substring(i, i + windowWidth))
+//            }
+//        } else {
+//        }
+        appendOutputLineSingle(line)
+    }
+
+    /**
+     * @param line MUST be guaranteed to fit on a single line
+     */
+    private fun appendOutputLineSingle(line: String) {
         if (hadPartialLine) {
             hadPartialLine = false
 
             val end = output.size - 1
             output[end] += line
         } else {
-            val atBottom = scrollbackTop + outputWindowHeight == output.size
+            val atBottom = scrollbackBottom == 0
             output.add(line)
 
-            if (atBottom && output.size > outputWindowHeight) {
-                ++scrollbackTop
+            if (!atBottom && output.size > outputWindowHeight) {
+                ++scrollbackBottom
             }
         }
     }

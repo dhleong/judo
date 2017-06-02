@@ -20,7 +20,7 @@ class JLineRendererTest {
                 "Take my land,",
                 "Take me"
             )
-        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+        assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
     @Test fun appendOutput_newlineOnly() {
@@ -36,7 +36,7 @@ class JLineRendererTest {
                 "",
                 "Take me"
             )
-        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+        assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
     @Test fun appendOutput_fancy() {
@@ -52,7 +52,7 @@ class JLineRendererTest {
                 "${0x27}[1;30m${0x27}[1;37mTake my love,",
                 "${0x27}[1;30m${0x27}[1;37mTake my land,"
             )
-        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+        assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
     @Test fun appendOutput_resumePartial() {
@@ -72,7 +72,7 @@ class JLineRendererTest {
                 "Take me where...",
                 "I don't care, I'm still free"
             )
-        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+        assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
     @Test fun appendOutput_resumePartial_fancy() {
@@ -88,7 +88,7 @@ class JLineRendererTest {
                 "",
                 "${0x27}[1;36mTake my ${0x27}[1;32mlove"
             )
-        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+        assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 }
 

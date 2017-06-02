@@ -114,7 +114,17 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         throw IllegalArgumentException("No such mode $mode")
     }
 
+    override fun scrollPages(count: Int) {
+        renderer.scrollPages(count)
+    }
+
+    override fun scrollToBottom() {
+        renderer.scrollToBottom()
+    }
+
     override fun send(text: String) {
+        scrollToBottom()
+
         val toSend = aliases.process(text)
         connection?.let {
             it.send(toSend)

@@ -19,6 +19,23 @@ interface JudoRenderer : Closeable {
     fun appendOutputLine(line: String)
     fun appendOutput(buffer: CharArray, count: Int)
 
+    /**
+     * Current lines scrolled back
+     */
+    fun getScrollback(): Int
+
+    /**
+     * @param count Number of lines to scroll, where a POSITIVE number
+     *  moves backward in history, and a NEGATIVE number moves forward
+     */
+    fun scrollLines(count: Int)
+
+    /**
+     * @see scrollLines
+     */
+    fun scrollPages(count: Int)
+    fun scrollToBottom()
+
     fun updateInputLine(line: String, cursor: Int)
 
     fun updateStatusLine(line: String, cursor: Int = -1)

@@ -41,6 +41,8 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
             buffer.clear()
         },
 
+        keys("G") to { core -> core.scrollToBottom() },
+
         keys("i") to { core -> core.enterMode("insert") },
         keys("I") to { core ->
             toStartMotion().applyTo(buffer)
@@ -56,7 +58,9 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
         keys("0") to motionAction(toStartMotion()),
         keys("$") to motionAction(toEndMotion()),
 
-        keys("ctrl C") to { _ -> clearBuffer() }
+        keys("ctrl b") to { core -> core.scrollPages(1) },
+        keys("ctrl f") to { core -> core.scrollPages(-1) },
+        keys("ctrl c") to { _ -> clearBuffer() }
     )
 
     private val input = MutableKeys()
