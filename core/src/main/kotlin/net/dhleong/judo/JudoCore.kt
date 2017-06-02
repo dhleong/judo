@@ -10,6 +10,7 @@ import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import java.awt.event.KeyEvent
+import java.io.File
 import javax.swing.KeyStroke
 
 /**
@@ -91,6 +92,14 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             return
         }
 
+        // map in all modes
+        if (mode == "") {
+            modes.keys
+                .filter { modes[it] is MappableMode }
+                .forEach { map(it, from, to, remap) }
+            return
+        }
+
         throw IllegalArgumentException("No such mode $mode")
     }
 
@@ -129,6 +138,21 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     /**
+     * Read a file in command mode
+     */
+    fun readFile(file: File) {
+        val cmdMode = modes["cmd"] as BaseCmdMode
+
+        try {
+            file.inputStream().use {
+                cmdMode.readFile(file.name, it)
+            }
+        } catch (e: Throwable) {
+            appendError(e, "ERROR: ")
+        }
+    }
+
+    /**
      * Read keys forever from the given producer
      */
     fun readKeys(producer: BlockingKeySource) {
@@ -158,8 +182,11 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private fun appendError(e: Throwable, prefix: String = "") {
         renderer.appendOutputLine("$prefix${e.message}")
-        e.stackTrace.map { it.toString() }
+        e.stackTrace.map { "  $it" }
             .forEach(renderer::appendOutputLine)
+        e.cause?.let {
+            appendError(it, "Caused by: ")
+        }
     }
 
 }

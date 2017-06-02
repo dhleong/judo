@@ -50,21 +50,26 @@ class KeyMapping() {
 
 fun key(string: String): KeyStroke {
     val stroke: String
-    if (string == " " || string == "20" || string == "space") {
-        return KeyStroke.getKeyStroke(' ')
-    } else if (string == "cr") {
-        return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
-    } else if ("typed" !in string) {
-        val lastSpace = string.lastIndexOf(' ')
-        if (lastSpace == -1) {
-            stroke = "typed $string"
-        } else {
-            val before = string.slice(0..lastSpace)
-            val after = string.substring(lastSpace + 1)
-            stroke = "$before typed $after"
+    when (string) {
+        // special cases
+        " ", "20", "space" -> return KeyStroke.getKeyStroke(' ')
+        "cr" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
+        "esc" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
+
+        else -> {
+            if ("typed" !in string) {
+                val lastSpace = string.lastIndexOf(' ')
+                if (lastSpace == -1) {
+                    stroke = "typed $string"
+                } else {
+                    val before = string.slice(0..lastSpace)
+                    val after = string.substring(lastSpace + 1)
+                    stroke = "$before typed $after"
+                }
+            } else {
+                stroke = string
+            }
         }
-    } else {
-        stroke = string
     }
 
     return KeyStroke.getKeyStroke(stroke)
