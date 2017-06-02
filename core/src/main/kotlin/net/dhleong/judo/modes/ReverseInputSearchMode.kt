@@ -22,7 +22,7 @@ class ReverseInputSearchMode(
     val searchBuffer = InputBuffer()
 
     override fun onEnter() {
-        // nop
+        searchBuffer.clear()
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
