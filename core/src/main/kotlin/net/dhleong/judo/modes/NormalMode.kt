@@ -71,7 +71,8 @@ class NormalMode(
 
         keys("ctrl b") to { core -> core.scrollPages(1) },
         keys("ctrl f") to { core -> core.scrollPages(-1) },
-        keys("ctrl c") to { _ -> clearBuffer() }
+        keys("ctrl c") to { _ -> clearBuffer() },
+        keys("ctrl r") to { core -> core.enterMode("rsearch") }
     )
 
     private val input = MutableKeys()

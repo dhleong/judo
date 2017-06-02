@@ -7,6 +7,7 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()
@@ -35,6 +36,10 @@ class TestableJudoCore : IJudoCore {
         get() = throw UnsupportedOperationException()
 
     override fun enterMode(modeName: String) {
+        TODO("not implemented")
+    }
+
+    override fun exitMode() {
         TODO("not implemented")
     }
 

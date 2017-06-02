@@ -27,7 +27,9 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode, I
         keys("ctrl e") to motionAction(toEndMotion()),
 
         keys("ctrl b") to { core -> core.scrollPages(1) },
-        keys("ctrl f") to { core -> core.scrollPages(-1) }
+        keys("ctrl f") to { core -> core.scrollPages(-1) },
+
+        keys("ctrl r") to { core -> core.enterMode("rsearch") }
     )
     private val input = MutableKeys()
 

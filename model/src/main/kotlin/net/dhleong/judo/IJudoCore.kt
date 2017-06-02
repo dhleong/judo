@@ -11,6 +11,7 @@ interface IJudoCore {
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)
+    fun exitMode()
     fun connect(address: String, port: Int)
     fun disconnect()
     fun feedKey(stroke: KeyStroke, remap: Boolean = true)

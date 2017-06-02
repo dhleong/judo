@@ -53,4 +53,35 @@ class InputHistoryTest {
         history.scroll(1)
         assertThat(buffer.toString()).isEqualTo("I don't care")
     }
+
+    @Test fun searchHistory() {
+        history.push("Take me where I cannot stand")
+        history.push("Take my land")
+        history.push("Take my love")
+        assertThat(buffer.toString()).isEqualTo("")
+
+        assertThat(history.search("t", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        assertThat(history.search("ta", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        // no match? no change
+        assertThat(history.search("tar", false)).isFalse()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        assertThat(history.search("ta", true)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my land")
+
+        assertThat(history.search("take", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my land")
+
+        assertThat(history.search("take me", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
+
+        // no change even though we force
+        assertThat(history.search("take me", true)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
+    }
 }
+

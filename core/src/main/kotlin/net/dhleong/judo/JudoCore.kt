@@ -7,6 +7,7 @@ import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.PythonCmdMode
+import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.util.InputHistory
@@ -29,7 +30,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     private val modes = mapOf(
         "insert" to InsertMode(this, buffer),
         "normal" to normalMode,
-        "cmd" to PythonCmdMode(this)
+        "cmd" to PythonCmdMode(this),
+        "rsearch" to ReverseInputSearchMode(this, buffer, sendHistory)
     )
 
     private var currentMode: Mode = normalMode
@@ -83,6 +85,11 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         } else {
             throw IllegalArgumentException("No such mode `$modeName`")
         }
+    }
+
+    override fun exitMode() {
+        // TODO actually, return to the previous mode
+        activateMode(normalMode)
     }
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
