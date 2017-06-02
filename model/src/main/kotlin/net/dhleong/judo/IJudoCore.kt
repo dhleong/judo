@@ -17,7 +17,7 @@ interface IJudoCore {
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun scrollPages(count: Int)
     fun scrollToBottom()
-    fun send(text: String)
+    fun send(text: String, fromMap: Boolean)
     fun quit()
 }
 

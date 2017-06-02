@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
@@ -10,13 +11,19 @@ import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
+import net.dhleong.judo.util.InputHistory
 import javax.swing.KeyStroke
 
 /**
  * @author dhleong
  */
 
-class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
+class NormalMode(
+        val judo: IJudoCore,
+        val buffer: InputBuffer,
+        val history: InputHistory
+) : MappableMode, InputBufferProvider {
+
     override val userMappings = KeyMapping()
     override val name = "normal"
 
@@ -48,6 +55,10 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
             toStartMotion().applyTo(buffer)
             core.enterMode("insert")
         },
+
+        // browse history
+        keys("j") to { _ -> history.scroll(1) },
+        keys("k") to { _ -> history.scroll(-1) },
 
         // TODO counts?
         keys("b") to motionAction(wordMotion(-1, false)),
@@ -96,6 +107,9 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
 
         input.clear()
     }
+
+    override fun renderInputBuffer(): String = buffer.toString()
+    override fun getCursor(): Int = buffer.cursor
 
     private fun clearBuffer() {
         input.clear()

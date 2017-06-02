@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
@@ -15,7 +16,7 @@ import javax.swing.KeyStroke
 /**
  * @author dhleong
  */
-class InsertMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
+class InsertMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode, InputBufferProvider {
 
     override val userMappings = KeyMapping()
     override val name = "insert"
@@ -37,7 +38,7 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
     override fun feedKey(key: KeyStroke, remap: Boolean) {
         when (key.keyCode) {
             KeyEvent.VK_ENTER -> {
-                judo.send(buffer.toString())
+                judo.send(buffer.toString(), false)
                 clearBuffer()
                 return
             }
@@ -72,6 +73,9 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
         buffer.type(key)
         input.clear() // and clear input queue
     }
+
+    override fun renderInputBuffer(): String = buffer.toString()
+    override fun getCursor(): Int = buffer.cursor
 
     private fun clearBuffer() {
         input.clear()

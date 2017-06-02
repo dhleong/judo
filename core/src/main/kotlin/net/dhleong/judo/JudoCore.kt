@@ -9,6 +9,7 @@ import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
+import net.dhleong.judo.util.InputHistory
 import java.awt.event.KeyEvent
 import java.io.File
 import javax.swing.KeyStroke
@@ -22,8 +23,9 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     override val aliases = AliasManager()
 
     private val buffer = InputBuffer()
+    private val sendHistory = InputHistory(buffer)
 
-    private val normalMode = NormalMode(this, buffer)
+    private val normalMode = NormalMode(this, buffer, sendHistory)
     private val modes = mapOf(
         "insert" to InsertMode(this, buffer),
         "normal" to normalMode,
@@ -118,10 +120,16 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         renderer.scrollToBottom()
     }
 
-    override fun send(text: String) {
+    override fun send(text: String, fromMap: Boolean) {
         scrollToBottom()
 
         val toSend = aliases.process(text)
+
+        if (!fromMap) {
+            // record it even if we couldn't send it
+            sendHistory.push(toSend)
+        }
+
         connection?.let {
             it.send(toSend)
             return
@@ -144,7 +152,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         if (newMode is BaseCmdMode) {
             renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
         } else {
-            renderer.updateInputLine(buffer.toString(), buffer.cursor)
+            updateInputLine()
         }
     }
 
@@ -188,14 +196,22 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         currentMode = mode
         mode.onEnter()
 
-        renderer.updateInputLine(buffer.toString(), buffer.cursor)
+        updateInputLine()
 
         if (mode is BaseCmdMode) {
             renderer.updateStatusLine(":", 1)
         } else {
             renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
         }
+    }
 
+    private fun updateInputLine() {
+        val mode = currentMode
+        if (mode is InputBufferProvider) {
+            renderer.updateInputLine(mode.renderInputBuffer(), mode.getCursor())
+        } else {
+            renderer.updateInputLine(buffer.toString(), buffer.cursor)
+        }
     }
 
     private fun appendError(e: Throwable, prefix: String = "") {

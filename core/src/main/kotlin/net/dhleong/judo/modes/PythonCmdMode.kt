@@ -40,7 +40,7 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
         python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
         python["echo"] = asUnitPyFn<Any> { judo.echo(*it) }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
-        python["send"] = asUnitPyFn<String>(1) { judo.send(it[0]) }
+        python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
     }
 
     override fun execute(code: String) {

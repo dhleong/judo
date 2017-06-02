@@ -46,7 +46,7 @@ class TestableJudoCore : IJudoCore {
         maps.add(arrayOf(mode, from, to, remap))
     }
 
-    override fun send(text: String) {
+    override fun send(text: String, fromMap: Boolean) {
         sends.add(text)
     }
 

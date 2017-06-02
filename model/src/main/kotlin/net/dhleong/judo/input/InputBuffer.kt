@@ -57,6 +57,12 @@ class InputBuffer {
     val size: Int
         get() = buffer.length
 
+    fun set(value: String) {
+        buffer.setLength(0)
+        buffer.append(value)
+        cursor = value.length
+    }
+
     /*
      Cursor movement
      */
