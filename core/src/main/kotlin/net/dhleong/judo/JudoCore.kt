@@ -53,9 +53,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         connection.forEachLine { buffer, count ->
 //            logFile.appendText(String(buffer, 0, count))
 //            logFile.appendText("{PACKET_BREAK}")
-            synchronized(renderer) {
-                renderer.appendOutput(buffer, count)
-            }
+            renderer.appendOutput(buffer, count)
         }
 
         this.connection = connection
@@ -72,10 +70,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     override fun echo(vararg objects: Any?) {
-        synchronized(renderer) {
-            // TODO colors?
-            renderer.appendOutputLine(objects.joinToString(" "))
-        }
+        // TODO colors?
+        renderer.appendOutputLine(objects.joinToString(" "))
     }
 
     override fun enterMode(modeName: String) {
@@ -145,12 +141,10 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        synchronized(renderer) {
-            if (newMode is BaseCmdMode) {
-                renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
-            } else {
-                renderer.updateInputLine(buffer.toString(), buffer.cursor)
-            }
+        if (newMode is BaseCmdMode) {
+            renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
+        } else {
+            renderer.updateInputLine(buffer.toString(), buffer.cursor)
         }
     }
 
@@ -194,25 +188,22 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         currentMode = mode
         mode.onEnter()
 
-        synchronized(renderer) {
-            renderer.updateInputLine(buffer.toString(), buffer.cursor)
+        renderer.updateInputLine(buffer.toString(), buffer.cursor)
 
-            if (mode is BaseCmdMode) {
-                renderer.updateStatusLine(":", 1)
-            } else {
-                renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
-            }
+        if (mode is BaseCmdMode) {
+            renderer.updateStatusLine(":", 1)
+        } else {
+            renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
         }
+
     }
 
     private fun appendError(e: Throwable, prefix: String = "") {
-        synchronized(renderer) {
-            renderer.appendOutputLine("$prefix${e.message}")
-            e.stackTrace.map { "  $it" }
-                .forEach(renderer::appendOutputLine)
-            e.cause?.let {
-                appendError(it, "Caused by: ")
-            }
+        renderer.appendOutputLine("$prefix${e.message}")
+        e.stackTrace.map { "  $it" }
+            .forEach(renderer::appendOutputLine)
+        e.cause?.let {
+            appendError(it, "Caused by: ")
         }
     }
 

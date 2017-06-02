@@ -77,7 +77,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         terminal.close()
     }
 
-    override fun appendOutput(buffer: CharArray, count: Int) {
+    @Synchronized override fun appendOutput(buffer: CharArray, count: Int) {
         var lastLineEnd = 0
         @Suppress("LoopToCallChain") // actually it seems we need the loop here
         for (i in 0 until count) {
@@ -115,7 +115,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         display()
     }
 
-    override fun appendOutputLine(line: String) {
+    @Synchronized override fun appendOutputLine(line: String) {
         appendOutputLineInternal(line)
 
         display()
@@ -209,7 +209,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 
-    private fun display() {
+    @Synchronized private fun display() {
         if (outputWindowHeight <= 0) return
 
         workspace.clear()
@@ -234,6 +234,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         window.resize(windowHeight, windowWidth)
         // FIXME why do we have to map?
         window.update(workspace.map { AttributedString.fromAnsi(it.toAnsi(terminal)) }, cursorPos)
+//        window.update(workspace, cursorPos)
         terminal.flush()
     }
 
@@ -246,10 +247,13 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         builder.tabs(0)
         builder.appendAnsi(line)
 
-        if (builder.length > windowWidth) {
-            for (i in 0 until line.length - windowWidth step windowWidth) {
-                appendOutputAttributedLine(builder.substring(i, i + windowWidth))
-            }
+        if (builder.columnLength() > windowWidth) {
+
+            builder.columnSplitLength(windowWidth)
+                .forEach { appendOutputAttributedLine(it) }
+//            for (i in 0 until line.length - windowWidth step windowWidth) {
+//                appendOutputAttributedLine(builder.columnSubSequence(i, i + windowWidth))
+//            }
         } else {
             appendOutputAttributedLine(builder.toAttributedString())
         }
