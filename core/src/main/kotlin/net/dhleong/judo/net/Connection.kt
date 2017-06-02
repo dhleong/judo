@@ -53,4 +53,7 @@ abstract class Connection : Closeable {
             }
         }
     }
+
+    abstract fun setWindowSize(width: Int, height: Int)
+
 }

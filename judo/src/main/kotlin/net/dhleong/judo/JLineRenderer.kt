@@ -17,6 +17,9 @@ import javax.swing.KeyStroke
  */
 
 class JLineRenderer : JudoRenderer, BlockingKeySource {
+    override val terminalType: String
+        get() = terminal.type
+
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
 
@@ -57,17 +60,22 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     override fun appendOutput(buffer: CharArray, count: Int) {
         var lastLineEnd = 0
+        @Suppress("LoopToCallChain") // actually it seems we need the loop here
         for (i in 0 until count) {
-            when (buffer[i]) {
-                '\n' -> {
-                    if (i >= lastLineEnd) {
+            if (i >= lastLineEnd) {
+                when (buffer[i]) {
+                    '\n' -> {
                         appendOutputLine(buffer.substring(lastLineEnd, i))
-                        lastLineEnd = i + 1
+                        if (i + 1 < count && buffer[i + 1] == '\r') {
+                            lastLineEnd = i + 2
+                        } else {
+                            lastLineEnd = i + 1
+                        }
                     }
-                }
-                '\r' -> {
-                    appendOutputLine(buffer.substring(lastLineEnd, i))
-                    lastLineEnd = i + 2
+                    '\r' -> {
+                        appendOutputLine(buffer.substring(lastLineEnd, i))
+                        lastLineEnd = i + 2
+                    }
                 }
             }
         }

@@ -44,10 +44,18 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         disconnect()
         echo("Connecting to $address:$port...")
 
-        val connection = CommonsNetConnection(address, port)
+        var logFile = File("log.txt")
+
+        val connection = CommonsNetConnection(address, port, renderer.terminalType)
+        connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = { echo("Disconnected from $connection") }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
-        connection.forEachLine(renderer::appendOutput)
+        connection.forEachLine { buffer, count ->
+            logFile.appendText(String(buffer, 0, count))
+            synchronized(renderer) {
+                renderer.appendOutput(buffer, count)
+            }
+        }
 
         this.connection = connection
     }
@@ -63,8 +71,10 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     override fun echo(vararg objects: Any?) {
-        // TODO colors?
-        renderer.appendOutputLine(objects.joinToString(" "))
+        synchronized(renderer) {
+            // TODO colors?
+            renderer.appendOutputLine(objects.joinToString(" "))
+        }
     }
 
     override fun enterMode(modeName: String) {
@@ -124,10 +134,12 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        if (newMode is BaseCmdMode) {
-            renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
-        } else {
-            renderer.updateInputLine(buffer.toString(), buffer.cursor)
+        synchronized(renderer) {
+            if (newMode is BaseCmdMode) {
+                renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
+            } else {
+                renderer.updateInputLine(buffer.toString(), buffer.cursor)
+            }
         }
     }
 
@@ -171,21 +183,25 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         currentMode = mode
         mode.onEnter()
 
-        renderer.updateInputLine(buffer.toString(), buffer.cursor)
+        synchronized(renderer) {
+            renderer.updateInputLine(buffer.toString(), buffer.cursor)
 
-        if (mode is BaseCmdMode) {
-            renderer.updateStatusLine(":", 1)
-        } else {
-            renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
+            if (mode is BaseCmdMode) {
+                renderer.updateStatusLine(":", 1)
+            } else {
+                renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
+            }
         }
     }
 
     private fun appendError(e: Throwable, prefix: String = "") {
-        renderer.appendOutputLine("$prefix${e.message}")
-        e.stackTrace.map { "  $it" }
-            .forEach(renderer::appendOutputLine)
-        e.cause?.let {
-            appendError(it, "Caused by: ")
+        synchronized(renderer) {
+            renderer.appendOutputLine("$prefix${e.message}")
+            e.stackTrace.map { "  $it" }
+                .forEach(renderer::appendOutputLine)
+            e.cause?.let {
+                appendError(it, "Caused by: ")
+            }
         }
     }
 
