@@ -214,14 +214,12 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         workspace.clear()
 
-        workspace.addAll(
-            output.dropLast(scrollbackBottom)
-                .takeLast(outputWindowHeight)
-        )
+        val toOutput = getDisplayLines()
 
-        (workspace.size..outputWindowHeight).forEach {
+        (toOutput.size..outputWindowHeight).forEach {
             workspace.add(AttributedString.EMPTY)
         }
+        workspace.addAll(toOutput)
 
         workspace.add(status)
         workspace.add(input)
@@ -236,6 +234,12 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         window.update(workspace.map { AttributedString.fromAnsi(it.toAnsi(terminal)) }, cursorPos)
 //        window.update(workspace, cursorPos)
         terminal.flush()
+    }
+
+    fun getDisplayLines(): List<AttributedString> {
+        val start = maxOf(0, output.size - scrollbackBottom - outputWindowHeight)
+        val end = minOf(output.size - 1, (start + outputWindowHeight - 1))
+        return output.slice(start..end)
     }
 
     /**
