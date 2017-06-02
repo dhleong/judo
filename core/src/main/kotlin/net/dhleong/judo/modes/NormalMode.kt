@@ -2,9 +2,14 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
+import net.dhleong.judo.motions.Motion
+import net.dhleong.judo.motions.toEndMotion
+import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.motions.wordMotion
 import javax.swing.KeyStroke
 
 /**
@@ -23,7 +28,7 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
             core.enterMode("insert")
         },
         keys("A") to { core ->
-            buffer.moveCursorToEnd()
+            toEndMotion().applyTo(buffer)
             core.enterMode("insert")
         },
 
@@ -38,16 +43,18 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
 
         keys("i") to { core -> core.enterMode("insert") },
         keys("I") to { core ->
-            buffer.moveCursorToStart()
+            toStartMotion().applyTo(buffer)
             core.enterMode("insert")
         },
 
         // TODO counts?
-        keys("b") to { _ -> buffer.moveWordBack() },
-        keys("w") to { _ -> buffer.moveWord() },
+        keys("b") to motionAction(wordMotion(-1, false)),
+        keys("B") to motionAction(wordMotion(-1, true)),
+        keys("w") to motionAction(wordMotion(1, false)),
+        keys("W") to motionAction(wordMotion(1, true)),
 
-        keys("0") to { _ -> buffer.moveCursorToStart() },
-        keys("$") to { _ -> buffer.moveCursorToEnd() },
+        keys("0") to motionAction(toStartMotion()),
+        keys("$") to motionAction(toEndMotion()),
 
         keys("ctrl C") to { _ -> clearBuffer() }
     )
@@ -91,4 +98,12 @@ class NormalMode(val judo: IJudoCore, val buffer: InputBuffer) : MappableMode {
         buffer.clear()
     }
 
+    /**
+     * Convenience to create a KeyAction that just applies
+     *  the given motion
+     */
+    private fun motionAction(motion: Motion): KeyAction =
+        { _ -> motion.applyTo(buffer) }
 }
+
+

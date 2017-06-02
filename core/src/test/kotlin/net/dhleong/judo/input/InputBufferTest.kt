@@ -61,53 +61,5 @@ class InputBufferTest {
         assertThat(buffer.toString()).isEmpty()
         assertThat(buffer.cursor).isEqualTo(0)
     }
-
-    @Test fun moveWord_space() {
-        assertThat(buffer.toString()).isEmpty()
-
-        buffer.type("malcolm reynolds    ")
-        buffer.cursor = 0
-
-        buffer.moveWord()
-        assertThat(buffer.cursor).isEqualTo(8)
-
-        buffer.moveWord()
-        assertThat(buffer.cursor).isEqualTo(19)
-    }
-
-    @Test fun moveWordBack_space() {
-        assertThat(buffer.toString()).isEmpty()
-
-        buffer.type("malcolm reynolds    ")
-        buffer.moveCursorToEnd()
-
-        buffer.moveWordBack()
-        assertThat(buffer.cursor).isEqualTo(8)
-
-        buffer.moveWordBack()
-        assertThat(buffer.cursor).isEqualTo(0)
-    }
-
-    @Test fun moveWord_special() {
-        assertThat(buffer.toString()).isEmpty()
-
-        buffer.type("malcolm(reynold's)")
-        buffer.cursor = 0
-        buffer.moveWord()
-
-        assertThat(buffer.cursor).isEqualTo(7)
-
-        buffer.moveWord()
-        assertThat(buffer.cursor).isEqualTo(8)
-
-        buffer.moveWord()
-        assertThat(buffer.cursor).isEqualTo(15)
-    }
 }
 
-private fun InputBuffer.type(string: String) {
-    string
-        .toCharArray()
-        .map { key(it.toString()) }
-        .forEach { this.type(it) }
-}

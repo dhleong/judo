@@ -20,9 +20,6 @@ class CommonsNetConnection(address: String, port: Int) : Connection() {
     override fun close() {
         try {
             client.disconnect()
-            input.close()
-            output.flush()
-            output.close()
         } catch (e: IOException) {
             // ignore?
         }
