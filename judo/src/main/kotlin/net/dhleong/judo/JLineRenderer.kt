@@ -6,6 +6,8 @@ import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.terminal.impl.DumbTerminal
+import org.jline.utils.AttributedString
+import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
 import java.awt.event.InputEvent
@@ -32,17 +34,17 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val windowSize = Size(0, 0)
 
     // TODO circular buffer with max size
-    private val output = mutableListOf<String>()
+    private val output = mutableListOf<AttributedString>()
     private var scrollbackBottom = 0
 
     private var hadPartialLine = false
 
-    private var input = ""
-    private var status = ""
+    private var input = AttributedString.EMPTY
+    private var status = AttributedString.EMPTY
     private var cursor = 0
     private var isCursorOnStatus = false
 
-    private val workspace = mutableListOf<String>()
+    private val workspace = mutableListOf<AttributedString>()
     private val originalAttributes: Attributes
 
     init {
@@ -127,14 +129,14 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     }
 
     override fun updateInputLine(line: String, cursor: Int) {
-        input = line
+        input = AttributedString.fromAnsi(line)
         this.cursor = cursor
         isCursorOnStatus = false
         display()
     }
 
     override fun updateStatusLine(line: String, cursor: Int) {
-        status = line
+        status = AttributedString.fromAnsi(line)
         if (cursor >= 0) {
             this.cursor = cursor
             isCursorOnStatus = true
@@ -177,7 +179,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         display()
     }
 
-    fun getOutputLines(): List<String> = output.toList()
+    fun getOutputLines(): List<String> = output.map { it.toAnsi() }.toList()
 
     /**
      * How many lines we've scrolled back
@@ -218,7 +220,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         )
 
         (workspace.size..outputWindowHeight).forEach {
-            workspace.add("")
+            workspace.add(AttributedString.EMPTY)
         }
 
         workspace.add(status)
@@ -230,7 +232,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         )
 
         window.resize(windowHeight, windowWidth)
-        window.updateAnsi(workspace, cursorPos)
+        // FIXME why do we have to map?
+        window.update(workspace.map { AttributedString.fromAnsi(it.toAnsi(terminal)) }, cursorPos)
         terminal.flush()
     }
 
@@ -239,25 +242,34 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
      * lines based on current window width
      */
     private fun appendOutputLineInternal(line: String) {
-        // TODO
-//        if (line.length > windowWidth) {
-//            for (i in 0 until line.length - windowWidth step windowWidth) {
-//                appendOutputLineSingle(line.substring(i, i + windowWidth))
-//            }
-//        } else {
-//        }
-        appendOutputLineSingle(line)
+        val builder = AttributedStringBuilder(line.length)
+        builder.tabs(0)
+        builder.appendAnsi(line)
+
+        if (builder.length > windowWidth) {
+            for (i in 0 until line.length - windowWidth step windowWidth) {
+                appendOutputAttributedLine(builder.substring(i, i + windowWidth))
+            }
+        } else {
+            appendOutputAttributedLine(builder.toAttributedString())
+        }
+
+//        appendOutputAttributedLine(AttributedString.fromAnsi(line))
     }
 
     /**
      * @param line MUST be guaranteed to fit on a single line
      */
-    private fun appendOutputLineSingle(line: String) {
+    private fun appendOutputAttributedLine(line: AttributedString) {
         if (hadPartialLine) {
             hadPartialLine = false
 
             val end = output.size - 1
-            output[end] += line
+            val original = output[end]
+            val builder = AttributedStringBuilder(original.length + line.length)
+            builder.append(original)
+            builder.append(line)
+            output[end] = builder.toAttributedString()
         } else {
             val atBottom = scrollbackBottom == 0
             output.add(line)

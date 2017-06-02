@@ -7,7 +7,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class CommonsNetConnection(
-    address: String, port: Int,
+    private val address: String, private val port: Int,
     terminalType: String = "xterm-256color"
 ) : Connection() {
     override val input: InputStream
@@ -35,6 +35,6 @@ class CommonsNetConnection(
     }
 
     override fun toString(): String {
-        return "[${client.remoteAddress}:${client.remotePort}]"
+        return "[$address:$port]"
     }
 }
