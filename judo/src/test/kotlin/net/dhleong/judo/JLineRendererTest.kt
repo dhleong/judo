@@ -9,6 +9,7 @@ import org.junit.Test
 class JLineRendererTest {
     @Test fun appendOutput() {
         val renderer = JLineRenderer()
+        renderer.windowWidth = 42
 
         renderer.appendOutput("\r\nTake my love,\r\n\r\nTake my land,\r\nTake me")
 
@@ -25,6 +26,7 @@ class JLineRendererTest {
 
     @Test fun appendOutput_newlineOnly() {
         val renderer = JLineRenderer()
+        renderer.windowWidth = 42
 
         renderer.appendOutput("\nTake my love,\nTake my land,\n\nTake me")
 
@@ -41,6 +43,7 @@ class JLineRendererTest {
 
     @Test fun appendOutput_fancy() {
         val renderer = JLineRenderer()
+        renderer.windowWidth = 42
 
         renderer.appendOutput(
             "\n\r${0x27}[1;30m${0x27}[1;37mTake my love," +
@@ -59,6 +62,7 @@ class JLineRendererTest {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
         val renderer = JLineRenderer()
+        renderer.windowWidth = 42
 
         renderer.appendOutput("\n\rTake my love,\n\rTake my")
         renderer.appendOutput(" land,\n\rTake me where...\n\r")
@@ -79,6 +83,7 @@ class JLineRendererTest {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
         val renderer = JLineRenderer()
+        renderer.windowWidth = 42
 
         renderer.appendOutput("\n\r${0x27}[1;36mTake my ${0x27}[1;32m")
         renderer.appendOutput("love")
@@ -90,6 +95,12 @@ class JLineRendererTest {
             )
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }
+
+//    @Test fun foo() {
+//        val original = AttributedString.fromAnsi("${0x27}[1;36mTake my ${0x27}[1;32mlove")
+//        assertThat(AttributedString.fromAnsi(original.toAnsi()))
+//            .isEqualTo(original)
+//    }
 }
 
 fun JLineRenderer.appendOutput(string: String) {

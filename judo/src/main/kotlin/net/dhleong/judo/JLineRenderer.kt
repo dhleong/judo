@@ -229,10 +229,12 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
             cursor
         )
 
+        // NOTE: jline keeps a reference to the list we provide this
+        // method, so we have to make a quick copy. If this becomes an
+        // issue, we might be able to "double buffer" and keep an active
+        // and a dirty workspace, and swap between them...
         window.resize(windowHeight, windowWidth)
-        // FIXME why do we have to map?
-        window.update(workspace.map { AttributedString.fromAnsi(it.toAnsi(terminal)) }, cursorPos)
-//        window.update(workspace, cursorPos)
+        window.update(workspace.toList(), cursorPos)
         terminal.flush()
     }
 
