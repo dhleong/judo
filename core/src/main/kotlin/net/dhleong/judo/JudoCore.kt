@@ -44,14 +44,15 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         disconnect()
         echo("Connecting to $address:$port...")
 
-        var logFile = File("log.txt")
+//        val logFile = File("log.txt")
 
         val connection = CommonsNetConnection(address, port, renderer.terminalType)
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = { echo("Disconnected from $connection") }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
         connection.forEachLine { buffer, count ->
-            logFile.appendText(String(buffer, 0, count))
+//            logFile.appendText(String(buffer, 0, count))
+//            logFile.appendText("{PACKET_BREAK}")
             synchronized(renderer) {
                 renderer.appendOutput(buffer, count)
             }

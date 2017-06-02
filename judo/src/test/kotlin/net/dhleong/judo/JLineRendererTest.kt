@@ -1,7 +1,6 @@
 package net.dhleong.judo
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -56,9 +55,7 @@ class JLineRendererTest {
         assertThat(renderer.getScrollbackTop()).isEqualTo(0)
     }
 
-    @Test
-    @Ignore("TODO")
-    fun appendOutput_resumePartial() {
+    @Test fun appendOutput_resumePartial() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
         val renderer = JLineRenderer()
@@ -74,6 +71,22 @@ class JLineRendererTest {
                 "Take my land,",
                 "Take me where...",
                 "I don't care, I'm still free"
+            )
+        assertThat(renderer.getScrollbackTop()).isEqualTo(0)
+    }
+
+    @Test fun appendOutput_resumePartial_fancy() {
+        // append without a line end and continue that line
+        // in a separate append. It's TCP so stuff happens
+        val renderer = JLineRenderer()
+
+        renderer.appendOutput("\n\r${0x27}[1;36mTake my ${0x27}[1;32m")
+        renderer.appendOutput("love")
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly(
+                "",
+                "${0x27}[1;36mTake my ${0x27}[1;32mlove"
             )
         assertThat(renderer.getScrollbackTop()).isEqualTo(0)
     }

@@ -32,6 +32,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val output = mutableListOf<String>()
     private var scrollbackTop = 0
 
+    private var hadPartialLine = false
+
     private var input = ""
     private var status = ""
     private var cursor = 0
@@ -65,7 +67,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
             if (i >= lastLineEnd) {
                 when (buffer[i]) {
                     '\n' -> {
-                        appendOutputLine(buffer.substring(lastLineEnd, i))
+                        appendOutputLineInternal(buffer.substring(lastLineEnd, i))
                         if (i + 1 < count && buffer[i + 1] == '\r') {
                             lastLineEnd = i + 2
                         } else {
@@ -73,28 +75,35 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
                         }
                     }
                     '\r' -> {
-                        appendOutputLine(buffer.substring(lastLineEnd, i))
-                        lastLineEnd = i + 2
+                        appendOutputLineInternal(buffer.substring(lastLineEnd, i))
+                        if (i + 1 < count && buffer[i + 1] == '\n') {
+                            lastLineEnd = i + 2
+                        } else {
+                            lastLineEnd = i + 1
+                        }
                     }
                 }
             }
         }
 
         if (lastLineEnd < count) {
-            appendOutputLine(buffer.substring(lastLineEnd, count))
-        }
-    }
-
-    override fun appendOutputLine(line: String) {
-        val atBottom = scrollbackTop + outputWindowHeight == output.size
-        output.add(line)
-
-        if (atBottom && output.size > outputWindowHeight) {
-            ++scrollbackTop
+            appendOutputLineInternal(buffer.substring(lastLineEnd, count))
+            hadPartialLine = true
+        } else {
+            // maybe we did some echo() or something before the rest
+            // came in? Either way, clear the flag
+            hadPartialLine = false
         }
 
         display()
     }
+
+    override fun appendOutputLine(line: String) {
+        appendOutputLineInternal(line)
+
+        display()
+    }
+
 
     override fun validate() {
         if (terminal is DumbTerminal) {
@@ -186,6 +195,22 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         window.resize(windowHeight, windowWidth)
         window.updateAnsi(workspace, cursorPos)
         terminal.flush()
+    }
+
+    private fun appendOutputLineInternal(line: String) {
+        if (hadPartialLine) {
+            hadPartialLine = false
+
+            val end = output.size - 1
+            output[end] += line
+        } else {
+            val atBottom = scrollbackTop + outputWindowHeight == output.size
+            output.add(line)
+
+            if (atBottom && output.size > outputWindowHeight) {
+                ++scrollbackTop
+            }
+        }
     }
 }
 
