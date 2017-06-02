@@ -30,6 +30,9 @@ class WordMotionKtTest {
 
         wordMotion(1, false).applyTo(buffer)
         assertThat(buffer.cursor).isEqualTo(30)
+
+        wordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(30)
     }
 
     @Test fun moveWord_spaceBack() {
@@ -41,6 +44,9 @@ class WordMotionKtTest {
 
         wordMotion(-1, false).applyTo(buffer)
         assertThat(buffer.cursor).isEqualTo(8)
+
+        wordMotion(-1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(0)
 
         wordMotion(-1, false).applyTo(buffer)
         assertThat(buffer.cursor).isEqualTo(0)
