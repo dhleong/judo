@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.alias.AliasManager
 import javax.swing.KeyStroke
 
 /**
@@ -11,6 +12,7 @@ class TestableJudoCore : IJudoCore {
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()
+    override val aliases = AliasManager()
 
     override fun scrollToBottom() {
         TODO("not implemented")
@@ -31,9 +33,6 @@ class TestableJudoCore : IJudoCore {
     override fun quit() {
         TODO("not implemented")
     }
-
-    override val aliases
-        get() = throw UnsupportedOperationException()
 
     override fun enterMode(modeName: String) {
         TODO("not implemented")

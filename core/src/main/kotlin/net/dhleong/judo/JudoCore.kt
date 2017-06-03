@@ -1,5 +1,7 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.alias.AliasProcessingException
 import net.dhleong.judo.complete.CompletionSourceFacade
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
@@ -140,14 +142,21 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     override fun send(text: String, fromMap: Boolean) {
         scrollToBottom()
 
-        val toSend = aliases.process(text)
+        val toSend: String
+        try {
+            toSend = aliases.process(text)
+        } catch (e: AliasProcessingException) {
+            appendError(e)
+            return
+        }
 
         if (!fromMap) {
             // record it even if we couldn't send it
             sendHistory.push(toSend)
 
             // also complete from sent things
-            completions.process(toSend)
+            // (but the original text, not the alias-processed one)
+            completions.process(text)
         }
 
         connection?.let {

@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.alias.IAliasManager
 import javax.swing.KeyStroke
 
 /**

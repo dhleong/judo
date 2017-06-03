@@ -43,5 +43,22 @@ class PythonCmdModeTest {
         assertThat(judo.maps)
             .containsExactly(arrayOf("custom", "a", "bc", true))
     }
+
+    @Test fun alias_static() {
+        mode.execute("alias('fun', 'fancy')")
+
+        assertThat(judo.aliases.hasAliasFor("fun")).isTrue()
+    }
+
+    @Test fun alias_fun() {
+        mode.execute("""
+            |def handleAlias(): return "awesome"
+            |alias('cool', handleAlias)
+            """.trimMargin())
+
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("this is cool"))
+            .isEqualTo("this is awesome")
+    }
 }
 
