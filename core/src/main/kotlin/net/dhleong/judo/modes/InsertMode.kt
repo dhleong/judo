@@ -64,12 +64,6 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer, completions: Comp
                 performTabCompletionFrom(key)
                 return
             }
-
-            key.hasCtrl() -> {
-                // ignore
-                judo.echo("${key.keyCode} == ${KeyEvent.VK_I} / ${key.keyChar}")
-                return
-            }
         }
 
         // input changed; suggestions go away
@@ -97,6 +91,11 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer, completions: Comp
         }
 
         if (mapping.couldMatch(input)) {
+            return
+        }
+
+        if (key.hasCtrl()) {
+            // ignore
             return
         }
 
