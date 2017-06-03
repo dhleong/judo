@@ -9,5 +9,5 @@ interface IAliasManager {
 
     fun define(inputSpec: String, parser: AliasProcesser)
 
-    fun process(input: String): String
+    fun process(input: CharSequence): CharSequence
 }

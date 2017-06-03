@@ -13,6 +13,7 @@ import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
+import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
@@ -26,6 +27,7 @@ import javax.swing.KeyStroke
 class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     override val aliases = AliasManager()
+    override val triggers = TriggerManager()
 
     private val buffer = InputBuffer()
     private val sendHistory = InputHistory(buffer)
@@ -144,7 +146,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
         val toSend: String
         try {
-            toSend = aliases.process(text)
+            toSend = aliases.process(text).toString()
         } catch (e: AliasProcessingException) {
             appendError(e)
             return
@@ -223,6 +225,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     fun processOutput(rawOutput: CharSequence) {
         completions.process(rawOutput)
+        triggers.process(rawOutput)
     }
 
     private fun activateMode(mode: Mode) {

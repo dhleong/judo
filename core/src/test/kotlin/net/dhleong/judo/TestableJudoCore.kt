@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.trigger.TriggerManager
 import javax.swing.KeyStroke
 
 /**
@@ -12,7 +13,9 @@ class TestableJudoCore : IJudoCore {
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()
+
     override val aliases = AliasManager()
+    override val triggers = TriggerManager()
 
     override fun scrollToBottom() {
         TODO("not implemented")

@@ -20,7 +20,7 @@ class AliasManager : IAliasManager {
 
     private val MAX_ITERATIONS = 50
 
-    override fun process(input: String): String {
+    override fun process(input: CharSequence): CharSequence {
         val builder = StringBuilder(input)
 
         // keep looping as long as *some* alias was applied,
@@ -35,13 +35,13 @@ class AliasManager : IAliasManager {
             throw AliasProcessingException("Infinite recursion detected", input)
         }
 
-        return builder.toString()
+        return builder
     }
 
     fun hasAliasFor(inputSpec: String): Boolean =
         aliases.any { it.original == inputSpec }
 }
 
-class AliasProcessingException(reason: String, original: String)
+class AliasProcessingException(reason: String, original: CharSequence)
     : IllegalStateException("$reason; input=`$original`")
 

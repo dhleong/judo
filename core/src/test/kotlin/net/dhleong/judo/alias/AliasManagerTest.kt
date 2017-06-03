@@ -20,7 +20,7 @@ class AliasManagerTest {
     @Test fun simpleReplace() {
         aliases.define("firefly", "serenity")
 
-        assertThat(aliases.process("this firefly is a fireflyfire"))
+        assertThat(process("this firefly is a fireflyfire"))
             .isEqualTo("this serenity is a fireflyfire")
     }
 
@@ -28,7 +28,7 @@ class AliasManagerTest {
         var count = 0
         aliases.define("firefly", { "firefly_${++count}" })
 
-        assertThat(aliases.process("this firefly that firefly"))
+        assertThat(process("this firefly that firefly"))
             .isEqualTo("this firefly_1 that firefly_2")
     }
 
@@ -36,7 +36,7 @@ class AliasManagerTest {
         aliases.define("cool", "VERY cool")
 
         assertThatThrownBy {
-            aliases.process("This is cool")
+            process("This is cool")
         }.isInstanceOf(AliasProcessingException::class.java)
             .hasMessageContaining("Infinite recursion")
     }
@@ -57,5 +57,6 @@ class AliasManagerTest {
     @Test fun replaceWithTwoVars_missing() {
     }
 
-
+    private fun process(input: CharSequence): String =
+        aliases.process(input).toString()
 }

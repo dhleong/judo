@@ -26,6 +26,11 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
             defineAlias(it[0] as String, it[1])
         }
 
+        // triggers
+        python["trigger"] = asMaybeDecorator<Any>(2) {
+            defineTrigger(it[0] as String, it[1] as PyFunction)
+        }
+
         // map invocations
         python["map"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], true) }
         python["noremap"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], false) }
@@ -51,7 +56,7 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
 
     private fun defineAlias(alias: String, handler: Any) {
         if (handler is PyFunction) {
-            judo.aliases.define(alias, {args ->
+            judo.aliases.define(alias, { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                        .__tojava__(String::class.java)
                     as String
@@ -59,6 +64,12 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
         } else {
             judo.aliases.define(alias, handler as String)
         }
+    }
+
+    private fun defineTrigger(alias: String, handler: PyFunction) {
+        judo.triggers.define(alias, { args ->
+            handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+        })
     }
 
     override fun execute(code: String) {

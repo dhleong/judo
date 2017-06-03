@@ -57,7 +57,7 @@ class PythonCmdModeTest {
             """.trimMargin())
 
         assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
-        assertThat(judo.aliases.process("this is cool"))
+        assertThat(judo.aliases.process("this is cool").toString())
             .isEqualTo("this is awesome")
     }
 
@@ -68,8 +68,30 @@ class PythonCmdModeTest {
             """.trimMargin())
 
         assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
-        assertThat(judo.aliases.process("this is cool"))
+        assertThat(judo.aliases.process("this is cool").toString())
             .isEqualTo("this is awesome")
+    }
+
+    @Test fun trigger() {
+        mode.execute("""
+            |def handleTrigger(): echo("awesome")
+            |trigger('cool', handleTrigger)
+            """.trimMargin())
+
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        judo.triggers.process("this is cool")
+        assertThat(judo.echos).containsExactly("awesome")
+    }
+
+    @Test fun trigger_decorator() {
+        mode.execute("""
+            |@trigger('cool')
+            |def handleTrigger(): echo("awesome")
+            """.trimMargin())
+
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        judo.triggers.process("this is cool")
+        assertThat(judo.echos).containsExactly("awesome")
     }
 }
 
