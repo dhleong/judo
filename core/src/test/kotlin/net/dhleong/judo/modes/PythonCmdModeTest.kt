@@ -60,5 +60,16 @@ class PythonCmdModeTest {
         assertThat(judo.aliases.process("this is cool"))
             .isEqualTo("this is awesome")
     }
+
+    @Test fun alias_funDecorator() {
+        mode.execute("""
+            |@alias('cool')
+            |def handleAlias(): return "awesome"
+            """.trimMargin())
+
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("this is cool"))
+            .isEqualTo("this is awesome")
+    }
 }
 

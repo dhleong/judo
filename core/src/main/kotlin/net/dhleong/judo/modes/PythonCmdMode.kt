@@ -22,7 +22,9 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
         python = PythonInterpreter()
 
         // aliasing
-        python["alias"] = asUnitPyFn<Any>(2) { defineAlias(it[0] as String, it[1]) }
+        python["alias"] = asMaybeDecorator<Any>(2) {
+            defineAlias(it[0] as String, it[1])
+        }
 
         // map invocations
         python["map"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], true) }
@@ -68,19 +70,44 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
     }
 }
 
+/**
+ * Create a Python function that can be used either as a normal
+ * function OR a decorator
+ */
+inline private fun <reified T: Any> asMaybeDecorator(
+        takeArgs: Int,
+        crossinline fn: (Array<T>) -> Unit): PyObject {
+    return asPyFn<T, PyObject?>(takeArgs, minArgs = takeArgs-1) { args ->
+        if (args.size == takeArgs - 1) {
+            // decorator mode; we return a function that accepts
+            // a function and finally calls `fn`
+            asPyFn<PyObject, PyObject>(1) { wrappedArgs ->
+                val combined = args + (wrappedArgs[0] as T)
+                fn(combined)
+                wrappedArgs[0]
+            }
+        } else {
+            // regular function call
+            fn(args)
+            null
+        }
+    }
+}
+
 inline private fun <reified T: Any> asUnitPyFn(
         takeArgs: Int = Int.MAX_VALUE,
         crossinline fn: (Array<T>) -> Unit): PyObject {
-    return asPyFn(takeArgs, fn)
+    return asPyFn(takeArgs, takeArgs, fn)
 }
 
 inline private fun <reified T: Any, reified R> asPyFn(
         takeArgs: Int = Int.MAX_VALUE,
+        minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> R): PyObject {
     return object : PyObject() {
         override fun __call__(args: Array<PyObject>, keywords: Array<String>): PyObject {
-            if (takeArgs != Int.MAX_VALUE && args.size < takeArgs) {
-                throw IllegalArgumentException("Expected $takeArgs arguments; got ${args.size}")
+            if (minArgs != Int.MAX_VALUE && args.size < minArgs) {
+                throw IllegalArgumentException("Expected $minArgs arguments; got ${args.size}")
             }
 
             val typedArgs =
