@@ -73,4 +73,8 @@ class InputBuffer {
             minOf(size, cursor + distance)
         )
     }
+
+    fun replace(range: IntRange, replacement: CharSequence) {
+        buffer.replace(range.start, range.endInclusive + 1, replacement.toString())
+    }
 }

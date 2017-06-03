@@ -3,6 +3,7 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.util.hasShift
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.InputStream
@@ -19,7 +20,7 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
     val inputBuffer = InputBuffer()
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
-        if (key.modifiers != 0 && key.modifiers != InputEvent.SHIFT_DOWN_MASK) {
+        if (key.modifiers != 0 && key.hasShift()) {
             // TODO mappings?
             return
         }

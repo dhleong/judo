@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.complete.CompletionSourceFacade
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.modes.BaseCmdMode
@@ -11,6 +12,7 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
 import java.io.File
 import javax.swing.KeyStroke
@@ -25,14 +27,21 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private val buffer = InputBuffer()
     private val sendHistory = InputHistory(buffer)
+    private val completions = CompletionSourceFacade.create()
 
     private val normalMode = NormalMode(this, buffer, sendHistory)
-    private val modes = mapOf(
-        "insert" to InsertMode(this, buffer),
-        "normal" to normalMode,
-        "cmd" to PythonCmdMode(this),
-        "rsearch" to ReverseInputSearchMode(this, buffer, sendHistory)
-    )
+
+    private val modes = sequenceOf(
+
+        InsertMode(this, buffer, completions),
+        normalMode,
+        PythonCmdMode(this),
+        ReverseInputSearchMode(this, buffer, sendHistory)
+
+    ).fold(HashMap<String, Mode>(), { map, mode ->
+        map[mode.name] = mode
+        map
+    })
 
     private var currentMode: Mode = normalMode
 
@@ -58,6 +67,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 //            logFile.appendText(String(buffer, 0, count))
 //            logFile.appendText("{PACKET_BREAK}")
             renderer.appendOutput(buffer, count)
+            processOutput(stripAnsi(buffer, count))
         }
 
         this.connection = connection
@@ -135,6 +145,9 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         if (!fromMap) {
             // record it even if we couldn't send it
             sendHistory.push(toSend)
+
+            // also complete from sent things
+            completions.process(toSend)
         }
 
         connection?.let {
@@ -146,7 +159,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     override fun feedKey(stroke: KeyStroke, remap: Boolean) {
-//        echo("## feedKey($stroke)")
+        echo("## feedKey($stroke)")
         if (stroke.keyCode == KeyEvent.VK_ESCAPE) {
             activateMode(normalMode)
             return
@@ -197,6 +210,10 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
             Thread.yield()
         }
+    }
+
+    fun processOutput(rawOutput: CharSequence) {
+        completions.process(rawOutput)
     }
 
     private fun activateMode(mode: Mode) {

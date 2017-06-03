@@ -147,7 +147,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     override fun readKey(): KeyStroke {
         val char = terminal.reader().read()
         return when (char) {
-            27 -> KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
+            27 -> readEscape()
             127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
             '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
 
@@ -158,6 +158,29 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
             else -> KeyStroke.getKeyStroke(char.toChar())
         }
+    }
+
+    /**
+     * Quickly attempt to read either an escape sequence,
+     * or a simple <esc> key press
+     */
+    private fun readEscape(): KeyStroke {
+        val reader = terminal.reader()
+        val peek = reader.peek(1)
+        if (peek == 91) { // 91 == [
+            // looks like an escape sequence
+            reader.read() // consume [
+
+            val argPeek = reader.read(1)
+            when (argPeek) {
+                90 -> return KeyStroke.getKeyStroke(
+                    KeyEvent.VK_TAB,
+                    KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK
+                )
+            }
+        }
+
+        return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
     }
 
     override fun scrollLines(count: Int) {

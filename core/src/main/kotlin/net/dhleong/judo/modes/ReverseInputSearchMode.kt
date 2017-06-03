@@ -5,6 +5,7 @@ import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -35,7 +36,7 @@ class ReverseInputSearchMode(
             }
 
             KeyEvent.VK_R -> {
-                if ((key.modifiers or KeyEvent.CTRL_DOWN_MASK) != 0) {
+                if (key.hasCtrl()) {
                     trySearch(true)
                     return
                 }
