@@ -77,50 +77,15 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         terminal.close()
     }
 
-    @Synchronized override fun appendOutput(buffer: CharArray, count: Int) {
-        var lastLineEnd = 0
-        @Suppress("LoopToCallChain") // actually it seems we need the loop here
-        for (i in 0 until count) {
-            if (i >= lastLineEnd) {
-                when (buffer[i]) {
-                    '\n' -> {
-                        appendOutputLineInternal(buffer.substring(lastLineEnd, i))
-                        if (i + 1 < count && buffer[i + 1] == '\r') {
-                            lastLineEnd = i + 2
-                        } else {
-                            lastLineEnd = i + 1
-                        }
-                    }
-                    '\r' -> {
-                        appendOutputLineInternal(buffer.substring(lastLineEnd, i))
-                        if (i + 1 < count && buffer[i + 1] == '\n') {
-                            lastLineEnd = i + 2
-                        } else {
-                            lastLineEnd = i + 1
-                        }
-                    }
-                }
-            }
-        }
-
-        if (lastLineEnd < count) {
-            appendOutputLineInternal(buffer.substring(lastLineEnd, count))
-            hadPartialLine = true
-        } else {
-            // maybe we did some echo() or something before the rest
-            // came in? Either way, clear the flag
-            hadPartialLine = false
-        }
-
-        display()
-    }
-
-    @Synchronized override fun appendOutputLine(line: String) {
+    override fun appendOutput(line: String, isPartialLine: Boolean) {
         appendOutputLineInternal(line)
-
-        display()
+        hadPartialLine = isPartialLine
     }
 
+    override fun inTransaction(block: () -> Unit) {
+        block()
+        display()
+    }
 
     override fun validate() {
         if (terminal is DumbTerminal) {
@@ -286,8 +251,6 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         } else {
             appendOutputAttributedLine(builder.toAttributedString())
         }
-
-//        appendOutputAttributedLine(AttributedString.fromAnsi(line))
     }
 
     /**

@@ -16,8 +16,14 @@ interface JudoRenderer : Closeable {
 
     fun validate()
 
-    fun appendOutputLine(line: String)
-    fun appendOutput(buffer: CharArray, count: Int)
+    /**
+     * @param isPartialLine If true, the next call to this function
+     * should append its value to this line instead of adding it
+     * as a new line
+     */
+    fun appendOutput(line: String, isPartialLine: Boolean = false)
+
+    fun inTransaction(block: () -> Unit)
 
     /**
      * Current lines scrolled back

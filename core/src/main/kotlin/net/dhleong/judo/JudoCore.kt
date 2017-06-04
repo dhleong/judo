@@ -70,7 +70,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         connection.forEachLine { buffer, count ->
 //            logFile.appendText(String(buffer, 0, count))
 //            logFile.appendText("{PACKET_BREAK}")
-            renderer.appendOutput(buffer, count)
+            appendOutput(buffer, count)
             processOutput(stripAnsi(buffer, count))
         }
 
@@ -89,7 +89,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     override fun echo(vararg objects: Any?) {
         // TODO colors?
-        renderer.appendOutputLine(objects.joinToString(" "))
+        renderer.appendOutput(objects.joinToString(" "))
     }
 
     override fun enterMode(modeName: String) {
@@ -151,6 +151,11 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             appendError(e)
             return
         }
+
+        // always output what we sent
+        // TODO except... don't echo if the server has told us not to
+        // (EG: passwords)
+        echo(toSend) // TODO color?
 
         if (!fromMap) {
             // record it even if we couldn't send it
@@ -251,13 +256,53 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     private fun appendError(e: Throwable, prefix: String = "") {
-        renderer.appendOutputLine("$prefix${e.message}")
+        renderer.appendOutput("$prefix${e.message}")
         e.stackTrace.map { "  $it" }
-            .forEach(renderer::appendOutputLine)
+            .forEach { renderer.appendOutput(it) }
         e.cause?.let {
             appendError(it, "Caused by: ")
         }
     }
 
+    internal fun appendOutput(buffer: CharArray, count: Int) {
+        // TODO process each line separately for prompts and strip it out (?)
+        // or maybe we process that BEFORE outputting...
+        renderer.inTransaction {
+            var lastLineEnd = 0
+
+            @Suppress("LoopToCallChain") // actually it seems we need the loop here
+            for (i in 0 until count) {
+                if (i >= lastLineEnd) {
+                    val char = buffer[i]
+                    if (!(char == '\n' || char == '\r')) continue
+
+                    val opposite =
+                        if (char == '\n') '\r'
+                        else '\n'
+
+                    renderer.appendOutput(
+                        buffer.substring(lastLineEnd, i),
+                        isPartialLine = false
+                    )
+
+                    if (i + 1 < count && buffer[i + 1] == opposite) {
+                        lastLineEnd = i + 2
+                    } else {
+                        lastLineEnd = i + 1
+                    }
+                }
+            }
+
+            if (lastLineEnd < count) {
+                renderer.appendOutput(
+                    buffer.substring(lastLineEnd, count),
+                    isPartialLine = true
+                )
+            }
+        }
+    }
 }
 
+
+private fun CharArray.substring(start: Int, end: Int) =
+    String(this, start, end - start)
