@@ -3,7 +3,6 @@ package net.dhleong.judo.alias
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -41,20 +40,39 @@ class AliasManagerTest {
             .hasMessageContaining("Infinite recursion")
     }
 
-    @Ignore("TODO")
     @Test fun replaceWithOneVar() {
+        aliases.define("admire $1", "This $1 is VERY cool")
+
+        assertThat(process("admire shiny"))
+            .isEqualTo("This shiny is VERY cool")
     }
 
-    @Ignore("TODO")
+    @Test fun replaceWithOneVar_func() {
+        aliases.define("admire $1", { args -> "This ${args[0]} is VERY cool"})
+
+        assertThat(process("admire shiny"))
+            .isEqualTo("This shiny is VERY cool")
+    }
+
     @Test fun replaceWithOneVar_missing() {
+        aliases.define("admire $1", "This $1 is VERY cool")
+
+        assertThat(process("admire "))
+            .isEqualTo("admire ")
     }
 
-    @Ignore("TODO")
     @Test fun replaceWithTwoVars() {
+        aliases.define("admire $1 with $2", "This $1 is VERY $2")
+
+        assertThat(process("admire shiny with awesome"))
+            .isEqualTo("This shiny is VERY awesome")
     }
 
-    @Ignore("TODO")
     @Test fun replaceWithTwoVars_missing() {
+        aliases.define("admire $1 with $2", "This $1 is VERY $2")
+
+        assertThat(process("admire shiny awesome"))
+            .isEqualTo("admire shiny awesome")
     }
 
     private fun process(input: CharSequence): String =

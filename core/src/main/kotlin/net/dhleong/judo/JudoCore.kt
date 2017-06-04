@@ -265,12 +265,9 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     internal fun appendOutput(buffer: CharArray, count: Int) {
-        // TODO process each line separately for prompts and strip it out (?)
-        // or maybe we process that BEFORE outputting...
         renderer.inTransaction {
             var lastLineEnd = 0
 
-            @Suppress("LoopToCallChain") // actually it seems we need the loop here
             for (i in 0 until count) {
                 if (i >= lastLineEnd) {
                     val char = buffer[i]
