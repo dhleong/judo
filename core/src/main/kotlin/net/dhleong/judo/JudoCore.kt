@@ -13,6 +13,7 @@ import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
+import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.stripAnsi
@@ -28,6 +29,9 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
+    override val prompts = PromptManager()
+
+    private val parsedPrompts = ArrayList<String>(1)
 
     private val buffer = InputBuffer()
     private val sendHistory = InputHistory(buffer)
@@ -53,6 +57,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private var connection: Connection? = null
 
+    private val statusLineWorkspace = StringBuilder(128)
+
     init {
         activateMode(currentMode)
     }
@@ -70,8 +76,16 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         connection.forEachLine { buffer, count ->
 //            logFile.appendText(String(buffer, 0, count))
 //            logFile.appendText("{PACKET_BREAK}")
-            appendOutput(buffer, count)
-            processOutput(stripAnsi(buffer, count))
+            renderer.inTransaction {
+                try {
+                    val asCharSequence = StringBuilder(count).append(buffer, 0, count)
+                    val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
+                    appendOutput(withoutPrompts)
+                    processOutput(stripAnsi(withoutPrompts))
+                } catch (e: Throwable) {
+                    appendError(e, "ERROR")
+                }
+            }
         }
 
         this.connection = connection
@@ -234,15 +248,17 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     private fun activateMode(mode: Mode) {
-        currentMode = mode
-        mode.onEnter()
+        renderer.inTransaction {
+            currentMode = mode
+            mode.onEnter()
 
-        updateInputLine()
+            updateInputLine()
 
-        if (mode is BaseCmdMode) {
-            renderer.updateStatusLine(":", 1)
-        } else {
-            renderer.updateStatusLine("[${mode.name.toUpperCase()}]")
+            if (mode is BaseCmdMode) {
+                renderer.updateStatusLine(":", 1)
+            } else {
+                updateStatusLine(mode)
+            }
         }
     }
 
@@ -255,6 +271,24 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         }
     }
 
+    private fun updateStatusLine(mode: Mode) {
+        val modeIndicator = "[${mode.name.toUpperCase()}]"
+        val availableCols = renderer.windowWidth - modeIndicator.length
+        statusLineWorkspace.setLength(0)
+        if (parsedPrompts.isNotEmpty()) {
+            statusLineWorkspace.append(parsedPrompts[0].subSequence(
+                0, minOf(parsedPrompts[0].length, availableCols)))
+        }
+
+        for (i in statusLineWorkspace.length until availableCols) {
+            statusLineWorkspace.append(" ")
+        }
+
+        statusLineWorkspace.append(modeIndicator)
+
+        renderer.updateStatusLine(statusLineWorkspace.toString())
+    }
+
     private fun appendError(e: Throwable, prefix: String = "") {
         renderer.appendOutput("$prefix${e.message}")
         e.stackTrace.map { "  $it" }
@@ -264,7 +298,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         }
     }
 
-    internal fun appendOutput(buffer: CharArray, count: Int) {
+    internal fun appendOutput(buffer: CharSequence) {
+        val count = buffer.length
         renderer.inTransaction {
             var lastLineEnd = 0
 
@@ -278,7 +313,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
                         else '\n'
 
                     renderer.appendOutput(
-                        buffer.substring(lastLineEnd, i),
+                        buffer.subSequence(lastLineEnd, i),
                         isPartialLine = false
                     )
 
@@ -292,14 +327,20 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
             if (lastLineEnd < count) {
                 renderer.appendOutput(
-                    buffer.substring(lastLineEnd, count),
+                    buffer.subSequence(lastLineEnd, count),
                     isPartialLine = true
                 )
             }
         }
     }
+
+    private fun onPrompt(index: Int, prompt: String) {
+        if (parsedPrompts.lastIndex < index) {
+            parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { "" })
+        }
+
+        parsedPrompts[index] = prompt
+        updateStatusLine(currentMode)
+    }
 }
 
-
-private fun CharArray.substring(start: Int, end: Int) =
-    String(this, start, end - start)

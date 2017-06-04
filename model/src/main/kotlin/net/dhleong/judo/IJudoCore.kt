@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.IAliasManager
+import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.trigger.ITriggerManager
 import javax.swing.KeyStroke
 
@@ -10,6 +11,7 @@ import javax.swing.KeyStroke
 interface IJudoCore {
 
     val aliases: IAliasManager
+    val prompts: IPromptManager
     val triggers: ITriggerManager
 
     fun echo(vararg objects: Any?)

@@ -24,6 +24,8 @@ class JudoCoreTest {
                 outputLines.add(line to isPartial)
             }
 
+            "getWindowWidth" -> 90
+
             "inTransaction" -> {
                 @Suppress("UNCHECKED_CAST")
                 val block = args[0] as () -> Unit
@@ -98,6 +100,3 @@ class JudoCoreTest {
     }
 }
 
-fun JudoCore.appendOutput(string: String) {
-    appendOutput(string.toCharArray(), string.length)
-}

@@ -1,8 +1,10 @@
 package net.dhleong.judo.alias
 
+import net.dhleong.judo.util.IStringBuilder
+
 class AliasManager : IAliasManager {
 
-    val aliases = mutableListOf<Alias>()
+    internal val aliases = mutableListOf<Alias>()
 
     override fun clear() =
         aliases.clear()
@@ -18,7 +20,7 @@ class AliasManager : IAliasManager {
     private val MAX_ITERATIONS = 50
 
     override fun process(input: CharSequence): CharSequence {
-        val builder = StringBuilder(input)
+        val builder = IStringBuilder.from(StringBuilder(input))
 
         // keep looping as long as *some* alias was applied,
         //  in case there was a recursive alias
@@ -32,6 +34,17 @@ class AliasManager : IAliasManager {
             throw AliasProcessingException("Infinite recursion detected", input)
         }
 
+        return builder
+    }
+
+    /**
+     * Non-recursive processing that supports a postProcess step
+     */
+    fun process(input: CharSequence, postProcess: (Int, String) -> String): CharSequence {
+        val builder = IStringBuilder.from(input)
+        aliases.forEachIndexed { index, alias ->
+            alias.parse(builder, { postProcess(index, it) })
+        }
         return builder
     }
 

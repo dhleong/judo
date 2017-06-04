@@ -6,6 +6,7 @@ import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.terminal.impl.DumbTerminal
+import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Display
@@ -47,6 +48,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val workspace = mutableListOf<AttributedString>()
     private val originalAttributes: Attributes
 
+    private var isInTransaction = false
+
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
         terminal.enterRawMode()
@@ -77,14 +80,22 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         terminal.close()
     }
 
-    override fun appendOutput(line: String, isPartialLine: Boolean) {
+    override fun appendOutput(line: CharSequence, isPartialLine: Boolean) {
         appendOutputLineInternal(line)
         hadPartialLine = isPartialLine
     }
 
+    // TODO it'd be great if this could be inline somehow...
     override fun inTransaction(block: () -> Unit) {
+        val alreadyInTransaction = isInTransaction
+        isInTransaction = true
+
         block()
-        display()
+
+        if (!alreadyInTransaction) {
+            isInTransaction = false
+            display()
+        }
     }
 
     override fun validate() {
@@ -97,7 +108,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         input = AttributedString.fromAnsi(line)
         this.cursor = cursor
         isCursorOnStatus = false
-        display()
+        if (!isInTransaction) display()
     }
 
     override fun updateStatusLine(line: String, cursor: Int) {
@@ -106,7 +117,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
             this.cursor = cursor
             isCursorOnStatus = true
         }
-        display()
+        if (!isInTransaction) display()
     }
 
     override fun readKey(): KeyStroke {
@@ -155,7 +166,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
                 output.size - outputWindowHeight,
                 scrollbackBottom + count)
         )
-        display()
+        if (!isInTransaction) display()
     }
 
     override fun scrollPages(count: Int) {
@@ -164,7 +175,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     override fun scrollToBottom() {
         scrollbackBottom = 0
-        display()
+        if (!isInTransaction) display()
     }
 
     fun getOutputLines(): List<String> = output.map { it.toAnsi() }.toList()
@@ -181,7 +192,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         windowWidth = size.columns
         outputWindowHeight = windowHeight - 2
         window.resize(windowHeight, windowWidth)
-        display()
+        if (!isInTransaction) display()
     }
 
     private fun handleSignal(signal: Terminal.Signal) {
@@ -236,10 +247,14 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
      * Wrapper for [appendOutputLineInternal] that hard-wraps
      * lines based on current window width
      */
-    private fun appendOutputLineInternal(line: String) {
+    private fun appendOutputLineInternal(line: CharSequence) {
         val builder = AttributedStringBuilder(line.length)
         builder.tabs(0)
-        builder.appendAnsi(line)
+        if (line is AttributedCharSequence) {
+            builder.append(line.toAttributedString())
+        } else {
+            builder.appendAnsi(line.toString())
+        }
 
         if (builder.columnLength() > windowWidth) {
 
@@ -276,6 +291,3 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 }
-
-private fun CharArray.substring(start: Int, end: Int) =
-    String(this, start, end - start)

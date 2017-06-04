@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.trigger.TriggerManager
 import javax.swing.KeyStroke
 
@@ -16,6 +17,7 @@ class TestableJudoCore : IJudoCore {
 
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
+    override val prompts = PromptManager()
 
     override fun scrollToBottom() {
         TODO("not implemented")

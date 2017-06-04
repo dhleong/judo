@@ -93,5 +93,20 @@ class PythonCmdModeTest {
         judo.triggers.process("this is cool")
         assertThat(judo.echos).containsExactly("awesome")
     }
+
+    @Test fun prompt() {
+
+        mode.execute("""
+            |prompt('^Input($1)', 'prompt $1>')
+            """.trimMargin())
+
+        assertThat(judo.prompts.size).isEqualTo(1)
+        var lastPrompt: String? = null
+        val result = judo.prompts.process("Input(42)", { _, prompt ->
+            lastPrompt = prompt
+        })
+        assertThat(result).isEmpty()
+        assertThat(lastPrompt).isEqualToIgnoringCase("prompt 42>")
+    }
 }
 

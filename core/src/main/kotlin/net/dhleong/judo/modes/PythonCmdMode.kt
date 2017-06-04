@@ -26,6 +26,11 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
             defineAlias(it[0] as String, it[1])
         }
 
+        // prompts
+        python["prompt"] = asMaybeDecorator<Any>(2) {
+            definePrompt(it[0] as String, it[1])
+        }
+
         // triggers
         python["trigger"] = asMaybeDecorator<Any>(2) {
             defineTrigger(it[0] as String, it[1] as PyFunction)
@@ -65,6 +70,19 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
             judo.aliases.define(alias, handler as String)
         }
     }
+
+    private fun definePrompt(alias: String, handler: Any) {
+        if (handler is PyFunction) {
+            judo.prompts.define(alias, { args ->
+                handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+                    .__tojava__(String::class.java)
+                    as String
+            })
+        } else {
+            judo.prompts.define(alias, handler as String)
+        }
+    }
+
 
     private fun defineTrigger(alias: String, handler: PyFunction) {
         judo.triggers.define(alias, { args ->
