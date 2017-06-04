@@ -8,8 +8,11 @@ import org.jline.utils.AttributedStringBuilder
 class ReplaceableAttributedStringBuilder(capacity: Int)
         : AttributedStringBuilder(capacity), IStringBuilder {
 
+    constructor(ansiString: String) : this(ansiString.length) {
+        appendAnsi(ansiString)
+    }
+
     override fun replace(start: Int, end: Int, str: String) {
-        val buffer = buffer()
         var actualEnd = end
 
         if (start < 0)
@@ -24,9 +27,13 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
         val len = str.length
         val newCount = length + len - (actualEnd - start)
         ensureCapacity(newCount)
+        val buffer = buffer()
 
         System.arraycopy(buffer, actualEnd, buffer, start + len, length - actualEnd)
         str.toCharArray(buffer, start)
         setLength(newCount)
     }
+
+    override fun toAnsiString(): String =
+        toAnsi()
 }

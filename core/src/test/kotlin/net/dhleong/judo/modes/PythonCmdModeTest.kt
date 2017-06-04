@@ -108,5 +108,19 @@ class PythonCmdModeTest {
         assertThat(result).isEmpty()
         assertThat(lastPrompt).isEqualToIgnoringCase("prompt 42>")
     }
+
+    @Test fun sharedVars() {
+
+        mode.execute("""
+            |value = "magic"
+            """.trimMargin())
+
+        mode.execute("""
+            |echo(value)
+            """.trimMargin())
+
+        assertThat(judo.echos)
+            .containsExactly("magic")
+    }
 }
 

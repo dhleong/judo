@@ -11,6 +11,7 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
+import java.awt.SystemColor.window
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.IOException
@@ -83,6 +84,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     override fun appendOutput(line: CharSequence, isPartialLine: Boolean) {
         appendOutputLineInternal(line)
         hadPartialLine = isPartialLine
+
+        if (!isInTransaction) display()
     }
 
     // TODO it'd be great if this could be inline somehow...
@@ -119,6 +122,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
         if (!isInTransaction) display()
     }
+
 
     override fun readKey(): KeyStroke {
         val char = terminal.reader().read()
@@ -291,3 +295,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 }
+
+private fun ansiToAttributed(line: CharSequence): AttributedString =
+    if (line is AttributedCharSequence) line.toAttributedString()
+    else AttributedString.fromAnsi(line.toString())
+

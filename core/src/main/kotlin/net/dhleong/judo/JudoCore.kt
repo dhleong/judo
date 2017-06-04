@@ -15,6 +15,7 @@ import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.trigger.TriggerManager
+import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
@@ -31,7 +32,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
 
-    private val parsedPrompts = ArrayList<String>(1)
+    private val parsedPrompts = ArrayList<IStringBuilder>(1)
 
     private val buffer = InputBuffer()
     private val sendHistory = InputHistory(buffer)
@@ -57,7 +58,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private var connection: Connection? = null
 
-    private val statusLineWorkspace = StringBuilder(128)
+    private val statusLineWorkspace = IStringBuilder.create(128)
 
     init {
         activateMode(currentMode)
@@ -272,12 +273,19 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     private fun updateStatusLine(mode: Mode) {
+        renderer.updateStatusLine(buildStatusLine(mode).toAnsiString())
+    }
+
+    internal fun buildStatusLine(mode: Mode): IStringBuilder {
         val modeIndicator = "[${mode.name.toUpperCase()}]"
         val availableCols = renderer.windowWidth - modeIndicator.length
         statusLineWorkspace.setLength(0)
         if (parsedPrompts.isNotEmpty()) {
-            statusLineWorkspace.append(parsedPrompts[0].subSequence(
-                0, minOf(parsedPrompts[0].length, availableCols)))
+            // TODO support multiple prompts?
+            val prompt = parsedPrompts[0]
+            val promptColsToPrint = minOf(prompt.length, availableCols)
+            val partialPrompt = prompt.subSequence(0, promptColsToPrint)
+            statusLineWorkspace.append(partialPrompt)
         }
 
         for (i in statusLineWorkspace.length until availableCols) {
@@ -285,8 +293,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         }
 
         statusLineWorkspace.append(modeIndicator)
-
-        renderer.updateStatusLine(statusLineWorkspace.toString())
+        return statusLineWorkspace
     }
 
     private fun appendError(e: Throwable, prefix: String = "") {
@@ -334,12 +341,12 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         }
     }
 
-    private fun onPrompt(index: Int, prompt: String) {
+    internal fun onPrompt(index: Int, prompt: CharSequence) {
         if (parsedPrompts.lastIndex < index) {
-            parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { "" })
+            parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { IStringBuilder.EMPTY })
         }
 
-        parsedPrompts[index] = prompt
+        parsedPrompts[index] = IStringBuilder.from(prompt)
         updateStatusLine(currentMode)
     }
 }

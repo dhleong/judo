@@ -1,15 +1,18 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.lang.reflect.Proxy
+import javax.swing.KeyStroke
 
 /**
  * @author dhleong
  */
 class JudoCoreTest {
 
+    var windowWidth = 90
     val outputLines = mutableListOf<Pair<String, Boolean>>()
 
     val renderer: JudoRenderer = Proxy.newProxyInstance(
@@ -24,7 +27,7 @@ class JudoCoreTest {
                 outputLines.add(line to isPartial)
             }
 
-            "getWindowWidth" -> 90
+            "getWindowWidth" -> windowWidth
 
             "inTransaction" -> {
                 @Suppress("UNCHECKED_CAST")
@@ -97,6 +100,28 @@ class JudoCoreTest {
                 "Take me where..."              to false,
                 "I don't care, I'm still free"  to true
             )
+    }
+
+    @Test fun buildPromptWithAnsi() {
+        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
+        judo.onPrompt(0, prompt)
+        windowWidth = 12
+
+        val status = judo.buildStatusLine(object : Mode {
+            override val name = "Test"
+
+            override fun feedKey(key: KeyStroke, remap: Boolean) {
+                TODO("not implemented")
+            }
+
+            override fun onEnter() {
+                TODO("not implemented")
+            }
+        })
+
+        assertThat(status.toAnsiString()).isEqualTo(
+            "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"
+        )
     }
 }
 
