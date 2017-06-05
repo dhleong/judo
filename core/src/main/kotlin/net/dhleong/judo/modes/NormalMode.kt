@@ -2,6 +2,7 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.InputBufferProvider
+import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
@@ -23,7 +24,8 @@ import javax.swing.KeyStroke
 class NormalMode(
         judo: IJudoCore,
         buffer: InputBuffer,
-        val history: InputHistory
+        val history: InputHistory,
+        val opMode: OperatorPendingMode
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {
@@ -43,13 +45,24 @@ class NormalMode(
             core.enterMode("insert")
         },
 
-        keys("c", "c") to { core ->
-            buffer.clear()
+        keys("c") to { core ->
+            opMode.fullLineMotionKey = 'c'
+            withOperator { range ->
+                buffer.deleteWithCursor(range)
+                core.enterMode("insert")
+            }
+        },
+        keys("C") to { core ->
+            buffer.delete(rangeOf(toEndMotion()))
             core.enterMode("insert")
         },
 
-        keys("d", "d") to { _ ->
-            buffer.clear()
+        keys("d") to { _ ->
+            opMode.fullLineMotionKey = 'd'
+            withOperator(buffer::deleteWithCursor)
+        },
+        keys("D") to { _ ->
+            buffer.delete(rangeOf(toEndMotion()))
         },
 
         keys("f") to motionAction(findMotion(1)),
@@ -94,11 +107,24 @@ class NormalMode(
         keys("ctrl r") to { core -> core.enterMode("rsearch") }
     )
 
+    private fun withOperator(action: OperatorFunc) {
+        judo.opfunc = action
+        fromOpMode = true
+        judo.enterMode("op")
+    }
+
     private val input = MutableKeys()
+
+    private var fromOpMode = false
 
     override fun onEnter() {
         input.clear()
-        buffer.cursor = maxOf(0, buffer.cursor - 1)
+
+        if (!fromOpMode) {
+            buffer.cursor = maxOf(0, buffer.cursor - 1)
+        }
+
+        fromOpMode = false
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {

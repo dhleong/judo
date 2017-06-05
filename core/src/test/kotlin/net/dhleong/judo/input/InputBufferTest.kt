@@ -61,5 +61,15 @@ class InputBufferTest {
         assertThat(buffer.toString()).isEmpty()
         assertThat(buffer.cursor).isEqualTo(0)
     }
+
+    @Test fun deleteWithCursorForward() {
+        buffer.set("0123 5678 101112")
+        buffer.cursor = 5
+
+        buffer.deleteWithCursor(5..10)
+        assertThat(buffer.toString())
+            .isEqualTo("0123 101112")
+        assertThat(buffer.cursor).isEqualTo(5)
+    }
 }
 

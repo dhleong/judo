@@ -9,6 +9,7 @@ import net.dhleong.judo.modes.BaseCmdMode
 import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
+import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.net.CommonsNetConnection
@@ -31,6 +32,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
+    override var opfunc: OperatorFunc? = null
 
     private val parsedPrompts = ArrayList<IStringBuilder>(1)
 
@@ -38,12 +40,14 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     private val sendHistory = InputHistory(buffer)
     private val completions = CompletionSourceFacade.create()
 
-    private val normalMode = NormalMode(this, buffer, sendHistory)
+    private val opMode = OperatorPendingMode(this, buffer)
+    private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
 
     private val modes = sequenceOf(
 
         InsertMode(this, buffer, completions),
         normalMode,
+        opMode,
         PythonCmdMode(this),
         ReverseInputSearchMode(this, buffer, sendHistory)
 

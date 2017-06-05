@@ -17,6 +17,9 @@ interface Motion {
         buffer.cursor = minOf(buffer.size, maxOf(0, end))
     }
 
+    fun calculate(readKey: () -> KeyStroke, buffer: InputBuffer) =
+        calculate(readKey, buffer.toChars(), buffer.cursor)
+
     fun calculate(judo: IJudoCore, buffer: InputBuffer) =
         calculate(judo::readKey, buffer.toChars(), buffer.cursor)
 

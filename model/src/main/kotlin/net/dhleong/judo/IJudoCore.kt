@@ -5,6 +5,8 @@ import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.trigger.ITriggerManager
 import javax.swing.KeyStroke
 
+typealias OperatorFunc = (IntRange) -> Unit
+
 /**
  * @author dhleong
  */
@@ -13,6 +15,8 @@ interface IJudoCore {
     val aliases: IAliasManager
     val prompts: IPromptManager
     val triggers: ITriggerManager
+
+    var opfunc: OperatorFunc?
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)

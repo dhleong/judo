@@ -67,6 +67,17 @@ class InputBuffer {
         buffer.delete(range.start, range.endInclusive + 1)
     }
 
+    fun deleteWithCursor(range: IntRange) {
+        if (range.start < range.endInclusive) {
+            // forward delete
+            delete(range.start..(range.endInclusive - 1))
+            cursor = range.start
+        } else {
+            delete(range.endInclusive..range.start)
+            cursor = range.endInclusive
+        }
+    }
+
     fun replace(range: IntRange, replacement: CharSequence) {
         buffer.replace(range.start, range.endInclusive + 1, replacement.toString())
     }
