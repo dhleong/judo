@@ -176,7 +176,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         // (EG: passwords)
         echo(toSend) // TODO color?
 
-        if (!fromMap) {
+        if (!fromMap && !toSend.isEmpty()) {
             // record it even if we couldn't send it
             sendHistory.push(toSend)
 

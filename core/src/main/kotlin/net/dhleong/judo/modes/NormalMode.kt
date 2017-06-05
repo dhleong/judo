@@ -12,6 +12,7 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
 import net.dhleong.judo.util.InputHistory
+import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
 /**
@@ -82,6 +83,12 @@ class NormalMode(
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
+        if (key.keyCode == KeyEvent.VK_ENTER) {
+            judo.send(buffer.toString(), false)
+            clearBuffer()
+            return
+        }
+
         input.push(key)
 
         if (remap) {
