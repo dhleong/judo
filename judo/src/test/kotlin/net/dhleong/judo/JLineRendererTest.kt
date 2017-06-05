@@ -9,7 +9,6 @@ import org.junit.Test
  * @author dhleong
  */
 class JLineRendererTest {
-    // TODO test splitting lines
     // TODO test scrollback
 
     @Test fun appendOutput_resumePartial() {
@@ -36,24 +35,78 @@ class JLineRendererTest {
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
-    @Ignore("FIXME: ansi codes list between split lines")
-    @Test fun appendOutput_resumePartial_fancy() {
+    @Test fun appendOutput_resumePartial_continueAnsi() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
         val renderer = JLineRenderer()
         renderer.windowWidth = 42
 
         renderer.appendOutput("", isPartialLine = false)
-        renderer.appendOutput("${ansi(1,36)}Take my ${ansi(1,32)}", isPartialLine = true)
+        renderer.appendOutput("${ansi(1,6)}Take my ", isPartialLine = true)
         renderer.appendOutput("love", isPartialLine = false)
 
         assertThat(renderer.getOutputLines())
             .containsExactly(
                 "",
-                "${ansi(1,36)}Take my ${ansi(1,32)}love"
+                "${ansi(1,6)}Take my love${ansi(0)}"
             )
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }
+
+    @Test fun appendOutput_resumePartial_continueAnsi2() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+
+        // continuation of the partial line has its own ansi;
+        // use previous line's ansi to start, but don't stomp
+        // on the new ansi
+        renderer.appendOutput("${ansi(1,6)}Take my ", isPartialLine = true)
+        renderer.appendOutput("lo${ansi(1,7)}ve", isPartialLine = false)
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly(
+                "${ansi(1,6)}Take my lo${ansi(fg=7)}ve${ansi(0)}"
+            )
+        assertThat(renderer.getScrollback()).isEqualTo(0)
+    }
+
+    @Ignore("FIXME: ansi codes at end of a partial line")
+    @Test fun appendOutput_resumePartial_trailingAnsi() {
+        // append without a line end and continue that line
+        // in a separate append. It's TCP so stuff happens
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+
+        renderer.appendOutput("", isPartialLine = false)
+        renderer.appendOutput("${ansi(1,6)}Take my ${ansi(1,2)}", isPartialLine = true)
+        renderer.appendOutput("love", isPartialLine = false)
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly(
+                "",
+                "${ansi(1,6)}Take my ${ansi(1,2)}love${ansi(0)}"
+            )
+        assertThat(renderer.getScrollback()).isEqualTo(0)
+    }
+
+    @Ignore("FIXME: partial ansi code at end of partial line")
+    @Test fun appendOutput_resumePartial_splitAnsi() {
+        // append without a line end and continue that line
+        // in a separate append. It's TCP so stuff happens
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+
+        val ansi = ansi(1,2)
+        val firstHalf = ansi.slice(0..3)
+        val secondHalf = ansi.slice(3..ansi.lastIndex)
+        renderer.appendOutput("${ansi(1,6)}Take my $firstHalf", isPartialLine = true)
+        renderer.appendOutput("${secondHalf}love", isPartialLine = false)
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly(
+                "${ansi(1,6)}Take my ${ansi(1,2)}love${ansi(0)}"
+            )
+        assertThat(renderer.getScrollback()).isEqualTo(0)    }
 
     @Test fun fitInputLineToWindow() {
         val renderer = JLineRenderer()
@@ -123,7 +176,6 @@ class JLineRendererTest {
 
         renderer.typeAndFit("Take my love, take my land, tak",
             expected = "…d, tak" to 7)
-
     }
 
     private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {

@@ -352,9 +352,16 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
             val end = output.size - 1
             val original = output[end]
-            val builder = AttributedStringBuilder(original.length + line.length)
-            builder.append(original)
-            builder.append(line)
+            val lineAsAnsi = line.toAnsi()
+            val builder = StylePersistingAttributedStringBuilder(original.length + lineAsAnsi.length)
+
+            // wacky hacks to persist the ansi style correctly.
+            // we should propose some upstream changes sometime...
+            builder.appendAndAdoptStyle(original)
+            builder.persistStyle(lineAsAnsi.length)
+            builder.appendAnsi(lineAsAnsi)
+
+//            builder.append(lineBuilder)
             output[end] = builder.toAttributedString()
         } else {
             val atBottom = scrollbackBottom == 0
@@ -365,5 +372,32 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
             }
         }
     }
+}
+
+class StylePersistingAttributedStringBuilder(capacity: Int): AttributedStringBuilder(capacity) {
+
+    fun appendAndAdoptStyle(string: AttributedString) {
+        append(string)
+        style(string.styleAt(string.lastIndex))
+    }
+
+    /**
+     * Persist the current style through the given count,
+     *  then restore length
+     */
+    fun persistStyle(count: Int) {
+        val len = length
+
+        append(FakeCharSequence(count))
+
+        setLength(len)
+    }
+}
+
+class FakeCharSequence(override val length: Int) : CharSequence {
+    override fun get(index: Int): Char = 0.toChar()
+
+    override fun subSequence(startIndex: Int, endIndex: Int): CharSequence =
+        FakeCharSequence(endIndex - startIndex)
 }
 
