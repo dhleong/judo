@@ -4,7 +4,6 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.hasShift
-import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.InputStream
 import javax.swing.KeyStroke
@@ -27,7 +26,7 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
         if (key.keyCode == KeyEvent.VK_ENTER) {
             val code = inputBuffer.toString()
             when (code) {
-                "q" -> {
+                "q", "q!", "qa", "qa!" -> {
                     judo.quit()
                     return
                 }
