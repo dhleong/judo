@@ -2,6 +2,8 @@ package net.dhleong.judo
 
 import java.io.Closeable
 
+typealias OnResizedEvent = () -> Unit
+
 /**
  * @author dhleong
  */
@@ -11,9 +13,19 @@ interface JudoRenderer : Closeable {
      * (or is emulating), eg VT100
      */
     val terminalType: String
+
     val windowHeight: Int
     val windowWidth: Int
 
+    /**
+     * Fired if the [windowWidth] or [windowHeight]
+     *  values changed; run inside a transaction
+     */
+    var onResized: OnResizedEvent?
+
+    /**
+     * Make sure this renderer can be used
+     */
     fun validate()
 
     /**

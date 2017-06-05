@@ -26,6 +26,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     override val terminalType: String
         get() = terminal.type
 
+    override var onResized: OnResizedEvent? = null
+
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
 
@@ -195,7 +197,11 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         windowWidth = size.columns
         outputWindowHeight = windowHeight - 2
         window.resize(windowHeight, windowWidth)
-        if (!isInTransaction) display()
+
+        inTransaction {
+            window.clear()
+            onResized?.invoke()
+        }
     }
 
     private fun handleSignal(signal: Terminal.Signal) {

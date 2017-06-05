@@ -62,6 +62,10 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     init {
         activateMode(currentMode)
+        renderer.onResized = {
+            updateStatusLine(currentMode)
+            updateInputLine()
+        }
     }
 
     override fun connect(address: String, port: Int) {
