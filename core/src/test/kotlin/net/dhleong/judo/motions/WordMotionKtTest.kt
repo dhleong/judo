@@ -88,3 +88,7 @@ class WordMotionKtTest {
         assertThat(buffer.cursor).isEqualTo(8)
     }
 }
+
+private fun Motion.applyTo(buffer: InputBuffer) =
+    applyTo({ TODO() }, buffer)
+

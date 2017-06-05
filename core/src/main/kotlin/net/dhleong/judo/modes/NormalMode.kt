@@ -3,14 +3,15 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.input.InputBuffer
-import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
-import net.dhleong.judo.motions.Motion
+import net.dhleong.judo.motions.charMotion
+import net.dhleong.judo.motions.findMotion
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
+import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
@@ -20,10 +21,12 @@ import javax.swing.KeyStroke
  */
 
 class NormalMode(
-        val judo: IJudoCore,
-        val buffer: InputBuffer,
+        judo: IJudoCore,
+        buffer: InputBuffer,
         val history: InputHistory
-) : MappableMode, InputBufferProvider {
+) : BaseModeWithBuffer(judo, buffer),
+    MappableMode,
+    InputBufferProvider {
 
     override val userMappings = KeyMapping()
     override val name = "normal"
@@ -32,11 +35,11 @@ class NormalMode(
         keys(":") to { core -> core.enterMode("cmd") },
 
         keys("a") to { core ->
-            buffer.moveCursor(1)
+            applyMotion(charMotion(1))
             core.enterMode("insert")
         },
         keys("A") to { core ->
-            toEndMotion().applyTo(buffer)
+            applyMotion(toEndMotion())
             core.enterMode("insert")
         },
 
@@ -49,11 +52,14 @@ class NormalMode(
             buffer.clear()
         },
 
+        keys("f") to motionAction(findMotion(1)),
+        keys("F") to motionAction(findMotion(-1)),
+
         keys("G") to { core -> core.scrollToBottom() },
 
         keys("i") to { core -> core.enterMode("insert") },
         keys("I") to { core ->
-            toStartMotion().applyTo(buffer)
+            applyMotion(toStartMotion())
             core.enterMode("insert")
         },
 
@@ -61,11 +67,23 @@ class NormalMode(
         keys("j") to { _ -> history.scroll(1) },
         keys("k") to { _ -> history.scroll(-1) },
 
+        keys("x") to actionOn(xCharMotion(1)) { _, range ->
+            buffer.delete(range)
+        },
+        keys("X") to actionOn(xCharMotion(-1)) { _, range ->
+            buffer.delete(range)
+            buffer.cursor = range.endInclusive
+        },
+
         // TODO counts?
         keys("b") to motionAction(wordMotion(-1, false)),
         keys("B") to motionAction(wordMotion(-1, true)),
         keys("w") to motionAction(wordMotion(1, false)),
         keys("W") to motionAction(wordMotion(1, true)),
+
+        // TODO counts?
+        keys("h") to motionAction(charMotion(-1)),
+        keys("l") to motionAction(charMotion(1)),
 
         keys("0") to motionAction(toStartMotion()),
         keys("$") to motionAction(toEndMotion()),
@@ -123,13 +141,6 @@ class NormalMode(
         input.clear()
         buffer.clear()
     }
-
-    /**
-     * Convenience to create a KeyAction that just applies
-     *  the given motion
-     */
-    private fun motionAction(motion: Motion): KeyAction =
-        { _ -> motion.applyTo(buffer) }
 }
 
 

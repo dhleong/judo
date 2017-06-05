@@ -60,6 +60,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private val statusLineWorkspace = IStringBuilder.create(128)
 
+    private lateinit var keyStrokeProducer: BlockingKeySource
+
     init {
         activateMode(currentMode)
         renderer.onResized = {
@@ -211,6 +213,11 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         }
     }
 
+    // TODO check for esc/ctrl+c and throw InputInterruptedException...
+    // TODO catch that in the feedKey loop
+    override fun readKey(): KeyStroke =
+        keyStrokeProducer.readKey()
+
     override fun quit() {
         connection?.close()
         renderer.close()
@@ -236,6 +243,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
      * Read keys forever from the given producer
      */
     fun readKeys(producer: BlockingKeySource) {
+        keyStrokeProducer = producer
         while (running) {
             try {
                 feedKey(producer.readKey(), true)

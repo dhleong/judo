@@ -63,15 +63,8 @@ class InputBuffer {
         cursor = value.length
     }
 
-    /*
-     Cursor movement
-     */
-
-    fun moveCursor(distance: Int) {
-        cursor = maxOf(
-            0,
-            minOf(size, cursor + distance)
-        )
+    fun delete(range: IntRange) {
+        buffer.delete(range.start, range.endInclusive + 1)
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {

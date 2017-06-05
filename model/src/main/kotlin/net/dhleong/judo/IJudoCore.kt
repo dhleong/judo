@@ -21,6 +21,7 @@ interface IJudoCore {
     fun disconnect()
     fun feedKey(stroke: KeyStroke, remap: Boolean = true)
     fun map(mode: String, from: String, to: String, remap: Boolean)
+    fun readKey(): KeyStroke
     fun scrollPages(count: Int)
     fun scrollToBottom()
     fun send(text: String, fromMap: Boolean)

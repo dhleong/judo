@@ -5,11 +5,9 @@ import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.InputBuffer
-import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
-import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.hasCtrl
@@ -20,7 +18,13 @@ import javax.swing.KeyStroke
 /**
  * @author dhleong
  */
-class InsertMode(val judo: IJudoCore, val buffer: InputBuffer, completions: CompletionSource) : MappableMode, InputBufferProvider {
+class InsertMode(
+    judo: IJudoCore,
+    buffer: InputBuffer,
+    completions: CompletionSource
+) : BaseModeWithBuffer(judo, buffer),
+    MappableMode,
+    InputBufferProvider {
 
     override val userMappings = KeyMapping()
     override val name = "insert"
@@ -133,12 +137,5 @@ class InsertMode(val judo: IJudoCore, val buffer: InputBuffer, completions: Comp
         input.clear()
         buffer.clear()
     }
-
-    /**
-     * Convenience to create a KeyAction that just applies
-     *  the given motion
-     */
-    private fun motionAction(motion: Motion): KeyAction =
-        { _ -> motion.applyTo(buffer) }
 }
 

@@ -19,6 +19,10 @@ class TestableJudoCore : IJudoCore {
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
 
+    override fun readKey(): KeyStroke {
+        TODO("not implemented")
+    }
+
     override fun scrollToBottom() {
         TODO("not implemented")
     }
