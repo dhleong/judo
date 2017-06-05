@@ -6,13 +6,8 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
-import net.dhleong.judo.input.keys
+import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
-import net.dhleong.judo.motions.charMotion
-import net.dhleong.judo.motions.findMotion
-import net.dhleong.judo.motions.toEndMotion
-import net.dhleong.judo.motions.toStartMotion
-import net.dhleong.judo.motions.wordMotion
 import javax.swing.KeyStroke
 
 /**
@@ -33,22 +28,9 @@ class OperatorPendingMode(
     // FIXME refactor so we only have to enumerate motions once
     //  and get them in both normal mode movements and here
     private val mapping = KeyMapping(
-
-        // TODO counts?
-        keys("b") to opFuncActionWith(wordMotion(-1, false)),
-        keys("B") to opFuncActionWith(wordMotion(-1, true)),
-        keys("w") to opFuncActionWith(wordMotion(1, false)),
-        keys("W") to opFuncActionWith(wordMotion(1, true)),
-
-        keys("f") to opFuncActionWith(findMotion(1)),
-        keys("F") to opFuncActionWith(findMotion(-1)),
-
-        // TODO counts?
-        keys("h") to opFuncActionWith(charMotion(-1)),
-        keys("l") to opFuncActionWith(charMotion(1)),
-
-        keys("0") to opFuncActionWith(toStartMotion()),
-        keys("$") to opFuncActionWith(toEndMotion())
+        ALL_MOTIONS.map { (keys, motion) ->
+            keys to opFuncActionWith(motion)
+        }
     )
 
     private val input = MutableKeys()

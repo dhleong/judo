@@ -7,11 +7,10 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
+import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.charMotion
-import net.dhleong.judo.motions.findMotion
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
-import net.dhleong.judo.motions.wordMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
 import java.awt.event.KeyEvent
@@ -33,7 +32,7 @@ class NormalMode(
     override val userMappings = KeyMapping()
     override val name = "normal"
 
-    private val mapping = KeyMapping(
+    private val mapping = KeyMapping(listOf(
         keys(":") to { core -> core.enterMode("cmd") },
 
         keys("a") to { core ->
@@ -65,9 +64,6 @@ class NormalMode(
             buffer.delete(rangeOf(toEndMotion()))
         },
 
-        keys("f") to motionAction(findMotion(1)),
-        keys("F") to motionAction(findMotion(-1)),
-
         keys("G") to { core -> core.scrollToBottom() },
 
         keys("i") to { core -> core.enterMode("insert") },
@@ -88,24 +84,14 @@ class NormalMode(
             buffer.cursor = range.endInclusive
         },
 
-        // TODO counts?
-        keys("b") to motionAction(wordMotion(-1, false)),
-        keys("B") to motionAction(wordMotion(-1, true)),
-        keys("w") to motionAction(wordMotion(1, false)),
-        keys("W") to motionAction(wordMotion(1, true)),
-
-        // TODO counts?
-        keys("h") to motionAction(charMotion(-1)),
-        keys("l") to motionAction(charMotion(1)),
-
-        keys("0") to motionAction(toStartMotion()),
-        keys("$") to motionAction(toEndMotion()),
-
         keys("ctrl b") to { core -> core.scrollPages(1) },
         keys("ctrl f") to { core -> core.scrollPages(-1) },
         keys("ctrl c") to { _ -> clearBuffer() },
         keys("ctrl r") to { core -> core.enterMode("rsearch") }
-    )
+    
+    ) + ALL_MOTIONS.map { (keys, motion) ->
+        keys to motionAction(motion)
+    })
 
     private fun withOperator(action: OperatorFunc) {
         judo.opfunc = action

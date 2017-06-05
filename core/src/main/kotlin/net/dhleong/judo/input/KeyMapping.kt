@@ -15,7 +15,8 @@ class KeyMapping() {
     private val keysMap = HashMap<Keys, KeyAction>()
     private val possibleMaps = HashSet<Keys>()
 
-    constructor(vararg mappings: Pair<Keys, KeyAction>) : this() {
+    constructor(vararg mappings: Pair<Keys, KeyAction>) : this(listOf(*mappings))
+    constructor(mappings: List<Pair<Keys, KeyAction>>) : this() {
         mappings.forEach { map(it.first, it.second) }
     }
 
