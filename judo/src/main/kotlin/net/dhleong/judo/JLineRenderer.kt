@@ -11,7 +11,6 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
-import java.awt.SystemColor.window
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.IOException
@@ -225,12 +224,21 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         workspace.addAll(toOutput)
 
         workspace.add(status)
-        workspace.add(input)
 
-        val cursorPos = windowSize.cursorPos(
-            windowHeight - (if (isCursorOnStatus) 1 else 0),
-            cursor
-        )
+        val (inputLine, inputCursor) = fitInputLineToWindow()
+        workspace.add(inputLine)
+
+        val cursorPos: Int
+        if (isCursorOnStatus) {
+            cursorPos = windowSize.cursorPos(
+                windowHeight - 1, cursor
+            )
+        } else {
+            cursorPos = windowSize.cursorPos(
+                windowHeight,
+                inputCursor
+            )
+        }
 
         // NOTE: jline keeps a reference to the list we provide this
         // method, so we have to make a quick copy. If this becomes an
@@ -239,6 +247,63 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         window.resize(windowHeight, windowWidth)
         window.update(workspace.toList(), cursorPos)
         terminal.flush()
+    }
+
+    internal fun fitInputLineToWindow(): Pair<AttributedString, Int> {
+        val maxLineWidth = windowWidth
+
+        if (input.length < maxLineWidth) {
+            // convenient shortcut
+            return input to cursor
+        }
+
+        // take the slice of `input` that contains `cursor`
+        val absolutePage = cursor / maxLineWidth
+        val absolutePageCursor = cursor % maxLineWidth
+
+        // if the cursor fits on the previous visualOffset page,
+        // draw that one; else draw the absolute page
+        val visualOffset = maxLineWidth / 2
+        val windowStart: Int
+        val cursorOffset: Int
+        if (absolutePage > 0 && absolutePageCursor < visualOffset) {
+            windowStart = absolutePage * maxLineWidth - visualOffset
+            cursorOffset = visualOffset
+        } else {
+            windowStart = absolutePage * maxLineWidth
+            cursorOffset = 0
+        }
+
+        val windowEnd = minOf(input.length, windowStart + maxLineWidth)
+        val hasMorePrev = absolutePage > 0
+        val hasMoreNext = windowEnd < input.length
+
+        // indicate continued
+        val withIndicator: AttributedString
+        if (!(hasMoreNext || hasMorePrev)) {
+            // minor optimization for the common case
+            withIndicator = input.subSequence(windowStart, windowEnd)
+        } else {
+            val windowedInput = input.subSequence(
+                if (hasMorePrev) windowStart + 1
+                else windowStart,
+
+                if (hasMoreNext) windowEnd - 1
+                else windowEnd
+            )
+
+            withIndicator = with(AttributedStringBuilder(maxLineWidth)) {
+                if (hasMorePrev) append("…")
+
+                append(windowedInput)
+
+                if (hasMoreNext) append("…")
+
+                toAttributedString()
+            }
+        }
+
+        return withIndicator.toAttributedString() to (absolutePageCursor + cursorOffset)
     }
 
     fun getDisplayLines(): List<AttributedString> {
@@ -295,8 +360,4 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
     }
 }
-
-private fun ansiToAttributed(line: CharSequence): AttributedString =
-    if (line is AttributedCharSequence) line.toAttributedString()
-    else AttributedString.fromAnsi(line.toString())
 
