@@ -98,6 +98,7 @@ class NormalMode(
 
     override fun onEnter() {
         input.clear()
+        buffer.cursor = maxOf(0, buffer.cursor - 1)
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
