@@ -56,14 +56,19 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000) {
      * @return True if a match was found, else false.
      */
     fun search(match: String, forceNext: Boolean): Boolean {
+        // NOTE offset will always be negative (or 0)
         val offset =
-            if (forceNext && contents[historyOffset].contains(match, true)) historyOffset + 1
-            else historyOffset
+            if (forceNext &&
+                    contents[contents.lastIndex + historyOffset].contains(match, true)) {
+                historyOffset - 1
+            } else {
+                historyOffset
+            }
 
-        for (i in contents.size - offset - 1 downTo 0) {
+        for (i in contents.size + offset - 1 downTo 0) {
             if (contents[i].contains(match, true)) {
                 buffer.set(contents[i])
-                historyOffset = contents.size - i - 1
+                historyOffset = -(contents.size - i - 1)
                 return true
             }
         }

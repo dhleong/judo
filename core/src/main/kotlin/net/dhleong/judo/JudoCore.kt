@@ -185,6 +185,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         if (!fromMap && !toSend.isEmpty()) {
             // record it even if we couldn't send it
             sendHistory.push(toSend)
+            sendHistory.resetHistoryOffset() // start back from most recent
 
             // also complete from sent things
             // (but the original text, not the alias-processed one)

@@ -153,6 +153,7 @@ class NormalMode(
     private fun clearBuffer() {
         input.clear()
         buffer.clear()
+        history.resetHistoryOffset()
     }
 }
 
