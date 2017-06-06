@@ -201,11 +201,22 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     override fun feedKey(stroke: KeyStroke, remap: Boolean) {
 //        echo("## feedKey($stroke)")
-        if (stroke.keyCode == KeyEvent.VK_ESCAPE) {
-            if (currentMode != normalMode) {
-                activateMode(normalMode)
+        when (stroke.keyCode) {
+            KeyEvent.VK_ESCAPE -> {
+                if (currentMode != normalMode) {
+                    activateMode(normalMode)
+                }
+                return
             }
-            return
+
+            KeyEvent.VK_PAGE_UP -> {
+                renderer.scrollLines(1)
+                return
+            }
+            KeyEvent.VK_PAGE_DOWN -> {
+                renderer.scrollLines(-1)
+                return
+            }
         }
 
         currentMode.feedKey(stroke, remap)

@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
+import org.jline.terminal.MouseEvent
 import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
@@ -9,13 +10,17 @@ import org.jline.terminal.impl.DumbTerminal
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
+import org.jline.utils.Curses
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.io.IOException
+import java.io.StringWriter
 import java.util.EnumSet
 import javax.swing.KeyStroke
+
+
 
 
 /**
@@ -52,6 +57,8 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     private var isInTransaction = false
 
+    private val mouseEvent: String?
+
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
         terminal.enterRawMode()
@@ -67,9 +74,13 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         terminal.puts(InfoCmp.Capability.enter_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_xmit)
+        terminal.trackMouse(Terminal.MouseTracking.Normal)
         terminal.flush()
 
         resize()
+
+        // TODO better handling that combines with the ctrl+shift+tab
+        mouseEvent = terminal.keystrokesFor(InfoCmp.Capability.key_mouse)
     }
 
     override fun close() {
@@ -77,6 +88,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         terminal.puts(InfoCmp.Capability.exit_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_local)
+        terminal.trackMouse(Terminal.MouseTracking.Off)
         terminal.flush()
         terminal.attributes = originalAttributes
         terminal.close()
@@ -128,7 +140,14 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     override fun readKey(): KeyStroke {
         val char = terminal.reader().read()
         return when (char) {
-            27 -> readEscape()
+            27 -> {
+                readEscape()?.let {
+                    return it
+                }
+
+                // not a known escape? ignore and try again
+                return readKey()
+            }
             127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
             '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
 
@@ -145,15 +164,17 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
      * Quickly attempt to read either an escape sequence,
      * or a simple <esc> key press
      */
-    private fun readEscape(): KeyStroke {
+    private fun readEscape(): KeyStroke? {
         val reader = terminal.reader()
         val peek = reader.peek(1)
         if (peek == 91) { // 91 == [
             // looks like an escape sequence
             reader.read() // consume [
 
+            val lastMouseChar = mouseEvent?.last()?.toInt() ?: 0
             val argPeek = reader.read(1)
             when (argPeek) {
+                lastMouseChar -> return readMouseEvent()
                 90 -> return KeyStroke.getKeyStroke(
                     KeyEvent.VK_TAB,
                     KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK
@@ -162,6 +183,27 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
 
         return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
+    }
+
+    private fun readMouseEvent(): KeyStroke? {
+        val event = terminal.readMouseEvent()
+        if (event.type == MouseEvent.Type.Wheel) {
+            return when(event.button) {
+                MouseEvent.Button.WheelUp -> KeyStroke.getKeyStroke(
+                    KeyEvent.VK_PAGE_UP,
+                    0
+                )
+
+                MouseEvent.Button.WheelDown -> KeyStroke.getKeyStroke(
+                    KeyEvent.VK_PAGE_DOWN,
+                    0
+                )
+
+                else -> null
+            }
+        }
+
+        return null
     }
 
     override fun scrollLines(count: Int) {
@@ -361,7 +403,6 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
             builder.persistStyle(lineAsAnsi.length)
             builder.appendAnsi(lineAsAnsi)
 
-//            builder.append(lineBuilder)
             output[end] = builder.toAttributedString()
         } else {
             val atBottom = scrollbackBottom == 0
@@ -401,3 +442,17 @@ class FakeCharSequence(override val length: Int) : CharSequence {
         FakeCharSequence(endIndex - startIndex)
 }
 
+fun Terminal.keystrokesFor(capability: InfoCmp.Capability): String? {
+    try {
+        val str = getStringCapability(capability)
+        if (str != null) {
+            val sw = StringWriter()
+            Curses.tputs(sw, str)
+            return sw.toString()
+        }
+    } catch (e: IOException) {
+        // Ignore
+    }
+
+    return null
+}
