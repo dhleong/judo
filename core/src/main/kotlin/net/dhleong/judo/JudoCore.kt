@@ -59,6 +59,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     private var currentMode: Mode = normalMode
 
     internal var running = true
+    internal var doEcho = true
 
     private var connection: Connection? = null
 
@@ -78,15 +79,14 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         disconnect()
         echo("Connecting to $address:$port...")
 
-//        val logFile = File("log.txt")
-
         val connection = CommonsNetConnection(address, port, renderer.terminalType)
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
+        connection.onEchoStateChanged = { doEcho ->
+            this.doEcho = doEcho
+        }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
         connection.forEachLine { buffer, count ->
-//            logFile.appendText(String(buffer, 0, count))
-//            logFile.appendText("{PACKET_BREAK}")
             renderer.inTransaction {
                 try {
                     val asCharSequence = StringBuilder(count).append(buffer, 0, count)
@@ -177,10 +177,12 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             return
         }
 
-        // always output what we sent
-        // TODO except... don't echo if the server has told us not to
-        // (EG: passwords)
-        echo(toSend) // TODO color?
+        if (doEcho) {
+            // always output what we sent
+            // TODO except... don't echo if the server has told us not to
+            // (EG: passwords)
+            echo(toSend) // TODO color?
+        }
 
         if (!fromMap && !toSend.isEmpty()) {
             // record it even if we couldn't send it
@@ -307,6 +309,11 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     }
 
     private fun updateInputLine() {
+        if (!doEcho) {
+            renderer.updateInputLine("", 0)
+            return
+        }
+        
         val mode = currentMode
         if (mode is InputBufferProvider) {
             renderer.updateInputLine(mode.renderInputBuffer(), mode.getCursor())

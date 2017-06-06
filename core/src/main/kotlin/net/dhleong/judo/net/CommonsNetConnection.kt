@@ -1,6 +1,9 @@
 package net.dhleong.judo.net
 
+import org.apache.commons.net.telnet.EchoOptionHandler
 import org.apache.commons.net.telnet.TelnetClient
+import org.apache.commons.net.telnet.TelnetNotificationHandler
+import org.apache.commons.net.telnet.TelnetOption
 import org.apache.commons.net.telnet.WindowSizeOptionHandler
 import java.io.IOException
 import java.io.InputStream
@@ -32,6 +35,13 @@ class CommonsNetConnection(
 
     override fun setWindowSize(width: Int, height: Int) {
         client.addOptionHandler(WindowSizeOptionHandler(width, height))
+        client.addOptionHandler(EchoOptionHandler(false, false, false, true))
+        client.registerNotifHandler { negotiation_code, option_code ->
+            if (option_code == TelnetOption.ECHO) {
+                val doEcho = negotiation_code == TelnetNotificationHandler.RECEIVED_WONT
+                onEchoStateChanged?.invoke(doEcho)
+            }
+        }
     }
 
     override fun toString(): String {

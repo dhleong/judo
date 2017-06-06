@@ -21,6 +21,7 @@ abstract class Connection : Closeable {
 
     var onError: ((IOException) -> Unit)? = null
     var onDisconnect: (() -> Unit)? = null
+    var onEchoStateChanged: ((Boolean) -> Unit)? = null
 
     private val writer: Writer by lazy { BufferedWriter(OutputStreamWriter(output)) }
     private var readerThread: Thread? = null
