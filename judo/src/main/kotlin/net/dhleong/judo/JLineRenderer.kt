@@ -28,6 +28,8 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 
+val KEY_ESCAPE = 27
+
 class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val DEFAULT_SCROLLBACK_SIZE = 20_000
 
@@ -59,7 +61,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
     private var isInTransaction = false
 
-    private val mouseEvent: String?
+    private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> KeyStroke?>>(8)
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
@@ -81,8 +83,17 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         resize()
 
-        // TODO better handling that combines with the ctrl+shift+tab
-        mouseEvent = terminal.keystrokesFor(InfoCmp.Capability.key_mouse)
+        // register handlers for keystrokes that are done via escape sequences
+        registerEscapeHandler(InfoCmp.Capability.key_mouse, this::readMouseEvent)
+        registerEscapeHandler(InfoCmp.Capability.key_btab) {
+            KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.SHIFT_DOWN_MASK)
+        }
+        registerEscapeHandler(InfoCmp.Capability.key_down) {
+            KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0)
+        }
+        registerEscapeHandler(InfoCmp.Capability.key_up) {
+            KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
+        }
     }
 
     override fun close() {
@@ -142,7 +153,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     override fun readKey(): KeyStroke {
         val char = terminal.reader().read()
         return when (char) {
-            27 -> {
+            KEY_ESCAPE -> {
                 readEscape()?.let {
                     return it
                 }
@@ -169,18 +180,13 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private fun readEscape(): KeyStroke? {
         val reader = terminal.reader()
         val peek = reader.peek(1)
-        if (peek == 91) { // 91 == [
+        escapeSequenceHandlers[peek]?.let { candidates ->
             // looks like an escape sequence
-            reader.read() // consume [
+            reader.read() // consume the second char
 
-            val lastMouseChar = mouseEvent?.last()?.toInt() ?: 0
             val argPeek = reader.read(1)
-            when (argPeek) {
-                lastMouseChar -> return readMouseEvent()
-                90 -> return KeyStroke.getKeyStroke(
-                    KeyEvent.VK_TAB,
-                    KeyEvent.CTRL_DOWN_MASK or KeyEvent.SHIFT_DOWN_MASK
-                )
+            candidates[argPeek]?.let {
+                return it.invoke()
             }
         }
 
@@ -206,6 +212,17 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
 
         return null
+    }
+
+    private fun registerEscapeHandler(key: InfoCmp.Capability, block: () -> KeyStroke?) {
+        val strokes = terminal.keystrokesFor(key) ?: return
+
+        if (strokes.length != 3) throw IllegalStateException("Expected $key to be a 3-char esc sequence")
+        if (strokes[0].toInt() != KEY_ESCAPE) throw IllegalStateException("Expected $key to be an esc sequence")
+
+        escapeSequenceHandlers.getOrPut(strokes[1].toInt(), { HashMap<Int, () -> KeyStroke?>() }).let {
+            it[strokes[2].toInt()] = block
+        }
     }
 
     override fun scrollLines(count: Int) {

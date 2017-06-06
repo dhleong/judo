@@ -45,7 +45,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private val modes = sequenceOf(
 
-        InsertMode(this, buffer, completions),
+        InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
         PythonCmdMode(this),

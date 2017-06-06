@@ -56,6 +56,8 @@ fun key(string: String): KeyStroke {
         " ", "20", "space" -> return KeyStroke.getKeyStroke(' ')
         "cr" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
         "esc" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
+        "up" -> return KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
+        "down" -> return KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0)
 
         else -> {
             if ("typed" !in string) {
@@ -77,6 +79,4 @@ fun key(string: String): KeyStroke {
         ?: throw IllegalArgumentException("Unable to parse `$stroke` into a KeyStroke")
 }
 
-//fun keys(vararg strings: String): Keys =
-//    Keys.of(strings.map { key(it) })
 fun keys(string: String) = Keys.parse(string)

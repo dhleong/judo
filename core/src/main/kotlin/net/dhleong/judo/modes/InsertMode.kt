@@ -10,6 +10,7 @@ import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.hasCtrl
 import net.dhleong.judo.util.hasShift
 import java.awt.event.KeyEvent
@@ -21,7 +22,8 @@ import javax.swing.KeyStroke
 class InsertMode(
     judo: IJudoCore,
     buffer: InputBuffer,
-    completions: CompletionSource
+    completions: CompletionSource,
+    val history: InputHistory
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {
@@ -30,6 +32,9 @@ class InsertMode(
     override val name = "insert"
 
     private val mapping = KeyMapping(
+        keys("<up>") to { _ -> history.scroll(-1) },
+        keys("<down>") to { _ -> history.scroll(1) },
+
         // not strictly vim, but nice enough
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion()),
@@ -136,6 +141,7 @@ class InsertMode(
     private fun clearBuffer() {
         input.clear()
         buffer.clear()
+        history.resetHistoryOffset()
     }
 }
 

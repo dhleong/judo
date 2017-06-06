@@ -84,6 +84,9 @@ class NormalMode(
             buffer.cursor = range.endInclusive
         },
 
+        keys("<up>") to { _ -> history.scroll(-1) },
+        keys("<down>") to { _ -> history.scroll(1) },
+
         keys("<ctrl b>") to { core -> core.scrollPages(1) },
         keys("<ctrl f>") to { core -> core.scrollPages(-1) },
         keys("<ctrl c>") to { _ -> clearBuffer() },
