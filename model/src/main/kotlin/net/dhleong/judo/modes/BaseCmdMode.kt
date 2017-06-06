@@ -3,7 +3,7 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
-import net.dhleong.judo.util.hasShift
+import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import java.io.InputStream
 import javax.swing.KeyStroke
@@ -19,28 +19,38 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
     val inputBuffer = InputBuffer()
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
-        if (key.modifiers != 0 && key.hasShift()) {
-            // TODO mappings?
-            return
-        }
-        if (key.keyCode == KeyEvent.VK_ENTER) {
-            val code = inputBuffer.toString()
-            when (code) {
-                "q", "q!", "qa", "qa!" -> {
-                    judo.quit()
-                    return
+        when {
+            key.keyCode == KeyEvent.VK_ENTER -> {
+                val code = inputBuffer.toString()
+                when (code) {
+                    "q", "q!", "qa", "qa!" -> {
+                        judo.quit()
+                        return
+                    }
                 }
+                execute(code)
+                clearBuffer()
+                exitMode()
+                return
             }
-            execute(code)
-            clearInputBuffer()
-            exitMode()
+
+            key.keyChar == 'c' && key.hasCtrl() -> {
+                clearBuffer()
+                exitMode()
+                return
+            }
+        }
+
+        if (key.hasCtrl()) {
+            // ignore
+            return
         }
 
         insertChar(key)
     }
 
     private fun exitMode() {
-        judo.enterMode("normal") // TODO return to previous mode?
+        judo.exitMode() // TODO return to previous mode?
     }
 
     /**
@@ -55,14 +65,14 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
     }
 
     override fun onEnter() {
-        clearInputBuffer()
+        clearBuffer()
     }
 
     abstract fun execute(code: String)
 
     abstract fun readFile(fileName: String, stream: InputStream)
 
-    private fun clearInputBuffer() {
+    private fun clearBuffer() {
         inputBuffer.clear()
     }
 }

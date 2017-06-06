@@ -313,7 +313,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             renderer.updateInputLine("", 0)
             return
         }
-        
+
         val mode = currentMode
         if (mode is InputBufferProvider) {
             renderer.updateInputLine(mode.renderInputBuffer(), mode.getCursor())
