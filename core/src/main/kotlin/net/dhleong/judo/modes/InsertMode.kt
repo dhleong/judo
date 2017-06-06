@@ -31,13 +31,13 @@ class InsertMode(
 
     private val mapping = KeyMapping(
         // not strictly vim, but nice enough
-        keys("ctrl a") to motionAction(toStartMotion()),
-        keys("ctrl e") to motionAction(toEndMotion()),
+        keys("<ctrl a>") to motionAction(toStartMotion()),
+        keys("<ctrl e>") to motionAction(toEndMotion()),
 
-        keys("ctrl b") to { core -> core.scrollPages(1) },
-        keys("ctrl f") to { core -> core.scrollPages(-1) },
+        keys("<ctrl b>") to { core -> core.scrollPages(1) },
+        keys("<ctrl f>") to { core -> core.scrollPages(-1) },
 
-        keys("ctrl r") to { core -> core.enterMode("rsearch") }
+        keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
     )
     private val input = MutableKeys()
 

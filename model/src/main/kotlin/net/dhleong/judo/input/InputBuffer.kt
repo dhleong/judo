@@ -73,7 +73,7 @@ class InputBuffer {
             delete(range.start..(range.endInclusive - 1))
             cursor = range.start
         } else {
-            delete(range.endInclusive..range.start)
+            delete(range.endInclusive..(range.start - 1))
             cursor = range.endInclusive
         }
     }

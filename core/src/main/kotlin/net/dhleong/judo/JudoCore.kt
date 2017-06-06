@@ -36,7 +36,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private val parsedPrompts = ArrayList<IStringBuilder>(1)
 
-    private val buffer = InputBuffer()
+    internal val buffer = InputBuffer()
     private val sendHistory = InputHistory(buffer)
     private val completions = CompletionSourceFacade.create()
 
@@ -58,7 +58,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private var currentMode: Mode = normalMode
 
-    private var running = true
+    internal var running = true
 
     private var connection: Connection? = null
 

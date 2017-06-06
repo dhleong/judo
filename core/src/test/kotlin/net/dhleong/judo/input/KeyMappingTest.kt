@@ -9,7 +9,7 @@ import org.junit.Test
 class KeyMappingTest {
     @Test fun sequenceMap() {
         val map = KeyMapping(
-            keys("c", "d") to { _ -> }
+            keys("cd") to { _ -> }
         )
 
         assertThat(map.match(keys("c"))).isNull()

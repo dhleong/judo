@@ -84,11 +84,11 @@ class NormalMode(
             buffer.cursor = range.endInclusive
         },
 
-        keys("ctrl b") to { core -> core.scrollPages(1) },
-        keys("ctrl f") to { core -> core.scrollPages(-1) },
-        keys("ctrl c") to { _ -> clearBuffer() },
-        keys("ctrl r") to { core -> core.enterMode("rsearch") }
-    
+        keys("<ctrl b>") to { core -> core.scrollPages(1) },
+        keys("<ctrl f>") to { core -> core.scrollPages(-1) },
+        keys("<ctrl c>") to { _ -> clearBuffer() },
+        keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
+
     ) + ALL_MOTIONS.map { (keys, motion) ->
         keys to motionAction(motion)
     })

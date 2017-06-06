@@ -4,7 +4,6 @@ import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.lang.reflect.Proxy
 import javax.swing.KeyStroke
 
 /**
@@ -12,44 +11,18 @@ import javax.swing.KeyStroke
  */
 class JudoCoreTest {
 
-    var windowWidth = 90
-    val outputLines = mutableListOf<Pair<String, Boolean>>()
-
-    val renderer: JudoRenderer = Proxy.newProxyInstance(
-        ClassLoader.getSystemClassLoader(),
-        arrayOf(JudoRenderer::class.java)
-    ) { _, method, args ->
-        when (method.name) {
-            "appendOutput" -> {
-                val line = args[0] as String
-                val isPartial = args[1] as Boolean
-
-                outputLines.add(line to isPartial)
-            }
-
-            "getWindowWidth" -> windowWidth
-
-            "inTransaction" -> {
-                @Suppress("UNCHECKED_CAST")
-                val block = args[0] as () -> Unit
-                block()
-            }
-
-            else -> null // ignore
-        }
-    } as JudoRenderer
-
+    var renderer = TestableJudoRenderer()
     lateinit var judo: JudoCore
 
     @Before fun setUp() {
-        outputLines.clear()
+        renderer.outputLines.clear()
         judo = JudoCore(renderer)
     }
 
     @Test fun appendOutput() {
         judo.appendOutput("\r\nTake my love,\r\n\r\nTake my land,\r\nTake me")
 
-        assertThat(outputLines)
+        assertThat(renderer.outputLines)
             .containsExactly(
                 ""              to false,
                 "Take my love," to false,
@@ -62,7 +35,7 @@ class JudoCoreTest {
     @Test fun appendOutput_newlineOnly() {
         judo.appendOutput("\nTake my love,\nTake my land,\n\nTake me")
 
-        assertThat(outputLines)
+        assertThat(renderer.outputLines)
             .containsExactly(
                 ""              to false,
                 "Take my love," to false,
@@ -78,7 +51,7 @@ class JudoCoreTest {
             "\n\r${0x27}[1;30m${0x27}[1;37mTake my love," +
                 "\n\r${0x27}[1;30m${0x27}[1;37mTake my land,")
 
-        assertThat(outputLines)
+        assertThat(renderer.outputLines)
             .containsExactly(
                 ""                                          to false,
                 "${0x27}[1;30m${0x27}[1;37mTake my love,"   to false,
@@ -91,7 +64,7 @@ class JudoCoreTest {
         judo.appendOutput(" land,\n\rTake me where...\n\r")
         judo.appendOutput("I don't care, I'm still free")
 
-        assertThat(outputLines)
+        assertThat(renderer.outputLines)
             .containsExactly(
                 ""                              to false,
                 "Take my love,"                 to false,
@@ -105,7 +78,7 @@ class JudoCoreTest {
     @Test fun buildPromptWithAnsi() {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
         judo.onPrompt(0, prompt)
-        windowWidth = 12
+        renderer.settableWindowWidth = 12
 
         val status = judo.buildStatusLine(object : Mode {
             override val name = "Test"

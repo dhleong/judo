@@ -77,5 +77,6 @@ fun key(string: String): KeyStroke {
         ?: throw IllegalArgumentException("Unable to parse `$stroke` into a KeyStroke")
 }
 
-fun keys(vararg strings: String): Keys =
-    Keys.of(strings.map { key(it) })
+//fun keys(vararg strings: String): Keys =
+//    Keys.of(strings.map { key(it) })
+fun keys(string: String) = Keys.parse(string)
