@@ -57,6 +57,8 @@ class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
         python["echo"] = asUnitPyFn<Any> { judo.echo(*it) }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
+        python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
+        python["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
     }
 
     private fun defineAlias(alias: String, handler: Any) {
