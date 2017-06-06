@@ -82,7 +82,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
         val connection = CommonsNetConnection(address, port, renderer.terminalType)
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
-        connection.onDisconnect = { echo("Disconnected from $connection") }
+        connection.onDisconnect = this::onDisconnect
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
         connection.forEachLine { buffer, count ->
 //            logFile.appendText(String(buffer, 0, count))
@@ -239,6 +239,19 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         connection?.close()
         renderer.close()
         running = false
+    }
+
+    fun onDisconnect() {
+        renderer.inTransaction {
+            // dump the parsed prompts for visual affect
+            parsedPrompts.forEach {
+                renderer.appendOutput(it)
+            }
+            parsedPrompts.clear()
+
+            echo("Disconnected from $connection")
+            updateStatusLine(currentMode)
+        }
     }
 
     /**
