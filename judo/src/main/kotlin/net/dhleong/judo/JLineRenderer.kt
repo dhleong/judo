@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.util.CircularArrayList
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
 import org.jline.terminal.MouseEvent
@@ -28,6 +29,8 @@ import javax.swing.KeyStroke
  */
 
 class JLineRenderer : JudoRenderer, BlockingKeySource {
+    private val DEFAULT_SCROLLBACK_SIZE = 20_000
+
     override val terminalType: String
         get() = terminal.type
 
@@ -41,8 +44,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
-    // TODO circular buffer with max size
-    private val output = mutableListOf<AttributedString>()
+    private val output = CircularArrayList<AttributedString>(DEFAULT_SCROLLBACK_SIZE)
     private var scrollbackBottom = 0
 
     private var hadPartialLine = false
@@ -354,7 +356,7 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         return withIndicator.toAttributedString() to (absolutePageCursor + cursorOffset)
     }
 
-    fun getDisplayLines(): List<AttributedString> {
+    fun getDisplayLines(): Collection<AttributedString> {
         val start = maxOf(0, output.size - scrollbackBottom - outputWindowHeight)
         val end = minOf(output.size - 1, (start + outputWindowHeight - 1))
         return output.slice(start..end)
