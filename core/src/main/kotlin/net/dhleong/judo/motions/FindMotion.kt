@@ -5,13 +5,13 @@ package net.dhleong.judo.motions
  */
 
 fun findMotion(step: Int) =
-    createMotion { readKey, buffer, start ->
+    createMotion(listOf(Motion.Flags.INCLUSIVE)) { readKey, buffer, start ->
         val target = readKey()
         val end: Int
         if (step > 0) {
-            end = buffer.indexOf(target.keyChar, start)
+            end = buffer.indexOf(target.keyChar, start + 1)
         } else {
-            end = buffer.lastIndexOf(target.keyChar, start)
+            end = buffer.lastIndexOf(target.keyChar, start - 1)
         }
 
         if (end == -1) {

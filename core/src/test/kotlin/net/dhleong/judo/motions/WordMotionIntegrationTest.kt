@@ -21,12 +21,28 @@ class WordMotionIntegrationTest {
         judo = JudoCore(renderer)
     }
 
+    @Test fun moveFindBack() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("Fw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 5)
+    }
+
     @Test fun moveFindForward() {
         judo.setInput("word word2 word3", 5)
 
         judo.type(keys("f<space>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 10)
+    }
+
+    @Test fun deleteFindBack() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("dFw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3" to 5)
     }
 
     @Test fun deleteFindForward() {

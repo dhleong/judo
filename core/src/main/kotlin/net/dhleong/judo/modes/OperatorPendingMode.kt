@@ -74,7 +74,13 @@ class OperatorPendingMode(
 
     private fun opFuncActionWith(motion: Motion): KeyAction =
         { _ ->
-            val range = motion.calculate(judo, buffer)
+            var range = motion.calculate(judo, buffer)
+
+            // TODO can we put this anywhere better?
+            if (motion.isInclusive && range.start < range.endInclusive) {
+                range = range.start..(range.endInclusive + 1)
+            }
+
             opfunc(range)
             judo.exitMode()
         }
