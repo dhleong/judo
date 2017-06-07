@@ -70,7 +70,6 @@ class JLineRendererTest {
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
-    @Ignore("FIXME: ansi codes at end of a partial line")
     @Test fun appendOutput_resumePartial_trailingAnsi() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
@@ -84,7 +83,7 @@ class JLineRendererTest {
         assertThat(renderer.getOutputLines())
             .containsExactly(
                 "",
-                "${ansi(1,6)}Take my ${ansi(1,2)}love${ansi(0)}"
+                "${ansi(1,6)}Take my ${ansi(fg=2)}love${ansi(0)}"
             )
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }

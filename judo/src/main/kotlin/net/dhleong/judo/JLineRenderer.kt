@@ -32,6 +32,7 @@ val KEY_ESCAPE = 27
 
 class JLineRenderer : JudoRenderer, BlockingKeySource {
     private val DEFAULT_SCROLLBACK_SIZE = 20_000
+    private val ESCAPE_CODE_SEARCH_LIMIT = 8
 
     override val terminalType: String
         get() = terminal.type
@@ -46,6 +47,9 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
     private var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
+    /** container for split ansi codes (double buffered) */
+    private var pendingOutputCurrent = StringBuilder(16)
+    private var pendingOutputBack = StringBuilder(16)
     private val output = CircularArrayList<AttributedString>(DEFAULT_SCROLLBACK_SIZE)
     private var scrollbackBottom = 0
 
@@ -384,6 +388,12 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
      * lines based on current window width
      */
     private fun appendOutputLineInternal(line: CharSequence) {
+        // flip the pending output buffers and preserve any trailing
+        val newBack = pendingOutputCurrent
+        pendingOutputCurrent = pendingOutputBack
+        pendingOutputBack = newBack
+        preserveTrailingEscapeCodes(line, newBack)
+
         val builder = AttributedStringBuilder(line.length)
         builder.tabs(0)
         if (line is AttributedCharSequence) {
@@ -393,12 +403,9 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
         }
 
         if (builder.columnLength() > windowWidth) {
-
+            // TODO split on word boundaries?
             builder.columnSplitLength(windowWidth)
                 .forEach { appendOutputAttributedLine(it) }
-//            for (i in 0 until line.length - windowWidth step windowWidth) {
-//                appendOutputAttributedLine(builder.columnSubSequence(i, i + windowWidth))
-//            }
         } else {
             appendOutputAttributedLine(builder.toAttributedString())
         }
@@ -408,30 +415,70 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
      * @param line MUST be guaranteed to fit on a single line
      */
     private fun appendOutputAttributedLine(line: AttributedString) {
+        val pendingOutput = pendingOutputCurrent
+
         if (hadPartialLine) {
             hadPartialLine = false
 
+            val pendingLength = pendingOutput.length
             val end = output.size - 1
             val original = output[end]
             val lineAsAnsi = line.toAnsi()
-            val builder = StylePersistingAttributedStringBuilder(original.length + lineAsAnsi.length)
+            val builder = StylePersistingAttributedStringBuilder(original.length + pendingLength + lineAsAnsi.length)
 
             // wacky hacks to persist the ansi style correctly.
             // we should propose some upstream changes sometime...
             builder.appendAndAdoptStyle(original)
-            builder.persistStyle(lineAsAnsi.length)
+            builder.persistStyle(lineAsAnsi.length + pendingLength)
+
+            if (pendingLength > 0) {
+                builder.appendAnsi(pendingOutput.toString())
+                pendingOutput.setLength(0)
+            }
+
             builder.appendAnsi(lineAsAnsi)
 
             output[end] = builder.toAttributedString()
         } else {
-            val atBottom = scrollbackBottom == 0
-            output.add(line)
+            if (pendingOutput.isNotEmpty()) {
+                val builder = AttributedStringBuilder(pendingOutput.length + line.length)
+                builder.appendAnsi(pendingOutput.toString())
+                builder.append(line)
+                output.add(builder.toAttributedString())
 
+                pendingOutput.setLength(0)
+            } else {
+                output.add(line)
+            }
+
+            val atBottom = scrollbackBottom == 0
             if (!atBottom && output.size > outputWindowHeight) {
                 ++scrollbackBottom
             }
         }
     }
+
+    private fun preserveTrailingEscapeCodes(line: CharSequence, targetBuffer: StringBuilder) {
+        val last = line.lastIndex
+        var end = last
+        var foundEscapeAt = -1
+        while (end >= 0 && last - end < ESCAPE_CODE_SEARCH_LIMIT) {
+            if (line[end].toInt() == KEY_ESCAPE) {
+                // NOTE there shouldn't be any more, but
+                // if we encounter that, we could adjust [last]
+                // here and keep looping
+                foundEscapeAt = end
+                break
+            }
+
+            --end
+        }
+
+        if (foundEscapeAt != -1) {
+            targetBuffer.append(line, end, line.length)
+        }
+    }
+
 }
 
 class StylePersistingAttributedStringBuilder(capacity: Int): AttributedStringBuilder(capacity) {

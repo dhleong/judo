@@ -48,7 +48,7 @@ class RecencyCompletionSourceTest {
         // we dedup lazily rather than eagerly during insert,
         // adding `super` actually prunes off the old `she`;
         // then, `special` prunes off `sells`.
-        
+
         source.process("super special")
         assertThat(source.suggest("s").toList())
             .containsExactly(
