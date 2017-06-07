@@ -21,6 +21,7 @@ import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
 import java.io.File
+import java.io.PrintStream
 import javax.swing.KeyStroke
 
 /**
@@ -42,6 +43,9 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
+
+    private val errorLogFile = File("error-log.txt")
+    private var logDebug = true
 
     private val modes = sequenceOf(
 
@@ -73,17 +77,25 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             updateStatusLine(currentMode)
             updateInputLine()
         }
+
+        if (logDebug) {
+            System.setErr(PrintStream(errorLogFile.outputStream()))
+        }
     }
 
     override fun connect(address: String, port: Int) {
         disconnect()
         echo("Connecting to $address:$port...")
 
-        val connection = CommonsNetConnection(address, port, renderer.terminalType)
+        val connection = CommonsNetConnection(address, port, renderer.terminalType, { string -> echo(string) })
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
         connection.onEchoStateChanged = { doEcho ->
             this.doEcho = doEcho
+
+            if (logDebug) {
+                echo("## TELNET doEcho($doEcho)")
+            }
         }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
         connection.forEachLine { buffer, count ->
@@ -114,7 +126,12 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     override fun echo(vararg objects: Any?) {
         // TODO colors?
-        renderer.appendOutput(objects.joinToString(" "))
+        val asString = objects.joinToString(" ")
+        renderer.appendOutput(asString)
+
+        if (logDebug) {
+            errorLogFile.appendText("\n## ECHO: $asString\n")
+        }
     }
 
     override fun enterMode(modeName: String) {
@@ -346,12 +363,19 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         return statusLineWorkspace
     }
 
-    private fun appendError(e: Throwable, prefix: String = "") {
+    private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
+        if (isRoot) {
+            errorLogFile.printWriter().use {
+                it.println(prefix)
+                e.printStackTrace(it)
+            }
+        }
+
         renderer.appendOutput("$prefix${e.message}")
         e.stackTrace.map { "  $it" }
             .forEach { renderer.appendOutput(it) }
         e.cause?.let {
-            appendError(it, "Caused by: ")
+            appendError(it, "Caused by: ", isRoot = false)
         }
     }
 
