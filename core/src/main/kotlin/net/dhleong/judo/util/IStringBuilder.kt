@@ -16,7 +16,6 @@ interface IStringBuilder : CharSequence, Appendable {
         fun from(actual: CharSequence) =
             when (actual) {
                 is IStringBuilder -> actual
-//                is StringBuilder -> DelegateIStringBuilder(actual)
                 is AttributedCharSequence -> {
                     val result = ReplaceableAttributedStringBuilder(actual.length)
                     result.append(actual)
@@ -33,19 +32,3 @@ interface IStringBuilder : CharSequence, Appendable {
     fun toAnsiString(): String = toString()
 }
 
-internal class DelegateIStringBuilder(val delegate: StringBuilder)
-        : IStringBuilder,
-            Appendable by delegate,
-            CharSequence by delegate {
-
-    override fun replace(start: Int, end: Int, str: String) {
-        delegate.replace(start, end, str)
-    }
-
-    override fun setLength(newLength: Int) {
-        delegate.setLength(newLength)
-    }
-
-    override fun toString(): String =
-        delegate.toString()
-}

@@ -1,5 +1,6 @@
 package net.dhleong.judo.util
 
+import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 
 /**
@@ -38,7 +39,6 @@ fun ansi(attr: Int = -1, fg: Int = -1, bg: Int = -1): CharSequence {
 
 
 fun stripAnsi(string: CharSequence): String =
-    AttributedString.stripAnsi(string.toString())
+    (string as? AttributedCharSequence)?.toString() // ansi is already stripped
+        ?: AttributedString.stripAnsi(string.toString())
 
-fun stripAnsi(chars: CharArray, count: Int): CharSequence =
-    AttributedString.stripAnsi(String(chars, 0, count))
