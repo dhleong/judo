@@ -1,6 +1,7 @@
 package net.dhleong.judo.util
 
 import org.jline.utils.AttributedCharSequence
+import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 
 private val ESCAPE_CODE_SEARCH_LIMIT = 8
@@ -19,12 +20,39 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
         preserveHangingAnsi(ansiString)
     }
 
+    /**
+     * NOTE: you should generally prefer slice if possible. We would LIKE to
+     *  just override this method instead of adding a new one, but JLine
+     *  overrode the return type with AttributedString :\
+     * We *could* add another subclass of AttributedString that contains
+     *  postEscapePartials, but.....
+     */
+    override fun subSequence(startIndex: Int, endIndex: Int): AttributedString =
+        super.subSequence(startIndex, endIndex)
+
+    override fun slice(startIndex: Int, endIndex: Int): AttributedCharSequence {
+        if (endIndex < this.lastIndex || postEscapePartials == null) {
+            return super.subSequence(startIndex, endIndex)
+        } else {
+            val partials = postEscapePartials
+            return ReplaceableAttributedStringBuilder(endIndex - startIndex).apply {
+                append(super.subSequence(startIndex, endIndex))
+                postEscapePartials = partials
+            }
+        }
+    }
+
     fun appendAndAdoptStyle(string: AttributedCharSequence) {
         // quick shortcut
         if (string.isEmpty()) return
 
         if (postEscapePartials != null) {
-            append(joinTrailingPartialsTo(string))
+            val partialsFixed = joinTrailingPartialsTo(string)
+            if (partialsFixed is AttributedString) {
+                appendAnsi(partialsFixed.toAnsi())
+            } else {
+                append(partialsFixed)
+            }
         } else {
             // FIXME: we seem to need to do it this way for now
             // see: JLineRendererTest.appendOutput_resumePartial_continueAnsi2

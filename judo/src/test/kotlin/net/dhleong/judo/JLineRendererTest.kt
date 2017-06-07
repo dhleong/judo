@@ -128,6 +128,33 @@ class JLineRendererTest {
         assertThat(renderer.getScrollback()).isEqualTo(0)
     }
 
+    @Test fun appendOutput_resumePartial_splitAnsi_integration() {
+        // we've tested the core handling above, so let's make sure
+        // JudoCore integrates into it correctly
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+        val core = JudoCore(renderer)
+
+        val ansi = ansi(fg=2)
+        val firstHalf = ansi.slice(0..ansi.lastIndex-1)
+        val secondHalf = ansi.slice(ansi.lastIndex..ansi.lastIndex)
+        assertThat("$firstHalf$secondHalf").isEqualTo(ansi.toString())
+        assertThat("$secondHalf").isEqualTo("m")
+
+        val lineOne = "${ansi(1,1)}Take my $firstHalf"
+        val lineTwo = "${secondHalf}l${ansi(1,6)}ove"
+
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        if (renderer.getOutputLines()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getOutputLines().joinToString("\n"))
+        }
+
+        assertThat(renderer.getOutputLines()[0])
+            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(fg=6)}ove${ansi(0)}")
+    }
+
     @Test fun fitInputLineToWindow() {
         val renderer = JLineRenderer()
         renderer.windowWidth = 12

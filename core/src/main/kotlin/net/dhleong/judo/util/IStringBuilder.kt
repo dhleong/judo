@@ -29,6 +29,11 @@ interface IStringBuilder : CharSequence, Appendable {
 
     fun setLength(newLength: Int)
 
+    // this method is hacks to get around AttributedCharSequence
+    // changing the return type of subSequence to AttributedString
+    fun slice(startIndex: Int, endIndex: Int): CharSequence =
+        subSequence(startIndex, endIndex)
+
     fun toAnsiString(): String = toString()
 }
 

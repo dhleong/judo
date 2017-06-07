@@ -2,7 +2,7 @@ package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.util.ReplaceableAttributedStringBuilder
+import net.dhleong.judo.util.IStringBuilder
 
 /**
  * @author dhleong
@@ -39,9 +39,7 @@ class PromptManager : IPromptManager {
         // NOTE: I don't love the dependency on JLine in the core
         //  here, but it seems to be the best way to process output
         //  for prompts without losing the ansi stuff....
-        val withAnsi = ReplaceableAttributedStringBuilder(input.length).apply {
-            appendAnsi(input.toString())
-        }
+        val withAnsi = IStringBuilder.from(input)
 
         return delegate.process(withAnsi) { index, prompt ->
             onPrompt(index, prompt)

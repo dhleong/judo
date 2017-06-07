@@ -120,16 +120,7 @@ class JudoCore(
                 }
             }
 
-            renderer.inTransaction {
-                try {
-                    val asCharSequence = StringBuilder(count).append(buffer, 0, count)
-                    val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
-                    appendOutput(withoutPrompts)
-                    processOutput(stripAnsi(withoutPrompts))
-                } catch (e: Throwable) {
-                    appendError(e, "ERROR")
-                }
-            }
+            onIncomingBuffer(buffer, count)
         }
 
         this.connection = connection
@@ -400,7 +391,21 @@ class JudoCore(
         }
     }
 
-    internal fun appendOutput(buffer: CharSequence) {
+    /** NOTE: public for testing only */
+    fun onIncomingBuffer(buffer: CharArray, count: Int) {
+        renderer.inTransaction {
+            try {
+                val asCharSequence = StringBuilder(count).append(buffer, 0, count)
+                val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
+                appendOutput(withoutPrompts as IStringBuilder) // hacks
+                processOutput(stripAnsi(withoutPrompts))
+            } catch (e: Throwable) {
+                appendError(e, "ERROR")
+            }
+        }
+    }
+
+    internal fun appendOutput(buffer: IStringBuilder) {
         val count = buffer.length
         renderer.inTransaction {
             var lastLineEnd = 0
@@ -415,7 +420,7 @@ class JudoCore(
                         else '\n'
 
                     renderer.appendOutput(
-                        buffer.subSequence(lastLineEnd, i),
+                        buffer.slice(lastLineEnd, i),
                         isPartialLine = false
                     )
 
@@ -429,7 +434,7 @@ class JudoCore(
 
             if (lastLineEnd < count) {
                 renderer.appendOutput(
-                    buffer.subSequence(lastLineEnd, count),
+                    buffer.slice(lastLineEnd, count),
                     isPartialLine = true
                 )
             }

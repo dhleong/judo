@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -97,4 +98,7 @@ class JudoCoreTest {
         )
     }
 }
+
+private fun JudoCore.appendOutput(buffer: String) =
+    appendOutput(IStringBuilder.from(buffer))
 

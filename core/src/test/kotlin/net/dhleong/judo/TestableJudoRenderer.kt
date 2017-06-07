@@ -33,10 +33,10 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
     ) { _, method, args ->
         when (method.name) {
             "appendOutput" -> {
-                val line = args[0] as String
+                val line = args[0] as CharSequence
                 val isPartial = args[1] as Boolean
 
-                state.outputLines.add(line to isPartial)
+                state.outputLines.add(line.toString() to isPartial)
             }
 
             "getWindowWidth" -> state.windowWidth
