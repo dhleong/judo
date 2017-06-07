@@ -24,18 +24,27 @@ fun main(args: Array<String>) {
         }
     })
 
+    val argsList = args.toMutableList()
+    val hasDebug = argsList.remove("--debug")
+    val hasAllDebug = argsList.remove("--debug=all")
+    val debugLevel = when {
+        hasAllDebug -> DebugLevel.ALL
+        hasDebug -> DebugLevel.NORMAL
+        else -> DebugLevel.OFF
+    }
+
     // the main thing
-    val judo = JudoCore(renderer)
+    val judo = JudoCore(renderer, debug = debugLevel)
 
     // if they have a global init.py, read it
     if (userConfigFile.exists()) {
         judo.readFile(userConfigFile)
     }
 
-    when (args.size) {
+    when (argsList.size) {
         1 -> {
             // read world.py
-            val worldPy = File(args[0].replace("^~", USER_HOME)).absoluteFile
+            val worldPy = File(argsList[0].replace("^~", USER_HOME)).absoluteFile
             if (!(worldPy.exists() && worldPy.canRead())) {
                 judo.quit()
                 renderer.close()
@@ -50,11 +59,11 @@ fun main(args: Array<String>) {
         2 -> {
             // connect directly
             try {
-                val host = args[0]
-                val port = args[1].toInt()
+                val host = argsList[0]
+                val port = argsList[1].toInt()
                 judo.connect(host, port)
             } catch (e: NumberFormatException) {
-                System.err.println("Invalid port: ${args[1]}")
+                System.err.println("Invalid port: ${argsList[1]}")
                 System.exit(1)
             }
         }

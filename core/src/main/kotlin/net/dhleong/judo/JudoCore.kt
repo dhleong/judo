@@ -21,6 +21,7 @@ import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
 import java.io.File
+import java.io.FileOutputStream
 import java.io.PrintStream
 import javax.swing.KeyStroke
 
@@ -28,7 +29,19 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 
-class JudoCore(val renderer: JudoRenderer) : IJudoCore {
+enum class DebugLevel {
+    OFF,
+    NORMAL,
+    ALL;
+
+    val isEnabled: Boolean
+        get() = this != OFF
+}
+
+class JudoCore(
+    val renderer: JudoRenderer,
+    val debug: DebugLevel = DebugLevel.OFF
+) : IJudoCore {
 
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
@@ -44,8 +57,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
 
-    private val errorLogFile = File("error-log.txt")
-    private var logDebug = true
+    private val debugLogFile = File("debug-log.txt")
 
     private val modes = sequenceOf(
 
@@ -78,8 +90,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
             updateInputLine()
         }
 
-        if (logDebug) {
-            System.setErr(PrintStream(errorLogFile.outputStream()))
+        if (debug.isEnabled) {
+            System.setErr(PrintStream(debugLogFile.outputStream()))
         }
     }
 
@@ -93,12 +105,21 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         connection.onEchoStateChanged = { doEcho ->
             this.doEcho = doEcho
 
-            if (logDebug) {
+            if (debug.isEnabled) {
                 echo("## TELNET doEcho($doEcho)")
             }
         }
         connection.onError = { appendError(it, "NETWORK ERROR: ")}
         connection.forEachLine { buffer, count ->
+            if (debug == DebugLevel.ALL) {
+                FileOutputStream(debugLogFile, true).use {
+                    it.bufferedWriter().use {
+                        it.write(buffer, 0, count)
+                        it.write("{PACKET_BOUNDARY}")
+                    }
+                }
+            }
+
             renderer.inTransaction {
                 try {
                     val asCharSequence = StringBuilder(count).append(buffer, 0, count)
@@ -129,8 +150,8 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
         val asString = objects.joinToString(" ")
         renderer.appendOutput(asString)
 
-        if (logDebug) {
-            errorLogFile.appendText("\n## ECHO: $asString\n")
+        if (debug.isEnabled) {
+            debugLogFile.appendText("\n## ECHO: $asString\n")
         }
     }
 
@@ -365,7 +386,7 @@ class JudoCore(val renderer: JudoRenderer) : IJudoCore {
 
     private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
         if (isRoot) {
-            errorLogFile.printWriter().use {
+            debugLogFile.printWriter().use {
                 it.println(prefix)
                 e.printStackTrace(it)
             }

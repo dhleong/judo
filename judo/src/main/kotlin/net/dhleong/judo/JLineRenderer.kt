@@ -31,7 +31,10 @@ import javax.swing.KeyStroke
 
 val KEY_ESCAPE = 27
 
-class JLineRenderer : JudoRenderer, BlockingKeySource {
+class JLineRenderer(
+    val enableMouse: Boolean = false
+) : JudoRenderer, BlockingKeySource {
+
     private val DEFAULT_SCROLLBACK_SIZE = 20_000
 
     override val terminalType: String
@@ -79,7 +82,11 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         terminal.puts(InfoCmp.Capability.enter_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_xmit)
-        terminal.trackMouse(Terminal.MouseTracking.Normal)
+
+        if (enableMouse) {
+            terminal.trackMouse(Terminal.MouseTracking.Normal)
+        }
+
         terminal.flush()
 
         resize()
@@ -102,7 +109,11 @@ class JLineRenderer : JudoRenderer, BlockingKeySource {
 
         terminal.puts(InfoCmp.Capability.exit_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_local)
-        terminal.trackMouse(Terminal.MouseTracking.Off)
+
+        if (enableMouse) {
+            terminal.trackMouse(Terminal.MouseTracking.Off)
+        }
+
         terminal.flush()
         terminal.attributes = originalAttributes
         terminal.close()
