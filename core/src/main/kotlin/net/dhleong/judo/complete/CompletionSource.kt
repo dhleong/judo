@@ -20,9 +20,8 @@ interface CompletionSource {
 class CompletionSourceFacade {
     companion object {
         fun create(): CompletionSource {
-            // right now we just have the DumbCompletionSource,
-            // and don't support any config...
-            return DumbCompletionSource()
+            // no config to speak of...
+            return RecencyCompletionSource()
         }
     }
 }
