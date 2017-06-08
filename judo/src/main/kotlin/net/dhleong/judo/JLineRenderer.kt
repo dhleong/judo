@@ -358,6 +358,10 @@ class JLineRenderer(
         }
     }
 
+    // visible for testing
+    internal fun fitInputLineToWindow(): Pair<AttributedString, Int> =
+        fitInputLineToWindow(input)
+
     internal fun fitInputLineToWindow(line: AttributedString): Pair<AttributedString, Int> {
         val maxLineWidth = windowWidth
 

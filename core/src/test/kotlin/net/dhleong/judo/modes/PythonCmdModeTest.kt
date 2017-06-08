@@ -1,6 +1,8 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.TestableJudoCore
+import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.util.InputHistory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -11,7 +13,8 @@ import org.junit.Test
 class PythonCmdModeTest {
 
     val judo = TestableJudoCore()
-    val mode = PythonCmdMode(judo)
+    val input = InputBuffer()
+    val mode = PythonCmdMode(judo, input, InputHistory(input))
 
     @Before fun setUp() {
         mode.onEnter()
@@ -37,8 +40,8 @@ class PythonCmdModeTest {
             .containsExactly(arrayOf("normal", "a", "bc", false))
     }
 
-    @Test fun map_createmap() {
-        mode.execute("createmap('custom', 'a', 'bc', True)")
+    @Test fun map_createMap() {
+        mode.execute("createMap('custom', 'a', 'bc', True)")
 
         assertThat(judo.maps)
             .containsExactly(arrayOf("custom", "a", "bc", true))

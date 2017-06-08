@@ -10,6 +10,18 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun createUserMode(name: String) {
+        TODO("not implemented")
+    }
+
+    override fun map(mode: String, from: String, to: () -> Unit) {
+        TODO("not implemented")
+    }
+
+    override fun setCursorType(type: CursorType) {
+        TODO("not implemented")
+    }
+
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()

@@ -52,7 +52,7 @@ class PythonCmdMode(
         python["nmap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], true) }
         python["nnoremap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], false) }
 
-        python["createMap"] = asUnitPyFn<Any>(3) {
+        python["createMap"] = asUnitPyFn<Any>(4, minArgs = 3) {
             val remap =
                 if (it.size == 4) it[3] as Boolean
                 else false
@@ -154,8 +154,9 @@ inline private fun <reified T: Any> asMaybeDecorator(
 
 inline private fun <reified T: Any> asUnitPyFn(
         takeArgs: Int = Int.MAX_VALUE,
+        minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> Unit): PyObject {
-    return asPyFn(takeArgs, takeArgs, fn)
+    return asPyFn(takeArgs, minArgs, fn)
 }
 
 inline private fun <reified T: Any, reified R> asPyFn(

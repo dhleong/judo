@@ -47,8 +47,11 @@ class NormalMode(
         keys("c") to { core ->
             opMode.fullLineMotionKey = 'c'
             withOperator { range ->
-                buffer.deleteWithCursor(range)
-                core.enterMode("insert")
+                if (buffer.deleteWithCursor(range)) {
+                    core.enterMode("insert")
+                } else {
+                    // TODO bell?
+                }
             }
         },
         keys("C") to { core ->
@@ -58,7 +61,7 @@ class NormalMode(
 
         keys("d") to { _ ->
             opMode.fullLineMotionKey = 'd'
-            withOperator(buffer::deleteWithCursor)
+            withOperator { range -> buffer.deleteWithCursor(range) } // TODO bell on error?
         },
         keys("D") to { _ ->
             buffer.delete(rangeOf(toEndMotion()))
