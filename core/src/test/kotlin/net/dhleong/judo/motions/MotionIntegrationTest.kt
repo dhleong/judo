@@ -12,7 +12,7 @@ import org.junit.Test
 /**
  * @author dhleong
  */
-class WordMotionIntegrationTest {
+class MotionIntegrationTest {
 
     val renderer = TestableJudoRenderer()
     lateinit var judo: JudoCore
@@ -60,6 +60,22 @@ class WordMotionIntegrationTest {
         judo.type(keys("df<space>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word word3" to 5)
+    }
+
+    @Test fun deleteUntilBack() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("dTw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word wword3" to 6)
+    }
+
+    @Test fun deleteUntilForward() {
+        judo.setInput("word word2 word3", 5)
+
+        judo.type(keys("dt<space>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word  word3" to 5)
     }
 
     @Test fun deleteWord() {

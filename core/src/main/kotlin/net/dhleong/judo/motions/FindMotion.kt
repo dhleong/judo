@@ -20,3 +20,12 @@ fun findMotion(step: Int) =
             start..end
         }
     }
+
+fun tilMotion(step: Int): Motion {
+    val base = findMotion(step)
+    return createMotion(listOf(Motion.Flags.INCLUSIVE)) { readKey, buffer, cursor ->
+        val baseRange = base.calculate(readKey, buffer, cursor)
+        baseRange.start..(baseRange.endInclusive - step)
+    }
+}
+
