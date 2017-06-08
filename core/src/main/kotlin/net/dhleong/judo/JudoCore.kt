@@ -276,6 +276,7 @@ class JudoCore(
     fun onDisconnect() {
         renderer.inTransaction {
             // dump the parsed prompts for visual affect
+            echo("")
             parsedPrompts.forEach {
                 renderer.appendOutput(it)
             }
