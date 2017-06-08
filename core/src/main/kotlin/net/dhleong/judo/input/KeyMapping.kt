@@ -12,6 +12,9 @@ typealias KeyAction = (IJudoCore) -> Unit
 
 class KeyMapping() {
 
+    val size: Int
+        get() = keysMap.size
+
     private val keysMap = HashMap<Keys, KeyAction>()
     private val possibleMaps = HashSet<Keys>()
 

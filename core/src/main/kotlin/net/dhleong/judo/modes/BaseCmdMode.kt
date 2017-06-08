@@ -66,9 +66,25 @@ private val COMMAND_HELP = mutableMapOf(
         "Connect to a server."
     ),
 
+    "createUserMode" to buildHelp(
+        "createUserMode(modeName: String)",
+        "Create a new mode with the given name. Mappings can be added to it" +
+        "using the createMap() function"
+    ),
+
     "disconnect" to buildHelp(
         "disconnect()",
         "Disconnect from the server."
+    ),
+
+    "enterMode" to buildHelp(
+        "enterMode(modeName: String)",
+        "Enter the mode with the given name"
+    ),
+
+    "exitMode" to buildHelp(
+        "exitMode()",
+        "Enter the current mode"
     ),
 
     "echo" to buildHelp(
@@ -100,16 +116,20 @@ private val COMMAND_HELP = mutableMapOf(
     val mapTypes = arrayOf(
         "map", "noremap",
         "imap", "inoremap",
-        "nmap", "nnoremap")
+        "nmap", "nnoremap"
+    )
+
     val help = buildHelp(
         mapTypes.map {
             "$it(inputKeys: String, outputKeys: String)"
-        },
+        } + "createMap(modeName: String, inputKeys: String, outputKeys: String)",
         "Create a mapping in a specific mode from inputKeys to outputKeys"
     )
+
     mapTypes.forEach {
         put(it, help)
     }
+    put("createMap", help)
 }
 
 abstract class BaseCmdMode(

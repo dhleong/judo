@@ -43,26 +43,28 @@ class PythonCmdMode(
         }
 
         // map invocations
-        python["map"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], true) }
-        python["noremap"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], false) }
-        python["cmap"] = asUnitPyFn<String>(2) { judo.map("cmd", it[0], it[1], true) }
-        python["cnoremap"] = asUnitPyFn<String>(2) { judo.map("cmd", it[0], it[1], false) }
-        python["imap"] = asUnitPyFn<String>(2) { judo.map("insert", it[0], it[1], true) }
-        python["inoremap"] = asUnitPyFn<String>(2) { judo.map("insert", it[0], it[1], false) }
-        python["nmap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], true) }
-        python["nnoremap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], false) }
+        python["map"] = asUnitPyFn<Any>(2) { defineMap("", it[0], it[1], true) }
+        python["noremap"] = asUnitPyFn<Any>(2) { defineMap("", it[0], it[1], false) }
+        python["cmap"] = asUnitPyFn<Any>(2) { defineMap("cmd", it[0], it[1], true) }
+        python["cnoremap"] = asUnitPyFn<Any>(2) { defineMap("cmd", it[0], it[1], false) }
+        python["imap"] = asUnitPyFn<Any>(2) { defineMap("insert", it[0], it[1], true) }
+        python["inoremap"] = asUnitPyFn<Any>(2) { defineMap("insert", it[0], it[1], false) }
+        python["nmap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], true) }
+        python["nnoremap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], false) }
 
-        python["createmap"] = asUnitPyFn<Any>(4) {
-            judo.map(
-                it[0] as String,
-                it[1] as String,
-                it[2] as String,
-                it[3] as Boolean)
+        python["createMap"] = asUnitPyFn<Any>(3) {
+            val remap =
+                if (it.size == 4) it[3] as Boolean
+                else false
+            defineMap(it[0] as String, it[1] as String, it[2], remap)
         }
 
         python["connect"] = asUnitPyFn<Any> { judo.connect(it[0] as String, it[1] as Int) }
+        python["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
         python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
         python["echo"] = asUnitPyFn<Any> { judo.echo(*it) }
+        python["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
+        python["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
         python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
@@ -81,6 +83,24 @@ class PythonCmdMode(
         }
     }
 
+    private fun defineMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
+        if (mapTo is String) {
+            judo.map(
+                modeName,
+                fromKeys as String,
+                mapTo,
+                remap)
+        } else if (mapTo is PyFunction) {
+            judo.map(
+                modeName,
+                fromKeys as String,
+                { mapTo.__call__() }
+            )
+        } else {
+            throw IllegalArgumentException("Unexpected map-to value")
+        }
+    }
+
     private fun definePrompt(alias: String, handler: Any) {
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
@@ -92,7 +112,6 @@ class PythonCmdMode(
             judo.prompts.define(alias, handler as String)
         }
     }
-
 
     private fun defineTrigger(alias: String, handler: PyFunction) {
         judo.triggers.define(alias, { args ->

@@ -12,6 +12,7 @@ import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
+import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
@@ -129,6 +130,10 @@ class JudoCore(
         this.connection = connection
     }
 
+    override fun createUserMode(name: String) {
+        modes[name] = UserCreatedMode(this, name)
+    }
+
     override fun disconnect() {
         connection?.let {
             it.onDisconnect = null
@@ -184,6 +189,28 @@ class JudoCore(
             modes.keys
                 .filter { modes[it] is MappableMode }
                 .forEach { map(it, from, to, remap) }
+            return
+        }
+
+        throw IllegalArgumentException("No such mode $mode")
+    }
+
+    override fun map(mode: String, from: String, to: () -> Unit) {
+        modes[mode]?.let { modeObj ->
+            if (modeObj !is MappableMode) {
+                throw IllegalArgumentException("$mode does not support mapping")
+            }
+
+            val fromKeys = Keys.parse(from)
+            modeObj.userMappings.map(fromKeys, { _ -> to() })
+            return
+        }
+
+        // map in all modes
+        if (mode == "") {
+            modes.keys
+                .filter { modes[it] is MappableMode }
+                .forEach { map(it, from, to) }
             return
         }
 
