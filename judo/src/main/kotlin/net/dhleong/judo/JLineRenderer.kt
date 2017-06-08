@@ -313,15 +313,17 @@ class JLineRenderer(
         }
         workspace.addAll(toOutput)
 
-        workspace.add(status)
+        val (statusLine, statusCursor) = fitInputLineToWindow(status)
+        workspace.add(statusLine)
 
-        val (inputLine, inputCursor) = fitInputLineToWindow()
+        val (inputLine, inputCursor) = fitInputLineToWindow(input)
         workspace.add(inputLine)
 
         val cursorPos: Int
         if (isCursorOnStatus) {
             cursorPos = windowSize.cursorPos(
-                windowHeight - 1, cursor
+                windowHeight - 1,
+                statusCursor
             )
         } else {
             cursorPos = windowSize.cursorPos(
@@ -339,15 +341,15 @@ class JLineRenderer(
         terminal.flush()
     }
 
-    internal fun fitInputLineToWindow(): Pair<AttributedString, Int> {
+    internal fun fitInputLineToWindow(line: AttributedString): Pair<AttributedString, Int> {
         val maxLineWidth = windowWidth
 
-        if (input.length < maxLineWidth) {
+        if (line.length < maxLineWidth) {
             // convenient shortcut
-            return input to cursor
+            return line to cursor
         }
 
-        // take the slice of `input` that contains `cursor`
+        // take the slice of `line` that contains `cursor`
         val absolutePage = cursor / maxLineWidth
         val absolutePageCursor = cursor % maxLineWidth
 
@@ -364,17 +366,17 @@ class JLineRenderer(
             cursorOffset = 0
         }
 
-        val windowEnd = minOf(input.length, windowStart + maxLineWidth)
+        val windowEnd = minOf(line.length, windowStart + maxLineWidth)
         val hasMorePrev = absolutePage > 0
-        val hasMoreNext = windowEnd < input.length
+        val hasMoreNext = windowEnd < line.length
 
         // indicate continued
         val withIndicator: AttributedString
         if (!(hasMoreNext || hasMorePrev)) {
             // minor optimization for the common case
-            withIndicator = input.subSequence(windowStart, windowEnd)
+            withIndicator = line.subSequence(windowStart, windowEnd)
         } else {
-            val windowedInput = input.subSequence(
+            val windowedInput = line.subSequence(
                 if (hasMorePrev) windowStart + 1
                 else windowStart,
 
