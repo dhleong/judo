@@ -238,7 +238,7 @@ class JudoCore(
 
         if (doEcho) {
             // always output what we sent
-            // TODO except... don't echo if the server has told us not to
+            // except... don't echo if the server has told us not to
             // (EG: passwords)
             echo(toSend) // TODO color?
         }
@@ -294,8 +294,14 @@ class JudoCore(
 
     // TODO check for esc/ctrl+c and throw InputInterruptedException...
     // TODO catch that in the feedKey loop
-    override fun readKey(): KeyStroke =
-        keyStrokeProducer.readKey()
+    override fun readKey(): KeyStroke {
+        if (debug.isEnabled) echo("## DEBUG: enter blocking readKey")
+        
+        val key = keyStrokeProducer.readKey()
+
+        if (debug.isEnabled) echo("## DEBUG: exit blocking readKey")
+        return key
+    }
 
     override fun setCursorType(type: CursorType) =
         renderer.setCursorType(type)
