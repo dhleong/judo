@@ -1,8 +1,9 @@
 package net.dhleong.judo.util
 
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 
-class InputHistory(val buffer: InputBuffer, capacity: Int = 2000) {
+class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory {
 
     // TODO circular buffer
     private val contents = ArrayList<String>(capacity)
@@ -10,17 +11,17 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000) {
     private var lastBufferValue: String? = null
     private var historyOffset = 0
 
-    fun clear() {
+    override fun clear() {
         contents.clear()
         lastBufferValue = null
         historyOffset = 0
     }
 
-    fun push(line: String) {
+    override fun push(line: String) {
         contents.add(line)
     }
 
-    fun resetHistoryOffset() {
+    override fun resetHistoryOffset() {
         historyOffset = 0
     }
 
@@ -28,7 +29,7 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000) {
      * Scroll the history by [dir], where positive numbers move to more recent
      * items and negative numbers move to older, updating the attached InputBuffer
      */
-    fun scroll(dir: Int) {
+    override fun scroll(dir: Int) {
         if (lastBufferValue == null && dir < 0) {
             lastBufferValue = buffer.toString()
         }
@@ -55,7 +56,7 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000) {
      *
      * @return True if a match was found, else false.
      */
-    fun search(match: String, forceNext: Boolean): Boolean {
+    override fun search(match: String, forceNext: Boolean): Boolean {
         // NOTE offset will always be negative (or 0)
         val offset =
             if (forceNext &&

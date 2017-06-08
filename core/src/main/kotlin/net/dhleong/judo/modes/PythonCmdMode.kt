@@ -1,6 +1,8 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.input.IInputHistory
+import net.dhleong.judo.input.InputBuffer
 import org.python.core.Options
 import org.python.core.Py
 import org.python.core.PyFunction
@@ -13,7 +15,11 @@ import java.io.InputStream
  *
  * @author dhleong
  */
-class PythonCmdMode(judo: IJudoCore) : BaseCmdMode(judo) {
+class PythonCmdMode(
+    judo: IJudoCore,
+    inputBuffer: InputBuffer,
+    history: IInputHistory
+) : BaseCmdMode(judo, inputBuffer, history) {
 
     private val python: PythonInterpreter
 

@@ -51,7 +51,10 @@ class JudoCore(
     private val parsedPrompts = ArrayList<IStringBuilder>(1)
 
     internal val buffer = InputBuffer()
+    internal val cmdBuffer = InputBuffer()
+
     private val sendHistory = InputHistory(buffer)
+    private val cmdHistory = InputHistory(cmdBuffer)
     private val completions = CompletionSourceFacade.create()
 
     private val opMode = OperatorPendingMode(this, buffer)
@@ -64,7 +67,7 @@ class JudoCore(
         InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
-        PythonCmdMode(this),
+        PythonCmdMode(this, cmdBuffer, cmdHistory),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>(), { map, mode ->

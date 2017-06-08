@@ -2,6 +2,7 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
@@ -12,11 +13,13 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 
-abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
+abstract class BaseCmdMode(
+    val judo: IJudoCore,
+    val inputBuffer: InputBuffer,
+    val history: IInputHistory
+) : Mode {
 
     override val name = "cmd"
-
-    val inputBuffer = InputBuffer()
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
         when {
@@ -29,6 +32,7 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
                     }
                 }
                 execute(code)
+                history.push(code)
                 clearBuffer()
                 exitMode()
                 return
@@ -50,6 +54,15 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
                 return
             }
 
+            key.keyCode == KeyEvent.VK_UP -> {
+                history.scroll(-1)
+                return
+            }
+
+            key.keyCode == KeyEvent.VK_DOWN -> {
+                history.scroll(1)
+                return
+            }
         }
 
         if (key.hasCtrl()) {
