@@ -441,7 +441,7 @@ class JudoCore(
                 )
             } else if (!buffer.isDiscardable()) {
                 renderer.appendOutput(
-                    buffer,
+                    buffer.slice(lastLineEnd, count),
                     isPartialLine = true
                 )
             }
