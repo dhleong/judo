@@ -104,6 +104,7 @@ class JudoCore(
         echo("Connecting to $address:$port...")
 
         val connection = CommonsNetConnection(address, port, renderer.terminalType, { string -> echo(string) })
+        connection.debug = debug.isEnabled
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
         connection.onEchoStateChanged = { doEcho ->
@@ -296,7 +297,7 @@ class JudoCore(
     // TODO catch that in the feedKey loop
     override fun readKey(): KeyStroke {
         if (debug.isEnabled) echo("## DEBUG: enter blocking readKey")
-        
+
         val key = keyStrokeProducer.readKey()
 
         if (debug.isEnabled) echo("## DEBUG: exit blocking readKey")

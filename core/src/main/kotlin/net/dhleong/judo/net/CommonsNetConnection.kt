@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import org.apache.commons.net.telnet.EchoOptionHandler
+import org.apache.commons.net.telnet.SimpleOptionHandler
 import org.apache.commons.net.telnet.TelnetClient
 import org.apache.commons.net.telnet.TelnetNotificationHandler
 import org.apache.commons.net.telnet.TelnetOption
@@ -18,13 +19,21 @@ class CommonsNetConnection(
     override val input: InputStream
     override val output: OutputStream
 
-    var debug = false
+    // NOTE: it's a bit weird storing this value in the socketFactory,
+    // but we need to update it somehow....
+    var debug: Boolean
+        get() = socketFactory.debug
+        set(value) {
+            socketFactory.debug = value
+        }
 
     private val client = TelnetClient(terminalType)
+    private val socketFactory = MccpHandlingSocketFactory(echo)
 
     private var echoStateChanges = 0
 
     init {
+        client.setSocketFactory(socketFactory)
         client.connect(address, port)
 
         input = client.inputStream
@@ -42,9 +51,10 @@ class CommonsNetConnection(
     override fun setWindowSize(width: Int, height: Int) {
         client.addOptionHandler(WindowSizeOptionHandler(width, height))
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
+        client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
             if (debug) {
-                echo("## TELNET ${stringify(negotiation_code)} ${TelnetOption.getOption(option_code)}")
+                echo("## TELNET ${stringify(negotiation_code)} ${stringifyOption(option_code)}")
             }
 
             if (option_code == TelnetOption.ECHO) {
@@ -65,14 +75,23 @@ class CommonsNetConnection(
         return "[$address:$port]"
     }
 
-    private fun stringify(option_code: Int): String =
-        when (option_code) {
+    private fun stringify(negotiationCode: Int): String =
+        when (negotiationCode) {
             TelnetNotificationHandler.RECEIVED_WILL -> "WILL"
             TelnetNotificationHandler.RECEIVED_WONT -> "WONT"
             TelnetNotificationHandler.RECEIVED_DO -> "DO"
             TelnetNotificationHandler.RECEIVED_DONT -> "DONT"
             TelnetNotificationHandler.RECEIVED_COMMAND -> "COMMAND"
-            else -> "[$option_code]"
+            else -> "[$negotiationCode]"
         }
 
+    private fun stringifyOption(optionCode: Int): String {
+        val known = TelnetOption.getOption(optionCode)
+        if (known == "UNASSIGNED") {
+            return "[$optionCode]"
+        }
+        return known
+    }
+
 }
+
