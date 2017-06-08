@@ -400,7 +400,8 @@ class JudoCore(
                 appendOutput(withoutPrompts as IStringBuilder) // hacks
                 processOutput(stripAnsi(withoutPrompts))
             } catch (e: Throwable) {
-                appendError(e, "ERROR")
+//                appendError(e, "ERROR")
+                throw e
             }
         }
     }
@@ -419,10 +420,11 @@ class JudoCore(
                         if (char == '\n') '\r'
                         else '\n'
 
-                    renderer.appendOutput(
+                    val actualLine = renderer.appendOutput(
                         buffer.slice(lastLineEnd, i),
                         isPartialLine = false
                     )
+                    checkForSplitPrompt(actualLine)
 
                     if (i + 1 < count && buffer[i + 1] == opposite) {
                         lastLineEnd = i + 2
@@ -437,7 +439,21 @@ class JudoCore(
                     buffer.slice(lastLineEnd, count),
                     isPartialLine = true
                 )
+            } else if (!buffer.isDiscardable()) {
+                renderer.appendOutput(
+                    buffer,
+                    isPartialLine = true
+                )
             }
+        }
+    }
+
+    private fun checkForSplitPrompt(actualLine: CharSequence) {
+        val originalLength = actualLine.length
+        val result = prompts.process(actualLine, this::onPrompt)
+        if (result.length != originalLength) {
+            // we found a prompt! clean up the output
+            renderer.replaceLastLine(result)
         }
     }
 

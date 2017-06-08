@@ -25,6 +25,8 @@ interface IStringBuilder : CharSequence, Appendable {
             }
     }
 
+    fun isDiscardable(): Boolean = true
+
     fun replace(start: Int, end: Int, str: String)
 
     fun setLength(newLength: Int)

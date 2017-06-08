@@ -14,11 +14,22 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
 
     internal var postEscapePartials: StringBuilder? = null
 
+    constructor(ansiSequence: CharSequence) : this(ansiSequence.length) {
+        if (ansiSequence is AttributedCharSequence) {
+            append(ansiSequence.toAttributedString())
+        } else {
+            appendAnsi(ansiSequence.toString())
+        }
+
+        preserveHangingAnsi(ansiSequence)
+    }
     constructor(ansiString: String) : this(ansiString.length) {
         appendAnsi(ansiString)
 
         preserveHangingAnsi(ansiString)
     }
+
+    override fun isDiscardable(): Boolean = postEscapePartials == null
 
     /**
      * NOTE: you should generally prefer slice if possible. We would LIKE to
@@ -44,7 +55,17 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
 
     fun appendAndAdoptStyle(string: AttributedCharSequence) {
         // quick shortcut
-        if (string.isEmpty()) return
+        if (string.isEmpty()) {
+            // empty strings might still have escape partials
+            if (string is ReplaceableAttributedStringBuilder) {
+                if (postEscapePartials == null) {
+                    postEscapePartials = string.postEscapePartials
+                } else if (string.postEscapePartials != null) {
+                    postEscapePartials!!.append(string.postEscapePartials)
+                }
+            }
+            return
+        }
 
         if (postEscapePartials != null) {
             val partialsFixed = joinTrailingPartialsTo(string)
@@ -105,7 +126,7 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
     override fun toAnsiString(): String =
         toAnsi()
 
-    private fun preserveHangingAnsi(ansiString: String) {
+    private fun preserveHangingAnsi(ansiString: CharSequence) {
         if (this.isEmpty() && !ansiString.isEmpty()) {
             // all ansi?
             postEscapePartials = StringBuilder(ansiString)

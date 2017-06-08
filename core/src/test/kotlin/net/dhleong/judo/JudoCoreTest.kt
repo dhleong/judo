@@ -81,24 +81,27 @@ class JudoCoreTest {
         judo.onPrompt(0, prompt)
         renderer.settableWindowWidth = 12
 
-        val status = judo.buildStatusLine(object : Mode {
-            override val name = "Test"
-
-            override fun feedKey(key: KeyStroke, remap: Boolean) {
-                TODO("not implemented")
-            }
-
-            override fun onEnter() {
-                TODO("not implemented")
-            }
-        })
+        val status = judo.buildStatusLine(fakeMode("Test"))
 
         assertThat(status.toAnsiString()).isEqualTo(
             "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"
         )
     }
+
 }
 
 private fun JudoCore.appendOutput(buffer: String) =
     appendOutput(IStringBuilder.from(buffer))
 
+private fun fakeMode(name: String): Mode =
+    object : Mode {
+        override val name = name
+
+        override fun feedKey(key: KeyStroke, remap: Boolean) {
+            TODO("not implemented")
+        }
+
+        override fun onEnter() {
+            TODO("not implemented")
+        }
+    }

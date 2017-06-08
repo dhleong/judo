@@ -225,6 +225,44 @@ class JLineRendererTest {
             expected = "…d, tak" to 7)
     }
 
+    @Test fun catchSplitPrompts() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+
+        val judo = JudoCore(renderer)
+        judo.prompts.define("HP: $1", "(hp: $1)")
+
+        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
+        val first = prompt.substring(0..8)
+        val second = prompt.substring(9..prompt.lastIndex)
+        assertThat("$first$second").isEqualTo(prompt)
+
+        judo.onIncomingBuffer(first.toCharArray(), first.length)
+        judo.onIncomingBuffer(second.toCharArray(), second.length)
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly("")
+    }
+
+    @Test fun catchSplitPrompts_splitAnsi() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+
+        val judo = JudoCore(renderer)
+        judo.prompts.define("HP: $1", "(hp: $1)")
+
+        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
+        val first = prompt.substring(0..5)
+        val second = prompt.substring(6..prompt.lastIndex)
+        assertThat("$first$second").isEqualTo(prompt)
+
+        judo.onIncomingBuffer(first.toCharArray(), first.length)
+        judo.onIncomingBuffer(second.toCharArray(), second.length)
+
+        assertThat(renderer.getOutputLines())
+            .containsExactly("")
+    }
+
     private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {
         updateInputLine(text, text.length)
 

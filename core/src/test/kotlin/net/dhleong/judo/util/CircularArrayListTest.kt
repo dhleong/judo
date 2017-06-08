@@ -112,6 +112,24 @@ class CircularArrayListTest {
             .containsExactly(3, 4, 5, 1)
     }
 
+    @Test fun lastIndex() {
+        val list1 = CircularArrayList<Int>(8)
+        assertThat(list1.lastIndex).isEqualTo(-1)
+
+        // NOTE: lastIndex is always size-1...
+        val list2 = CircularArrayList<Int>(
+            arrayOf<Any?>(1, 2, 3, 4, 5),
+            0, 4, size = 4
+        )
+        assertThat(list2.lastIndex).isEqualTo(3)
+
+        val list3 = CircularArrayList<Int>(
+            arrayOf<Any?>(1, 2, 3, 4, 5),
+            2, 1, size = 4
+        )
+        assertThat(list3.lastIndex).isEqualTo(3)
+    }
+
     @Test fun slice() {
         val list1 = CircularArrayList<Int>(
             arrayOf<Any?>(1, 2, 3, 4, 5),

@@ -33,7 +33,8 @@ interface JudoRenderer : Closeable {
      * should append its value to this line instead of adding it
      * as a new line
      */
-    fun appendOutput(line: CharSequence, isPartialLine: Boolean = false)
+    fun appendOutput(line: CharSequence, isPartialLine: Boolean = false): CharSequence
+    fun replaceLastLine(result: CharSequence)
 
     fun inTransaction(block: () -> Unit)
 

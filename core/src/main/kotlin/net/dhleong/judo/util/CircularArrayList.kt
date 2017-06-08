@@ -38,6 +38,9 @@ class CircularArrayList<E> : Collection<E> {
     val capacity: Int
         get() = array.size
 
+    val lastIndex: Int
+        get() = size - 1
+
     override val size: Int
         get() = actualSize
 

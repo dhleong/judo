@@ -119,10 +119,21 @@ class JLineRenderer(
         terminal.close()
     }
 
-    override fun appendOutput(line: CharSequence, isPartialLine: Boolean) {
-        appendOutputLineInternal(line)
+    override fun appendOutput(line: CharSequence, isPartialLine: Boolean): AttributedCharSequence {
+        val result = appendOutputLineInternal(line)
         hadPartialLine = isPartialLine
 
+        if (!isInTransaction) display()
+        return result
+    }
+
+    override fun replaceLastLine(result: CharSequence) {
+        // TODO remove the line completely if empty?
+
+        output[output.lastIndex] = when (result) {
+            is AttributedCharSequence -> result
+            else -> AttributedString(result)
+        }
         if (!isInTransaction) display()
     }
 
@@ -398,45 +409,37 @@ class JLineRenderer(
      * Wrapper for [appendOutputLineInternal] that hard-wraps
      * lines based on current window width
      */
-    private fun appendOutputLineInternal(line: CharSequence) {
-        // flip the pending output buffers and preserve any trailing
-//        val newBack = pendingOutputCurrent
-//        pendingOutputCurrent = pendingOutputBack
-//        pendingOutputBack = newBack
-//        preserveTrailingEscapeCodes(line, newBack)
-
+    private fun appendOutputLineInternal(line: CharSequence): AttributedCharSequence {
         val builder: AttributedStringBuilder
         if (line is AttributedStringBuilder) {
             builder = line
         } else {
-            builder = AttributedStringBuilder(line.length)
-            builder.tabs(0)
-            if (line is AttributedCharSequence) {
-                builder.append(line.toAttributedString())
-            } else {
-                builder.appendAnsi(line.toString())
-            }
+            builder = ReplaceableAttributedStringBuilder(line)
         }
 
         if (builder.columnLength() > windowWidth) {
             // TODO split on word boundaries?
+            var result: AttributedCharSequence? = null
             builder.columnSplitLength(windowWidth)
-                .forEach { appendOutputAttributedLine(it) }
+                .forEach { result = appendOutputAttributedLine(it) }
+
+            // NOTE: it won't be empty, but the compiler needs reassuring
+            return result ?: AttributedString.EMPTY
         } else {
-            appendOutputAttributedLine(builder)
+            return appendOutputAttributedLine(builder)
         }
     }
 
     /**
      * @param line MUST be guaranteed to fit on a single line
+     * @return The actual [AttributedCharSequence] that was put into the buffer
      */
-    private fun appendOutputAttributedLine(line: AttributedCharSequence) {
+    private fun appendOutputAttributedLine(line: AttributedCharSequence): AttributedCharSequence {
         if (hadPartialLine) {
             hadPartialLine = false
 
             val end = output.size - 1
             val original = output[end]
-//            val lineAsAnsi = line.toAnsi()
             val lineAnsiLength = line.length * 2 // just guess wildly. We could scan, but... why?
             val builder = ReplaceableAttributedStringBuilder(
                 original.length + lineAnsiLength)
@@ -446,10 +449,12 @@ class JLineRenderer(
             builder.appendAndAdoptStyle(original)
             builder.persistStyle(lineAnsiLength)
 
-//            builder.appendAnsi(lineAsAnsi)
             builder.appendAndAdoptStyle(line)
 
-            output[end] = builder.toAttributedString()
+            // TODO do we need to split this combined line?
+
+            output[end] = builder
+            return builder
         } else {
             output.add(line)
 
@@ -457,6 +462,8 @@ class JLineRenderer(
             if (!atBottom && output.size > outputWindowHeight) {
                 ++scrollbackBottom
             }
+
+            return line
         }
     }
 }
