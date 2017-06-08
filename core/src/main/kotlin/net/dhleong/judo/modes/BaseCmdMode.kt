@@ -1,11 +1,15 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.Mode
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.KeyMapping
+import net.dhleong.judo.input.MutableKeys
+import net.dhleong.judo.input.keys
+import net.dhleong.judo.motions.toEndMotion
+import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import java.io.InputStream
@@ -109,21 +113,37 @@ private val COMMAND_HELP = mutableMapOf(
 }
 
 abstract class BaseCmdMode(
-    val judo: IJudoCore,
-    val inputBuffer: InputBuffer,
+    judo: IJudoCore,
+    buffer: InputBuffer,
     val history: IInputHistory
-) : Mode {
+) : BaseModeWithBuffer(judo, buffer),
+    MappableMode {
 
+    override val userMappings = KeyMapping()
     override val name = "cmd"
 
     private val suggester = CompletionSuggester(DumbCompletionSource().apply {
         COMMAND_HELP.keys.forEach(this::process)
+        process("help")
     })
+
+    val mapping = KeyMapping(
+        keys("<up>") to { _ -> history.scroll(-1) },
+        keys("<down>") to { _ -> history.scroll(1) },
+
+        keys("<ctrl a>") to motionAction(toStartMotion()),
+        keys("<ctrl e>") to motionAction(toEndMotion())
+    )
+    private val input = MutableKeys()
+
+    override fun onEnter() {
+        clearBuffer()
+    }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {
-                val code = inputBuffer.toString().trim()
+                val code = buffer.toString().trim()
                 when (code) {
                     "q", "q!", "qa", "qa!" -> {
                         judo.quit()
@@ -135,18 +155,15 @@ abstract class BaseCmdMode(
                     showHelp()
                 } else if (code.startsWith("help")) {
                     showHelp(code.substring(5))
+                } else if (!code.contains('(')) {
+                    showHelp(code)
                 } else {
                     execute(code)
                     history.push(code)
                 }
-                
+
                 clearBuffer()
                 exitMode()
-                return
-            }
-
-            key.keyChar == 'a' && key.hasCtrl() -> {
-                inputBuffer.cursor = 0
                 return
             }
 
@@ -156,20 +173,20 @@ abstract class BaseCmdMode(
                 return
             }
 
-            key.keyChar == 'e' && key.hasCtrl() -> {
-                inputBuffer.cursor = inputBuffer.size
+            // NOTE: ctrl+i == tab
+            key.keyCode == KeyEvent.VK_TAB
+                    || key.keyChar == 'i' && key.hasCtrl() -> {
+                performTabCompletionFrom(key, suggester)
                 return
             }
+        }
 
-            key.keyCode == KeyEvent.VK_UP -> {
-                history.scroll(-1)
-                return
-            }
+        // input changed; suggestions go away
+        suggester.reset()
 
-            key.keyCode == KeyEvent.VK_DOWN -> {
-                history.scroll(1)
-                return
-            }
+        // handle key mappings
+        if (tryMappings(key, remap, input, mapping, userMappings)) {
+            return
         }
 
         if (key.hasCtrl()) {
@@ -194,7 +211,6 @@ abstract class BaseCmdMode(
         judo.echo("No such command: $command")
     }
 
-
     private fun exitMode() {
         judo.exitMode()
     }
@@ -203,15 +219,11 @@ abstract class BaseCmdMode(
      * Insert a key stroke at the current cursor position
      */
     private fun insertChar(key: KeyStroke) {
-        val wasEmpty = inputBuffer.isEmpty()
-        inputBuffer.type(key)
-        if (inputBuffer.isEmpty() && wasEmpty) {
+        val wasEmpty = buffer.isEmpty()
+        buffer.type(key)
+        if (buffer.isEmpty() && wasEmpty) {
             exitMode()
         }
-    }
-
-    override fun onEnter() {
-        clearBuffer()
     }
 
     abstract fun execute(code: String)
@@ -219,6 +231,7 @@ abstract class BaseCmdMode(
     abstract fun readFile(fileName: String, stream: InputStream)
 
     private fun clearBuffer() {
-        inputBuffer.clear()
+        buffer.clear()
+        input.clear()
     }
 }

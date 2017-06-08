@@ -12,7 +12,6 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.hasCtrl
-import net.dhleong.judo.util.hasShift
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -70,7 +69,7 @@ class InsertMode(
             // NOTE: ctrl+i == tab
             key.keyCode == KeyEvent.VK_TAB
                     || key.keyChar == 'i' && key.hasCtrl() -> {
-                performTabCompletionFrom(key)
+                performTabCompletionFrom(key, suggester)
                 return
             }
         }
@@ -78,28 +77,8 @@ class InsertMode(
         // input changed; suggestions go away
         suggester.reset()
 
-        // TODO share this code with NormalMode?
-        input.push(key)
-
-        if (remap) {
-            userMappings.match(input)?.let {
-                input.clear()
-                it.invoke(judo)
-                return
-            }
-
-            if (userMappings.couldMatch(input)) {
-                return
-            }
-        }
-
-        mapping.match(input)?.let {
-            input.clear()
-            it.invoke(judo)
-            return
-        }
-
-        if (mapping.couldMatch(input)) {
+        // handle key mappings
+        if (tryMappings(key, remap, input, mapping, userMappings)) {
             return
         }
 
@@ -110,29 +89,6 @@ class InsertMode(
 
         // no possible mapping; just update buffer
         buffer.type(key)
-        input.clear() // and clear input queue
-    }
-
-    private fun performTabCompletionFrom(key: KeyStroke) {
-        if (key.hasShift()) {
-            rewindTabCompletion()
-        } else {
-            performTabCompletion()
-        }
-    }
-
-    private fun performTabCompletion() {
-        if (!suggester.isInitialized()) {
-            suggester.initialize(buffer.toChars(), buffer.cursor)
-        }
-
-        suggester.updateWithNextSuggestion(buffer)
-    }
-
-    private fun rewindTabCompletion() {
-        if (!suggester.isInitialized()) return // nop
-
-        suggester.updateWithPrevSuggestion(buffer)
     }
 
     override fun renderInputBuffer(): String = buffer.toString()

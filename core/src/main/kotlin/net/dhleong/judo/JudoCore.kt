@@ -259,7 +259,7 @@ class JudoCore(
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
         if (newMode is BaseCmdMode) {
-            renderer.updateStatusLine(":${newMode.inputBuffer}", newMode.inputBuffer.cursor + 1)
+            renderer.updateStatusLine(":${newMode.buffer}", newMode.buffer.cursor + 1)
         } else {
             updateInputLine()
         }

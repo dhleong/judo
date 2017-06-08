@@ -45,10 +45,12 @@ class PythonCmdMode(
         // map invocations
         python["map"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], true) }
         python["noremap"] = asUnitPyFn<String>(2) { judo.map("", it[0], it[1], false) }
-        python["nmap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], true) }
-        python["nnoremap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], false) }
+        python["cmap"] = asUnitPyFn<String>(2) { judo.map("cmd", it[0], it[1], true) }
+        python["cnoremap"] = asUnitPyFn<String>(2) { judo.map("cmd", it[0], it[1], false) }
         python["imap"] = asUnitPyFn<String>(2) { judo.map("insert", it[0], it[1], true) }
         python["inoremap"] = asUnitPyFn<String>(2) { judo.map("insert", it[0], it[1], false) }
+        python["nmap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], true) }
+        python["nnoremap"] = asUnitPyFn<String>(2) { judo.map("normal", it[0], it[1], false) }
 
         python["createmap"] = asUnitPyFn<Any>(4) {
             judo.map(

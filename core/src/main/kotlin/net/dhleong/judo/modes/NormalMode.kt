@@ -123,31 +123,10 @@ class NormalMode(
             return
         }
 
-        input.push(key)
-
-        if (remap) {
-            userMappings.match(input)?.let {
-                input.clear()
-                it.invoke(judo)
-                return
-            }
-
-            if (userMappings.couldMatch(input)) {
-                return
-            }
-        }
-
-        mapping.match(input)?.let {
-            input.clear()
-            it.invoke(judo)
+        // handle key mappings
+        if (tryMappings(key, remap, input, mapping, userMappings)) {
             return
         }
-
-        if (mapping.couldMatch(input)) {
-            return
-        }
-
-        input.clear()
     }
 
     override fun renderInputBuffer(): String = buffer.toString()
