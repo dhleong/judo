@@ -34,11 +34,22 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
                 return
             }
 
+            key.keyChar == 'a' && key.hasCtrl() -> {
+                inputBuffer.cursor = 0
+                return
+            }
+
             key.keyChar == 'c' && key.hasCtrl() -> {
                 clearBuffer()
                 exitMode()
                 return
             }
+
+            key.keyChar == 'e' && key.hasCtrl() -> {
+                inputBuffer.cursor = inputBuffer.size
+                return
+            }
+
         }
 
         if (key.hasCtrl()) {
@@ -50,7 +61,7 @@ abstract class BaseCmdMode(val judo: IJudoCore) : Mode {
     }
 
     private fun exitMode() {
-        judo.exitMode() // TODO return to previous mode?
+        judo.exitMode()
     }
 
     /**
