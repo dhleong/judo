@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.complete.CompletionSource
@@ -48,7 +49,7 @@ class InsertMode(
     private val suggester = CompletionSuggester(completions)
 
     override fun onEnter() {
-        // nop
+        judo.setCursorType(CursorType.PIPE)
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {

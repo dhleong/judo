@@ -88,7 +88,6 @@ class JLineRenderer(
         }
 
         terminal.flush()
-
         resize()
 
         // register handlers for keystrokes that are done via escape sequences
@@ -107,6 +106,7 @@ class JLineRenderer(
     override fun close() {
         window.clear()
 
+        setCursorType(CursorType.BLOCK)
         terminal.puts(InfoCmp.Capability.exit_ca_mode)
         terminal.puts(InfoCmp.Capability.keypad_local)
 
@@ -135,6 +135,12 @@ class JLineRenderer(
             else -> AttributedString(result)
         }
         if (!isInTransaction) display()
+    }
+
+    private var  cursorType: CursorType = CursorType.BLOCK
+
+    @Synchronized override fun setCursorType(type: CursorType) {
+        cursorType = type
     }
 
     // TODO it'd be great if this could be inline somehow...
@@ -339,6 +345,17 @@ class JLineRenderer(
         window.resize(windowHeight, windowWidth)
         window.update(workspace.toList(), cursorPos)
         terminal.flush()
+
+        try {
+            Curses.tputs(terminal.writer(), cursorType.ansiString)
+            terminal.flush()
+        } catch (e: NullPointerException) {
+            // it's unclear what is causing this NPE (the stack trace
+            // seems to indicate it's either the terminal or the cursorType,
+            // but neither appears to be possible...
+            // Anyway, it only happens from the JLineRenderer constructor,
+            // so we can safely ignore it
+        }
     }
 
     internal fun fitInputLineToWindow(line: AttributedString): Pair<AttributedString, Int> {

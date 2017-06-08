@@ -31,6 +31,7 @@ interface IJudoCore {
     fun scrollPages(count: Int)
     fun scrollToBottom()
     fun send(text: String, fromMap: Boolean)
+    fun setCursorType(type: CursorType)
     fun quit()
 }
 

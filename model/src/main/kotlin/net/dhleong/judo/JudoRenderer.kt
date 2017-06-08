@@ -4,6 +4,23 @@ import java.io.Closeable
 
 typealias OnResizedEvent = () -> Unit
 
+enum class CursorType(ansiCode: Int) {
+
+    BLOCK_BLINK(1),
+    BLOCK(2),
+    UNDERSCORE_BLINK(3),
+    UNDERSCORE(4),
+    PIPE_BLINK(5),
+    PIPE(6);
+
+    val ansiString: String = StringBuilder(5)
+        .append(27.toChar())
+        .append('[')
+        .append(ansiCode)
+        .append(" q")
+        .toString()
+}
+
 /**
  * @author dhleong
  */
@@ -54,6 +71,11 @@ interface JudoRenderer : Closeable {
      */
     fun scrollPages(count: Int)
     fun scrollToBottom()
+
+    /**
+     * Attempt to set the current cursor type
+     */
+    fun setCursorType(type: CursorType)
 
     fun updateInputLine(line: String, cursor: Int)
 

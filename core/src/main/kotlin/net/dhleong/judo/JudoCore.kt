@@ -297,6 +297,9 @@ class JudoCore(
     override fun readKey(): KeyStroke =
         keyStrokeProducer.readKey()
 
+    override fun setCursorType(type: CursorType) =
+        renderer.setCursorType(type)
+
     override fun quit() {
         connection?.close()
         renderer.close()
@@ -355,6 +358,8 @@ class JudoCore(
 
     private fun activateMode(mode: Mode) {
         renderer.inTransaction {
+            renderer.setCursorType(CursorType.BLOCK)
+
             currentMode = mode
             mode.onEnter()
 
