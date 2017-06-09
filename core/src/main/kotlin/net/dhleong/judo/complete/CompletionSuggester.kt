@@ -33,9 +33,10 @@ class CompletionSuggester(private val completions: CompletionSource) {
 
         suggestedWordStart = wordStart
 
-        val word = input.subSequence(wordStart, cursor)
+        val wordRange = wordStart until cursor
+        val word = input.subSequence(wordRange)
         originalWord = word
-        pendingSuggestions = completions.suggest(word).iterator()
+        pendingSuggestions = completions.suggest(input, wordRange).iterator()
     }
 
     /** NOTE: ASSUMES that initialize() was called */

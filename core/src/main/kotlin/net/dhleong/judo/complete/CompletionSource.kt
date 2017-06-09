@@ -11,10 +11,18 @@ interface CompletionSource {
     fun process(string: CharSequence)
 
     /**
-     * Given a partial input string, return a lazy
-     * Sequence of suggested completions
+     * Given an input string and an IntRange, representing
+     * the word to be completed, return a lazy Sequence of
+     * suggested completions
      */
-    fun suggest(partial: CharSequence): Sequence<String>
+    fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String>
+
+    /**
+     * Given a partial string, return a lazy Sequence of
+     * suggested completions for that "word"
+     */
+    fun suggest(partial: CharSequence) =
+        suggest(partial, 0..partial.lastIndex)
 }
 
 class CompletionSourceFacade {

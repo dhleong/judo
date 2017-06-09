@@ -81,7 +81,7 @@ class MotionIntegrationTest {
 
         judo.type(keys("dTw"))
         assertThat(renderer.inputLine)
-            .isEqualTo("word wword3" to 5)
+            .isEqualTo("word wword3" to 6)
     }
 
     @Test fun deleteUntilForward() {

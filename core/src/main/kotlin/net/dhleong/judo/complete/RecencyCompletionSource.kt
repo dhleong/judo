@@ -56,7 +56,8 @@ class RecencyCompletionSource(
         oldest.removeWhile { candidates.size > max }
     }
 
-    override fun suggest(partial: CharSequence): Sequence<String> {
+    override fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String> {
+        val partial = string.subSequence(wordRange)
         val partialLower = partial.toString().toLowerCase()
         return candidates.keys.asSequence().filter {
             it.word.startsWith(partialLower)

@@ -27,7 +27,8 @@ class DumbCompletionSource : CompletionSource {
         }
     }
 
-    override fun suggest(partial: CharSequence): Sequence<String> {
+    override fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String> {
+        val partial = string.subSequence(wordRange)
         var index = 0
         var foundAny = false
         val limit = sortedList.size
