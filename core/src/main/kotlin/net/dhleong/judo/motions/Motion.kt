@@ -37,6 +37,10 @@ interface Motion {
         calculate(judo::readKey, buffer.toChars(), buffer.cursor)
 
     fun calculate(readKey: () -> KeyStroke, buffer: CharSequence, cursor: Int): IntRange
+
+    /** NOTE: Use ONLY when ABSOLUTELY SURE the motion won't need readKey */
+    fun calculate(input: CharSequence, cursor: Int) =
+        calculate({ throw IllegalStateException("Expected to not need readKey") }, input, cursor)
 }
 
 internal fun createMotion(calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =

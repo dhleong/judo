@@ -48,6 +48,14 @@ class CompletionSuggesterTest {
         assertThat(suggester.prevSuggestion()).isEqualTo("z")
     }
 
+    @Test fun suggestInMiddle() {
+        suggester.initialize("go l now", 4)
+
+        // prev should restore the original
+        assertThat(suggester.nextSuggestion()).isEqualTo("land")
+        assertThat(suggester.prevSuggestion()).isEqualTo("l")
+    }
+
     @Test fun updateWithSuggestions() {
         val buffer = InputBuffer()
         buffer.set("  l")
@@ -65,5 +73,24 @@ class CompletionSuggesterTest {
 
         suggester.updateWithPrevSuggestion(buffer)
         assertThat(buffer.toString()).isEqualTo("  l")
+    }
+
+    @Test fun updateWithSuggestionsInMiddle() {
+        val buffer = InputBuffer()
+        buffer.set("go l now")
+        buffer.cursor = 4
+        suggester.initialize(buffer.toString(), 4)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("go land now")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("go love now")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("go land now")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("go l now")
     }
 }

@@ -1,11 +1,14 @@
 package net.dhleong.judo.complete
 
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.motions.wordMotion
 
 /**
  * @author dhleong
  */
 class CompletionSuggester(private val completions: CompletionSource) {
+    private val wordStartMovement = wordMotion(-1, bigWord = false)
+
     private var pendingSuggestions: Iterator<String>? = null
     private val suggestionsStack = ArrayList<String>()
 
@@ -25,17 +28,12 @@ class CompletionSuggester(private val completions: CompletionSource) {
         pendingSuggestions != null
 
     fun initialize(input: CharSequence, cursor: Int) {
-        var wordStart = cursor
-        while (wordStart >= 0
-            && (wordStart >= input.length
-                || !Character.isWhitespace(input[wordStart]))) {
-            --wordStart
-        }
+        val move = wordStartMovement.calculate(input, cursor)
+        val wordStart = move.endInclusive
 
-        ++wordStart
         suggestedWordStart = wordStart
 
-        val word = input.subSequence(wordStart until cursor)
+        val word = input.subSequence(wordStart, cursor)
         originalWord = word
         pendingSuggestions = completions.suggest(word).iterator()
     }
@@ -50,7 +48,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
     }
 
     private fun applySuggestion(buffer: InputBuffer, suggestion: CharSequence) {
-        val oldWordRange = suggestedWordStart..buffer.cursor
+        val oldWordRange = suggestedWordStart until buffer.cursor
         buffer.replace(oldWordRange, suggestion)
         buffer.cursor = suggestedWordStart + suggestion.length
     }
