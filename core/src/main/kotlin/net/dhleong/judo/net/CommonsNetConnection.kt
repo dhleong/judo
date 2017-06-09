@@ -32,8 +32,8 @@ class CommonsNetConnection(
 
     private var echoStateChanges = 0
 
-    private val lastWidth = -1
-    private val lastHeight = -1
+    private var lastWidth = -1
+    private var lastHeight = -1
 
     init {
         client.setSocketFactory(socketFactory)
@@ -74,7 +74,17 @@ class CommonsNetConnection(
     override fun setWindowSize(width: Int, height: Int) {
         if (width == lastWidth && height == lastHeight) return
 
-        client.addOptionHandler(WindowSizeOptionHandler(width, height, false, false, true, false))
+        val windowSizeHandler = WindowSizeOptionHandler(width, height, false, false, true, false)
+        if (lastWidth != -1) {
+            // delete the old handler; if lastWidth (or lastHeight) == -1 there
+            // is none, and deleting a non-existing handler is apparently an error
+            client.deleteOptionHandler(windowSizeHandler.optionCode)
+        }
+
+        lastWidth = width
+        lastHeight = height
+        client.addOptionHandler(windowSizeHandler)
+        client.sendSubnegotiation(windowSizeHandler.startSubnegotiationLocal())
     }
 
     override fun toString(): String {
