@@ -142,7 +142,6 @@ class JudoCore(
         connection?.let {
             it.onError = null
             it.close()
-            connection = null
         }
     }
 
@@ -335,6 +334,8 @@ class JudoCore(
             echo("Disconnected from $connection")
             updateStatusLine(currentMode)
         }
+
+        this.connection = null
     }
 
     /**
