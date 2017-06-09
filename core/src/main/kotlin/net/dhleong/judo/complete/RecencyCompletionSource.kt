@@ -57,6 +57,8 @@ class RecencyCompletionSource(
     }
 
     override fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String> {
+        // FIXME if we have to process() while iterating over this,
+        // a ConcurrentModificationException is thrown
         val partial = string.subSequence(wordRange)
         val partialLower = partial.toString().toLowerCase()
         return candidates.keys.asSequence().filter {

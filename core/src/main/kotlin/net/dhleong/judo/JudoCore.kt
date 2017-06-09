@@ -446,7 +446,7 @@ class JudoCore(
             }
         }
 
-        renderer.appendOutput("$prefix${e.message}")
+        renderer.appendOutput("$prefix${e.javaClass.name}: ${e.message}")
         e.stackTrace.map { "  $it" }
             .forEach { renderer.appendOutput(it) }
         e.cause?.let {
