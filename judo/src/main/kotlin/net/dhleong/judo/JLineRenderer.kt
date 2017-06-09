@@ -69,6 +69,8 @@ class JLineRenderer(
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
+        terminal.handle(Terminal.Signal.CONT, this::handleSignal)
+
         terminal.enterRawMode()
 
         originalAttributes = terminal.attributes
@@ -137,7 +139,7 @@ class JLineRenderer(
         if (!isInTransaction) display()
     }
 
-    private var  cursorType: CursorType = CursorType.BLOCK
+    private var cursorType: CursorType = CursorType.BLOCK
 
     override fun setCursorType(type: CursorType) {
         cursorType = type
@@ -298,6 +300,10 @@ class JLineRenderer(
         try {
             when (signal) {
                 Terminal.Signal.WINCH -> resize()
+                Terminal.Signal.CONT -> {
+                    terminal.enterRawMode()
+                    resize()
+                }
                 else -> {
                     // TODO ?
                 }
