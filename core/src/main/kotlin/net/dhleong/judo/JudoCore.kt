@@ -117,7 +117,16 @@ class JudoCore(
                 echo("## TELNET doEcho($doEcho)")
             }
         }
-        connection.onError = { appendError(it, "NETWORK ERROR: ")}
+        connection.onError = {
+            appendError(it, "NETWORK ERROR: ")
+
+            // force disconnect on network error; we've probably already
+            // lost connection, but in case we haven't, manually handle
+            // onDisconnect to avoid duplicates
+            connection.onDisconnect = null
+            disconnect()
+            onDisconnect(connection)
+        }
         connection.forEachLine { buffer, count ->
             if (debug == DebugLevel.ALL) {
                 FileOutputStream(debugLogFile, true).use {
