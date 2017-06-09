@@ -313,14 +313,10 @@ class JudoCore(
 
     override fun isConnected(): Boolean = connection != null
 
-    // TODO check for esc/ctrl+c and throw InputInterruptedException...
-    // TODO catch that in the feedKey loop
     override fun readKey(): KeyStroke {
-        if (debug.isEnabled) echo("## DEBUG: enter blocking readKey")
-
         val key = keyStrokeProducer.readKey()
-
-        if (debug.isEnabled) echo("## DEBUG: exit blocking readKey")
+        // TODO check for esc/ctrl+c and throw InputInterruptedException...
+        // TODO catch that in the feedKey loop
         return key
     }
 
