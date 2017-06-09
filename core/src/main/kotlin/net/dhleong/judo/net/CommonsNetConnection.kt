@@ -32,24 +32,16 @@ class CommonsNetConnection(
 
     private var echoStateChanges = 0
 
+    private val lastWidth = -1
+    private val lastHeight = -1
+
     init {
         client.setSocketFactory(socketFactory)
         client.connect(address, port)
 
         input = client.inputStream
         output = client.outputStream
-    }
 
-    override fun close() {
-        try {
-            client.disconnect()
-        } catch (e: IOException) {
-            // ignore?
-        }
-    }
-
-    override fun setWindowSize(width: Int, height: Int) {
-        client.addOptionHandler(WindowSizeOptionHandler(width, height))
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
@@ -69,6 +61,20 @@ class CommonsNetConnection(
                 }
             }
         }
+    }
+
+    override fun close() {
+        try {
+            client.disconnect()
+        } catch (e: IOException) {
+            // ignore?
+        }
+    }
+
+    override fun setWindowSize(width: Int, height: Int) {
+        if (width == lastWidth && height == lastHeight) return
+
+        client.addOptionHandler(WindowSizeOptionHandler(width, height, false, false, true, false))
     }
 
     override fun toString(): String {

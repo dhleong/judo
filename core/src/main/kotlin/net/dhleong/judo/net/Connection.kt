@@ -25,7 +25,7 @@ abstract class Connection : Closeable {
 
     private val writer: Writer by lazy { BufferedWriter(OutputStreamWriter(output)) }
     private var readerThread: Thread? = null
-    private var isClosed = false
+    protected var isClosed = false
 
     fun send(line: String) {
         writer.write(line)
