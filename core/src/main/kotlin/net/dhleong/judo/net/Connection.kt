@@ -35,7 +35,7 @@ abstract class Connection : Closeable {
 
     fun forEachLine(onNewLine: (CharArray, Int) -> Unit) {
         val reader = BufferedReader(InputStreamReader(input))
-        readerThread = thread {
+        readerThread = thread(isDaemon = true) {
             try {
                 val buffer = CharArray(1024)
                 while (!isClosed) {
