@@ -1,8 +1,8 @@
 package net.dhleong.judo.complete
 
+import net.dhleong.judo.input.InputBuffer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -48,8 +48,22 @@ class CompletionSuggesterTest {
         assertThat(suggester.prevSuggestion()).isEqualTo("z")
     }
 
-    @Ignore("TODO")
     @Test fun updateWithSuggestions() {
-        // TODO test this
+        val buffer = InputBuffer()
+        buffer.set("  l")
+        buffer.cursor = 3
+        suggester.initialize("  l", 3)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  land")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  love")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  land")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  l")
     }
 }
