@@ -59,14 +59,16 @@ class PythonCmdMode(
             defineMap(it[0] as String, it[1] as String, it[2], remap)
         }
 
-        python["connect"] = asUnitPyFn<Any> { judo.connect(it[0] as String, it[1] as Int) }
+        python["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }
         python["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
         python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
-        python["echo"] = asUnitPyFn<Any> { judo.echo(*it) }
+        python["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
         python["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
         python["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
+        python["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
+        python["reload"] = asUnitPyFn<Any> { reload() }
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
         python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         python["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
@@ -154,14 +156,14 @@ inline private fun <reified T: Any> asMaybeDecorator(
 }
 
 inline private fun <reified T: Any> asUnitPyFn(
-        takeArgs: Int = Int.MAX_VALUE,
+        takeArgs: Int = 0,
         minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> Unit): PyObject {
     return asPyFn(takeArgs, minArgs, fn)
 }
 
 inline private fun <reified T: Any, reified R> asPyFn(
-        takeArgs: Int = Int.MAX_VALUE,
+        takeArgs: Int = 0,
         minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> R): PyObject {
     return object : PyObject() {
@@ -171,9 +173,13 @@ inline private fun <reified T: Any, reified R> asPyFn(
             }
 
             val typedArgs =
-                args.take(takeArgs)
-                    .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }
-                    .toTypedArray()
+                if (takeArgs == 0) emptyArray<T>()
+                else {
+                    args.take(takeArgs)
+                        .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }
+                        .toTypedArray()
+                }
+
             val result = fn(typedArgs)
             if (T::class == Unit::class) {
                 return Py.None

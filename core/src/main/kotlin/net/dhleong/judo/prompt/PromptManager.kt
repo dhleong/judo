@@ -20,7 +20,9 @@ class PromptManager : IPromptManager {
 
     override fun define(inputSpec: String, outputSpec: String) {
         if (delegate.aliases.isNotEmpty()) {
-            throw IllegalStateException("Only a single prompt is supported right now")
+            // we should warn about this:
+//            throw IllegalStateException("Only a single prompt is supported right now")
+            delegate.aliases.clear()
         }
 
         delegate.define(inputSpec, outputSpec)
@@ -28,7 +30,9 @@ class PromptManager : IPromptManager {
 
     override fun define(inputSpec: String, parser: AliasProcesser) {
         if (delegate.aliases.isNotEmpty()) {
-            throw IllegalStateException("Only a single prompt is supported right now")
+            // we should warn about this:
+//            throw IllegalStateException("Only a single prompt is supported right now")
+            delegate.aliases.clear()
         }
 
         delegate.define(inputSpec, parser)

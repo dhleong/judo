@@ -311,6 +311,8 @@ class JudoCore(
         }
     }
 
+    override fun isConnected(): Boolean = connection != null
+
     // TODO check for esc/ctrl+c and throw InputInterruptedException...
     // TODO catch that in the feedKey loop
     override fun readKey(): KeyStroke {
@@ -354,9 +356,7 @@ class JudoCore(
         val cmdMode = modes["cmd"] as BaseCmdMode
 
         try {
-            file.inputStream().use {
-                cmdMode.readFile(file.name, it)
-            }
+            cmdMode.readFile(file)
         } catch (e: Throwable) {
             appendError(e, "ERROR: ")
         }

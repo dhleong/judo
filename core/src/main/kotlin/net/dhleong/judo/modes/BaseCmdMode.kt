@@ -12,6 +12,7 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
+import java.io.File
 import java.io.InputStream
 import javax.swing.KeyStroke
 
@@ -92,6 +93,11 @@ private val COMMAND_HELP = mutableMapOf(
         "Print some output to the screen locally."
     ),
 
+    "isConnected" to buildHelp(
+        "isConnected() -> Boolean",
+        "Check if connected"
+    ),
+
     "quit" to buildHelp(
         "quit()",
         "Exit Judo"
@@ -100,6 +106,11 @@ private val COMMAND_HELP = mutableMapOf(
     "reconnect" to buildHelp(
         "reconnect()",
         "Repeat the last connect()"
+    ),
+
+    "reload" to buildHelp(
+        "reload()",
+        "Reload the last-loaded script file."
     ),
 
     "send" to buildHelp(
@@ -160,6 +171,8 @@ abstract class BaseCmdMode(
         keys("<ctrl e>") to motionAction(toEndMotion())
     )
     private val input = MutableKeys()
+
+    private var lastReadFile: File? = null
 
     override fun onEnter() {
         clearBuffer()
@@ -226,6 +239,23 @@ abstract class BaseCmdMode(
         insertChar(key)
     }
 
+    fun readFile(file: File) {
+        lastReadFile = file
+        file.inputStream().use {
+            readFile(file.name, it)
+        }
+    }
+
+    fun reload() {
+        lastReadFile?.let {
+            readFile(it)
+            judo.echo("Loaded $it")
+            return
+        }
+
+        judo.echo("No files read; nothing to reload")
+    }
+
     private fun showHelp() {
         // TODO columns?
         COMMAND_HELP.keys.forEach { judo.echo(it) }
@@ -257,7 +287,7 @@ abstract class BaseCmdMode(
 
     abstract fun execute(code: String)
 
-    abstract fun readFile(fileName: String, stream: InputStream)
+    abstract protected fun readFile(fileName: String, stream: InputStream)
 
     private fun clearBuffer() {
         buffer.clear()
