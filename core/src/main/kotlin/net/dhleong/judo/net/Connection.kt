@@ -20,7 +20,7 @@ abstract class Connection : Closeable {
     abstract val output: OutputStream
 
     var onError: ((IOException) -> Unit)? = null
-    var onDisconnect: (() -> Unit)? = null
+    var onDisconnect: ((Connection) -> Unit)? = null
     var onEchoStateChanged: ((Boolean) -> Unit)? = null
 
     private val writer: Writer by lazy { BufferedWriter(OutputStreamWriter(output)) }
@@ -43,7 +43,7 @@ abstract class Connection : Closeable {
                     val read = reader.read(buffer)
                     if (read == -1) {
                         isClosed = true
-                        onDisconnect?.invoke()
+                        onDisconnect?.invoke(this)
                         break
                     } else if (read > 0) {
                         onNewLine(buffer, read)

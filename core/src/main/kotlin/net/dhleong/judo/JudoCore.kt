@@ -140,11 +140,9 @@ class JudoCore(
 
     override fun disconnect() {
         connection?.let {
-            it.onDisconnect = null
             it.onError = null
             it.close()
             connection = null
-            echo("Disconnected from $it.")
         }
     }
 
@@ -325,9 +323,9 @@ class JudoCore(
         running = false
     }
 
-    fun onDisconnect() {
+    fun onDisconnect(connection: Connection) {
         renderer.inTransaction {
-            // dump the parsed prompts for visual affect
+            // dump the parsed prompts for visual effect
             echo("")
             parsedPrompts.forEach {
                 renderer.appendOutput(it)

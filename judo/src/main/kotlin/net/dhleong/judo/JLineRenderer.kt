@@ -139,7 +139,7 @@ class JLineRenderer(
 
     private var  cursorType: CursorType = CursorType.BLOCK
 
-    @Synchronized override fun setCursorType(type: CursorType) {
+    override fun setCursorType(type: CursorType) {
         cursorType = type
     }
 
