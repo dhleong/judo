@@ -97,6 +97,11 @@ private val COMMAND_HELP = mutableMapOf(
         "Exit Judo"
     ),
 
+    "reconnect" to buildHelp(
+        "reconnect()",
+        "Repeat the last connect()"
+    ),
+
     "send" to buildHelp(
         "send(text: String)",
         "Send some text to the connected server."
@@ -175,8 +180,12 @@ abstract class BaseCmdMode(
                     showHelp()
                 } else if (code.startsWith("help")) {
                     showHelp(code.substring(5))
-                } else if (!code.contains('(')) {
+                } else if (!(code.contains('(') && code.contains(')')) && code !in COMMAND_HELP) {
                     showHelp(code)
+                } else if (code in COMMAND_HELP) {
+                    // no args needed, so just implicitly handle for convenience
+                    execute("$code()")
+                    history.push(code)
                 } else {
                     execute(code)
                     history.push(code)

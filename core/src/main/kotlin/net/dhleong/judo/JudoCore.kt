@@ -82,6 +82,7 @@ class JudoCore(
     internal var doEcho = true
 
     private var connection: Connection? = null
+    private var lastConnect: Pair<String, Int>? = null
 
     private val statusLineWorkspace = IStringBuilder.create(128)
 
@@ -102,6 +103,8 @@ class JudoCore(
     override fun connect(address: String, port: Int) {
         disconnect()
         echo("Connecting to $address:$port...")
+
+        lastConnect = address to port
 
         val connection = CommonsNetConnection(address, port, renderer.terminalType, { string -> echo(string) })
         connection.debug = debug.isEnabled
@@ -216,6 +219,15 @@ class JudoCore(
         }
 
         throw IllegalArgumentException("No such mode $mode")
+    }
+
+    override fun reconnect() {
+        lastConnect?.let { (address, port) ->
+            connect(address, port)
+            return
+        }
+
+        throw IllegalStateException("You have to connect() first")
     }
 
     override fun scrollPages(count: Int) {

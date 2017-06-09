@@ -66,6 +66,7 @@ class PythonCmdMode(
         python["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
         python["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
+        python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
         python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         python["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
