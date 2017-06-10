@@ -24,23 +24,37 @@ class ReverseInputSearchMode(
 
     override fun onEnter() {
         searchBuffer.clear()
+        sendHistory.resetHistoryOffset()
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean) {
-        when (key.keyCode) {
-            KeyEvent.VK_ENTER -> {
+        when {
+            key.keyCode == KeyEvent.VK_ENTER -> {
                 judo.send(buffer.toString(), false)
                 judo.exitMode()
                 clearBuffer()
                 return
             }
 
-            KeyEvent.VK_R -> {
+            key.keyChar == 'r' -> {
                 if (key.hasCtrl()) {
                     trySearch(true)
                     return
                 }
             }
+
+            key.keyChar == 'c' -> {
+                if (key.hasCtrl()) {
+                    clearBuffer()
+                    judo.exitMode()
+                    return
+                }
+            }
+        }
+
+        if (key.hasCtrl()) {
+            // ignore
+            return
         }
 
         searchBuffer.type(key)
@@ -64,6 +78,7 @@ class ReverseInputSearchMode(
     private fun clearBuffer() {
         buffer.clear()
         searchBuffer.clear()
+        sendHistory.resetHistoryOffset()
     }
 
 }
