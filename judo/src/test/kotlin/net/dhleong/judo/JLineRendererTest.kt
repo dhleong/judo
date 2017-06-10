@@ -1,9 +1,8 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
-import org.jline.utils.AttributedString
 import org.junit.Test
 
 /**
@@ -17,8 +16,8 @@ class JLineRendererTest {
         renderer.windowWidth = 42
 
         // basically make sure it doesn't crash
-        renderer.appendOutput(IStringBuilder.from(""), isPartialLine = true)
-        renderer.appendOutput(IStringBuilder.from(""), isPartialLine = false)
+        renderer.appendOutput(OutputLine(""), isPartialLine = true)
+        renderer.appendOutput(OutputLine(""), isPartialLine = false)
 
         assertThat(renderer.getOutputLines())
             .containsExactly("")
@@ -73,8 +72,8 @@ class JLineRendererTest {
         // continuation of the partial line has its own ansi;
         // use previous line's ansi to start, but don't stomp
         // on the new ansi
-        val first = IStringBuilder.from("${ansi(1,6)}Take my ")
-        val second = IStringBuilder.from("lo${ansi(1,7)}ve")
+        val first = OutputLine("${ansi(1,6)}Take my ")
+        val second = OutputLine("lo${ansi(1,7)}ve")
         renderer.appendOutput(first, isPartialLine = true)
         renderer.appendOutput(second, isPartialLine = false)
 
@@ -91,7 +90,7 @@ class JLineRendererTest {
         val renderer = JLineRenderer()
         renderer.windowWidth = 42
 
-        val trailingAnsiLine = IStringBuilder.from("${ansi(1,6)}Take my ${ansi(1,2)}")
+        val trailingAnsiLine = OutputLine("${ansi(1,6)}Take my ${ansi(1,2)}")
         renderer.appendOutput("", isPartialLine = false)
         renderer.appendOutput(trailingAnsiLine, isPartialLine = true)
         renderer.appendOutput("love", isPartialLine = false)
@@ -116,10 +115,10 @@ class JLineRendererTest {
         assertThat("$firstHalf$secondHalf").isEqualTo(ansi.toString())
 
         renderer.appendOutput(
-            IStringBuilder.from("${ansi(1,6)}Take my $firstHalf"),
+            OutputLine("${ansi(1,6)}Take my $firstHalf"),
             isPartialLine = true)
         renderer.appendOutput(
-            IStringBuilder.from("${secondHalf}love"),
+            OutputLine("${secondHalf}love"),
             isPartialLine = false)
 
         assertThat(renderer.getOutputLines())
@@ -153,7 +152,7 @@ class JLineRendererTest {
         }
 
         assertThat(renderer.getOutputLines()[0])
-            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(fg=6)}ove${ansi(0)}")
+            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(1,6)}ove")
     }
 
     @Test fun fitInputLineToWindow() {
@@ -161,29 +160,25 @@ class JLineRendererTest {
         renderer.windowWidth = 12
 
         renderer.updateInputLine("Take my love, Take my land... ", 0)
-        renderer.fitInputLineToWindow().let {
-            val (line, cursor) = it
+        renderer.fitInputLineToWindow().let { (line, cursor) ->
             assertThat(line.toString()).isEqualTo("Take my lov…")
             assertThat(cursor).isEqualTo(0)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 14)
-        renderer.fitInputLineToWindow().let {
-            val (line, cursor) = it
+        renderer.fitInputLineToWindow().let { (line, cursor) ->
             assertThat(line.toString()).isEqualTo("… love, Tak…")
             assertThat(cursor).isEqualTo(8)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 19)
-        renderer.fitInputLineToWindow().let {
-            val (line, cursor) = it
+        renderer.fitInputLineToWindow().let { (line, cursor) ->
             assertThat(line.toString()).isEqualTo("… Take my l…")
             assertThat(cursor).isEqualTo(7)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 30)
-        renderer.fitInputLineToWindow().let {
-            val (line, cursor) = it
+        renderer.fitInputLineToWindow().let { (line, cursor) ->
             assertThat(line.toString()).isEqualTo("…d... ")
             assertThat(cursor).isEqualTo(6)
         }

@@ -16,10 +16,10 @@ import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
-import net.dhleong.judo.util.stripAnsi
 import java.awt.event.KeyEvent
 import java.io.File
 import java.io.FileOutputStream
@@ -377,6 +377,7 @@ class JudoCore(
     fun processOutput(rawOutput: CharSequence) {
         completions.process(rawOutput)
         triggers.process(rawOutput)
+        processAndStripPrompt(rawOutput)
     }
 
     private fun activateMode(mode: Mode) {
@@ -454,13 +455,52 @@ class JudoCore(
     fun onIncomingBuffer(buffer: CharArray, count: Int) {
         renderer.inTransaction {
             try {
-                val asCharSequence = StringBuilder(count).append(buffer, 0, count)
-                val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
-                appendOutput(withoutPrompts as IStringBuilder) // hacks
-                processOutput(stripAnsi(withoutPrompts))
+//                val asCharSequence = StringBuilder(count).append(buffer, 0, count)
+//                val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
+//                appendOutput(withoutPrompts as IStringBuilder) // hacks
+//                processOutput(toAttributedString(withoutPrompts))
+                val line = OutputLine(buffer, 0, count)
+                appendOutput(line)
             } catch (e: Throwable) {
 //                appendError(e, "ERROR")
                 throw e
+            }
+        }
+    }
+
+    internal fun appendOutput(buffer: OutputLine) {
+        val count = buffer.length
+        renderer.inTransaction {
+            var lastLineEnd = 0
+
+            for (i in 0 until count) {
+                if (i >= lastLineEnd) {
+                    val char = buffer[i]
+                    if (!(char == '\n' || char == '\r')) continue
+
+                    val opposite =
+                        if (char == '\n') '\r'
+                        else '\n'
+
+                    val actualLine = renderer.appendOutput(
+                        buffer.subSequence(lastLineEnd, i),
+                        isPartialLine = false
+                    ) as OutputLine
+                    processOutput(actualLine.toAttributedString())
+
+                    if (i + 1 < count && buffer[i + 1] == opposite) {
+                        lastLineEnd = i + 2
+                    } else {
+                        lastLineEnd = i + 1
+                    }
+                }
+            }
+
+            if (lastLineEnd < count) {
+                renderer.appendOutput(
+                    buffer.subSequence(lastLineEnd, count),
+                    isPartialLine = true
+                )
             }
         }
     }
@@ -483,7 +523,7 @@ class JudoCore(
                         buffer.slice(lastLineEnd, i),
                         isPartialLine = false
                     )
-                    checkForSplitPrompt(actualLine)
+                    processAndStripPrompt(actualLine)
 
                     if (i + 1 < count && buffer[i + 1] == opposite) {
                         lastLineEnd = i + 2
@@ -507,7 +547,7 @@ class JudoCore(
         }
     }
 
-    private fun checkForSplitPrompt(actualLine: CharSequence) {
+    private fun processAndStripPrompt(actualLine: CharSequence) {
         val originalLength = actualLine.length
         val result = prompts.process(actualLine, this::onPrompt)
         if (result.length != originalLength) {

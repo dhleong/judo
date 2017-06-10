@@ -1,7 +1,7 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.CircularArrayList
-import net.dhleong.judo.util.ReplaceableAttributedStringBuilder
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
 import org.jline.terminal.MouseEvent
@@ -9,7 +9,6 @@ import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.terminal.impl.DumbTerminal
-import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Curses
@@ -51,7 +50,7 @@ class JLineRenderer(
     private var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
-    private val output = CircularArrayList<AttributedCharSequence>(DEFAULT_SCROLLBACK_SIZE)
+    private val output = CircularArrayList<OutputLine>(DEFAULT_SCROLLBACK_SIZE)
     private var scrollbackBottom = 0
 
     private var hadPartialLine = false
@@ -122,8 +121,9 @@ class JLineRenderer(
         terminal.close()
     }
 
-    override fun appendOutput(line: CharSequence, isPartialLine: Boolean): AttributedCharSequence {
-        val result = appendOutputLineInternal(line)
+    override fun appendOutput(line: CharSequence, isPartialLine: Boolean): OutputLine {
+        val outputLine = line as? OutputLine ?: OutputLine(line)
+        val result = appendOutputLineInternal(outputLine, isPartialLine)
         hadPartialLine = isPartialLine
 
         if (!isInTransaction) display()
@@ -134,8 +134,8 @@ class JLineRenderer(
         // TODO remove the line completely if empty?
 
         output[output.lastIndex] = when (result) {
-            is AttributedCharSequence -> result
-            else -> AttributedString(result)
+            is OutputLine -> result
+            else -> OutputLine(result)
         }
         if (!isInTransaction) display()
     }
@@ -268,6 +268,7 @@ class JLineRenderer(
     }
 
     override fun scrollLines(count: Int) {
+        // FIXME take into account wrapped lines
         scrollbackBottom = maxOf(
             0,
             minOf(
@@ -439,72 +440,87 @@ class JLineRenderer(
     fun getDisplayLines(): Collection<AttributedString> {
         val start = maxOf(0, output.size - scrollbackBottom - outputWindowHeight)
         val end = minOf(output.size - 1, (start + outputWindowHeight - 1))
-        return output.slice(start..end).map { asAttributedString(it) }
+        return output.slice(start..end)
+            .flatMap { it.getDisplayLines(windowWidth) }
+            .takeLast(outputWindowHeight)
     }
 
-    private fun asAttributedString(it: AttributedCharSequence): AttributedString =
-        (it as? AttributedString) ?: it.toAttributedString()
+//    /**
+//     * Wrapper for [appendOutputLineInternal] that hard-wraps
+//     * lines based on current window width
+//     */
+//    private fun appendOutputLineInternal(line: CharSequence): OutputLine {
+//        val builder: AttributedStringBuilder
+//        if (line is AttributedStringBuilder) {
+//            builder = line
+//        } else {
+//            builder = ReplaceableAttributedStringBuilder(line)
+//        }
+//
+//        if (builder.columnLength() > windowWidth) {
+//            // TODO split on word boundaries?
+//            var result: AttributedCharSequence? = null
+//            builder.columnSplitLength(windowWidth)
+//                .forEach { result = appendOutputAttributedLine(it) }
+//
+//            // NOTE: it won't be empty, but the compiler needs reassuring
+//            return result ?: AttributedString.EMPTY
+//        } else {
+//            return appendOutputAttributedLine(builder)
+//        }
+//    }
 
     /**
-     * Wrapper for [appendOutputLineInternal] that hard-wraps
-     * lines based on current window width
+     * @return The actual [OutputLine] that was put into the buffer
      */
-    private fun appendOutputLineInternal(line: CharSequence): AttributedCharSequence {
-        val builder: AttributedStringBuilder
-        if (line is AttributedStringBuilder) {
-            builder = line
-        } else {
-            builder = ReplaceableAttributedStringBuilder(line)
-        }
-
-        if (builder.columnLength() > windowWidth) {
-            // TODO split on word boundaries?
-            var result: AttributedCharSequence? = null
-            builder.columnSplitLength(windowWidth)
-                .forEach { result = appendOutputAttributedLine(it) }
-
-            // NOTE: it won't be empty, but the compiler needs reassuring
-            return result ?: AttributedString.EMPTY
-        } else {
-            return appendOutputAttributedLine(builder)
-        }
-    }
-
-    /**
-     * @param line MUST be guaranteed to fit on a single line
-     * @return The actual [AttributedCharSequence] that was put into the buffer
-     */
-    private fun appendOutputAttributedLine(line: AttributedCharSequence): AttributedCharSequence {
+    private fun appendOutputLineInternal(line: OutputLine, isPartialLine: Boolean): OutputLine {
+        val splitCandidate: OutputLine
         if (hadPartialLine) {
             hadPartialLine = false
 
-            val end = output.size - 1
-            val original = output[end]
-            val lineAnsiLength = line.length * 2 // just guess wildly. We could scan, but... why?
-            val builder = ReplaceableAttributedStringBuilder(
-                original.length + lineAnsiLength)
+//            val end = output.size - 1
+//            val original = output[end]
+            val original = output.removeLast()
+            original.append(line)
 
-            // wacky hacks to persist the ansi style correctly.
-            // we should propose some upstream changes sometime...
-            builder.appendAndAdoptStyle(original)
-            builder.persistStyle(lineAnsiLength)
-
-            builder.appendAndAdoptStyle(line)
+//            val lineAnsiLength = line.length * 2 // just guess wildly. We could scan, but... why?
+//            val builder = ReplaceableAttributedStringBuilder(
+//                original.length + lineAnsiLength)
+//
+//            // wacky hacks to persist the ansi style correctly.
+//            // we should propose some upstream changes sometime...
+//            builder.appendAndAdoptStyle(original)
+//            builder.persistStyle(lineAnsiLength)
+//
+//            builder.appendAndAdoptStyle(line)
 
             // TODO do we need to split this combined line?
 
-            output[end] = builder
-            return builder
+//            output[end] = builder
+//            return original
+            splitCandidate = original
         } else {
-            output.add(line)
-
-            val atBottom = scrollbackBottom == 0
-            if (!atBottom && output.size > outputWindowHeight) {
-                ++scrollbackBottom
-            }
-
-            return line
+            splitCandidate = line
         }
+
+        val linesAdded: Int
+        if (isPartialLine) {
+            // never split partial lines right away
+            output.add(splitCandidate)
+            linesAdded = 1
+        } else {
+            // full line. split away!
+            val split = splitCandidate.getDisplayOutputLines(windowWidth)
+            linesAdded = split.size
+            split.forEach(output::add)
+        }
+
+        val atBottom = scrollbackBottom == 0
+        if (!atBottom && output.size > outputWindowHeight) {
+            scrollbackBottom += linesAdded
+        }
+
+        return splitCandidate
     }
 }
 

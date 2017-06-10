@@ -85,6 +85,16 @@ class CircularArrayList<E> : Collection<E> {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
+    fun removeLast(): E {
+        if (actualSize == 0) throw NoSuchElementException()
+        val newEnd = actualIndexOf(actualSize - 1)
+        val last = array[newEnd]
+        end = newEnd
+        --actualSize
+        return last as E
+    }
+
     fun slice(range: IntRange): CircularArrayList<E> {
         if (range.isEmpty()) {
             return CircularArrayList(

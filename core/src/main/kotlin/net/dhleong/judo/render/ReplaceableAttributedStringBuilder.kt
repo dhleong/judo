@@ -1,5 +1,6 @@
-package net.dhleong.judo.util
+package net.dhleong.judo.render
 
+import net.dhleong.judo.util.IStringBuilder
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder

@@ -40,6 +40,7 @@ abstract class Connection : Closeable {
                 val buffer = CharArray(1024)
                 while (!isClosed) {
                     // FIXME actually we don't always get a full line
+                    reader.ready()
                     val read = reader.read(buffer)
                     if (read == -1) {
                         isClosed = true
