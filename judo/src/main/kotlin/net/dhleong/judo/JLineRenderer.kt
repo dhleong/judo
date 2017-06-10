@@ -47,11 +47,16 @@ class JLineRenderer(
 
     override var windowHeight = -1
     override var windowWidth = -1
-    private var outputWindowHeight = -1
+    internal var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
     private val output = CircularArrayList<OutputLine>(DEFAULT_SCROLLBACK_SIZE)
+
+    /** offset from end of output */
     private var scrollbackBottom = 0
+
+    /** offset within output[scrollbackBottom] */
+    private var scrollbackOffset = 0
 
     private var hadPartialLine = false
 
@@ -267,14 +272,58 @@ class JLineRenderer(
         }
     }
 
-    override fun scrollLines(count: Int) {
-        // FIXME take into account wrapped lines
-        scrollbackBottom = maxOf(
-            0,
-            minOf(
-                output.size - outputWindowHeight,
-                scrollbackBottom + count)
-        )
+    @Synchronized override fun scrollLines(count: Int) {
+        // take into account wrapped lines
+        val width = windowWidth
+        val desired = Math.abs(count)
+        val step = count / desired
+        val end = output.size - 1
+
+        val rangeEnd = minOf(end, scrollbackBottom + count)
+        val range =
+            if (count > 0) scrollbackBottom..rangeEnd
+            else scrollbackBottom downTo rangeEnd
+
+        var scrolled = 0
+        for (i in range) {
+            if (i < 0) break
+            if (i >= output.size) break
+
+            scrollbackBottom = i
+            val displayedLines = output[end - i].getDisplayedLinesCount(width)
+            val renderedLines = displayedLines - scrollbackOffset
+            val newScrolled = scrolled + renderedLines
+            if (newScrolled == desired) {
+                // exactly where we want to be, no offset necessary
+                scrollbackBottom = maxOf(
+                    0,
+                    minOf(
+                        end,
+                        scrollbackBottom + step
+                    )
+                )
+                scrollbackOffset = 0
+                break
+            } else if (newScrolled > desired) {
+                // the logical line had too many visual lines;
+                // offset into it
+                scrollbackOffset += step * (desired - scrolled)
+                if (scrollbackOffset < 0) {
+                    // scrolling backwards, so this was a reverse offset
+                    scrollbackOffset += displayedLines
+                }
+                break
+            } else if (newScrolled < desired
+                    && (step > 0 && scrollbackBottom == end
+                        || step < 0 && scrollbackBottom == 0)) {
+                // end of the line; just stop
+                break
+            }
+
+            scrolled = newScrolled
+            scrollbackOffset = 0 // we've moved on; reset the offset
+        }
+
         if (!isInTransaction) display()
     }
 
@@ -438,37 +487,15 @@ class JLineRenderer(
     }
 
     fun getDisplayLines(): Collection<AttributedString> {
-        val start = maxOf(0, output.size - scrollbackBottom - outputWindowHeight)
-        val end = minOf(output.size - 1, (start + outputWindowHeight - 1))
-        return output.slice(start..end)
-            .flatMap { it.getDisplayLines(windowWidth) }
+        val start = output.lastIndex - scrollbackBottom
+        val end = maxOf(0, start - outputWindowHeight)
+        return output.slice(end..start)
+            .asSequence()
+            .flatMap { it.getDisplayLines(windowWidth).asSequence() }
+            .toList()
+            .dropLast(scrollbackOffset)
             .takeLast(outputWindowHeight)
     }
-
-//    /**
-//     * Wrapper for [appendOutputLineInternal] that hard-wraps
-//     * lines based on current window width
-//     */
-//    private fun appendOutputLineInternal(line: CharSequence): OutputLine {
-//        val builder: AttributedStringBuilder
-//        if (line is AttributedStringBuilder) {
-//            builder = line
-//        } else {
-//            builder = ReplaceableAttributedStringBuilder(line)
-//        }
-//
-//        if (builder.columnLength() > windowWidth) {
-//            // TODO split on word boundaries?
-//            var result: AttributedCharSequence? = null
-//            builder.columnSplitLength(windowWidth)
-//                .forEach { result = appendOutputAttributedLine(it) }
-//
-//            // NOTE: it won't be empty, but the compiler needs reassuring
-//            return result ?: AttributedString.EMPTY
-//        } else {
-//            return appendOutputAttributedLine(builder)
-//        }
-//    }
 
     /**
      * @return The actual [OutputLine] that was put into the buffer
@@ -478,26 +505,10 @@ class JLineRenderer(
         if (hadPartialLine) {
             hadPartialLine = false
 
-//            val end = output.size - 1
-//            val original = output[end]
+            // merge partial line
             val original = output.removeLast()
             original.append(line)
 
-//            val lineAnsiLength = line.length * 2 // just guess wildly. We could scan, but... why?
-//            val builder = ReplaceableAttributedStringBuilder(
-//                original.length + lineAnsiLength)
-//
-//            // wacky hacks to persist the ansi style correctly.
-//            // we should propose some upstream changes sometime...
-//            builder.appendAndAdoptStyle(original)
-//            builder.persistStyle(lineAnsiLength)
-//
-//            builder.appendAndAdoptStyle(line)
-
-            // TODO do we need to split this combined line?
-
-//            output[end] = builder
-//            return original
             splitCandidate = original
         } else {
             splitCandidate = line

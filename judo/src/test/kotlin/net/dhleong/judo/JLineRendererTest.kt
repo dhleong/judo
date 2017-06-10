@@ -259,6 +259,91 @@ class JLineRendererTest {
             .containsExactly("")
     }
 
+    @Test fun scrollBack() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 6
+        renderer.windowHeight = 4
+        renderer.outputWindowHeight = 2
+
+        renderer.appendOutput("Take my love")
+        renderer.appendOutput("Take my land")
+        renderer.appendOutput("Take me where I cannot stand")
+
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+
+        renderer.scrollPages(1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        renderer.scrollPages(1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("y land", "Take m")
+
+        renderer.scrollPages(-1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        renderer.scrollPages(-1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+    }
+
+    @Test fun scrollBackWrapping() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+        renderer.windowHeight = 4
+//        renderer.outputWindowHeight = 3
+        renderer.outputWindowHeight = 2
+
+        renderer.appendOutput("Take My love")
+        renderer.appendOutput("Take my land")
+        renderer.appendOutput("Take me where I cannot stand")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take me where I cannot stand")
+
+        // now resize the window and force wrapping
+        renderer.windowWidth = 6
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+
+        renderer.scrollPages(1) // bot=0; off=2
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        renderer.scrollPages(1) // bot=0; off=4
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("y land", "Take m")
+
+        renderer.scrollPages(1) // bot=1; off=1
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("y love", "Take m")
+
+        renderer.scrollPages(1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("Take M")
+
+        // repeat; we're at the top
+        renderer.scrollPages(1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("Take M")
+
+        // go back down
+        renderer.scrollPages(-1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("y love", "Take m")
+
+        renderer.scrollPages(-2) // skip...
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        renderer.scrollPages(-1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+    }
+
     private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {
         updateInputLine(text, text.length)
 
@@ -266,4 +351,7 @@ class JLineRendererTest {
         assertThat(line.toString() to cursor).isEqualTo(expected)
     }
 }
+
+private fun JLineRenderer.getDisplayStrings(): List<String> =
+    getDisplayLines().map { it.toString() }
 
