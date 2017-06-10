@@ -48,7 +48,7 @@ class OperatorPendingMode(
         input.clear()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean) {
+    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
 
         // special case for eg dd, cc, etc
         if (key.keyChar == currentFullLineMotionKey) {

@@ -119,9 +119,9 @@ class NormalMode(
         fromOpMode = false
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean) {
+    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         if (key.keyCode == KeyEvent.VK_ENTER) {
-            judo.send(buffer.toString(), false)
+            judo.send(buffer.toString(), fromMap)
             clearBuffer()
             return
         }

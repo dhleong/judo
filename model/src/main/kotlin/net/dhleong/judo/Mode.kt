@@ -9,6 +9,6 @@ import javax.swing.KeyStroke
 interface Mode {
     val name: String
 
-    fun feedKey(key: KeyStroke, remap: Boolean = true)
+    fun feedKey(key: KeyStroke, remap: Boolean = true, fromMap: Boolean = false)
     fun onEnter()
 }

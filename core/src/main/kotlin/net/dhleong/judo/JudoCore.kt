@@ -280,7 +280,7 @@ class JudoCore(
         appendError(Error("Not connected."))
     }
 
-    override fun feedKey(stroke: KeyStroke, remap: Boolean) {
+    override fun feedKey(stroke: KeyStroke, remap: Boolean, fromMap: Boolean) {
 //        echo("## feedKey($stroke)")
         when (stroke.keyCode) {
             KeyEvent.VK_ESCAPE -> {
@@ -300,7 +300,7 @@ class JudoCore(
             }
         }
 
-        currentMode.feedKey(stroke, remap)
+        currentMode.feedKey(stroke, remap, fromMap)
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode

@@ -97,7 +97,7 @@ private fun fakeMode(name: String): Mode =
     object : Mode {
         override val name = name
 
-        override fun feedKey(key: KeyStroke, remap: Boolean) {
+        override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
             TODO("not implemented")
         }
 

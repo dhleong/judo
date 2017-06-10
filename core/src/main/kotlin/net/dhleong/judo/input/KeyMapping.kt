@@ -46,7 +46,7 @@ class KeyMapping() {
     private fun map(from: Keys, to: Keys, remap: Boolean) {
         map(from, { core ->
             to.forEach {
-                core.feedKey(it, remap)
+                core.feedKey(it, remap, true)
             }
         })
     }

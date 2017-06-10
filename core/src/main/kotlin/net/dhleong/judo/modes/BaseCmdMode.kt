@@ -178,7 +178,7 @@ abstract class BaseCmdMode(
         clearBuffer()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean) {
+    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {
                 val code = buffer.toString().trim()

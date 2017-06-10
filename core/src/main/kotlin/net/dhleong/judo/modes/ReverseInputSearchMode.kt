@@ -27,10 +27,10 @@ class ReverseInputSearchMode(
         sendHistory.resetHistoryOffset()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean) {
+    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {
-                judo.send(buffer.toString(), false)
+                judo.send(buffer.toString(), fromMap)
                 judo.exitMode()
                 clearBuffer()
                 return

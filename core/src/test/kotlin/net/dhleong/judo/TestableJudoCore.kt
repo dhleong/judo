@@ -71,7 +71,7 @@ class TestableJudoCore : IJudoCore {
         TODO("not implemented")
     }
 
-    override fun feedKey(stroke: KeyStroke, remap: Boolean) {
+    override fun feedKey(stroke: KeyStroke, remap: Boolean, fromMap: Boolean) {
         TODO("not implemented")
     }
 
