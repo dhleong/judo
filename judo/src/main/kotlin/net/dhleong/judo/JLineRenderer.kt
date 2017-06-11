@@ -502,8 +502,13 @@ class JLineRenderer(
      */
     private fun appendOutputLineInternal(line: OutputLine, isPartialLine: Boolean): OutputLine {
         val splitCandidate: OutputLine
+        val linesMod: Int
         if (hadPartialLine) {
             hadPartialLine = false
+
+            // we're adding one less than expected, because at least
+            // one part of OutputLine is replacing something
+            linesMod = -1
 
             // merge partial line
             val original = output.removeLast()
@@ -512,6 +517,7 @@ class JLineRenderer(
             splitCandidate = original
         } else {
             splitCandidate = line
+            linesMod = 0 // no change
         }
 
         val linesAdded: Int
@@ -526,9 +532,9 @@ class JLineRenderer(
             split.forEach(output::add)
         }
 
-        val atBottom = scrollbackBottom == 0
-        if (!atBottom && output.size > outputWindowHeight) {
-            scrollbackBottom += linesAdded
+        val atBottom = scrollbackBottom == 0 && scrollbackOffset == 0
+        if (!atBottom) {
+            scrollbackBottom += linesAdded + linesMod
         }
 
         return splitCandidate

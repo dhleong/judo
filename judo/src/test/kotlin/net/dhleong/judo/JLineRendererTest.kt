@@ -9,8 +9,6 @@ import org.junit.Test
  * @author dhleong
  */
 class JLineRendererTest {
-    // TODO test scrollback
-
     @Test fun appendOutput_empty() {
         val renderer = JLineRenderer()
         renderer.windowWidth = 42
@@ -293,7 +291,6 @@ class JLineRendererTest {
         val renderer = JLineRenderer()
         renderer.windowWidth = 42
         renderer.windowHeight = 4
-//        renderer.outputWindowHeight = 3
         renderer.outputWindowHeight = 2
 
         renderer.appendOutput("Take My love")
@@ -342,6 +339,36 @@ class JLineRendererTest {
         renderer.scrollPages(-1)
         assertThat(renderer.getDisplayStrings())
             .containsExactly("nnot s", "tand")
+    }
+
+    @Test fun maintainScrollback() {
+        val renderer = JLineRenderer()
+        renderer.windowWidth = 42
+        renderer.windowHeight = 4
+        renderer.outputWindowHeight = 2
+
+        renderer.appendOutput("Take My love")
+        renderer.appendOutput("Take my land")
+        renderer.appendOutput("Take me where I cannot stand")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take me where I cannot stand")
+
+        // now resize the window and force wrapping
+        renderer.windowWidth = 6
+        renderer.scrollPages(1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        renderer.appendOutput("PAR", isPartialLine = true)
+        renderer.appendOutput("TS", isPartialLine = false)
+        renderer.appendOutput("LINES")
+
+        // since we're scrolled, we should stay
+        // where we are
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
     }
 
     private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {

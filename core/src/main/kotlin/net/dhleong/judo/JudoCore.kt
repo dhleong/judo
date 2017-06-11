@@ -460,10 +460,6 @@ class JudoCore(
     fun onIncomingBuffer(buffer: CharArray, count: Int) {
         renderer.inTransaction {
             try {
-//                val asCharSequence = StringBuilder(count).append(buffer, 0, count)
-//                val withoutPrompts = prompts.process(asCharSequence, this::onPrompt)
-//                appendOutput(withoutPrompts as IStringBuilder) // hacks
-//                processOutput(toAttributedString(withoutPrompts))
                 val line = OutputLine(buffer, 0, count)
                 appendOutput(line)
             } catch (e: Throwable) {
@@ -504,48 +500,6 @@ class JudoCore(
             if (lastLineEnd < count) {
                 renderer.appendOutput(
                     buffer.subSequence(lastLineEnd, count),
-                    isPartialLine = true
-                )
-            }
-        }
-    }
-
-    internal fun appendOutput(buffer: IStringBuilder) {
-        val count = buffer.length
-        renderer.inTransaction {
-            var lastLineEnd = 0
-
-            for (i in 0 until count) {
-                if (i >= lastLineEnd) {
-                    val char = buffer[i]
-                    if (!(char == '\n' || char == '\r')) continue
-
-                    val opposite =
-                        if (char == '\n') '\r'
-                        else '\n'
-
-                    val actualLine = renderer.appendOutput(
-                        buffer.slice(lastLineEnd, i),
-                        isPartialLine = false
-                    )
-                    processAndStripPrompt(actualLine)
-
-                    if (i + 1 < count && buffer[i + 1] == opposite) {
-                        lastLineEnd = i + 2
-                    } else {
-                        lastLineEnd = i + 1
-                    }
-                }
-            }
-
-            if (lastLineEnd < count) {
-                renderer.appendOutput(
-                    buffer.slice(lastLineEnd, count),
-                    isPartialLine = true
-                )
-            } else if (!buffer.isDiscardable()) {
-                renderer.appendOutput(
-                    buffer.slice(lastLineEnd, count),
                     isPartialLine = true
                 )
             }
