@@ -23,6 +23,13 @@ class AliasManagerTest {
             .isEqualTo("this serenity is a fireflyfire")
     }
 
+    @Test fun onlyMatchStart() {
+        aliases.define("^firefly", "serenity")
+
+        assertThat(process("firefly is a firefly"))
+            .isEqualTo("serenity is a firefly")
+    }
+
     @Test fun fnReplace() {
         var count = 0
         aliases.define("firefly", { "firefly_${++count}" })
