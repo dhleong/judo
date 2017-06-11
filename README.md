@@ -43,7 +43,12 @@ can omit the parentheses.
 ### Custom Modes
 
 One interesting feature of Judo is the ability to create custom modes. We'll go
-into more depth on the mechanics of this feature in the scripting documentation
+into more depth on the mechanics of this feature in the scripting documentation,
+but the idea is to be able to have a blank slate on which to create whatever
+mappings you like. For myself, I created a `nav` mode, in which the `hjkl`, and `uon,`
+keys map to the directions: `n`, `e`, `s`, `w`, and `nw`, `ne`, `sw`, `se`,
+respectively. Holding shift while pressing these keys `open` the corresponding
+direction.
 
 
 ## How
