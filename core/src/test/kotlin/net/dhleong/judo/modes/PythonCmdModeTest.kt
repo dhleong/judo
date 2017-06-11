@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.TestableJudoCore
+import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.InputHistory
 import org.assertj.core.api.Assertions.assertThat
@@ -14,7 +15,8 @@ class PythonCmdModeTest {
 
     val judo = TestableJudoCore()
     val input = InputBuffer()
-    val mode = PythonCmdMode(judo, input, InputHistory(input))
+    val mode = PythonCmdMode(judo, input, InputHistory(input),
+        DumbCompletionSource())
 
     @Before fun setUp() {
         mode.onEnter()

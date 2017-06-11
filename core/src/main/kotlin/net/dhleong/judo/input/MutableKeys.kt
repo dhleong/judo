@@ -45,6 +45,10 @@ interface Keys : Collection<KeyStroke> {
                 }
             }
 
+            if (inSpecial) {
+                parsed.add(key("<"))
+            }
+
             return of(parsed)
         }
     }

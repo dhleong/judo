@@ -1,6 +1,6 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -91,7 +91,7 @@ class JudoCoreTest {
 }
 
 private fun JudoCore.appendOutput(buffer: String) =
-    appendOutput(IStringBuilder.from(buffer))
+    appendOutput(OutputLine(buffer))
 
 private fun fakeMode(name: String): Mode =
     object : Mode {
