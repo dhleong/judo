@@ -81,8 +81,8 @@ class OperatorPendingMode(
                 range = range.start..(range.endInclusive + 1)
             }
 
-            opfunc(range)
             judo.exitMode()
+            opfunc(range)
         }
 
 }
