@@ -144,6 +144,16 @@ private val COMMAND_HELP = mutableMapOf(
     "stopInsert" to buildHelp(
         "stopInsert()",
         "Exit insert mode as soon as possible"
+    ),
+
+    "unalias" to buildHelp(
+        "unalias(inputSpec: String)",
+        "Delete the alias with the specified inputSpec"
+    ),
+
+    "untrigger" to buildHelp(
+        "untrigger(inputSpec: String)",
+        "Delete the trigger with the specified inputSpec"
     )
 
 ).apply {

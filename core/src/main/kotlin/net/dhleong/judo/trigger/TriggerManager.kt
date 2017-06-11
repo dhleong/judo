@@ -23,6 +23,10 @@ class TriggerManager : ITriggerManager {
         aliases.process(input)
     }
 
+    override fun undefine(inputSpec: String) {
+        aliases.undefine(inputSpec)
+    }
+
     fun hasTriggerFor(inputSpec: String): Boolean =
         aliases.hasAliasFor(inputSpec)
 

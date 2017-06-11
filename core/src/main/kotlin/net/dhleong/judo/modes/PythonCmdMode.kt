@@ -85,6 +85,8 @@ class PythonCmdMode(
         python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
         python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         python["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
+        python["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }
+        python["untrigger"] = asUnitPyFn<String>(1) { judo.triggers.undefine(it[0]) }
     }
 
     private fun defineAlias(alias: String, handler: Any) {

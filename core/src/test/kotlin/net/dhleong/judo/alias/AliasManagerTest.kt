@@ -30,6 +30,18 @@ class AliasManagerTest {
             .isEqualTo("serenity is a firefly")
     }
 
+    @Test fun undefine() {
+        aliases.define("^firefly", "serenity")
+        assertThat(aliases.hasAliasFor("^firefly")).isTrue()
+
+        aliases.undefine("^firefly")
+        assertThat(aliases.hasAliasFor("^firefly")).isFalse()
+
+        assertThat(process("firefly is a firefly"))
+            .isEqualTo("firefly is a firefly")
+    }
+
+
     @Test fun fnReplace() {
         var count = 0
         aliases.define("firefly", { "firefly_${++count}" })

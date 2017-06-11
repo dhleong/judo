@@ -15,4 +15,6 @@ interface ITriggerManager {
     fun define(inputSpec: String, parser: TriggerProcessor)
 
     fun process(input: CharSequence)
+
+    fun undefine(inputSpec: String)
 }

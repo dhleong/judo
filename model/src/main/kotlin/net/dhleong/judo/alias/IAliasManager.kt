@@ -10,4 +10,6 @@ interface IAliasManager {
     fun define(inputSpec: String, parser: AliasProcesser)
 
     fun process(input: CharSequence): CharSequence
+
+    fun undefine(inputSpec: String)
 }
