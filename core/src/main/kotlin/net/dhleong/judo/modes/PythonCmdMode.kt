@@ -48,20 +48,31 @@ class PythonCmdMode(
         }
 
         // map invocations
-        python["map"] = asUnitPyFn<Any>(2) { defineMap("", it[0], it[1], true) }
-        python["noremap"] = asUnitPyFn<Any>(2) { defineMap("", it[0], it[1], false) }
-        python["cmap"] = asUnitPyFn<Any>(2) { defineMap("cmd", it[0], it[1], true) }
-        python["cnoremap"] = asUnitPyFn<Any>(2) { defineMap("cmd", it[0], it[1], false) }
-        python["imap"] = asUnitPyFn<Any>(2) { defineMap("insert", it[0], it[1], true) }
-        python["inoremap"] = asUnitPyFn<Any>(2) { defineMap("insert", it[0], it[1], false) }
-        python["nmap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], true) }
-        python["nnoremap"] = asUnitPyFn<Any>(2) { defineMap("normal", it[0], it[1], false) }
+        sequenceOf(
+            "" to "",
+            "c" to "cmd",
+            "i" to "insert",
+            "n" to "normal"
+        ).forEach { (letter, modeName) ->
+            python["${letter}map"] = asUnitPyFn<Any>(2) {
+                defineMap(modeName, it[0], it[1], true)
+            }
+            python["${letter}noremap"] = asUnitPyFn<Any>(2) {
+                defineMap(modeName, it[0], it[1], false)
+            }
+            python["${letter}unmap"] = asUnitPyFn<String>(1) {
+                judo.unmap(modeName, it[0])
+            }
+        }
 
         python["createMap"] = asUnitPyFn<Any>(4, minArgs = 3) {
             val remap =
                 if (it.size == 4) it[3] as Boolean
                 else false
             defineMap(it[0] as String, it[1] as String, it[2], remap)
+        }
+        python["deleteMap"] = asUnitPyFn<String>(2) {
+            judo.unmap(it[0], it[1])
         }
 
         python["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }

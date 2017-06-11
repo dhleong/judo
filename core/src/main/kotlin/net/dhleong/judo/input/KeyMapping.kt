@@ -16,7 +16,7 @@ class KeyMapping() {
         get() = keysMap.size
 
     private val keysMap = HashMap<Keys, KeyAction>()
-    private val possibleMaps = HashSet<Keys>()
+    private val possibleMaps = HashMap<Keys, Int>()
 
     constructor(vararg mappings: Pair<Keys, KeyAction>) : this(listOf(*mappings))
     constructor(mappings: List<Pair<Keys, KeyAction>>) : this() {
@@ -27,7 +27,9 @@ class KeyMapping() {
      * @return True iff there's a mapping that starts with or is exactly
      *  `keys`
      */
-    fun couldMatch(keys: Keys): Boolean = possibleMaps.contains(keys)
+    fun couldMatch(keys: Keys): Boolean =
+        possibleMaps[keys]?.let { it > 0 }
+            ?: false
 
     fun match(keys: Keys): KeyAction? = keysMap[keys]
 
@@ -36,12 +38,31 @@ class KeyMapping() {
 
         keysMap[from] = to
         (0 until from.size).forEach { mapEnd ->
-            possibleMaps.add(from.slice(0..mapEnd))
+            addPossible(from.slice(0..mapEnd), 1)
         }
     }
 
     fun map(from: Keys, to: Keys) = map(from, to, true)
     fun noremap(from: Keys, to: Keys) = map(from, to, false)
+
+    fun unmap(from: Keys) {
+        keysMap.remove(from)
+
+        (0 until from.size).forEach { mapEnd ->
+            addPossible(from.slice(0..mapEnd), -1)
+        }
+    }
+
+    private fun addPossible(slice: Keys, addCount: Int) {
+        possibleMaps[slice]?.let {
+            possibleMaps[slice] = it + addCount
+            return
+        }
+
+        if (addCount > 0) {
+            possibleMaps[slice] = addCount
+        }
+    }
 
     private fun map(from: Keys, to: Keys, remap: Boolean) {
         map(from, { core ->

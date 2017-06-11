@@ -29,12 +29,13 @@ interface IJudoCore {
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit)
+    fun quit()
     fun readKey(): KeyStroke
     fun reconnect()
     fun scrollPages(count: Int)
     fun scrollToBottom()
     fun send(text: String, fromMap: Boolean)
     fun setCursorType(type: CursorType)
-    fun quit()
+    fun unmap(mode: String, from: String)
 }
 

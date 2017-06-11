@@ -333,6 +333,27 @@ class JudoCore(
         running = false
     }
 
+    override fun unmap(mode: String, from: String) {
+        modes[mode]?.let { modeObj ->
+            if (modeObj !is MappableMode) {
+                throw IllegalArgumentException("$mode does not support mapping")
+            }
+
+            val fromKeys = Keys.parse(from)
+            modeObj.userMappings.unmap(fromKeys)
+            return
+        }
+
+        // map in all modes
+        if (mode == "") {
+            modes.keys
+                .filter { modes[it] is MappableMode }
+                .forEach { unmap(it, from) }
+            return
+        }
+
+        throw IllegalArgumentException("No such mode $mode")    }
+
     fun onDisconnect(connection: Connection) {
         renderer.inTransaction {
             // dump the parsed prompts for visual effect

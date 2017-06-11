@@ -10,6 +10,10 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun unmap(mode: String, from: String) {
+        TODO("not implemented")
+    }
+
     override fun enterMode(mode: Mode) {
         TODO("not implemented")
     }
