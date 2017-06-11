@@ -386,10 +386,16 @@ class JLineRenderer(
         }
         workspace.addAll(toOutput)
 
-        val (statusLine, statusCursor) = fitInputLineToWindow(status)
+        val rawStatusCursor =
+            if (isCursorOnStatus) cursor
+            else 0
+        val (statusLine, statusCursor) = fitInputLineToWindow(status, rawStatusCursor)
         workspace.add(statusLine)
 
-        val (inputLine, inputCursor) = fitInputLineToWindow(input)
+        val rawInputCursor =
+            if (isCursorOnStatus) 0
+            else cursor
+        val (inputLine, inputCursor) = fitInputLineToWindow(input, rawInputCursor)
         workspace.add(inputLine)
 
         val cursorPos: Int
@@ -427,9 +433,9 @@ class JLineRenderer(
 
     // visible for testing
     internal fun fitInputLineToWindow(): Pair<AttributedString, Int> =
-        fitInputLineToWindow(input)
+        fitInputLineToWindow(input, cursor)
 
-    internal fun fitInputLineToWindow(line: AttributedString): Pair<AttributedString, Int> {
+    private fun fitInputLineToWindow(line: AttributedString, cursor: Int): Pair<AttributedString, Int> {
         val maxLineWidth = windowWidth
 
         if (line.length < maxLineWidth) {
