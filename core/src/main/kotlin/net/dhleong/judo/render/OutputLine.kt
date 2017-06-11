@@ -92,6 +92,8 @@ class OutputLine : CharSequence {
     fun toAnsi(): String {
         return rawChars.toString()
     }
+
+    override fun toString(): String = toAnsi()
 }
 
 /**
