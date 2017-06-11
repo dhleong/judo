@@ -68,7 +68,7 @@ class JudoCore(
         InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
-        PythonCmdMode(this, cmdBuffer, cmdHistory),
+        PythonCmdMode(this, cmdBuffer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>(), { map, mode ->
@@ -171,6 +171,10 @@ class JudoCore(
         } else {
             throw IllegalArgumentException("No such mode `$modeName`")
         }
+    }
+
+    override fun enterMode(mode: Mode) {
+        activateMode(mode)
     }
 
     override fun exitMode() {
@@ -384,6 +388,7 @@ class JudoCore(
         renderer.inTransaction {
             renderer.setCursorType(CursorType.BLOCK)
 
+            currentMode.onExit()
             currentMode = mode
             mode.onEnter()
 

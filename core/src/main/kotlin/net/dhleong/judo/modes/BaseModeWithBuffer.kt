@@ -47,12 +47,12 @@ abstract class BaseModeWithBuffer(
     protected fun tryMappings(
         key: KeyStroke, allowRemap: Boolean,
         input: MutableKeys,
-        originalMaps: KeyMapping, remaps: KeyMapping
+        originalMaps: KeyMapping, remaps: KeyMapping?
     ): Boolean {
 
         input.push(key)
 
-        if (allowRemap) {
+        if (allowRemap && remaps != null) {
             remaps.match(input)?.let {
                 input.clear()
                 it.invoke(judo)

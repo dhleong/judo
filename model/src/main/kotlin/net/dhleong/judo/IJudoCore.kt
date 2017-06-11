@@ -20,6 +20,7 @@ interface IJudoCore {
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)
+    fun enterMode(mode: Mode)
     fun exitMode()
     fun connect(address: String, port: Int)
     fun createUserMode(name: String)

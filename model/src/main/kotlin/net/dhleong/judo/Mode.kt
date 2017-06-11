@@ -11,4 +11,8 @@ interface Mode {
 
     fun feedKey(key: KeyStroke, remap: Boolean = true, fromMap: Boolean = false)
     fun onEnter()
+
+    fun onExit() {
+        // nop by default
+    }
 }

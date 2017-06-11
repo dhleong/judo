@@ -10,6 +10,10 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun enterMode(mode: Mode) {
+        TODO("not implemented")
+    }
+
     override fun isConnected(): Boolean {
         TODO("not implemented")
     }

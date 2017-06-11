@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import org.python.core.Options
@@ -18,7 +19,8 @@ import java.io.InputStream
 class PythonCmdMode(
     judo: IJudoCore,
     inputBuffer: InputBuffer,
-    history: IInputHistory
+    history: IInputHistory,
+    private var completions: CompletionSource
 ) : BaseCmdMode(judo, inputBuffer, history) {
 
     private val python: PythonInterpreter
@@ -65,6 +67,13 @@ class PythonCmdMode(
         python["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
         python["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
         python["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
+        python["input"] = asPyFn<String, String?>(1, minArgs = 0) {
+            if (it.isNotEmpty()) {
+                readInput(it[0])
+            } else {
+                readInput("")
+            }
+        }
         python["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
@@ -120,6 +129,13 @@ class PythonCmdMode(
         judo.triggers.define(alias, { args ->
             handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
         })
+    }
+
+    private fun readInput(prompt: String): String? {
+        // TODO user-provided completions?
+        val inputMode = ScriptInputMode(judo, completions, prompt)
+        judo.enterMode(inputMode)
+        return inputMode.awaitResult()
     }
 
     override fun execute(code: String) {

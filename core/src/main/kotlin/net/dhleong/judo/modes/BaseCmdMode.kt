@@ -93,6 +93,16 @@ private val COMMAND_HELP = mutableMapOf(
         "Print some output to the screen locally."
     ),
 
+    "input" to buildHelp(
+        listOf(
+            "input() -> String",
+            "input(prompt: String) -> String"
+        ),
+        "Request a string from the user, returning whatever they typed.\n" +
+        "NOTE: Unlike the equivalent function in Vim, input() DOES NOT\n" +
+        "currently consume pending input from mappings."
+    ),
+
     "isConnected" to buildHelp(
         "isConnected() -> Boolean",
         "Check if connected"
