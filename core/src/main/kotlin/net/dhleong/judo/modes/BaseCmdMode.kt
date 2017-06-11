@@ -157,23 +157,35 @@ private val COMMAND_HELP = mutableMapOf(
     )
 
 ).apply {
-    val mapTypes = arrayOf(
-        "map", "noremap",
-        "imap", "inoremap",
-        "nmap", "nnoremap"
-    )
+    val kinds = sequenceOf("", "c", "i", "n")
+    val mapTypes = kinds.flatMap { sequenceOf("${it}map", "${it}noremap") }
+    val unmapTypes = kinds.map { "${it}unmap" }
 
-    val help = buildHelp(
+    val mapHelp = buildHelp(
         mapTypes.map {
             "$it(inputKeys: String, outputKeys: String)"
-        } + "createMap(modeName: String, inputKeys: String, outputKeys: String)",
+        }.toList()
+            + "createMap(modeName: String, inputKeys: String, outputKeys: String)",
         "Create a mapping in a specific mode from inputKeys to outputKeys"
     )
 
+    val unmapHelp = buildHelp(
+        unmapTypes.map {
+            "$it(inputKeys: String)"
+        }.toList()
+            + "deleteMap(modeName: String, inputKeys: String)",
+        "Delete a mapping in the specific mode with inputKeys"
+    )
+
     mapTypes.forEach {
-        put(it, help)
+        put(it, mapHelp)
     }
-    put("createMap", help)
+    put("createMap", mapHelp)
+
+    unmapTypes.forEach {
+        put(it, unmapHelp)
+    }
+    put("deleteMap", unmapHelp)
 }
 
 abstract class BaseCmdMode(
