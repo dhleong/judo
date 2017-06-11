@@ -29,6 +29,9 @@ class PythonCmdMode(
         Options.importSite = false
         python = PythonInterpreter()
 
+        // "constants" (don't know if we can actually make them constant)
+        python["MYJUDORC"] = USER_CONFIG_FILE.absolutePath
+
         // aliasing
         python["alias"] = asMaybeDecorator<Any>(2) {
             defineAlias(it[0] as String, it[1])
@@ -75,6 +78,7 @@ class PythonCmdMode(
             }
         }
         python["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
+        python["load"] = asUnitPyFn<String>(1) { load(it[0]) }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
         python["reload"] = asUnitPyFn<Any> { reload() }

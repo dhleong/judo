@@ -29,6 +29,12 @@ class PythonCmdModeTest {
         assertThat(judo.echos).containsExactly("test", 2)
     }
 
+    @Test fun globals() {
+        mode.execute("echo(MYJUDORC)")
+
+        assertThat(judo.echos).containsExactly(USER_CONFIG_FILE.absolutePath)
+    }
+
     @Test fun send_ignoreExtraArgs() {
         mode.execute("send('test', 2)")
 

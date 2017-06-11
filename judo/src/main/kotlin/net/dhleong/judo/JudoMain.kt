@@ -1,13 +1,12 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.modes.USER_CONFIG_FILE
+import net.dhleong.judo.modes.USER_HOME
 import java.io.File
 
 /**
  * @author dhleong
  */
-
-val USER_HOME = System.getProperty("user.home")!!
-val userConfigFile = File("$USER_HOME/.config/judo/init.py").absoluteFile!!
 
 fun main(args: Array<String>) {
     // prevent OSX from showing the title bar and dock icon
@@ -37,8 +36,8 @@ fun main(args: Array<String>) {
     val judo = JudoCore(renderer, debug = debugLevel)
 
     // if they have a global init.py, read it
-    if (userConfigFile.exists()) {
-        judo.readFile(userConfigFile)
+    if (USER_CONFIG_FILE.exists()) {
+        judo.readFile(USER_CONFIG_FILE)
     }
 
     when (argsList.size) {

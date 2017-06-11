@@ -20,6 +20,9 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 
+val USER_HOME = System.getProperty("user.home")!!
+val USER_CONFIG_FILE = File("$USER_HOME/.config/judo/init.py").absoluteFile!!
+
 private fun buildHelp(usage: String, description: String): String =
     buildHelp(listOf(usage), description)
 private fun buildHelp(usages: Iterable<String>, description: String): String =
@@ -80,17 +83,22 @@ private val COMMAND_HELP = mutableMapOf(
 
     "enterMode" to buildHelp(
         "enterMode(modeName: String)",
-        "Enter the mode with the given name"
+        "Enter the mode with the given name."
     ),
 
     "exitMode" to buildHelp(
         "exitMode()",
-        "Enter the current mode"
+        "Enter the current mode."
     ),
 
     "echo" to buildHelp(
         "echo(...)",
         "Print some output to the screen locally."
+    ),
+
+    "load" to buildHelp(
+        "load(pathToFile: String)",
+        "Load and execute a script."
     ),
 
     "input" to buildHelp(
@@ -105,12 +113,12 @@ private val COMMAND_HELP = mutableMapOf(
 
     "isConnected" to buildHelp(
         "isConnected() -> Boolean",
-        "Check if connected"
+        "Check if connected."
     ),
 
     "quit" to buildHelp(
         "quit()",
-        "Exit Judo"
+        "Exit Judo."
     ),
 
     "reconnect" to buildHelp(
@@ -249,7 +257,17 @@ abstract class BaseCmdMode(
         insertChar(key)
     }
 
+    fun load(pathToFile: String) {
+        val file = File(pathToFile)
+        readFile(file)
+        judo.echo("Loaded $file")
+    }
+
     fun readFile(file: File) {
+        if (!(file.exists() && file.canRead())) {
+            throw IllegalArgumentException("Unable to load $file")
+        }
+
         lastReadFile = file
         file.inputStream().use {
             readFile(file.name, it)
@@ -259,7 +277,7 @@ abstract class BaseCmdMode(
     fun reload() {
         lastReadFile?.let {
             readFile(it)
-            judo.echo("Loaded $it")
+            judo.echo("Reloaded $it")
             return
         }
 
