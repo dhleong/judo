@@ -60,4 +60,14 @@ class RecencyCompletionSourceTest {
                 "seashells"
             )
     }
+
+    @Test fun processWhileSuggesting() {
+        val iterator = source.suggest("s").iterator()
+        assertThat(iterator.next()).isEqualTo("she")
+        assertThat(iterator.next()).isEqualTo("shore")
+
+        source.process("ignore")
+        assertThat(iterator.next()).isEqualTo("sea")
+        assertThat(iterator.next()).isEqualTo("seashells")
+    }
 }

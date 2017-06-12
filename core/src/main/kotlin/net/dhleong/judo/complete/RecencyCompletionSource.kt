@@ -1,5 +1,6 @@
 package net.dhleong.judo.complete
 
+import net.dhleong.judo.util.ForgivingSequence
 import net.dhleong.judo.util.removeWhile
 import java.util.TreeMap
 
@@ -57,11 +58,9 @@ class RecencyCompletionSource(
     }
 
     override fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String> {
-        // FIXME if we have to process() while iterating over this,
-        // a ConcurrentModificationException is thrown
         val partial = string.subSequence(wordRange)
         val partialLower = partial.toString().toLowerCase()
-        return candidates.keys.asSequence().filter {
+        return ForgivingSequence { candidates.keys }.filter {
             it.word.startsWith(partialLower)
         }.distinct() // TODO can/should we prune dups from the map?
          .map { it.word }
