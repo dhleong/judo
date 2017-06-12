@@ -1,8 +1,11 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.util.ansi
 import net.dhleong.judo.util.findTrailingEscape
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
+
+private val ANSI_CLEAR = ansi(0)
 
 /**
  * One logical line of output to be rendered.
@@ -30,7 +33,13 @@ class OutputLine : CharSequence {
 
     fun append(chars: CharSequence) {
         if (chars is AttributedCharSequence) {
-            rawChars.append(chars.toAnsi())
+            val asAnsi = chars.toAnsi()
+            val trailing = findTrailingEscape(asAnsi)
+            if (trailing != null && trailing.endsWith(ANSI_CLEAR)) {
+                rawChars.append(asAnsi.subSequence(0..asAnsi.lastIndex - ANSI_CLEAR.length))
+            } else {
+                rawChars.append(chars.toAnsi())
+            }
 
             // this should no longer happen...?
 //            if (chars is ReplaceableAttributedStringBuilder) {
@@ -88,7 +97,7 @@ class OutputLine : CharSequence {
         }
 
         val lines = getDisplayLines(windowWidth)
-        var previousHint = getFinalStyle()
+        var previousHint: CharSequence = ""
         return lines.fold(ArrayList<OutputLine>(lines.size)) { result, it ->
             val outputLine = sealedOutputLine(it, previousHint)
             result.add(outputLine)
@@ -147,10 +156,11 @@ class OutputLine : CharSequence {
      * but also are probably not reflected visually
      */
     fun setStyleHint(styleHint: CharSequence) {
-        if (!rawChars.startsWith(styleHint)) {
-            rawChars.insert(0, styleHint)
-            dirty = true
-        }
+        if (styleHint.isEmpty()) return
+        if (rawChars.startsWith(styleHint)) return
+
+        rawChars.insert(0, styleHint)
+        dirty = true
     }
 }
 

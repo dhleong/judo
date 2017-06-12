@@ -14,8 +14,8 @@ class OutputLineTest {
         assertThat(line.toAnsi()).isEqualTo("${ansi(1,2)}Take my love")
 
         val (first, second) = line.getDisplayOutputLines(6)
-        assertThat(first.toAnsi()).isEqualTo("${ansi(1,2)}Take m${ansi(0)}")
-        assertThat(second.toAnsi()).isEqualTo("${ansi(1,2)}y love${ansi(0)}")
+        assertThat(first.toAttributedString().toAnsi()).isEqualTo("${ansi(1,2)}Take m${ansi(0)}")
+        assertThat(second.toAttributedString().toAnsi()).isEqualTo("${ansi(1,2)}y love${ansi(0)}")
 
     }
 }

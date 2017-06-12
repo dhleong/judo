@@ -455,5 +455,5 @@ class JLineRendererTest {
 }
 
 private fun JLineRenderer.getDisplayStrings(): List<String> =
-    getDisplayLines().map { it.toAnsi() }
+    getDisplayLines().map { it.toAttributedString().toAnsi() }
 

@@ -50,7 +50,7 @@ fun findTrailingEscape(chars: CharSequence): CharSequence? {
         return null
     }
 
-    val start = lastIndex - ESCAPE_CODE_SEARCH_LIMIT
+    val start = maxOf(0, lastIndex - ESCAPE_CODE_SEARCH_LIMIT)
 
     return (lastIndex-1 downTo start)
         .firstOrNull { chars[it] == ESCAPE_CHAR }
