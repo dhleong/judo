@@ -336,8 +336,6 @@ class JLineRenderer(
         if (!isInTransaction) display()
     }
 
-    fun getOutputLines(): List<String> = output.map { it.toAnsi() }.toList()
-
     /**
      * How many lines we've scrolled back
      */
@@ -522,6 +520,11 @@ class JLineRenderer(
 
             splitCandidate = original
         } else {
+            // new line
+            if (output.isNotEmpty()) {
+                val previous = output.last()
+                line.setStyleHint(previous.getFinalStyle())
+            }
             splitCandidate = line
             linesMod = 0 // no change
         }

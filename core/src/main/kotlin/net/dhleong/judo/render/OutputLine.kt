@@ -1,5 +1,6 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.util.findTrailingEscape
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 
@@ -77,8 +78,27 @@ class OutputLine : CharSequence {
         // TODO if we know we fit on a single line, we could
         // just return ourself in a singleton list
 
-        return getDisplayLines(windowWidth)
-            .map { sealedOutputLine(it) }
+        if (rawChars.length < windowWidth) {
+            // NOTE: this is not rigorous! Since rawChars has ansi
+            // escapes in it, a very short but highly decorated line
+            // will be ignored. However, this check DOES handle the
+            // case of an empty line with only an ansi code on it
+            // that's supposed to color the whole next paragraph
+            return listOf(this)
+        }
+
+        val lines = getDisplayLines(windowWidth)
+        var previousHint = getFinalStyle()
+        return lines.fold(ArrayList<OutputLine>(lines.size)) { result, it ->
+            val outputLine = sealedOutputLine(it, previousHint)
+            result.add(outputLine)
+            // FIXME we can't allow trailing here because using the JLine
+            // splitter adds ansi(0) to the end no matter what :\ We need
+            // to just sit down and write a word-wrap splitter that doesn't
+            // force the ansi(0); it'll happen when displaying it anyway
+            previousHint = outputLine.getFinalStyle(allowTrailing = false)
+            result
+        }
     }
 
     fun toAttributedString(): AttributedString {
@@ -94,6 +114,44 @@ class OutputLine : CharSequence {
     }
 
     override fun toString(): String = toAnsi()
+
+    fun getFinalStyle(allowTrailing: Boolean = true): CharSequence {
+        if (allowTrailing) {
+            val trailing = findTrailingEscape(rawChars)
+            if (trailing != null) return trailing
+        }
+
+        val attributed: AttributedCharSequence
+        if (lastWindowWidth != -1) {
+            val lines = getDisplayLines(lastWindowWidth)
+            attributed = lines.last()
+        } else {
+            attributed = toAttributedString()
+        }
+
+        if (attributed.isEmpty() && rawChars.isEmpty()) {
+            return ""
+        } else if (attributed.isEmpty()) {
+            // we have raw chars but no attributed? must be
+            // ansi escape codes
+            return rawChars
+        }
+
+        val style = attributed.styleAt(attributed.lastIndex)
+        val stylishSpace = AttributedString(" ", style)
+        return stylishSpace.toAnsi().dropLast(5) // `\e[0m  plus the space
+    }
+
+    /**
+     * NOTE: Only useful once; subsequent calls are not ignored,
+     * but also are probably not reflected visually
+     */
+    fun setStyleHint(styleHint: CharSequence) {
+        if (!rawChars.startsWith(styleHint)) {
+            rawChars.insert(0, styleHint)
+            dirty = true
+        }
+    }
 }
 
 /**
@@ -101,10 +159,12 @@ class OutputLine : CharSequence {
  * have any split escape codes and doesn't need to store the
  * raw stream
  */
-private fun sealedOutputLine(line: CharSequence): OutputLine {
+private fun sealedOutputLine(line: CharSequence, styleHint: CharSequence): OutputLine {
     // NOTE: this is an opportunity for future optimization
     // that we haven't bothered with yet
     // TODO we don't have to render AttributedString
     // into an ANSI string and copy that into the StringBuilder
-    return OutputLine(line)
+    return OutputLine(line).apply {
+        setStyleHint(styleHint)
+    }
 }
