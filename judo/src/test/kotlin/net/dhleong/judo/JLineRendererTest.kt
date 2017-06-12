@@ -3,29 +3,41 @@ package net.dhleong.judo
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 /**
  * @author dhleong
  */
 class JLineRendererTest {
-    @Test fun appendOutput_empty() {
-        val renderer = JLineRenderer()
+
+    lateinit var renderer: JLineRenderer
+
+    @Before fun setUp() {
+        renderer = JLineRenderer()
         renderer.windowWidth = 42
+        renderer.windowHeight = 22
+        renderer.outputWindowHeight = 20
+    }
+
+    @After fun tearDown() {
+        renderer.close()
+    }
+
+    @Test fun appendOutput_empty() {
 
         // basically make sure it doesn't crash
         renderer.appendOutput(OutputLine(""), isPartialLine = true)
         renderer.appendOutput(OutputLine(""), isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly("")
     }
 
     @Test fun appendOutput_resumePartial() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         renderer.appendOutput("", isPartialLine = false)
         renderer.appendOutput("Take my love,", isPartialLine = false)
@@ -34,7 +46,7 @@ class JLineRendererTest {
         renderer.appendOutput("Take me where...", isPartialLine = false)
         renderer.appendOutput("I don't care, I'm still free", isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "",
                 "Take my love,",
@@ -48,14 +60,12 @@ class JLineRendererTest {
     @Test fun appendOutput_resumePartial_continueAnsi() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         renderer.appendOutput("", isPartialLine = false)
         renderer.appendOutput("${ansi(1,6)}Take my ", isPartialLine = true)
         renderer.appendOutput("love", isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "",
                 "${ansi(1,6)}Take my love${ansi(0)}"
@@ -64,8 +74,6 @@ class JLineRendererTest {
     }
 
     @Test fun appendOutput_resumePartial_continueAnsi2() {
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         // continuation of the partial line has its own ansi;
         // use previous line's ansi to start, but don't stomp
@@ -75,8 +83,9 @@ class JLineRendererTest {
         renderer.appendOutput(first, isPartialLine = true)
         renderer.appendOutput(second, isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
-            .containsExactly(
+        assertThat(renderer.getDisplayStrings()).hasSize(1)
+        assertThat(renderer.getDisplayStrings()[0])
+            .isEqualTo(
                 "${ansi(1,6)}Take my lo${ansi(fg=7)}ve${ansi(0)}"
             )
         assertThat(renderer.getScrollback()).isEqualTo(0)
@@ -85,15 +94,13 @@ class JLineRendererTest {
     @Test fun appendOutput_resumePartial_trailingAnsi() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         val trailingAnsiLine = OutputLine("${ansi(1,6)}Take my ${ansi(1,2)}")
         renderer.appendOutput("", isPartialLine = false)
         renderer.appendOutput(trailingAnsiLine, isPartialLine = true)
         renderer.appendOutput("love", isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "",
                 "${ansi(1,6)}Take my ${ansi(fg=2)}love${ansi(0)}"
@@ -104,8 +111,6 @@ class JLineRendererTest {
     @Test fun appendOutput_resumePartial_splitAnsi() {
         // append without a line end and continue that line
         // in a separate append. It's TCP so stuff happens
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         val ansi = ansi(1,2)
         val firstHalf = ansi.slice(0..3)
@@ -119,7 +124,7 @@ class JLineRendererTest {
             OutputLine("${secondHalf}love"),
             isPartialLine = false)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "${ansi(1,6)}Take my ${ansi(fg=2)}love${ansi(0)}"
             )
@@ -129,8 +134,6 @@ class JLineRendererTest {
     @Test fun appendOutput_resumePartial_splitAnsi_integration() {
         // we've tested the core handling above, so let's make sure
         // JudoCore integrates into it correctly
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
         val core = JudoCore(renderer)
 
         val ansi = ansi(fg=2)
@@ -145,16 +148,15 @@ class JLineRendererTest {
         core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
         core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
 
-        if (renderer.getOutputLines()[0].startsWith("ERROR")) {
-            throw AssertionError(renderer.getOutputLines().joinToString("\n"))
+        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
         }
 
-        assertThat(renderer.getOutputLines()[0])
-            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(1,6)}ove")
+        assertThat(renderer.getDisplayStrings()[0])
+            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(fg=6)}ove${ansi(0)}")
     }
 
     @Test fun fitInputLineToWindow() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 12
 
         renderer.updateInputLine("Take my love, Take my land... ", 0)
@@ -183,7 +185,6 @@ class JLineRendererTest {
     }
 
     @Test fun fitInputLineToWindow_type() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 12
 
         renderer.typeAndFit("Take my love",
@@ -194,7 +195,6 @@ class JLineRendererTest {
     }
 
     @Test fun fitInputLineToWindow_type_page3() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 12
 
         renderer.typeAndFit("Take my love, take my lan",
@@ -220,8 +220,6 @@ class JLineRendererTest {
     }
 
     @Test fun catchSplitPrompts() {
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         val judo = JudoCore(renderer)
         judo.prompts.define("HP: $1", "(hp: $1)")
@@ -234,13 +232,11 @@ class JLineRendererTest {
         judo.onIncomingBuffer(first.toCharArray(), first.length)
         judo.onIncomingBuffer(second.toCharArray(), second.length)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly("")
     }
 
     @Test fun catchSplitPrompts_splitAnsi() {
-        val renderer = JLineRenderer()
-        renderer.windowWidth = 42
 
         val judo = JudoCore(renderer)
         judo.prompts.define("HP: $1", "(hp: $1)")
@@ -253,12 +249,11 @@ class JLineRendererTest {
         judo.onIncomingBuffer(first.toCharArray(), first.length)
         judo.onIncomingBuffer(second.toCharArray(), second.length)
 
-        assertThat(renderer.getOutputLines())
+        assertThat(renderer.getDisplayStrings())
             .containsExactly("")
     }
 
     @Test fun scrollBack() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 6
         renderer.windowHeight = 4
         renderer.outputWindowHeight = 2
@@ -288,7 +283,6 @@ class JLineRendererTest {
     }
 
     @Test fun scrollBackWrapping() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 42
         renderer.windowHeight = 4
         renderer.outputWindowHeight = 2
@@ -342,7 +336,6 @@ class JLineRendererTest {
     }
 
     @Test fun maintainScrollback() {
-        val renderer = JLineRenderer()
         renderer.windowWidth = 42
         renderer.windowHeight = 4
         renderer.outputWindowHeight = 2
@@ -371,6 +364,88 @@ class JLineRendererTest {
             .containsExactly("e wher", "e I ca")
     }
 
+    @Test fun continueStyleAcrossLines() {
+        val core = JudoCore(renderer)
+
+        val lineOne = "${ansi(1,1)}Take my love,\r\n"
+        val lineTwo = "Take my land...\r\n"
+
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
+        }
+
+        assertThat(renderer.getDisplayStrings()[0])
+            .isEqualTo("${ansi(1,1)}Take my love,${ansi(0)}")
+        assertThat(renderer.getDisplayStrings()[1])
+            .isEqualTo("${ansi(1,1)}Take my land...${ansi(0)}")
+    }
+
+    @Test fun continueTrailingStyleAcrossLines() {
+        val lineOne = "${ansi(1,2)}Take my love,${ansi(1,4)}\r\n"
+        val lineTwo = "Take my land...\r\n"
+
+        assertThat(OutputLine(lineOne.trimEnd()).getFinalStyle().toString())
+            .isEqualTo(ansi(1,4).toString())
+
+        val core = JudoCore(renderer)
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer("\r\n".toCharArray(), 2) // empty line
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
+        }
+
+        assertThat(renderer.getDisplayStrings()[2])
+            .isEqualTo("${ansi(1,4)}Take my land...${ansi(0)}")
+    }
+
+    @Test fun continueTrailingStyleAcrossSplitLines() {
+        renderer.windowWidth = 12
+        val lineOne = "\r\n${ansi(1,2)}\r\nTake my love\r\nTake"
+        val lineTwo = " my land...\r\nTake me where..."
+
+        assertThat(OutputLine(lineOne).getFinalStyle().toString())
+            .isEqualTo(ansi(1,2).toString())
+
+        val core = JudoCore(renderer)
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
+        }
+
+        assertThat(renderer.getDisplayStrings()[2])
+            .isEqualTo("${ansi(1,2)}Take my love${ansi(0)}")
+        assertThat(renderer.getDisplayStrings()[3])
+            .isEqualTo("${ansi(1,2)}Take my land${ansi(0)}")
+        assertThat(renderer.getDisplayStrings()[4])
+            .isEqualTo("${ansi(1,2)}...${ansi(0)}")
+        assertThat(renderer.getDisplayStrings()[5])
+            .isEqualTo("${ansi(1,2)}Take me wher${ansi(0)}")
+    }
+
+    @Test fun continueEmptyStyleAcrossLines() {
+        val core = JudoCore(renderer)
+
+        val lineOne = "${ansi(1,1)}\r\n"
+        val lineTwo = "Take my love...\r\n"
+
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
+            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
+        }
+
+        assertThat(renderer.getDisplayStrings()[1])
+            .isEqualTo("${ansi(1,1)}Take my love...${ansi(0)}")
+    }
+
     private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {
         updateInputLine(text, text.length)
 
@@ -380,5 +455,5 @@ class JLineRendererTest {
 }
 
 private fun JLineRenderer.getDisplayStrings(): List<String> =
-    getDisplayLines().map { it.toString() }
+    getDisplayLines().map { it.toAttributedString().toAnsi() }
 

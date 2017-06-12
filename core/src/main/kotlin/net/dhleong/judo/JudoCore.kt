@@ -20,6 +20,7 @@ import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.ansi
 import java.awt.event.KeyEvent
 import java.io.File
 import java.io.FileOutputStream
@@ -49,7 +50,7 @@ class JudoCore(
     override val prompts = PromptManager()
     override var opfunc: OperatorFunc? = null
 
-    private val parsedPrompts = ArrayList<IStringBuilder>(1)
+    private val parsedPrompts = ArrayList<IStringBuilder>(2)
 
     internal val buffer = InputBuffer()
     internal val cmdBuffer = InputBuffer()
@@ -157,7 +158,7 @@ class JudoCore(
     override fun echo(vararg objects: Any?) {
         // TODO colors?
         val asString = objects.joinToString(" ")
-        renderer.appendOutput(asString)
+        renderer.appendOutput("${ansi(0)}$asString")
 
         if (debug.isEnabled) {
             debugLogFile.appendText("\n## ECHO: $asString\n")
@@ -541,6 +542,7 @@ class JudoCore(
             parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { IStringBuilder.EMPTY })
         }
 
+        // make sure prompt colors don't bleed
         parsedPrompts[index] = IStringBuilder.from(prompt)
         updateStatusLine(currentMode)
     }

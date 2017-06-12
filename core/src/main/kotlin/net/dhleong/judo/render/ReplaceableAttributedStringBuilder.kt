@@ -1,11 +1,10 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.util.ESCAPE_CODE_SEARCH_LIMIT
 import net.dhleong.judo.util.IStringBuilder
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
-
-private val ESCAPE_CODE_SEARCH_LIMIT = 8
 
 /**
  * @author dhleong
