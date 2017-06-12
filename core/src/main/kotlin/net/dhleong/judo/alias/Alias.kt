@@ -49,9 +49,9 @@ class Alias(
                 spec.substring(lastEnd, spec.length)
             ))
 
-            // TODO do we need whitespace boundaries instead of word boundaries?
+            // do we need whitespace boundaries instead of word boundaries?
             val pattern =
-                if (spec[0] == '^') Pattern.compile("^$withVars", Pattern.MULTILINE)
+                if (spec[0] == '^') Pattern.compile("^$withVars\\b", Pattern.MULTILINE)
                 else Pattern.compile("\\b($withVars)\\b")
 
             return Alias(spec, pattern, groups, processor)
@@ -66,28 +66,25 @@ class Alias(
     }
 
     fun parse(input: IStringBuilder, postProcess: (String) -> String, keepAnsi: Boolean = false): Boolean {
-        var matched = false
         val matcher = pattern.matcher(input)
 
         val vars =
             if (groups.isEmpty()) emptyArray<String>()
             else Array(groups.size) { "" }
 
-        while (matcher.find()) {
-            matched = true
+        if (!matcher.find()) return false
 
-            // extract variables
-            for (i in 0 until groups.size) {
-                val value = matcher.group(groups[i])
-                vars[i] =
-                    if (keepAnsi) value
-                    else stripAnsi(value)
-            }
-
-            val processed = postProcess(process(vars))
-            input.replace(matcher.start(), matcher.end(), processed)
+        // extract variables
+        for (i in 0 until groups.size) {
+            val value = matcher.group(groups[i])
+            vars[i] =
+                if (keepAnsi) value
+                else stripAnsi(value)
         }
 
-        return matched
+        val processed = postProcess(process(vars))
+        input.replace(matcher.start(), matcher.end(), processed)
+
+        return true
     }
 }

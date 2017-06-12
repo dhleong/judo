@@ -30,6 +30,21 @@ class AliasManagerTest {
             .isEqualTo("serenity is a firefly")
     }
 
+    @Test fun expandingIsntRecursive() {
+        aliases.define("fire", "firefly")
+
+//        Pattern.compile("(?<=^|\\s)(fire)(?=$|\\s)")
+        assertThat(process("fire is a firefly"))
+            .isEqualTo("firefly is a firefly")
+    }
+
+    @Test fun onlyMatchStartExpandingIsntRecursive() {
+        aliases.define("^fire", "firefly")
+
+        assertThat(process("fire is a firefly"))
+            .isEqualTo("firefly is a firefly")
+    }
+
     @Test fun undefine() {
         aliases.define("^firefly", "serenity")
         assertThat(aliases.hasAliasFor("^firefly")).isTrue()
