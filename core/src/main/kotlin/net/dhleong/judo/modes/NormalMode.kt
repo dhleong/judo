@@ -13,6 +13,7 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -78,6 +79,16 @@ class NormalMode(
         // browse history
         keys("j") to { _ -> history.scroll(1) },
         keys("k") to { _ -> history.scroll(-1) },
+
+        keys("r") to actionOn(xCharMotion(1)) { _, range ->
+            val replacement = judo.readKey()
+            if (replacement.hasCtrl()
+                    || replacement.keyCode == KeyEvent.VK_ESCAPE) {
+                // TODO beep?
+            } else {
+                buffer.replace(range, replacement.keyChar.toString())
+            }
+        },
 
         keys("x") to actionOn(xCharMotion(1)) { _, range ->
             buffer.delete(range)

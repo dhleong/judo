@@ -125,5 +125,26 @@ class MotionIntegrationTest {
             .isEqualTo("word word3" to 5)
     }
 
+    @Test fun replaceChar() {
+        judo.setInput("word word2 word3", 5)
+
+        // ignore cancel things
+        judo.type(keys("r<esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 5)
+
+        judo.type(keys("r<ctrl c>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 5)
+
+        // simple replace
+        judo.type(keys("ra"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word aord2 word3" to 5)
+
+        judo.type(keys("rb"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word bord2 word3" to 5)
+    }
 }
 
