@@ -95,5 +95,21 @@ class InputHistoryTest {
         assertThat(history.search("t", false)).isTrue()
         assertThat(buffer.toString()).isEqualTo("Take my land")
     }
+
+    @Test fun dontDupHistory() {
+        history.push("Take me where I cannot stand")
+        history.push("Take me where I cannot stand")
+        history.push("Take me where I cannot stand")
+        history.push("Take my land")
+        history.push("Take my land")
+        history.push("Take my land")
+        history.push("Take my love")
+        history.push("Take my land")
+
+        // NOTE: it's fine to not search back through
+        // the entire history, but we should at least
+        // not repeat the most recent
+        assertThat(history.size).isEqualTo(4)
+    }
 }
 

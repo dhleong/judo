@@ -51,6 +51,12 @@ class CircularArrayList<E> : Collection<E> {
         ++end
     }
 
+    fun clear() {
+        actualSize = 0
+        start = 0
+        end = 0
+    }
+
     @Suppress("UNCHECKED_CAST")
     operator fun get(index: Int): E =
         array[actualIndexOf(index)] as E
@@ -115,24 +121,6 @@ class CircularArrayList<E> : Collection<E> {
             sliceLength
         )
     }
-
-//    {
-//        // NOTE: this is not super efficient, but...
-//        val rangeSize = range.last - range.first
-//        val result = arrayOfNulls<Any>(rangeSize)
-//
-//        if (start < end) {
-//            System.arraycopy(array, start + range.start, result, 0, rangeSize)
-//        } else {
-//            val firstLength = array.size - (start + range.start)
-//            val secondLength = rangeSize - firstLength
-//
-//            System.arraycopy(array, start + range.start, result, 0, firstLength)
-//            System.arraycopy(array, 0, result, firstLength, secondLength)
-//        }
-//
-//        return Arrays.asList(result) as List<E>
-//    }
 
     private fun actualIndexOf(virtualIndex: Int): Int {
         if (virtualIndex < 0) throw IndexOutOfBoundsException("$virtualIndex < 0")

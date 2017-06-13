@@ -5,11 +5,13 @@ import net.dhleong.judo.input.InputBuffer
 
 class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory {
 
-    // TODO circular buffer
-    private val contents = ArrayList<String>(capacity)
+    private val contents = CircularArrayList<String>(capacity)
 
     private var lastBufferValue: String? = null
     private var historyOffset = 0
+
+    val size: Int
+        get() = contents.size
 
     override fun clear() {
         contents.clear()
@@ -18,7 +20,9 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
     }
 
     override fun push(line: String) {
-        contents.add(line)
+        if (contents.isEmpty() || contents.last() != line) {
+            contents.add(line)
+        }
     }
 
     override fun resetHistoryOffset() {
