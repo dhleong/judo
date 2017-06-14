@@ -66,7 +66,7 @@ class NormalMode(
             withOperator { range -> buffer.deleteWithCursor(range) } // TODO bell on error?
         },
         keys("D") to { _ ->
-            buffer.delete(rangeOf(toEndMotion()))
+            buffer.deleteWithCursor(rangeOf(toEndMotion()))
         },
 
         keys("G") to { core -> core.scrollToBottom() },
