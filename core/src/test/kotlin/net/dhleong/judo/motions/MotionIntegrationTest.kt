@@ -78,6 +78,15 @@ class MotionIntegrationTest {
             .isEqualTo("word changed2 word3" to 13)
     }
 
+    @Test fun changeInnerWord_last() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("ciwchanged"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 changed" to 18)
+    }
+
     @Test fun deleteEndOfWordBack() {
         judo.setInput("word word2 word3", 9)
 
@@ -235,6 +244,38 @@ class MotionIntegrationTest {
         judo.type(keys("rb"))
         assertThat(renderer.inputLine)
             .isEqualTo("word bord2 word3" to 5)
+    }
+
+    @Test fun flipCase() {
+         judo.setInput("Wo&Rd", 0)
+
+        // ignore cancel things
+        judo.type(keys("~~~~"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("wO&rd" to 4)
+
+        judo.type(keys("~"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("wO&rD" to 4) // stay at end
+    }
+
+    @Test fun flipCase_innerWord() {
+        judo.setInput("Wo&Rd", 0)
+
+        // ignore cancel things
+        judo.type(keys("g~iw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("wO&Rd" to 0)
+    }
+
+    @Test fun flipCase_WORDback() {
+        judo.setInput("Wo&Rd", 4)
+
+        // ignore cancel things
+        judo.type(keys("g~B"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("wO&rd" to 0)
     }
 }
 

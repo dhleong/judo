@@ -22,6 +22,9 @@ class InputBuffer {
 
     fun isEmpty() = buffer.isEmpty()
 
+    val lastIndex: Int
+        get() = buffer.lastIndex
+
     /**
      * Type the given KeyStroke into the buffer at the current cursor
      */
@@ -67,26 +70,57 @@ class InputBuffer {
         buffer.delete(range.start, range.endInclusive + 1)
     }
 
-    fun deleteWithCursor(range: IntRange): Boolean {
-        if (range.start < range.endInclusive) {
-            // forward delete
-            val end = (range.endInclusive - 1)
-            if (end < 0) return false
-
-            delete(range.start..end)
-            cursor = minOf(buffer.lastIndex, range.start)
-        } else {
-            val end = (range.start - 1)
-            if (end < 0) return false
-
-            delete(range.endInclusive..end)
-            cursor = minOf(buffer.lastIndex, range.endInclusive)
+    fun deleteWithCursor(range: IntRange, clampCursor: Boolean = true): Boolean {
+        normalizeRange(range)?.let { (normalized, newCursor) ->
+            delete(normalized)
+            if (clampCursor) {
+                cursor = minOf(buffer.lastIndex, newCursor)
+            }
+            return true
         }
 
-        return true
+        return false
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {
         buffer.replace(range.start, range.endInclusive + 1, replacement.toString())
+    }
+
+    fun replace(range: IntRange, transformer: (CharSequence) -> CharSequence) {
+        val old = buffer.subSequence(range.start, range.endInclusive + 1)
+        val new = transformer(old).toString()
+        buffer.replace(range.start, range.endInclusive + 1, new)
+    }
+
+    fun switchCaseWithCursor(range: IntRange) {
+        normalizeRange(range)?.let { (normalized, newCursor) ->
+            replace(normalized) { old ->
+                val result = StringBuilder(old.length)
+                old.forEach {
+                    if (Character.isUpperCase(it)) {
+                        result.append(Character.toLowerCase(it))
+                    } else {
+                        result.append(Character.toUpperCase(it))
+                    }
+                }
+                result
+            }
+            cursor = newCursor
+        }
+    }
+
+    private fun normalizeRange(range: IntRange): Pair<IntRange, Int>? {
+        if (range.start < range.endInclusive) {
+            // forward delete
+            val end = (range.endInclusive - 1)
+            if (end < 0) return null
+
+            return (range.start..end) to minOf(buffer.lastIndex, range.start)
+        } else {
+            val end = (range.start - 1)
+            if (end < 0) return null
+
+            return (range.endInclusive..end) to minOf(buffer.lastIndex, range.endInclusive)
+        }
     }
 }

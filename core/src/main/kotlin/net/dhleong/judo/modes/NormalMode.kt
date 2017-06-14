@@ -49,7 +49,7 @@ class NormalMode(
         keys("c") to { core ->
             opMode.fullLineMotionKey = 'c'
             withOperator { range ->
-                if (buffer.deleteWithCursor(range)) {
+                if (buffer.deleteWithCursor(range, clampCursor = false)) {
                     core.enterMode("insert")
                 } else {
                     // TODO bell?
@@ -97,6 +97,17 @@ class NormalMode(
         keys("X") to actionOn(xCharMotion(-1)) { _, range ->
             buffer.delete(range)
             buffer.cursor = range.endInclusive
+        },
+
+        keys("~") to actionOn(charMotion(1)) { _, range ->
+            buffer.switchCaseWithCursor(range)
+            buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
+        },
+        keys("g~") to { _ ->
+            opMode.fullLineMotionKey = '~'
+            withOperator { range ->
+                buffer.switchCaseWithCursor(range)
+            }
         },
 
         keys("<up>") to { _ -> history.scroll(-1) },

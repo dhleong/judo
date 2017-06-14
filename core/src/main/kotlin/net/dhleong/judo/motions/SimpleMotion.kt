@@ -6,10 +6,7 @@ package net.dhleong.judo.motions
 
 fun charMotion(step: Int) =
     createMotion { buffer, start ->
-        val end = minOf(
-            buffer.lastIndex,
-            maxOf(0, start + step)
-        )
+        val end = maxOf(0, start + step)
 
         start..end
     }
