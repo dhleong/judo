@@ -1,4 +1,4 @@
-judo
+judo [![Build Status](http://img.shields.io/travis/dhleong/judo.svg?style=flat)](https://travis-ci.org/dhleong/judo)
 ====
 
 *A more elegant way to play in the [MUD][1]*
