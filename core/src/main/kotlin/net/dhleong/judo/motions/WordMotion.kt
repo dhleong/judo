@@ -19,11 +19,11 @@ fun wordMotion(step: Int, bigWord: Boolean): Motion {
 
         if (step < 0) {
             // skip past any whitespace
-            while (end > 0 && Character.isWhitespace(buffer[end])) {
+            while (end in 0..buffer.lastIndex && Character.isWhitespace(buffer[end])) {
                 end += step
             }
 
-            wasOnBoundary = end >= 0 && isWordBoundary(buffer[end])
+            wasOnBoundary = end in 0..buffer.lastIndex && isWordBoundary(buffer[end])
         } else if (end >= buffer.length) {
             // we've gone too far this time
             end = buffer.length - 1
@@ -42,7 +42,9 @@ fun wordMotion(step: Int, bigWord: Boolean): Motion {
                 end += step
             }
 
-        } else if (!wasOnBoundary && (end < 0 || isWordBoundary(buffer[end]))) {
+        } else if (!wasOnBoundary
+                && end < buffer.lastIndex
+                && (end < 0 || isWordBoundary(buffer[end]))) {
             // shift back to the start of the previous word
             ++end
         }

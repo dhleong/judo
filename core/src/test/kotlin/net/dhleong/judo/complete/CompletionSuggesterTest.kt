@@ -75,6 +75,19 @@ class CompletionSuggesterTest {
         assertThat(buffer.toString()).isEqualTo("  l")
     }
 
+    @Test fun updateWithSuggestions_empty() {
+        val buffer = InputBuffer()
+        buffer.set("")
+        buffer.cursor = 0
+        suggester.initialize(buffer.toString(), buffer.cursor)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("land")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("love")
+    }
+
     @Test fun updateWithSuggestionsInMiddle() {
         val buffer = InputBuffer()
         buffer.set("go l now")
