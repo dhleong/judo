@@ -4,10 +4,12 @@ package net.dhleong.judo.motions
  * @author dhleong
  */
 
+private fun wordBoundaryFor(bigWord: Boolean): (Char) -> Boolean =
+    if (bigWord) Character::isWhitespace
+    else { char -> !Character.isJavaIdentifierPart(char) }
+
 fun wordMotion(step: Int, bigWord: Boolean): Motion {
-    val isWordBoundary: (Char) -> Boolean =
-        if (bigWord) Character::isWhitespace
-        else { char -> !Character.isJavaIdentifierPart(char) }
+    val isWordBoundary = wordBoundaryFor(bigWord)
     return createMotion { buffer, start ->
         var end = start
 
@@ -43,6 +45,45 @@ fun wordMotion(step: Int, bigWord: Boolean): Motion {
         } else if (!wasOnBoundary && (end < 0 || isWordBoundary(buffer[end]))) {
             // shift back to the start of the previous word
             ++end
+        }
+
+        start..end
+    }
+}
+
+fun endOfWordMotion(step: Int, bigWord: Boolean): Motion {
+    val isWordBoundary = wordBoundaryFor(bigWord)
+    return createMotion(Motion.Flags.INCLUSIVE) { buffer, start ->
+        var end = start
+
+        end += step
+
+        var wasOnBoundary = end <= 0 || end >= buffer.length || isWordBoundary(buffer[end])
+
+        if (!wasOnBoundary && step < 0) {
+            // skip past the current word
+            while (end in 0..buffer.lastIndex && !isWordBoundary(buffer[end])) {
+                end += step
+            }
+        }
+
+        // skip past any whitespace
+        while (end in 0..buffer.lastIndex && Character.isWhitespace(buffer[end])) {
+            end += step
+        }
+
+        if (step > 0) {
+            wasOnBoundary = end in 0..buffer.lastIndex && isWordBoundary(buffer[end])
+        }
+
+        if (!wasOnBoundary && step > 0) {
+            // continue to the end
+            while (end in 0..buffer.lastIndex && !isWordBoundary(buffer[end])) {
+                end += step
+            }
+
+            // pop back
+            end -= step
         }
 
         start..end

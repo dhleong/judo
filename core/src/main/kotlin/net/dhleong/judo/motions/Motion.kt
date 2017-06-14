@@ -43,10 +43,21 @@ interface Motion {
         calculate({ throw IllegalStateException("Expected to not need readKey") }, input, cursor)
 }
 
-internal fun createMotion(calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =
-    createMotion { _, buffer, cursor ->
+
+internal fun createMotion(
+        flag: Motion.Flags,
+        calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =
+    createMotion(listOf(flag), calculate)
+internal fun createMotion(
+        flags: List<Motion.Flags> = emptyList(),
+        calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =
+    createMotion(flags) { _, buffer, cursor ->
         calculate(buffer, cursor)
     }
+internal fun createMotion(
+        flag: Motion.Flags,
+        calculate: MotionCalculator): Motion =
+    createMotion(listOf(flag), calculate)
 internal fun createMotion(
     flags: List<Motion.Flags> = emptyList(),
     calculate: MotionCalculator): Motion {

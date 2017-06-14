@@ -87,6 +87,61 @@ class WordMotionKtTest {
         wordMotion(-1, false).applyTo(buffer)
         assertThat(buffer.cursor).isEqualTo(8)
     }
+
+
+    @Test fun moveWordEnd_space() {
+        assertThat(buffer.toString()).isEmpty()
+
+        buffer.type("captain malcolm    reynolds    ")
+        buffer.cursor = 0
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(6)
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(14)
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(26)
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(30)
+    }
+
+    @Test fun moveWordEnd_spaceBack() {
+        assertThat(buffer.toString()).isEmpty()
+
+        buffer.type("malcolm reynolds    ")
+        buffer.cursor = 20
+
+        endOfWordMotion(-1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(15)
+
+        endOfWordMotion(-1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(6)
+
+        endOfWordMotion(-1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(0)
+
+        endOfWordMotion(-1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(0)
+    }
+
+    @Test fun moveWordEnd_special() {
+        assertThat(buffer.toString()).isEmpty()
+
+        buffer.type("malcolm(reynold's)")
+        buffer.cursor = 0
+        endOfWordMotion(1, false).applyTo(buffer)
+
+        assertThat(buffer.cursor).isEqualTo(6)
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(7)
+
+        endOfWordMotion(1, false).applyTo(buffer)
+        assertThat(buffer.cursor).isEqualTo(14)
+    }
 }
 
 private fun Motion.applyTo(buffer: InputBuffer) =

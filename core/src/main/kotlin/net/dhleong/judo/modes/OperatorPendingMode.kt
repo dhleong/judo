@@ -79,6 +79,8 @@ class OperatorPendingMode(
             // TODO can we put this anywhere better?
             if (motion.isInclusive && range.start < range.endInclusive) {
                 range = range.start..(range.endInclusive + 1)
+            } else if (motion.isInclusive && range.start > range.endInclusive) {
+                range = range.start..(range.endInclusive + 1)
             }
 
             judo.exitMode()

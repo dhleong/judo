@@ -4,8 +4,11 @@ package net.dhleong.judo.motions
  * @author dhleong
  */
 
-fun findMotion(step: Int) =
-    createMotion(listOf(Motion.Flags.INCLUSIVE)) { readKey, buffer, start ->
+fun findMotion(step: Int): Motion {
+    val flags =
+        if (step > 0) listOf(Motion.Flags.INCLUSIVE)
+        else emptyList()
+    return createMotion(flags) { readKey, buffer, start ->
         val target = readKey()
         val end: Int
         if (step > 0) {
@@ -20,10 +23,14 @@ fun findMotion(step: Int) =
             start..end
         }
     }
+}
 
 fun tilMotion(step: Int): Motion {
     val base = findMotion(step)
-    return createMotion(listOf(Motion.Flags.INCLUSIVE)) { readKey, buffer, cursor ->
+    val flags =
+        if (step > 0) listOf(Motion.Flags.INCLUSIVE)
+        else emptyList()
+    return createMotion(flags) { readKey, buffer, cursor ->
         val baseRange = base.calculate(readKey, buffer, cursor)
         baseRange.start..(baseRange.endInclusive - step)
     }

@@ -13,6 +13,11 @@ val ALL_MOTIONS = arrayListOf(
     keys("w") to wordMotion(1, false),
     keys("W") to wordMotion(1, true),
 
+    keys("e") to endOfWordMotion(1, false),
+    keys("E") to endOfWordMotion(1, true),
+    keys("ge") to endOfWordMotion(-1, false),
+    keys("gE") to endOfWordMotion(-1, true),
+
     keys("f") to findMotion(1),
     keys("F") to findMotion(-1),
 
