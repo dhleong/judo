@@ -108,7 +108,7 @@ class MotionIntegrationTest {
 
         judo.type(keys("diw"))
         assertThat(renderer.inputLine)
-            .isEqualTo("word word2 " to 11)
+            .isEqualTo("word word2 " to 10)
     }
 
     @Test fun deleteInnerWord_symbols() {
@@ -117,6 +117,46 @@ class MotionIntegrationTest {
         judo.type(keys("diw"))
         assertThat(renderer.inputLine)
             .isEqualTo("word @rd2 word3" to 5)
+    }
+
+    @Test fun deleteOuterWord() {
+        judo.setInput("word word2 word3", 5)
+
+        judo.type(keys("daw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3" to 5)
+    }
+
+    @Test fun deleteOuterWord_last() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("daw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2" to 9)
+    }
+
+    @Test fun deleteOuterWord_symbols() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("daw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word@rd2 word3" to 4)
+    }
+
+    @Test fun deleteOuterWORD() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("daW"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3" to 5)
+    }
+
+    @Test fun deleteOuterWORD_last() {
+        judo.setInput("word w@rd2 word3", 11)
+
+        judo.type(keys("daW"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word w@rd2" to 9)
     }
 
     @Test fun deleteUntilBack() {

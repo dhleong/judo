@@ -74,13 +74,13 @@ class InputBuffer {
             if (end < 0) return false
 
             delete(range.start..end)
-            cursor = range.start
+            cursor = minOf(buffer.lastIndex, range.start)
         } else {
             val end = (range.start - 1)
             if (end < 0) return false
 
             delete(range.endInclusive..end)
-            cursor = range.endInclusive
+            cursor = minOf(buffer.lastIndex, range.endInclusive)
         }
 
         return true

@@ -27,6 +27,9 @@ val ALL_MOTIONS = arrayListOf(
     keys("iw") to innerWordObjectMotion(false),
     keys("iW") to innerWordObjectMotion(true),
 
+    keys("aw") to outerWordObjectMotion(false),
+    keys("aW") to outerWordObjectMotion(true),
+
     keys("t") to tilMotion(1),
     keys("T") to tilMotion(-1),
 
