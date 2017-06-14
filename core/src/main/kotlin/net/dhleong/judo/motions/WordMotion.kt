@@ -4,7 +4,7 @@ package net.dhleong.judo.motions
  * @author dhleong
  */
 
-private fun wordBoundaryFor(bigWord: Boolean): (Char) -> Boolean =
+internal fun wordBoundaryFor(bigWord: Boolean): (Char) -> Boolean =
     if (bigWord) Character::isWhitespace
     else { char -> !Character.isJavaIdentifierPart(char) }
 

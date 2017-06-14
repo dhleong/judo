@@ -8,6 +8,7 @@ import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.ALL_MOTIONS
+import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.charMotion
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
@@ -106,7 +107,10 @@ class NormalMode(
         keys("<ctrl c>") to { _ -> clearBuffer() },
         keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
 
-    ) + ALL_MOTIONS.map { (keys, motion) ->
+    ) + ALL_MOTIONS.filter { (_, motion) ->
+        // text object motions can't be used as an action
+        Motion.Flags.TEXT_OBJECT !in motion.flags
+    }.map { (keys, motion) ->
         keys to motionAction(motion)
     })
 

@@ -14,7 +14,8 @@ typealias MotionCalculator =
 
 interface Motion {
     enum class Flags {
-        INCLUSIVE
+        INCLUSIVE,
+        TEXT_OBJECT
     }
 
     val flags: EnumSet<Flags>

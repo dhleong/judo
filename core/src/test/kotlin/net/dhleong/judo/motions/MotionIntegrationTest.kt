@@ -103,6 +103,22 @@ class MotionIntegrationTest {
             .isEqualTo("word word3" to 5)
     }
 
+    @Test fun deleteInnerWord() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("diw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 " to 11)
+    }
+
+    @Test fun deleteInnerWord_symbols() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("diw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word @rd2 word3" to 5)
+    }
+
     @Test fun deleteUntilBack() {
         judo.setInput("word word2 word3", 11)
 
