@@ -87,6 +87,15 @@ class MotionIntegrationTest {
             .isEqualTo("word word2 changed" to 18)
     }
 
+    @Test fun changeLine() {
+        judo.setInput("word", 3)
+
+        judo.type(keys("ccnewWord"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("newWord" to 7)
+    }
+
     @Test fun deleteEndOfWordBack() {
         judo.setInput("word word2 word3", 9)
 

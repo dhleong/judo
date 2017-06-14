@@ -75,6 +75,10 @@ class InputBuffer {
             delete(normalized)
             if (clampCursor) {
                 cursor = minOf(buffer.lastIndex, newCursor)
+            } else {
+                // don't clamp *within* buffer, but also don't allow going completely
+                // outside of it. that is the path to errors
+                cursor = minOf(buffer.length, newCursor)
             }
             return true
         }
