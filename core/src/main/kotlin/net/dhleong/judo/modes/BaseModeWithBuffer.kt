@@ -31,7 +31,7 @@ abstract class BaseModeWithBuffer(
         }
 
     protected fun applyMotion(motion: Motion) =
-        motion.applyTo(judo::readKey, buffer)
+        motion.applyTo(judo, buffer)
 
     /**
      * Convenience to create a KeyAction that just applies

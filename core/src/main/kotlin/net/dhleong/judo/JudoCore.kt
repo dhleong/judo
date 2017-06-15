@@ -48,7 +48,7 @@ class JudoCore(
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-    override var opfunc: OperatorFunc? = null
+    override val state = StateMap()
 
     private val parsedPrompts = ArrayList<IStringBuilder>(2)
 

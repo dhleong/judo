@@ -34,5 +34,8 @@ val ALL_MOTIONS = arrayListOf(
     keys("T") to tilMotion(-1),
 
     keys("0") to toStartMotion(),
-    keys("$") to toEndMotion()
+    keys("$") to toEndMotion(),
+
+    keys(";") to repeatFindMotion(1),
+    keys(",") to repeatFindMotion(-1)
 )

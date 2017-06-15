@@ -10,6 +10,8 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override val state = StateMap()
+
     override fun unmap(mode: String, from: String) {
         TODO("not implemented")
     }
@@ -45,7 +47,6 @@ class TestableJudoCore : IJudoCore {
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-    override var opfunc: OperatorFunc? = null
 
     override fun readKey(): KeyStroke {
         TODO("not implemented")

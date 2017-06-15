@@ -1,16 +1,16 @@
 package net.dhleong.judo.motions
 
+import net.dhleong.judo.DUMMY_JUDO_CORE
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import java.util.EnumSet
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
  */
 
 typealias MotionCalculator =
-    (readKey: () -> KeyStroke, buffer: CharSequence, cursor: Int) -> IntRange
+    (core: IJudoCore, buffer: CharSequence, cursor: Int) -> IntRange
 
 interface Motion {
     enum class Flags {
@@ -23,25 +23,22 @@ interface Motion {
     val isInclusive: Boolean
         get() = flags.contains(Motion.Flags.INCLUSIVE)
 
-    fun applyTo(readKey: () -> KeyStroke, buffer: InputBuffer) {
+    fun applyTo(core: IJudoCore, buffer: InputBuffer) {
         val end = calculate(
-            readKey, buffer.toChars(), buffer.cursor
+            core, buffer.toChars(), buffer.cursor
         ).endInclusive
 
         buffer.cursor = minOf(buffer.size, maxOf(0, end))
     }
 
-    fun calculate(readKey: () -> KeyStroke, buffer: InputBuffer) =
-        calculate(readKey, buffer.toChars(), buffer.cursor)
+    fun calculate(core: IJudoCore, buffer: InputBuffer) =
+        calculate(core, buffer.toChars(), buffer.cursor)
 
-    fun calculate(judo: IJudoCore, buffer: InputBuffer) =
-        calculate(judo::readKey, buffer.toChars(), buffer.cursor)
-
-    fun calculate(readKey: () -> KeyStroke, buffer: CharSequence, cursor: Int): IntRange
+    fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange
 
     /** NOTE: Use ONLY when ABSOLUTELY SURE the motion won't need readKey */
     fun calculate(input: CharSequence, cursor: Int) =
-        calculate({ throw IllegalStateException("Expected to not need readKey") }, input, cursor)
+        calculate(DUMMY_JUDO_CORE, input, cursor)
 }
 
 
@@ -65,8 +62,8 @@ internal fun createMotion(
 
     return object : Motion {
         override val flags: EnumSet<Motion.Flags> = EnumSet(flags)
-        override fun calculate(readKey: () -> KeyStroke, buffer: CharSequence, cursor: Int): IntRange =
-            calculate(readKey, buffer, cursor)
+        override fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+            calculate(core, buffer, cursor)
     }
 }
 

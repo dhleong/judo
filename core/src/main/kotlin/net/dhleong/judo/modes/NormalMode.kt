@@ -139,7 +139,7 @@ class NormalMode(
     })
 
     private fun withOperator(action: OperatorFunc) {
-        judo.opfunc = action
+        judo.state[KEY_OPFUNC] = action
         fromOpMode = true
         judo.enterMode("op")
     }

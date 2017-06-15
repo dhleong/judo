@@ -2,6 +2,7 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
+import net.dhleong.judo.StateKind
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
@@ -9,6 +10,8 @@ import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
 import javax.swing.KeyStroke
+
+val KEY_OPFUNC = StateKind<OperatorFunc>("net.dhleong.judo.modes.op.opfunc")
 
 /**
  * @author dhleong
@@ -36,11 +39,11 @@ class OperatorPendingMode(
     private val input = MutableKeys()
 
     override fun onEnter() {
-        val currentOpFunc = judo.opfunc
+        val currentOpFunc = judo.state[KEY_OPFUNC]
             ?: throw IllegalStateException("Entered `op` without setting opfunc")
 
         opfunc = currentOpFunc
-        judo.opfunc = null
+        judo.state.remove(KEY_OPFUNC)
 
         currentFullLineMotionKey = fullLineMotionKey
         fullLineMotionKey = 0.toChar()

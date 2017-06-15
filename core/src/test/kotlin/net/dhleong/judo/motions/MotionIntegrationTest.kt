@@ -294,5 +294,49 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("WORD word2 WORD3" to 5)
     }
+
+    @Test fun repeatFind() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("fo"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 1)
+
+        judo.type(keys(";"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 6)
+
+        // go back...
+        judo.type(keys(","))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 1)
+
+        // and forward twice
+        judo.type(keys(";;"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 12)
+    }
+
+    @Test fun repeatTil() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("tr"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 1)
+
+        judo.type(keys(";"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 6)
+
+        // go back...
+        judo.type(keys(","))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 3)
+
+        // and forward twice
+        judo.type(keys(";;"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 12)
+    }
 }
 
