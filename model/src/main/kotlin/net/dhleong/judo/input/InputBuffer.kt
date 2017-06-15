@@ -96,20 +96,24 @@ class InputBuffer {
         buffer.replace(range.start, range.endInclusive + 1, new)
     }
 
-    fun switchCaseWithCursor(range: IntRange) {
+    fun replaceWithCursor(range: IntRange, transformer: (CharSequence) -> CharSequence) {
         normalizeRange(range)?.let { (normalized, newCursor) ->
-            replace(normalized) { old ->
-                val result = StringBuilder(old.length)
-                old.forEach {
-                    if (Character.isUpperCase(it)) {
-                        result.append(Character.toLowerCase(it))
-                    } else {
-                        result.append(Character.toUpperCase(it))
-                    }
-                }
-                result
-            }
+            replace(normalized, transformer)
             cursor = newCursor
+        }
+    }
+
+    fun switchCaseWithCursor(range: IntRange) {
+        replaceWithCursor(range) { old ->
+            val result = StringBuilder(old.length)
+            old.forEach {
+                if (Character.isUpperCase(it)) {
+                    result.append(Character.toLowerCase(it))
+                } else {
+                    result.append(Character.toUpperCase(it))
+                }
+            }
+            result
         }
     }
 

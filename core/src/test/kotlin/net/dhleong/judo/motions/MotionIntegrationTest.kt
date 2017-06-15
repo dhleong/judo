@@ -286,5 +286,13 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("wO&rd" to 0)
     }
+
+    @Test fun goLower_word() {
+         judo.setInput("WORD WORD2 WORD3", 5)
+
+        judo.type(keys("guw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("WORD word2 WORD3" to 5)
+    }
 }
 

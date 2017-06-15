@@ -47,8 +47,7 @@ class NormalMode(
         },
 
         keys("c") to { core ->
-            opMode.fullLineMotionKey = 'c'
-            withOperator { range ->
+            withOperator('c') { range ->
                 if (buffer.deleteWithCursor(range, clampCursor = false)) {
                     core.enterMode("insert")
                 } else {
@@ -62,11 +61,26 @@ class NormalMode(
         },
 
         keys("d") to { _ ->
-            opMode.fullLineMotionKey = 'd'
-            withOperator { range -> buffer.deleteWithCursor(range) } // TODO bell on error?
+            // TODO bell on error?
+            withOperator('d') { range -> buffer.deleteWithCursor(range) }
         },
         keys("D") to { _ ->
             buffer.deleteWithCursor(rangeOf(toEndMotion()))
+        },
+
+        keys("gu") to { _ ->
+            withOperator('u') { range ->
+                buffer.replaceWithCursor(range) { old ->
+                    old.toString().toLowerCase()
+                }
+            }
+        },
+        keys("gU") to { _ ->
+            withOperator('U') { range ->
+                buffer.replaceWithCursor(range) { old ->
+                    old.toString().toUpperCase()
+                }
+            }
         },
 
         keys("G") to { core -> core.scrollToBottom() },
@@ -104,8 +118,7 @@ class NormalMode(
             buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
         },
         keys("g~") to { _ ->
-            opMode.fullLineMotionKey = '~'
-            withOperator { range ->
+            withOperator('~') { range ->
                 buffer.switchCaseWithCursor(range)
             }
         },
@@ -130,6 +143,12 @@ class NormalMode(
         fromOpMode = true
         judo.enterMode("op")
     }
+
+    private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {
+        opMode.fullLineMotionKey = fullLineMotionKey
+        withOperator(action)
+    }
+
 
     private val input = MutableKeys()
 
