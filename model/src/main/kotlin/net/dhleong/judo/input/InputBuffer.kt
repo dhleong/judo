@@ -2,6 +2,7 @@ package net.dhleong.judo.input
 
 import java.awt.event.KeyEvent.VK_BACK_SPACE
 import javax.swing.KeyStroke
+import kotlin.properties.Delegates
 
 /**
  * A navigable input buffer
@@ -9,7 +10,12 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 class InputBuffer {
-    var cursor = 0
+    var cursor: Int by Delegates.observable(0) { _, _, newValue ->
+        if (newValue < 0 || newValue > size) {
+            throw IllegalArgumentException(
+                "Illegal cursor position: $newValue (size=$size)")
+        }
+    }
 
     private val buffer = StringBuilder(128)
 
@@ -74,7 +80,8 @@ class InputBuffer {
         normalizeRange(range)?.let { (normalized, newCursor) ->
             delete(normalized)
             if (clampCursor) {
-                cursor = minOf(buffer.lastIndex, newCursor)
+                // NOTE: lastIndex is -1 when size == 0
+                cursor = maxOf(0, minOf(buffer.lastIndex, newCursor))
             } else {
                 // don't clamp *within* buffer, but also don't allow going completely
                 // outside of it. that is the path to errors
