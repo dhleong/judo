@@ -113,8 +113,10 @@ class NormalMode(
         },
 
         keys("~") to actionOn(charMotion(1)) { _, range ->
-            buffer.switchCaseWithCursor(range)
-            buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
+            if (range.start <= buffer.lastIndex) { // TODO can we generalize this?
+                buffer.switchCaseWithCursor(range)
+                buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
+            }
         },
         keys("g~") to { _ ->
             withOperator('~') { range ->

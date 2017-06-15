@@ -256,7 +256,7 @@ class MotionIntegrationTest {
     }
 
     @Test fun flipCase() {
-         judo.setInput("Wo&Rd", 0)
+        judo.setInput("Wo&Rd", 0)
 
         // ignore cancel things
         judo.type(keys("~~~~"))
@@ -266,6 +266,15 @@ class MotionIntegrationTest {
         judo.type(keys("~"))
         assertThat(renderer.inputLine)
             .isEqualTo("wO&rD" to 4) // stay at end
+    }
+
+    @Test fun flipCase_empty() {
+        judo.setInput("", 0)
+
+        judo.type(keys("~"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
     }
 
     @Test fun flipCase_innerWord() {
