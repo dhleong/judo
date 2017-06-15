@@ -48,11 +48,10 @@ class NormalMode(
 
         keys("c") to { core ->
             withOperator('c') { range ->
-                if (buffer.deleteWithCursor(range, clampCursor = false)) {
-                    core.enterMode("insert")
-                } else {
+                if (!buffer.deleteWithCursor(range, clampCursor = false)) {
                     // TODO bell?
                 }
+                core.enterMode("insert")
             }
         },
         keys("C") to { core ->
