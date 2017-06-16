@@ -83,6 +83,10 @@ val DUMMY_JUDO_CORE = object : IJudoCore {
         throw UnsupportedOperationException("not implemented")
     }
 
+    override fun seedCompletion(text: String) {
+        TODO("not implemented")
+    }
+
     override fun send(text: String, fromMap: Boolean) {
         throw UnsupportedOperationException("not implemented")
     }

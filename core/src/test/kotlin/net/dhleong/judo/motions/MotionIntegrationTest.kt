@@ -21,6 +21,14 @@ class MotionIntegrationTest {
         judo = JudoCore(renderer)
     }
 
+    @Test fun altBackSpace() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("i<alt bs>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3" to 5)
+    }
+
     @Test fun moveFindBack() {
         judo.setInput("word word2 word3", 11)
 

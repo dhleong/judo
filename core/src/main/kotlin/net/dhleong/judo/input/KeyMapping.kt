@@ -78,6 +78,8 @@ fun key(string: String): KeyStroke {
     when (string) {
         // special cases
         " ", "20", "space" -> return KeyStroke.getKeyStroke(' ')
+        "bs" -> return KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
+        "alt bs" -> return KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, KeyEvent.ALT_DOWN_MASK)
         "cr" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
         "esc" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
         "up" -> return KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)

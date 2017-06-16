@@ -29,7 +29,12 @@ import javax.swing.KeyStroke
  * @author dhleong
  */
 
+// ascii codes:
 val KEY_ESCAPE = 27
+val KEY_DELETE = 127
+
+// this is returned by read() when it times out
+val KEY_TIMEOUT = -2
 
 class JLineRenderer(
     val enableMouse: Boolean = false
@@ -108,6 +113,9 @@ class JLineRenderer(
         registerEscapeHandler(InfoCmp.Capability.key_up) {
             KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
         }
+        registerEscapeHandler(listOf(KEY_DELETE), {
+            KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, KeyEvent.ALT_DOWN_MASK)
+        })
     }
 
     override fun close() {
@@ -267,8 +275,16 @@ class JLineRenderer(
         if (strokes.length != 3) throw IllegalStateException("Expected $key to be a 3-char esc sequence")
         if (strokes[0].toInt() != KEY_ESCAPE) throw IllegalStateException("Expected $key to be an esc sequence")
 
-        escapeSequenceHandlers.getOrPut(strokes[1].toInt(), { HashMap<Int, () -> KeyStroke?>() }).let {
-            it[strokes[2].toInt()] = block
+        registerEscapeHandler(strokes.toCharArray().drop(1).map { it.toInt() }, block)
+    }
+
+    private fun registerEscapeHandler(strokes: List<Int>, block: () -> KeyStroke?) {
+        escapeSequenceHandlers.getOrPut(strokes[0], { HashMap<Int, () -> KeyStroke?>() }).let {
+            if (strokes.size == 2) {
+                it[strokes[1]] = block
+            } else {
+                it[KEY_TIMEOUT] = block
+            }
         }
     }
 
