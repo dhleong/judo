@@ -65,6 +65,14 @@ private val COMMAND_HELP = mutableMapOf(
         "Declare a trigger."
     ),
 
+    "complete" to buildHelp(
+        "complete(text: String)",
+        """Feed some text into the text completion system.
+          |NOTE: This does not yet guarantee that the provided words will
+          |be suggested in the sequence provided, but it may in the future.
+        """.trimMargin()
+    ),
+
     "connect" to buildHelp(
         "connect(host: String, port: Int)",
         "Connect to a server."

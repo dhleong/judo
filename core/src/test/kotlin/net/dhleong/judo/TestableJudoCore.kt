@@ -10,6 +10,10 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun seedCompletion(text: String) {
+        TODO("not implemented")
+    }
+
     override val state = StateMap()
 
     override fun unmap(mode: String, from: String) {

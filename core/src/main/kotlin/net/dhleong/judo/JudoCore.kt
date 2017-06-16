@@ -280,6 +280,10 @@ class JudoCore(
         renderer.scrollToBottom()
     }
 
+    override fun seedCompletion(text: String) {
+        commandCompletions.process(text)
+    }
+
     override fun send(text: String, fromMap: Boolean) {
         scrollToBottom()
 

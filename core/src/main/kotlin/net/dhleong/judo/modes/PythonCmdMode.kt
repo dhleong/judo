@@ -76,6 +76,7 @@ class PythonCmdMode(
         }
 
         python["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }
+        python["complete"] = asUnitPyFn<String>(1) { judo.seedCompletion(it[0]) }
         python["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
         python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
         python["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }

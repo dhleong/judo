@@ -61,6 +61,7 @@ interface IJudoCore {
     fun reconnect()
     fun scrollPages(count: Int)
     fun scrollToBottom()
+    fun seedCompletion(text: String)
     fun send(text: String, fromMap: Boolean)
     fun setCursorType(type: CursorType)
     fun unmap(mode: String, from: String)
