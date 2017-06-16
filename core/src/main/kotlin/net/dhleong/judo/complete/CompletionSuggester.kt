@@ -3,6 +3,41 @@ package net.dhleong.judo.complete
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.motions.wordMotion
 
+internal interface CapitalizationStrategy {
+    companion object {
+        fun detect(original: CharSequence): CapitalizationStrategy {
+            if (original.isEmpty()) return AsIsCapitalization()
+
+            val capitals = original.filter { Character.isUpperCase(it) }.sumBy { 1 }
+            return when (capitals) {
+                1 -> TitleCaseCapitalization()
+                original.length -> AllCapsCapitalization()
+                else -> AsIsCapitalization()
+            }
+        }
+    }
+
+    fun capitalize(word: CharSequence): CharSequence
+}
+
+class AllCapsCapitalization : CapitalizationStrategy {
+    override fun capitalize(word: CharSequence): CharSequence =
+        word.toString().toUpperCase()
+}
+
+class AsIsCapitalization : CapitalizationStrategy {
+    override fun capitalize(word: CharSequence): CharSequence = word
+}
+
+class TitleCaseCapitalization : CapitalizationStrategy {
+    override fun capitalize(word: CharSequence): CharSequence {
+        if (Character.isUpperCase(word[0])) return word
+
+        val upperFirst = Character.toUpperCase(word[0])
+        return "$upperFirst${word.subSequence(1, word.length)}"
+    }
+}
+
 /**
  * @author dhleong
  */
@@ -17,6 +52,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
 
     private var suggestedWordStart = 0
     private lateinit var originalWord: CharSequence
+    private lateinit var capitalizationStrategy: CapitalizationStrategy
 
     fun reset() {
         pendingSuggestions = null
@@ -41,6 +77,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
         }
         val word = input.subSequence(wordRange)
         originalWord = word
+        capitalizationStrategy = CapitalizationStrategy.detect(word)
         pendingSuggestions = completions.suggest(input, wordRange).iterator()
     }
 
@@ -55,7 +92,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
 
     private fun applySuggestion(buffer: InputBuffer, suggestion: CharSequence) {
         val oldWordRange = suggestedWordStart until buffer.cursor
-        buffer.replace(oldWordRange, suggestion)
+        buffer.replace(oldWordRange, capitalizationStrategy.capitalize(suggestion))
         buffer.cursor = suggestedWordStart + suggestion.length
     }
 

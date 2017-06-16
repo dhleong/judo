@@ -106,4 +106,44 @@ class CompletionSuggesterTest {
         suggester.updateWithPrevSuggestion(buffer)
         assertThat(buffer.toString()).isEqualTo("go l now")
     }
+
+    @Test fun preserveTitleCase() {
+        val buffer = InputBuffer()
+        buffer.set("  L")
+        buffer.cursor = 3
+        suggester.initialize(buffer.toChars(), buffer.cursor)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  Land")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  Love")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  Land")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  L")
+    }
+
+    @Test fun preserveAllCaps() {
+        completions.process("laser lasso")
+
+        val buffer = InputBuffer()
+        buffer.set("  LA")
+        buffer.cursor = 4
+        suggester.initialize(buffer.toChars(), buffer.cursor)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  LAND")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  LASER")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  LAND")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("  LA")
+    }
 }
