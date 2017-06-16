@@ -2,7 +2,9 @@ package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcessingException
-import net.dhleong.judo.complete.CompletionSourceFacade
+import net.dhleong.judo.complete.MultiplexCompletionSource
+import net.dhleong.judo.complete.RecencyCompletionSource
+import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.modes.BaseCmdMode
@@ -57,7 +59,36 @@ class JudoCore(
 
     private val sendHistory = InputHistory(buffer)
     private val cmdHistory = InputHistory(cmdBuffer)
-    private val completions = CompletionSourceFacade.create()
+
+    private val commandCompletions = RecencyCompletionSource()
+    private val outputCompletions = RecencyCompletionSource()
+    private val weightedSelectorFactory = WeightedRandomSelector.distributeByWordIndex(
+        // first word? prefer commandCompletions by a lot;
+        // we'll still fallback to output if commandCompletion
+        // doesn't have anything
+        doubleArrayOf(.95, .05),
+
+        // second word? slight preference to commands
+        doubleArrayOf(.65, .35),
+
+        // otherwise, just split it evenly
+        doubleArrayOf(.5, .5)
+    )
+    private val completions = MultiplexCompletionSource(
+        listOf(commandCompletions, outputCompletions),
+        { string, wordRange ->
+
+            val wordsBefore =
+                // convenient shortcut
+                if (wordRange.start == 0) 0
+
+                // TODO: optimize and fix (double whitespace anyone?)
+                else string.subSequence(0, wordRange.start)
+                    .count { Character.isWhitespace(it) }
+
+            weightedSelectorFactory(wordsBefore)
+        }
+    )
 
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
@@ -274,7 +305,7 @@ class JudoCore(
 
             // also complete from sent things
             // (but the original text, not the alias-processed one)
-            completions.process(text)
+            completions.process(text) // NOTE: we let all completers process commands
         }
 
         connection?.let {
@@ -401,7 +432,7 @@ class JudoCore(
     }
 
     fun processOutput(rawOutput: CharSequence) {
-        completions.process(rawOutput)
+        outputCompletions.process(rawOutput)
         triggers.process(rawOutput)
         processAndStripPrompt(rawOutput)
     }
