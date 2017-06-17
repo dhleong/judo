@@ -147,7 +147,7 @@ private val COMMAND_HELP = mutableMapOf(
 
     "reload" to buildHelp(
         "reload()",
-        "Reload the last-loaded script file."
+        "Reload the last-loaded, non-MYJUDORC script file."
     ),
 
     "send" to buildHelp(
@@ -309,7 +309,10 @@ abstract class BaseCmdMode(
             throw IllegalArgumentException("Unable to load $file")
         }
 
-        lastReadFile = file
+        if (file != USER_CONFIG_FILE) {
+            lastReadFile = file
+        }
+
         file.inputStream().use {
             readFile(file.name, it)
         }
