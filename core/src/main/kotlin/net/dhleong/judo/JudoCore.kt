@@ -138,7 +138,7 @@ class JudoCore(
 
         lastConnect = address to port
 
-        val connection = CommonsNetConnection(address, port, renderer.terminalType, { string -> echo(string) })
+        val connection = CommonsNetConnection(address, port, renderer, { string -> echo(string) })
         connection.debug = debug.isEnabled
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect

@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import java.io.Closeable
+import java.util.EnumSet
 
 typealias OnResizedEvent = () -> Unit
 
@@ -21,15 +22,26 @@ enum class CursorType(ansiCode: Int) {
         .toString()
 }
 
-/**
- * @author dhleong
- */
-interface JudoRenderer : Closeable {
+interface JudoRendererInfo {
+    enum class Capabilities {
+        UTF8,
+        VT100,
+        COLOR_256
+    }
+
     /**
      * The type of terminal this is rendering to
      * (or is emulating), eg VT100
      */
     val terminalType: String
+
+    val capabilities: EnumSet<Capabilities>
+}
+
+/**
+ * @author dhleong
+ */
+interface JudoRenderer : JudoRendererInfo, Closeable {
 
     val windowHeight: Int
     val windowWidth: Int

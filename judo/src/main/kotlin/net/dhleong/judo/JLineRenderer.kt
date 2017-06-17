@@ -44,6 +44,7 @@ class JLineRenderer(
 
     override val terminalType: String
         get() = terminal.type
+    override val capabilities: EnumSet<JudoRendererInfo.Capabilities>
 
     override var onResized: OnResizedEvent? = null
 
@@ -116,6 +117,14 @@ class JLineRenderer(
         registerEscapeHandler(listOf(KEY_DELETE), {
             KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, KeyEvent.ALT_DOWN_MASK)
         })
+
+        // determine capabilities
+        capabilities = EnumSet.of(JudoRendererInfo.Capabilities.UTF8)
+        terminal.getNumericCapability(InfoCmp.Capability.max_colors)?.let {
+            if (it >= 256) {
+                capabilities.add(JudoRendererInfo.Capabilities.COLOR_256)
+            }
+        }
     }
 
     override fun close() {
