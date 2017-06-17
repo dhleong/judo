@@ -248,6 +248,9 @@ abstract class BaseCmdMode(
                     }
                 }
 
+                clearBuffer()
+                exitMode()
+
                 if (code == "help") {
                     showHelp()
                 } else if (code.startsWith("help")) {
@@ -262,9 +265,6 @@ abstract class BaseCmdMode(
                     execute(code)
                     history.push(code)
                 }
-
-                clearBuffer()
-                exitMode()
                 return
             }
 
