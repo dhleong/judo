@@ -124,6 +124,17 @@ private val COMMAND_HELP = mutableMapOf(
         "Check if connected."
     ),
 
+    "normal" to buildHelp(
+        listOf(
+            "normal(keys: String)",
+            "normal(keys: String, remap: Boolean)"
+        ),
+        """Process [keys] as though they were typed by the user in normal mode.
+          |To perform this operation with remaps disabled (as in nnoremap), pass
+          |False for the second parameter.
+        """.trimMargin()
+    ),
+
     "quit" to buildHelp(
         "quit()",
         "Exit Judo."

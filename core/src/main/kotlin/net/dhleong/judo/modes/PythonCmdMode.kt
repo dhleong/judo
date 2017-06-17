@@ -91,6 +91,7 @@ class PythonCmdMode(
         }
         python["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
         python["load"] = asUnitPyFn<String>(1) { load(it[0]) }
+        python["normal"] = asUnitPyFn<Any>(2, minArgs = 1) { feedKeys(it, mode = "normal") }
         python["quit"] = asUnitPyFn<Any> { judo.quit() }
         python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
         python["reload"] = asUnitPyFn<Any> { reload() }
@@ -147,6 +148,16 @@ class PythonCmdMode(
         judo.triggers.define(alias, { args ->
             handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
         })
+    }
+
+    private fun feedKeys(userInput: Array<Any>, mode: String) {
+        val keys = userInput[0] as? String ?: throw IllegalArgumentException("[keys] must be a String")
+
+        val remap =
+            if (userInput.size == 1) true
+            else userInput[1] as? Boolean ?: throw IllegalArgumentException("[remap] must be a Boolean")
+
+        judo.feedKeys(keys, remap, mode)
     }
 
     private fun readInput(prompt: String): String? {

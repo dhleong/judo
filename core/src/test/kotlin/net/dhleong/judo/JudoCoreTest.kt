@@ -88,6 +88,25 @@ class JudoCoreTest {
         )
     }
 
+    @Test fun feedKeys() {
+        judo.buffer.set("my love,")
+        judo.buffer.cursor = 0
+
+        judo.feedKeys("ITake")
+        assertThat(judo.buffer.toString()).isEqualTo("Takemy love,")
+
+        // still in insert mode
+        judo.feedKeys(" ")
+        assertThat(judo.buffer.toString()).isEqualTo("Take my love,")
+
+        // now, feedKeys in normal mode
+        judo.feedKeys("df,", mode = "normal")
+        assertThat(judo.buffer.toString()).isEqualTo("Take ")
+
+        // should have returned to insert mode
+        judo.feedKeys(" my land")
+        assertThat(judo.buffer.toString()).isEqualTo("Take my land ")
+    }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =

@@ -118,7 +118,7 @@ class JudoCore(
 
     private val statusLineWorkspace = IStringBuilder.create(128)
 
-    private lateinit var keyStrokeProducer: BlockingKeySource
+    private var keyStrokeProducer: BlockingKeySource? = null
 
     init {
         activateMode(currentMode)
@@ -351,10 +351,34 @@ class JudoCore(
         }
     }
 
+    override fun feedKeys(keys: String, remap: Boolean, mode: String) {
+        val oldMode = currentMode
+
+        if (mode != "") {
+            // NOTE: we don't activateMode() because there's a lot of baggage
+            // associated with that, and I don't think Vim does that stuff either
+            val newMode = modes[mode] ?: throw IllegalArgumentException("No such mode `$mode`")
+            currentMode = newMode
+        }
+
+        val keysIter = Keys.parse(keys).iterator()
+        readKeys(object : BlockingKeySource {
+            override fun readKey(): KeyStroke = keysIter.next()
+        }, remap = remap, fromMap = true) {
+            keysIter.hasNext()
+        }
+
+        if (mode != "") {
+            // restore the old mode (but without calling onEnter and making it
+            // reset its state)
+            currentMode = oldMode
+        }
+    }
+
     override fun isConnected(): Boolean = connection != null
 
     override fun readKey(): KeyStroke {
-        val key = keyStrokeProducer.readKey()
+        val key = keyStrokeProducer!!.readKey() // must be initialized by now
         // TODO check for esc/ctrl+c and throw InputInterruptedException...
         // TODO catch that in the feedKey loop
         return key
@@ -423,15 +447,28 @@ class JudoCore(
      * Read keys forever from the given producer
      */
     fun readKeys(producer: BlockingKeySource) {
+        readKeys(producer, remap = true, fromMap = false) { running }
+    }
+
+    /**
+     * Read keys from the given producer until [keepReading] returns false
+     */
+    fun readKeys(producer: BlockingKeySource, remap: Boolean, fromMap: Boolean, keepReading: () -> Boolean) {
+        val oldProducer = keyStrokeProducer
+
         keyStrokeProducer = producer
-        while (running) {
+        while (keepReading()) {
             try {
-                feedKey(producer.readKey(), true)
+                feedKey(producer.readKey(), remap, fromMap)
             } catch (e: Throwable) {
                 appendError(e, "INTERNAL ERROR: ")
             }
 
             Thread.yield()
+        }
+
+        if (oldProducer != null) {
+            keyStrokeProducer = oldProducer
         }
     }
 

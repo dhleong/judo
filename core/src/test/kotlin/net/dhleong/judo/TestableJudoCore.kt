@@ -10,6 +10,10 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun feedKeys(keys: String, remap: Boolean, mode: String) {
+        TODO("not implemented")
+    }
+
     override fun seedCompletion(text: String) {
         TODO("not implemented")
     }
