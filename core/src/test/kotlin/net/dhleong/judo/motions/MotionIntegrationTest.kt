@@ -160,7 +160,35 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 " to 10)
     }
-    
+
+    @Test fun deleteInnerWord_symbols() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("diw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word @rd2 word3" to 5)
+
+        judo.type(keys("diw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word rd2 word3" to 5)
+    }
+
+    @Test fun deleteCountInnerWord_2() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("d2iw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word rd2 word3" to 5)
+    }
+
+    @Test fun deleteCountInnerWord_4() {
+        judo.setInput("word w@rd2 word3", 5)
+
+        judo.type(keys("d4iw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3" to 5)
+    }
+
     @Test fun deleteOuterWord() {
         judo.setInput("word word2 word3", 5)
 
