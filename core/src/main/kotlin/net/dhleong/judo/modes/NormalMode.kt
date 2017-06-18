@@ -2,12 +2,17 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
+import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.ALL_MOTIONS
+import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.charMotion
+import net.dhleong.judo.motions.normalizeForMotion
+import net.dhleong.judo.motions.repeat
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
@@ -90,31 +95,32 @@ class NormalMode(
         },
 
         // browse history
-        keys("j") to { _ -> history.scroll(1) },
-        keys("k") to { _ -> history.scroll(-1) },
+        keys("j") to withCount { count -> history.scroll(count) },
+        keys("k") to withCount { count -> history.scroll(-count) },
 
-        keys("n") to { _ -> continueSearch(1) },
-        keys("N") to { _ -> continueSearch(-1) },
+        keys("n") to withCount { count -> continueSearch(count) },
+        keys("N") to withCount { count -> continueSearch(-count) },
 
-        keys("r") to actionOn(xCharMotion(1)) { _, range ->
+        keys("r") to actionOnCount(::xCharMotion, 1) { _, range ->
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
                     || replacement.keyCode == KeyEvent.VK_ESCAPE) {
                 // TODO beep?
             } else {
-                buffer.replace(range, replacement.keyChar.toString())
+                val char = replacement.keyChar.toString()
+                buffer.replace(range, char.repeat(range.endInclusive - range.start + 1))
             }
         },
 
-        keys("x") to actionOn(xCharMotion(1)) { _, range ->
+        keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
             buffer.delete(range)
         },
-        keys("X") to actionOn(xCharMotion(-1)) { _, range ->
+        keys("X") to actionOnCount(::xCharMotion, -1) { _, range ->
             buffer.delete(range)
             buffer.cursor = range.endInclusive
         },
 
-        keys("~") to actionOn(charMotion(1)) { _, range ->
+        keys("~") to actionOnCount(::charMotion, 1) { _, range ->
             if (range.start <= buffer.lastIndex) { // TODO can we generalize this?
                 buffer.switchCaseWithCursor(range)
                 buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
@@ -126,11 +132,11 @@ class NormalMode(
             }
         },
 
-        keys("<up>") to { _ -> history.scroll(-1) },
-        keys("<down>") to { _ -> history.scroll(1) },
+        keys("<up>") to withCount { count -> history.scroll(-count) },
+        keys("<down>") to withCount { count -> history.scroll(count) },
 
-        keys("<ctrl b>") to { core -> core.scrollPages(1) },
-        keys("<ctrl f>") to { core -> core.scrollPages(-1) },
+        keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
+        keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
         keys("<ctrl c>") to { _ -> clearBuffer() },
         keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
 
@@ -150,8 +156,29 @@ class NormalMode(
         // TODO bell?
     }
 
+    override fun motionAction(motion: Motion): KeyAction =
+        { _ -> applyMotion(repeat(motion, count.toRepeatCount())) }
+
     private fun withOperator(action: OperatorFunc) {
-        judo.state[KEY_OPFUNC] = action
+        // save now before we clear when leaving normal mode
+        val repeats = count.toRepeatCount()
+
+        judo.state[KEY_OPFUNC] = { originalRange ->
+
+            action(originalRange)
+
+            if (repeats > 1) {
+                judo.state[KEY_LAST_OP]?.let { lastOp ->
+                    // TODO repeat
+                    val range = repeat(lastOp.toRepeatable(), repeats - 1)
+                        .calculate(judo, buffer)
+                        .normalizeForMotion(lastOp)
+
+                    action(range)
+                }
+            }
+        }
+
         fromOpMode = true
         judo.enterMode("op")
     }
@@ -163,6 +190,7 @@ class NormalMode(
 
 
     private val input = MutableKeys()
+    private val count = CountReadingBuffer()
 
     private var fromOpMode = false
 
@@ -183,8 +211,16 @@ class NormalMode(
             return
         }
 
+        // read in counts
+        if (count.tryPush(key)) {
+            // still reading...
+            return
+        }
+
         // handle key mappings
         if (tryMappings(key, remap, input, mapping, userMappings)) {
+            // executed; clear the count
+            count.clear()
             return
         }
     }
@@ -193,10 +229,21 @@ class NormalMode(
     override fun getCursor(): Int = buffer.cursor
 
     private fun clearBuffer() {
+        count.clear()
         input.clear()
         buffer.clear()
         history.resetHistoryOffset()
     }
+
+    private fun actionOnCount(motionFactory: (Int) -> Motion, step: Int, action: KeyActionOnRange): KeyAction {
+        return { core ->
+            val motionWithCount = motionFactory(step * count.toRepeatCount())
+            actionOn(motionWithCount, action).invoke(core)
+        }
+    }
+
+    private fun withCount(action: (Int) -> Unit): KeyAction =
+        { _ -> action.invoke(count.toRepeatCount()) }
 }
 
 

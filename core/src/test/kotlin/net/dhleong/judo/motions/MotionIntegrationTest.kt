@@ -51,6 +51,14 @@ class MotionIntegrationTest {
             .isEqualTo("word word2 word3" to 10)
     }
 
+    @Test fun moveCountFindForward() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("2f<space>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 10)
+    }
+
     @Test fun moveWordEmpty() {
         judo.setInput("", 0)
 
@@ -63,6 +71,15 @@ class MotionIntegrationTest {
         assertThat(renderer.outputLines).isEmpty() // no error
         assertThat(renderer.inputLine)
             .isEqualTo("" to 0)
+    }
+
+    @Test fun moveToFirst() {
+        judo.setInput("word word2 word3", 11)
+
+        judo.type(keys("0"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 0)
     }
 
     @Test fun changeBackEmpty() {
@@ -139,6 +156,15 @@ class MotionIntegrationTest {
         judo.setInput("word word2 word3", 0)
 
         judo.type(keys("d2f<space>"))
+        assertThat(renderer.outputLines).isEmpty() // no errors
+        assertThat(renderer.inputLine)
+            .isEqualTo("word3" to 0)
+    }
+
+    @Test fun countDeleteFindForward() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("2df<space>"))
         assertThat(renderer.outputLines).isEmpty() // no errors
         assertThat(renderer.inputLine)
             .isEqualTo("word3" to 0)
@@ -317,6 +343,28 @@ class MotionIntegrationTest {
         judo.type(keys("rb"))
         assertThat(renderer.inputLine)
             .isEqualTo("word bord2 word3" to 5)
+    }
+
+    @Test fun countReplaceChar() {
+        judo.setInput("word word2 word3", 5)
+
+        // ignore cancel things
+        judo.type(keys("r<esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 5)
+
+        judo.type(keys("r<ctrl c>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 5)
+
+        // simple replace
+        judo.type(keys("3ra"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word aaad2 word3" to 5)
+
+        judo.type(keys("rb"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word baad2 word3" to 5)
     }
 
     @Test fun flipCase() {

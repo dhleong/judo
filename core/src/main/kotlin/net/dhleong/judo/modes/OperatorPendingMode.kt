@@ -15,6 +15,7 @@ import net.dhleong.judo.motions.repeat
 import javax.swing.KeyStroke
 
 val KEY_OPFUNC = StateKind<OperatorFunc>("net.dhleong.judo.modes.op.opfunc")
+val KEY_LAST_OP = StateKind<Motion>("net.dhleong.judo.modes.op.lastOp")
 
 /**
  * @author dhleong
@@ -77,11 +78,12 @@ class OperatorPendingMode(
 
     private fun opFuncActionWith(motion: Motion): KeyAction =
         { _ ->
-            val range = repeat(motion, count.toRepeatCount())
+            val lastOp = repeat(motion, count.toRepeatCount())
+            judo.state[KEY_LAST_OP] = lastOp
+
+            val range = lastOp
                 .calculate(judo, buffer)
                 .normalizeForMotion(motion)
-//            val range = motion.calculate(judo, buffer)
-//                .normalizeForMotion(motion)
 
             judo.exitMode()
             opfunc(range)

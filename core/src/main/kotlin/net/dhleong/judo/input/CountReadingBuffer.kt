@@ -19,6 +19,12 @@ class CountReadingBuffer {
         if (stroke.keyChar !in '0'..'9') return false
 
         val keyNumericValue = (stroke.keyChar - '0')
+        if (keyNumericValue == 0 && runningCount == 0) {
+            // no previous counts read, and this is just 0;
+            // let that be a regular keypress
+            return false
+        }
+
         runningCount *= 10
         runningCount += keyNumericValue
 

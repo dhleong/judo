@@ -16,9 +16,9 @@ fun xCharMotion(step: Int) =
     createMotion { _, start ->
         if (step < 0) {
             val end = start + step
-            end..end
+            end..(start - 1)
         } else {
-            start..start
+            start..(start + step - 1)
         }
     }
 

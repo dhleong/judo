@@ -37,7 +37,7 @@ abstract class BaseModeWithBuffer(
      * Convenience to create a KeyAction that just applies
      *  the given motion
      */
-    protected fun motionAction(motion: Motion): KeyAction =
+    protected open fun motionAction(motion: Motion): KeyAction =
         { _ -> applyMotion(motion) }
 
     protected fun rangeOf(motion: Motion) =
