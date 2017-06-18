@@ -1,7 +1,6 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
@@ -15,6 +14,8 @@ import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.hasCtrl
+import net.dhleong.judo.util.iflet
+import net.dhleong.judo.util.letelse
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -36,6 +37,7 @@ class NormalMode(
 
     private val mapping = KeyMapping(listOf(
         keys(":") to { core -> core.enterMode("cmd") },
+        keys("/") to { core -> core.enterMode("search") },
 
         keys("a") to { core ->
             applyMotion(charMotion(1))
@@ -93,6 +95,14 @@ class NormalMode(
         // browse history
         keys("j") to { _ -> history.scroll(1) },
         keys("k") to { _ -> history.scroll(-1) },
+
+        keys("n") to { core ->
+            iflet (core.state[KEY_LAST_SEARCH_STRING]) {
+                core.searchForKeyword(it)
+            } ?: letelse {
+                // TODO bell?
+            }
+        },
 
         keys("r") to actionOn(xCharMotion(1)) { _, range ->
             val replacement = judo.readKey()

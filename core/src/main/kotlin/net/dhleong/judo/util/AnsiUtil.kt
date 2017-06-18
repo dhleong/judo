@@ -40,6 +40,10 @@ fun ansi(attr: Int = -1, fg: Int = -1, bg: Int = -1): CharSequence {
     return builder
 }
 
+fun ansi(inverse: Boolean): CharSequence =
+    if (inverse) "$ESCAPE_CHAR[7m"
+    else "$ESCAPE_CHAR[27m"
+
 fun findTrailingEscape(chars: CharSequence): CharSequence? {
     val lastIndex = chars.lastIndex
     if (lastIndex == -1) return null

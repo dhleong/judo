@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.StateKind
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
@@ -11,12 +12,16 @@ import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
+val KEY_LAST_SEARCH_STRING = StateKind<CharSequence>("net.dhleong.judo.modes.search.lastSearch")
+
 /**
  * Mode for searching through the output
  * @author dhleong
  */
-class OutputSearchMode(judo: IJudoCore)
-    : BaseModeWithBuffer(judo, InputBuffer()) {
+class OutputSearchMode(
+    judo: IJudoCore
+) : BaseModeWithBuffer(judo, InputBuffer()),
+    StatusBufferProvider {
 
     override val name: String = "search"
 
@@ -33,7 +38,12 @@ class OutputSearchMode(judo: IJudoCore)
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {
                 val searchString = buffer.toString().trim()
-                // TODO search
+
+                clearBuffer()
+                exitMode()
+
+                judo.state[KEY_LAST_SEARCH_STRING] = searchString
+                judo.searchForKeyword(searchString)
                 return
             }
 
@@ -61,13 +71,16 @@ class OutputSearchMode(judo: IJudoCore)
         clearBuffer()
     }
 
+    override fun renderStatusBuffer(): String = "/$buffer"
+    override fun getCursor(): Int = buffer.cursor + 1
+
     private fun exitMode() {
         judo.exitMode()
     }
 
     private fun clearBuffer() {
         buffer.clear()
-//        input.clear()
+        input.clear()
     }
 
     /**

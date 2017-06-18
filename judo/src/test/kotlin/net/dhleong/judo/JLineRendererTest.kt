@@ -364,6 +364,40 @@ class JLineRendererTest {
             .containsExactly("e wher", "e I ca")
     }
 
+    @Test fun search() {
+        renderer.windowWidth = 12
+        renderer.windowHeight = 4
+        renderer.outputWindowHeight = 2
+
+        renderer.appendOutput("Take My love")
+        renderer.appendOutput("Take my land")
+        renderer.appendOutput("Take me where I cannot stand")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "e I cannot s",
+                "tand")
+
+        renderer.searchForKeyword("m")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
+            )
+
+        renderer.searchForKeyword("m")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take ${ansi(inverse = true)}m${ansi(0)}y land",
+                "Take me wher"
+            )
+
+        renderer.searchForKeyword("m")
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take ${ansi(inverse = true)}M${ansi(0)}y love"
+            )
+    }
+
     @Test fun continueStyleAcrossLines() {
         val core = JudoCore(renderer)
 
@@ -455,5 +489,5 @@ class JLineRendererTest {
 }
 
 private fun JLineRenderer.getDisplayStrings(): List<String> =
-    getDisplayLines().map { it.toAttributedString().toAnsi() }
+    getDisplayLines().map { it.toAnsi() }
 

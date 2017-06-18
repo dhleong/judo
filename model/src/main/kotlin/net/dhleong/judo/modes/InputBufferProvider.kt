@@ -1,4 +1,6 @@
-package net.dhleong.judo
+package net.dhleong.judo.modes
+
+import net.dhleong.judo.Mode
 
 /**
  * An InputBufferProvider is some sort of Mode

@@ -89,7 +89,8 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      */
     fun setCursorType(type: CursorType)
 
-    fun updateInputLine(line: String, cursor: Int)
+    fun searchForKeyword(word: CharSequence)
 
+    fun updateInputLine(line: String, cursor: Int)
     fun updateStatusLine(line: String, cursor: Int = -1)
 }
