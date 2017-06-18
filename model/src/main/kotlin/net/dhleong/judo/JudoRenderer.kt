@@ -89,7 +89,11 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      */
     fun setCursorType(type: CursorType)
 
-    fun searchForKeyword(word: CharSequence)
+    /**
+     * @param direction Direction to search, where a POSITIVE number
+     *  moves backward in history, and a NEGATIVE number moves forward
+     */
+    fun searchForKeyword(word: CharSequence, direction: Int)
 
     fun updateInputLine(line: String, cursor: Int)
     fun updateStatusLine(line: String, cursor: Int = -1)

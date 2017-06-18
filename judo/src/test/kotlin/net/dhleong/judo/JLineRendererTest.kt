@@ -377,21 +377,31 @@ class JLineRendererTest {
                 "e I cannot s",
                 "tand")
 
-        renderer.searchForKeyword("m")
+        renderer.searchForKeyword("m", direction = 1)
         assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "Take my land",
                 "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
             )
 
-        renderer.searchForKeyword("m")
+        renderer.searchForKeyword("m", direction = 1)
         assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "Take ${ansi(inverse = true)}m${ansi(0)}y land",
                 "Take me wher"
             )
 
-        renderer.searchForKeyword("m")
+        // step back
+        renderer.searchForKeyword("m", direction = -1)
+        assertThat(renderer.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
+            )
+
+        // go to next page
+        renderer.searchForKeyword("m", direction = 1)
+        renderer.searchForKeyword("m", direction = 1)
         assertThat(renderer.getDisplayStrings())
             .containsExactly(
                 "Take ${ansi(inverse = true)}M${ansi(0)}y love"

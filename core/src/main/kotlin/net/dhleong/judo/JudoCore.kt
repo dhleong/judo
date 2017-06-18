@@ -390,8 +390,8 @@ class JudoCore(
         return key
     }
 
-    override fun searchForKeyword(text: CharSequence) {
-        renderer.searchForKeyword(text)
+    override fun searchForKeyword(text: CharSequence, direction: Int) {
+        renderer.searchForKeyword(text, direction)
     }
 
     override fun setCursorType(type: CursorType) =

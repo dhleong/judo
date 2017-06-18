@@ -375,7 +375,7 @@ class JLineRenderer(
      */
     override fun getScrollback(): Int = scrollbackBottom
 
-    override fun searchForKeyword(word: CharSequence) {
+    override fun searchForKeyword(word: CharSequence, direction: Int) {
         val originalSearchResultLine = searchResultLine
         val originalScrollbackBottom = scrollbackBottom
         val originalScrollbackOffset = scrollbackOffset
@@ -390,13 +390,18 @@ class JLineRenderer(
             val lastScrollbackOffset = scrollbackOffset
 
             val lines = getDisplayLines()
-            val last = lines.size - 1
+            val last =
+                if (direction > 0) lines.lastIndex
+                else 0
             val iterateStart =
                 if (searchResultLine == -1) last
-                else searchResultLine - 1
+                else searchResultLine - direction
 
             if (iterateStart >= 0) {
-                for (i in iterateStart downTo 0) {
+                val range =
+                    if (direction > 0) iterateStart downTo 0
+                    else iterateStart..lines.lastIndex
+                for (i in range) {
                     val line = lines[i]
                     if (line.contains(word, true)) {
                         searchResultLine = i
@@ -405,7 +410,7 @@ class JLineRenderer(
                 }
             }
 
-            scrollPages(1)
+            scrollPages(direction)
         } while (searchResultLine == -1
             && (scrollbackBottom > lastScrollbackBottom || scrollbackOffset != lastScrollbackOffset))
 

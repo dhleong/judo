@@ -14,8 +14,6 @@ import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.hasCtrl
-import net.dhleong.judo.util.iflet
-import net.dhleong.judo.util.letelse
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
@@ -96,13 +94,8 @@ class NormalMode(
         keys("j") to { _ -> history.scroll(1) },
         keys("k") to { _ -> history.scroll(-1) },
 
-        keys("n") to { core ->
-            iflet (core.state[KEY_LAST_SEARCH_STRING]) {
-                core.searchForKeyword(it)
-            } ?: letelse {
-                // TODO bell?
-            }
-        },
+        keys("n") to { _ -> continueSearch(1) },
+        keys("N") to { _ -> continueSearch(-1) },
 
         keys("r") to actionOn(xCharMotion(1)) { _, range ->
             val replacement = judo.readKey()
@@ -148,6 +141,15 @@ class NormalMode(
     }.map { (keys, motion) ->
         keys to motionAction(motion)
     })
+
+    private fun continueSearch(direction: Int) {
+        judo.state[KEY_LAST_SEARCH_STRING]?.let {
+            judo.searchForKeyword(it, direction)
+            return
+        }
+
+        // TODO bell?
+    }
 
     private fun withOperator(action: OperatorFunc) {
         judo.state[KEY_OPFUNC] = action
