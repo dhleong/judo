@@ -133,5 +133,16 @@ class PythonCmdModeTest {
         assertThat(judo.echos)
             .containsExactly("magic")
     }
+
+    @Test fun dontOverwiteBuiltins() {
+        mode.execute("def echo(): pass")
+
+        mode.execute("""
+            |echo("magic")
+            """.trimMargin())
+
+        assertThat(judo.echos)
+            .containsExactly("magic")
+    }
 }
 

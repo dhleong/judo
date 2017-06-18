@@ -8,6 +8,7 @@ import org.python.core.Options
 import org.python.core.Py
 import org.python.core.PyFunction
 import org.python.core.PyObject
+import org.python.core.PyStringMap
 import org.python.util.PythonInterpreter
 import java.io.InputStream
 
@@ -29,21 +30,24 @@ class PythonCmdMode(
         Options.importSite = false
         python = PythonInterpreter()
 
+        val globals = PyGlobals()
+
         // "constants" (don't know if we can actually make them constant)
-        python["MYJUDORC"] = USER_CONFIG_FILE.absolutePath
+        globals["MYJUDORC"] = USER_CONFIG_FILE.absolutePath
 
         // aliasing
-        python["alias"] = asMaybeDecorator<Any>(2) {
+        globals["alias"] = asMaybeDecorator<Any>(2) {
             defineAlias(it[0] as String, it[1])
         }
+//        globals.set()
 
         // prompts
-        python["prompt"] = asMaybeDecorator<Any>(2) {
+        globals["prompt"] = asMaybeDecorator<Any>(2) {
             definePrompt(it[0] as String, it[1])
         }
 
         // triggers
-        python["trigger"] = asMaybeDecorator<Any>(2) {
+        globals["trigger"] = asMaybeDecorator<Any>(2) {
             defineTrigger(it[0] as String, it[1] as PyFunction)
         }
 
@@ -54,52 +58,55 @@ class PythonCmdMode(
             "i" to "insert",
             "n" to "normal"
         ).forEach { (letter, modeName) ->
-            python["${letter}map"] = asUnitPyFn<Any>(2) {
+            globals["${letter}map"] = asUnitPyFn<Any>(2) {
                 defineMap(modeName, it[0], it[1], true)
             }
-            python["${letter}noremap"] = asUnitPyFn<Any>(2) {
+            globals["${letter}noremap"] = asUnitPyFn<Any>(2) {
                 defineMap(modeName, it[0], it[1], false)
             }
-            python["${letter}unmap"] = asUnitPyFn<String>(1) {
+            globals["${letter}unmap"] = asUnitPyFn<String>(1) {
                 judo.unmap(modeName, it[0])
             }
         }
 
-        python["createMap"] = asUnitPyFn<Any>(4, minArgs = 3) {
+        globals["createMap"] = asUnitPyFn<Any>(4, minArgs = 3) {
             val remap =
                 if (it.size == 4) it[3] as Boolean
                 else false
             defineMap(it[0] as String, it[1] as String, it[2], remap)
         }
-        python["deleteMap"] = asUnitPyFn<String>(2) {
+        globals["deleteMap"] = asUnitPyFn<String>(2) {
             judo.unmap(it[0], it[1])
         }
 
-        python["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }
-        python["complete"] = asUnitPyFn<String>(1) { judo.seedCompletion(it[0]) }
-        python["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
-        python["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
-        python["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
-        python["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
-        python["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
-        python["input"] = asPyFn<String, String?>(1, minArgs = 0) {
+        globals["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }
+        globals["complete"] = asUnitPyFn<String>(1) { judo.seedCompletion(it[0]) }
+        globals["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
+        globals["disconnect"] = asUnitPyFn<Any> { judo.disconnect() }
+        globals["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
+        globals["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
+        globals["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
+        globals["input"] = asPyFn<String, String?>(1, minArgs = 0) {
             if (it.isNotEmpty()) {
                 readInput(it[0])
             } else {
                 readInput("")
             }
         }
-        python["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
-        python["load"] = asUnitPyFn<String>(1) { load(it[0]) }
-        python["normal"] = asUnitPyFn<Any>(2, minArgs = 1) { feedKeys(it, mode = "normal") }
-        python["quit"] = asUnitPyFn<Any> { judo.quit() }
-        python["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
-        python["reload"] = asUnitPyFn<Any> { reload() }
-        python["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
-        python["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
-        python["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
-        python["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }
-        python["untrigger"] = asUnitPyFn<String>(1) { judo.triggers.undefine(it[0]) }
+        globals["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
+        globals["load"] = asUnitPyFn<String>(1) { load(it[0]) }
+        globals["normal"] = asUnitPyFn<Any>(2, minArgs = 1) { feedKeys(it, mode = "normal") }
+        globals["quit"] = asUnitPyFn<Any> { judo.quit() }
+        globals["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
+        globals["reload"] = asUnitPyFn<Any> { reload() }
+        globals["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
+        globals["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
+        globals["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
+        globals["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }
+        globals["untrigger"] = asUnitPyFn<String>(1) { judo.triggers.undefine(it[0]) }
+
+        // the naming here is insane, but correct
+        python.locals = globals
     }
 
     private fun defineAlias(alias: String, handler: Any) {
@@ -232,5 +239,26 @@ inline private fun <reified T: Any, reified R> asPyFn(
 
             return Py.java2py(result)
         }
+    }
+}
+
+private class PyGlobals : PyStringMap() {
+
+    private val reservedSet = HashSet<String>()
+
+    override fun __setitem__(key: String?, value: PyObject?) {
+        if (key !in reservedSet) {
+            super.__setitem__(key, value)
+        }
+    }
+
+    operator fun set(key: String, value: PyObject) {
+        reservedSet.add(key)
+        super.__setitem__(key, value)
+    }
+
+    operator fun set(key: String, value: Any) {
+        reservedSet.add(key)
+        super.__setitem__(key, Py.java2py(value))
     }
 }
