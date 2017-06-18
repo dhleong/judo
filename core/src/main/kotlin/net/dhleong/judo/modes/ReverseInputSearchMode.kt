@@ -1,7 +1,6 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.InputHistory

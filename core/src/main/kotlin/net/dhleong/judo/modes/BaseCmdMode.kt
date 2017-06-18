@@ -212,7 +212,8 @@ abstract class BaseCmdMode(
     buffer: InputBuffer,
     val history: IInputHistory
 ) : BaseModeWithBuffer(judo, buffer),
-    MappableMode {
+    MappableMode,
+    StatusBufferProvider {
 
     override val userMappings = KeyMapping()
     override val name = "cmd"
@@ -297,6 +298,9 @@ abstract class BaseCmdMode(
 
         insertChar(key)
     }
+
+    override fun renderStatusBuffer(): String = ":$buffer"
+    override fun getCursor(): Int = buffer.cursor + 1
 
     fun load(pathToFile: String) {
         val file = File(pathToFile)

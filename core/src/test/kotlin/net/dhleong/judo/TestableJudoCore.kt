@@ -10,6 +10,10 @@ import javax.swing.KeyStroke
  */
 
 class TestableJudoCore : IJudoCore {
+    override fun searchForKeyword(text: CharSequence, direction: Int) {
+        TODO("not implemented")
+    }
+
     override fun feedKeys(keys: String, remap: Boolean, mode: String) {
         TODO("not implemented")
     }

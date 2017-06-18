@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.CircularArrayList
+import net.dhleong.judo.util.ansi
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
 import org.jline.terminal.MouseEvent
@@ -63,6 +64,9 @@ class JLineRenderer(
 
     /** offset within output[scrollbackBottom] */
     private var scrollbackOffset = 0
+
+    private var lastSearchKeyword: String = ""
+    private var searchResultLine = -1
 
     private var hadPartialLine = false
 
@@ -309,6 +313,10 @@ class JLineRenderer(
             if (count > 0) scrollbackBottom..rangeEnd
             else scrollbackBottom downTo rangeEnd
 
+        // clear search result on scroll (?)
+        // TODO should we do better?
+        searchResultLine = -1
+
         var scrolled = 0
         for (i in range) {
             if (i < 0) break
@@ -358,6 +366,7 @@ class JLineRenderer(
 
     override fun scrollToBottom() {
         scrollbackBottom = 0
+        searchResultLine = -1
         if (!isInTransaction) display()
     }
 
@@ -365,6 +374,58 @@ class JLineRenderer(
      * How many lines we've scrolled back
      */
     override fun getScrollback(): Int = scrollbackBottom
+
+    override fun searchForKeyword(word: CharSequence, direction: Int) {
+        val originalSearchResultLine = searchResultLine
+        val originalScrollbackBottom = scrollbackBottom
+        val originalScrollbackOffset = scrollbackOffset
+
+        if (word != lastSearchKeyword) {
+            lastSearchKeyword = word.toString()
+            searchResultLine = -1
+        }
+
+        do {
+            val lastScrollbackBottom = scrollbackBottom
+            val lastScrollbackOffset = scrollbackOffset
+
+            val lines = getDisplayLines()
+            val last =
+                if (direction > 0) lines.lastIndex
+                else 0
+            val iterateStart =
+                if (searchResultLine == -1) last
+                else searchResultLine - direction
+
+            if (iterateStart >= 0) {
+                val range =
+                    if (direction > 0) iterateStart downTo 0
+                    else iterateStart..lines.lastIndex
+                for (i in range) {
+                    val line = lines[i]
+                    if (line.contains(word, true)) {
+                        searchResultLine = i
+                        return
+                    }
+                }
+            }
+
+            scrollPages(direction)
+        } while (searchResultLine == -1
+            && (scrollbackBottom > lastScrollbackBottom || scrollbackOffset != lastScrollbackOffset))
+
+        // couldn't find anything; reset position
+        scrollbackBottom = originalScrollbackBottom
+        scrollbackOffset = originalScrollbackOffset
+
+        if (originalSearchResultLine != -1) {
+            searchResultLine = originalSearchResultLine
+        }
+
+        // TODO bell? echo?
+        appendOutput("Pattern not found: $word")
+
+    }
 
     private fun resize() {
         val size = terminal.size
@@ -403,7 +464,6 @@ class JLineRenderer(
         workspace.clear()
 
         val toOutput = getDisplayLines()
-
         (toOutput.size..outputWindowHeight).forEach {
             workspace.add(AttributedString.EMPTY)
         }
@@ -515,15 +575,38 @@ class JLineRenderer(
         return withIndicator.toAttributedString() to (absolutePageCursor + cursorOffset)
     }
 
-    fun getDisplayLines(): Collection<AttributedString> {
+    fun getDisplayLines(): List<AttributedString> {
         val start = output.lastIndex - scrollbackBottom
         val end = maxOf(0, start - outputWindowHeight)
-        return output.slice(end..start)
+        val lines = output.slice(end..start)
             .asSequence()
             .flatMap { it.getDisplayLines(windowWidth).asSequence() }
             .toList()
             .dropLast(scrollbackOffset)
             .takeLast(outputWindowHeight)
+
+        if (searchResultLine >= 0) {
+            val lineIndex = searchResultLine
+            val original = lines[lineIndex]
+            val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
+            if (wordStart >= 0) {
+                val wordEnd = wordStart + lastSearchKeyword.length
+                val word = original.substring(wordStart, wordEnd)
+                val highlighted = "${ansi(inverse = true)}$word${ansi(0)}"
+
+                val new = AttributedStringBuilder(original.length)
+                new.append(original, 0, wordStart)
+                new.appendAnsi(highlighted)
+                new.append(original, wordEnd, original.length)
+                val newString = new.toAttributedString()
+
+                val mutableLines = lines.toMutableList()
+                mutableLines[lineIndex] = newString
+                return mutableLines
+            }
+        }
+
+        return lines
     }
 
     /**
@@ -568,7 +651,8 @@ class JLineRenderer(
 
         val atBottom = scrollbackBottom == 0 && scrollbackOffset == 0
         if (!atBottom) {
-            scrollbackBottom += linesAdded + linesMod
+            val change = linesAdded + linesMod
+            scrollbackBottom += change
         }
 
         return splitCandidate

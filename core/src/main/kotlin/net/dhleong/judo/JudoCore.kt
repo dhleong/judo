@@ -8,12 +8,15 @@ import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.modes.BaseCmdMode
+import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
+import net.dhleong.judo.modes.OutputSearchMode
 import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
+import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
@@ -100,6 +103,7 @@ class JudoCore(
         InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
+        OutputSearchMode(this),
         PythonCmdMode(this, cmdBuffer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
@@ -109,6 +113,8 @@ class JudoCore(
     })
 
     private var currentMode: Mode = normalMode
+
+    private var lastSearchKeyword: CharSequence = ""
 
     internal var running = true
     internal var doEcho = true
@@ -344,8 +350,8 @@ class JudoCore(
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        if (newMode is BaseCmdMode) {
-            renderer.updateStatusLine(":${newMode.buffer}", newMode.buffer.cursor + 1)
+        if (newMode is StatusBufferProvider) {
+            renderer.updateStatusLine(newMode.renderStatusBuffer(), newMode.getCursor())
         } else {
             updateInputLine()
         }
@@ -382,6 +388,10 @@ class JudoCore(
         // TODO check for esc/ctrl+c and throw InputInterruptedException...
         // TODO catch that in the feedKey loop
         return key
+    }
+
+    override fun searchForKeyword(text: CharSequence, direction: Int) {
+        renderer.searchForKeyword(text, direction)
     }
 
     override fun setCursorType(type: CursorType) =
@@ -488,8 +498,8 @@ class JudoCore(
 
             updateInputLine()
 
-            if (mode is BaseCmdMode) {
-                renderer.updateStatusLine(":", 1)
+            if (mode is StatusBufferProvider) {
+                renderer.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
             } else {
                 updateStatusLine(mode)
             }

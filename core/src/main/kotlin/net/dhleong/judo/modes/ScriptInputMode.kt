@@ -2,7 +2,6 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.InputBufferProvider
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.InputBuffer
