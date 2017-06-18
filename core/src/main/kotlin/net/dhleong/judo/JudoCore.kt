@@ -104,7 +104,7 @@ class JudoCore(
         normalMode,
         opMode,
         OutputSearchMode(this),
-        PythonCmdMode(this, cmdBuffer, cmdHistory, completions),
+        PythonCmdMode(this, cmdBuffer, renderer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>(), { map, mode ->

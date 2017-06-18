@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
@@ -21,9 +22,10 @@ import java.io.InputStream
 class PythonCmdMode(
     judo: IJudoCore,
     inputBuffer: InputBuffer,
+    rendererInfo: JudoRendererInfo,
     history: IInputHistory,
     private var completions: CompletionSource
-) : BaseCmdMode(judo, inputBuffer, history) {
+) : BaseCmdMode(judo, inputBuffer, rendererInfo, history) {
 
     private val python: PythonInterpreter
 

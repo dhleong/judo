@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.IInputHistory
@@ -229,6 +230,7 @@ private val COMMAND_HELP = mutableMapOf(
 abstract class BaseCmdMode(
     judo: IJudoCore,
     buffer: InputBuffer,
+    private val rendererInfo: JudoRendererInfo,
     val history: IInputHistory
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
@@ -362,12 +364,39 @@ abstract class BaseCmdMode(
         judo.echo("No files read; nothing to reload")
     }
 
-    private fun showHelp() {
-        // TODO columns?
-        COMMAND_HELP.keys.forEach { judo.echo(it) }
+    internal fun showHelp() {
+        val commands = COMMAND_HELP.keys.sorted().toList()
+        val longest = commands.asSequence().map { it.length }.max()!!
+        val colWidth = longest + 2
+
+        if (colWidth >= rendererInfo.windowWidth) {
+            // super small renderer (whaaat?)
+            // just be lazy
+            commands.forEach { judo.echo(it) }
+            return
+        }
+
+        val cols = rendererInfo.windowWidth / colWidth
+        val line = StringBuilder(cols * colWidth)
+        var word = 0
+        for (name in commands) {
+            line.append(name)
+            for (i in 0..(colWidth - name.length - 1)) {
+                line.append(' ')
+            }
+
+            ++word
+
+            if (word >= cols) {
+                // end of the line; dump it and start over
+                word = 0
+                judo.echo(line.toString())
+                line.setLength(0)
+            }
+        }
     }
 
-    private fun showHelp(command: String) {
+    internal fun showHelp(command: String) {
         COMMAND_HELP[command]?.let {
             it.split("\n").forEach { judo.echo(it) }
             return

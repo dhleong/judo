@@ -36,6 +36,8 @@ interface JudoRendererInfo {
     val terminalType: String
 
     val capabilities: EnumSet<Capabilities>
+
+    val windowWidth: Int
 }
 
 /**
@@ -44,7 +46,6 @@ interface JudoRendererInfo {
 interface JudoRenderer : JudoRendererInfo, Closeable {
 
     val windowHeight: Int
-    val windowWidth: Int
 
     /**
      * Fired if the [windowWidth] or [windowHeight]
