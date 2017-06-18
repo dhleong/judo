@@ -3,54 +3,13 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.trigger.TriggerManager
-import javax.swing.KeyStroke
+import java.lang.reflect.Proxy
 
 /**
  * @author dhleong
  */
 
-class TestableJudoCore : IJudoCore {
-    override fun searchForKeyword(text: CharSequence, direction: Int) {
-        TODO("not implemented")
-    }
-
-    override fun feedKeys(keys: String, remap: Boolean, mode: String) {
-        TODO("not implemented")
-    }
-
-    override fun seedCompletion(text: String) {
-        TODO("not implemented")
-    }
-
-    override val state = StateMap()
-
-    override fun unmap(mode: String, from: String) {
-        TODO("not implemented")
-    }
-
-    override fun enterMode(mode: Mode) {
-        TODO("not implemented")
-    }
-
-    override fun isConnected(): Boolean {
-        TODO("not implemented")
-    }
-
-    override fun reconnect() {
-        TODO("not implemented")
-    }
-
-    override fun createUserMode(name: String) {
-        TODO("not implemented")
-    }
-
-    override fun map(mode: String, from: String, to: () -> Unit) {
-        TODO("not implemented")
-    }
-
-    override fun setCursorType(type: CursorType) {
-        TODO("not implemented")
-    }
+class TestableJudoCore : IJudoCore by createCoreProxy() {
 
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
@@ -59,42 +18,6 @@ class TestableJudoCore : IJudoCore {
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-
-    override fun readKey(): KeyStroke {
-        TODO("not implemented")
-    }
-
-    override fun scrollToBottom() {
-        TODO("not implemented")
-    }
-
-    override fun scrollPages(count: Int) {
-        TODO("not implemented")
-    }
-
-    override fun connect(address: String, port: Int) {
-        TODO("not implemented")
-    }
-
-    override fun disconnect() {
-        TODO("not implemented")
-    }
-
-    override fun quit() {
-        TODO("not implemented")
-    }
-
-    override fun enterMode(modeName: String) {
-        TODO("not implemented")
-    }
-
-    override fun exitMode() {
-        TODO("not implemented")
-    }
-
-    override fun feedKey(stroke: KeyStroke, remap: Boolean, fromMap: Boolean) {
-        TODO("not implemented")
-    }
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
         maps.add(arrayOf(mode, from, to, remap))
@@ -113,4 +36,14 @@ class TestableJudoCore : IJudoCore {
         sends.clear()
         maps.clear()
     }
+}
+
+private fun createCoreProxy(): IJudoCore {
+    return Proxy.newProxyInstance(
+        ClassLoader.getSystemClassLoader(),
+        arrayOf(IJudoCore::class.java)
+    ) { _, _, _ ->
+        // by default, nothing is implemented
+        TODO("not implemented")
+    } as IJudoCore
 }
