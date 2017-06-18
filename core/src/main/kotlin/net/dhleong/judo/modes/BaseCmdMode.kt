@@ -340,7 +340,7 @@ abstract class BaseCmdMode(
         throw IllegalStateException("You must be connected to use persistInput() without args")
     }
 
-    fun readFile(file: File) {
+    open fun readFile(file: File) {
         if (!(file.exists() && file.canRead())) {
             throw IllegalArgumentException("Unable to load $file")
         }
@@ -429,3 +429,6 @@ abstract class BaseCmdMode(
         input.clear()
     }
 }
+
+class ScriptExecutionException(traceback: String)
+    : RuntimeException(traceback)

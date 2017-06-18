@@ -16,6 +16,7 @@ import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.modes.OutputSearchMode
 import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
+import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
@@ -573,7 +574,15 @@ class JudoCore(
             }
         }
 
-        renderer.appendOutput("$prefix${e.javaClass.name}: ${e.message}")
+        if (e is ScriptExecutionException) {
+            renderer.appendOutput("${prefix}ScriptExecutionException:")
+            appendOutput(OutputLine(e.message!!))
+            e.stackTrace.map { "  $it" }
+                .forEach { renderer.appendOutput(it) }
+            return
+        }
+
+        renderer.appendOutput("$prefix${e.javaClass.name}: ${e.message} ")
         e.stackTrace.map { "  $it" }
             .forEach { renderer.appendOutput(it) }
         e.cause?.let {

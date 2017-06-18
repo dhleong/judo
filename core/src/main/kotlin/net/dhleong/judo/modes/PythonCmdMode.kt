@@ -7,6 +7,7 @@ import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import org.python.core.Options
 import org.python.core.Py
+import org.python.core.PyException
 import org.python.core.PyFunction
 import org.python.core.PyObject
 import org.python.core.PyStringMap
@@ -42,7 +43,6 @@ class PythonCmdMode(
         globals["alias"] = asMaybeDecorator<Any>(2) {
             defineAlias(it[0] as String, it[1])
         }
-//        globals.set()
 
         // prompts
         globals["prompt"] = asMaybeDecorator<Any>(2) {
@@ -185,12 +185,43 @@ class PythonCmdMode(
     }
 
     override fun execute(code: String) {
-        python.exec(code)
+        wrapExceptions(lineExecution = true) {
+            python.exec(code)
+        }
+    }
+
+    override fun readFile(file: File) {
+        val fileDir = file.parentFile
+        python.exec(
+            """import sys
+              |sys.path.insert(0, '${fileDir.absolutePath}')
+            """.trimMargin())
+        super.readFile(file)
     }
 
     override fun readFile(fileName: String, stream: InputStream) {
-        python.execfile(stream, fileName)
+        wrapExceptions {
+            python.execfile(stream, fileName)
+        }
     }
+
+    private inline fun wrapExceptions(lineExecution: Boolean = false, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: PyException) {
+            if (lineExecution) {
+                // if the single line execution's cause was a ScriptExecution,
+                // that's the only info we need
+                val cause = e.cause
+                if (cause is ScriptExecutionException) {
+                    throw cause
+                }
+            }
+
+            throw ScriptExecutionException(e.toString())
+        }
+    }
+
 }
 
 /**
