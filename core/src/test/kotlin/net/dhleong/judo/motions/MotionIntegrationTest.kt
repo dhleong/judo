@@ -6,6 +6,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.setInput
 import net.dhleong.judo.type
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -19,6 +20,11 @@ class MotionIntegrationTest {
 
     @Before fun setUp() {
         judo = JudoCore(renderer)
+    }
+
+    @After fun tearDown() {
+        // if not empty, it contained errors
+        assertThat(renderer.outputLines).isEmpty()
     }
 
     @Test fun altBackSpace() {
@@ -129,6 +135,15 @@ class MotionIntegrationTest {
             .isEqualTo("word word3" to 5)
     }
 
+    @Test fun deleteCountFindForward() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("d2f<space>"))
+        assertThat(renderer.outputLines).isEmpty() // no errors
+        assertThat(renderer.inputLine)
+            .isEqualTo("word3" to 0)
+    }
+
     @Test fun deleteLine() {
         judo.setInput("word word2 word3", 11)
 
@@ -145,15 +160,7 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 " to 10)
     }
-
-    @Test fun deleteInnerWord_symbols() {
-        judo.setInput("word w@rd2 word3", 5)
-
-        judo.type(keys("diw"))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word @rd2 word3" to 5)
-    }
-
+    
     @Test fun deleteOuterWord() {
         judo.setInput("word word2 word3", 5)
 
@@ -248,6 +255,18 @@ class MotionIntegrationTest {
         judo.type(keys("db"))
         assertThat(renderer.inputLine)
             .isEqualTo("word word3" to 5)
+    }
+
+    @Test fun deleteCountWordBack() {
+        judo.setInput("word word2 word3", 16)
+
+        judo.type(keys("<esc>b"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 11)
+
+        judo.type(keys("d2b"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word3" to 0)
     }
 
     @Test fun replaceChar() {

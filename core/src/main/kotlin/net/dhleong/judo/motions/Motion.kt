@@ -23,6 +23,9 @@ interface Motion {
     val isInclusive: Boolean
         get() = flags.contains(Motion.Flags.INCLUSIVE)
 
+    val isTextObject: Boolean
+        get() = flags.contains(Flags.TEXT_OBJECT)
+
     fun applyTo(core: IJudoCore, buffer: InputBuffer) {
         val end = calculate(
             core, buffer.toChars(), buffer.cursor
@@ -39,8 +42,22 @@ interface Motion {
     /** NOTE: Use ONLY when ABSOLUTELY SURE the motion won't need readKey */
     fun calculate(input: CharSequence, cursor: Int) =
         calculate(DUMMY_JUDO_CORE, input, cursor)
+
+    /**
+     * Can be overridden to provide an alternative motion when being repeated
+     */
+    fun toRepeatable(): Motion = this
 }
 
+fun IntRange.normalizeForMotion(motion: Motion): IntRange {
+    if (motion.isInclusive && start < endInclusive) {
+        return start..(endInclusive + 1)
+    } else if (motion.isInclusive && start > endInclusive) {
+        return start..(endInclusive + 1)
+    } else {
+        return this
+    }
+}
 
 internal fun createMotion(
         flag: Motion.Flags,
@@ -64,6 +81,17 @@ internal fun createMotion(
         override val flags: EnumSet<Motion.Flags> = EnumSet(flags)
         override fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
             calculate(core, buffer, cursor)
+    }
+}
+
+internal infix fun Motion.repeatWith(repeatable: Motion): Motion {
+    val original = this
+    return object : Motion {
+        override val flags = original.flags
+        override fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+            original.calculate(core, buffer, cursor)
+
+        override fun toRepeatable(): Motion = repeatable
     }
 }
 

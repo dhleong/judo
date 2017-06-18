@@ -32,20 +32,3 @@ fun toStartMotion(): Motion =
         cursor..0
     }
 
-
-/**
- * Repeat any motion N times
- */
-fun repeat(motion: Motion, count: Int): Motion {
-    if (count < 1) throw IllegalArgumentException("Invalid repeat count ($count)")
-
-    return createMotion { readKey, buffer, start ->
-        var end = start
-        for (i in 1..count) {
-            end = motion.calculate(readKey, buffer, end).endInclusive
-        }
-
-        start..end
-    }
-}
-

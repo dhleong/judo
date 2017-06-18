@@ -3,12 +3,15 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.StateKind
+import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
+import net.dhleong.judo.motions.normalizeForMotion
+import net.dhleong.judo.motions.repeat
 import javax.swing.KeyStroke
 
 val KEY_OPFUNC = StateKind<OperatorFunc>("net.dhleong.judo.modes.op.opfunc")
@@ -37,6 +40,7 @@ class OperatorPendingMode(
     )
 
     private val input = MutableKeys()
+    private val count = CountReadingBuffer()
 
     override fun onEnter() {
         val currentOpFunc = judo.state[KEY_OPFUNC]
@@ -60,15 +64,11 @@ class OperatorPendingMode(
             return
         }
 
-        input.push(key)
-
-        mapping.match(input)?.let {
-            input.clear()
-            it.invoke(judo)
+        if (count.tryPush(key)) {
             return
         }
 
-        if (mapping.couldMatch(input)) {
+        if (tryMappings(key, remap, input, mapping, null)) {
             return
         }
 
@@ -77,17 +77,16 @@ class OperatorPendingMode(
 
     private fun opFuncActionWith(motion: Motion): KeyAction =
         { _ ->
-            var range = motion.calculate(judo, buffer)
-
-            // TODO can we put this anywhere better?
-            if (motion.isInclusive && range.start < range.endInclusive) {
-                range = range.start..(range.endInclusive + 1)
-            } else if (motion.isInclusive && range.start > range.endInclusive) {
-                range = range.start..(range.endInclusive + 1)
-            }
+            val range = repeat(motion, count.toRepeatCount())
+                .calculate(judo, buffer)
+                .normalizeForMotion(motion)
+//            val range = motion.calculate(judo, buffer)
+//                .normalizeForMotion(motion)
 
             judo.exitMode()
             opfunc(range)
+
+            count.clear()
         }
 
 }

@@ -40,7 +40,7 @@ fun findMotion(step: Int): Motion {
         val target = core.readKey().keyChar
         core.state[KEY_LAST_FIND] = FindInfo(::calculateFind, step, target)
         calculateFind(step, target, buffer, start)
-    }
+    } repeatWith(repeatFindMotion(step))
 }
 
 
