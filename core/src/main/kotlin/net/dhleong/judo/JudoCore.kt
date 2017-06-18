@@ -114,8 +114,6 @@ class JudoCore(
 
     private var currentMode: Mode = normalMode
 
-    private var lastSearchKeyword: CharSequence = ""
-
     internal var running = true
     internal var doEcho = true
 
