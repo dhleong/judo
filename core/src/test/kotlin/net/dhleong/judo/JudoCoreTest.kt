@@ -1,10 +1,15 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.net.Connection
 import net.dhleong.judo.render.OutputLine
+import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import javax.swing.KeyStroke
 
 /**
@@ -106,6 +111,61 @@ class JudoCoreTest {
         // should have returned to insert mode
         judo.feedKeys(" my land")
         assertThat(judo.buffer.toString()).isEqualTo("Take my land ")
+    }
+
+    @Test fun readPersistedInput() {
+        val tmpFile = File.createTempFile("judo-history-test", ".tmp")
+        tmpFile.writeText("Take my love,\nTake my land")
+        val history = with(JudoCore::class.java.getDeclaredField("sendHistory")) {
+            isAccessible = true
+            get(judo) as InputHistory
+        }
+
+        assertThat(history.size).isEqualTo(0)
+
+        judo.persistInput(tmpFile)
+
+        assertThat(history.size).isEqualTo(2)
+        tmpFile.deleteOnExit()
+    }
+
+    @Test fun persistInput() {
+        val tmpFile = File.createTempFile("judo-history-test", ".tmp")
+        tmpFile.delete()
+        val history = with(JudoCore::class.java.getDeclaredField("sendHistory")) {
+            isAccessible = true
+            get(judo) as InputHistory
+        }
+
+        assertThat(history.size).isEqualTo(0)
+
+        judo.persistInput(tmpFile)
+        assertThat(history.size).isEqualTo(0) // nothing there
+
+        judo.send("take love", fromMap = false)
+        judo.send("take land", fromMap = false)
+        assertThat(history.size).isEqualTo(2)
+
+        judo.onDisconnect(object : Connection() {
+            override val input: InputStream
+                get() = TODO("not implemented")
+            override val output: OutputStream
+                get() = TODO("not implemented")
+
+            override fun setWindowSize(width: Int, height: Int) {
+                TODO("not implemented")
+            }
+
+            override fun close() {
+                TODO("not implemented")
+            }
+        })
+
+        assertThat(tmpFile)
+            .exists()
+            .hasContent("take love\ntake land")
+
+        tmpFile.deleteOnExit()
     }
 }
 

@@ -119,7 +119,7 @@ class JudoCore(
     internal var running = true
     internal var doEcho = true
 
-    private var connection: Connection? = null
+    override var connection: Connection? = null
     private var lastConnect: Pair<String, Int>? = null
 
     private val statusLineWorkspace = IStringBuilder.create(128)
@@ -383,6 +383,20 @@ class JudoCore(
 
     override fun isConnected(): Boolean = connection != null
 
+    override fun persistInput(file: File) {
+        if (file.exists() && !(file.canRead() && file.canWrite())) {
+            throw IllegalArgumentException("Cannot read or write $file")
+        }
+        state[KEY_PERSIST_INPUT_HISTORY_PATH] = file
+
+        if (file.exists()) {
+            file.forEachLine {
+                commandCompletions.process(it)
+                sendHistory.push(it)
+            }
+        }
+    }
+
     override fun readKey(): KeyStroke {
         val key = keyStrokeProducer!!.readKey() // must be initialized by now
         // TODO check for esc/ctrl+c and throw InputInterruptedException...
@@ -438,6 +452,15 @@ class JudoCore(
         }
 
         this.connection = null
+
+        state[KEY_PERSIST_INPUT_HISTORY_PATH]?.let { path ->
+            try {
+                sendHistory.writeTo(path)
+            } catch (e: Exception) {
+                appendError(e, "FAILED TO PERSIST INPUT: ")
+            }
+        }
+        state.remove(KEY_PERSIST_INPUT_HISTORY_PATH)
     }
 
     /**

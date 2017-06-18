@@ -2,6 +2,7 @@ package net.dhleong.judo.util
 
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import java.io.File
 
 class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory {
 
@@ -79,5 +80,17 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
         }
 
         return false
+    }
+
+    fun writeTo(path: File) {
+        if (!path.exists()) {
+            if (!path.parentFile.isDirectory && !path.parentFile.mkdirs()) {
+                throw IllegalArgumentException("Couldn't create directories for $path")
+            }
+        }
+
+        path.bufferedWriter().use { writer ->
+            contents.forEach { writer.appendln(it) }
+        }
     }
 }

@@ -10,6 +10,7 @@ import org.python.core.PyFunction
 import org.python.core.PyObject
 import org.python.core.PyStringMap
 import org.python.util.PythonInterpreter
+import java.io.File
 import java.io.InputStream
 
 /**
@@ -96,6 +97,13 @@ class PythonCmdMode(
         globals["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
         globals["load"] = asUnitPyFn<String>(1) { load(it[0]) }
         globals["normal"] = asUnitPyFn<Any>(2, minArgs = 1) { feedKeys(it, mode = "normal") }
+        globals["persistInput"] = asUnitPyFn<String>(1, minArgs = 0) {
+            if (it.isNotEmpty()) {
+                judo.persistInput(File(it[0]))
+            } else {
+                persistInput()
+            }
+        }
         globals["quit"] = asUnitPyFn<Any> { judo.quit() }
         globals["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
         globals["reload"] = asUnitPyFn<Any> { reload() }

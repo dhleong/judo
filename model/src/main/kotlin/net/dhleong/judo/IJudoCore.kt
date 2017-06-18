@@ -3,7 +3,11 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.trigger.ITriggerManager
+import java.io.Closeable
+import java.io.File
 import javax.swing.KeyStroke
+
+val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persistentInput")
 
 typealias OperatorFunc = (IntRange) -> Unit
 
@@ -41,6 +45,7 @@ class StateMap {
 interface IJudoCore {
 
     val aliases: IAliasManager
+    val connection: Closeable?
     val prompts: IPromptManager
     val triggers: ITriggerManager
     val state: StateMap
@@ -57,6 +62,7 @@ interface IJudoCore {
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit)
+    fun persistInput(file: File)
     fun quit()
     fun readKey(): KeyStroke
     fun reconnect()

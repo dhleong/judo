@@ -11,6 +11,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.hasCtrl
+import net.dhleong.judo.util.hash
 import java.awt.event.KeyEvent
 import java.io.File
 import java.io.InputStream
@@ -21,7 +22,8 @@ import javax.swing.KeyStroke
  */
 
 val USER_HOME = System.getProperty("user.home")!!
-val USER_CONFIG_FILE = File("$USER_HOME/.config/judo/init.py").absoluteFile!!
+val USER_CONFIG_DIR = File("$USER_HOME/.config/judo/").absoluteFile!!
+val USER_CONFIG_FILE = File("${USER_CONFIG_DIR.absolutePath}/init.py").absoluteFile!!
 
 private fun buildHelp(usage: String, description: String): String =
     buildHelp(listOf(usage), description)
@@ -132,6 +134,23 @@ private val COMMAND_HELP = mutableMapOf(
         """Process [keys] as though they were typed by the user in normal mode.
           |To perform this operation with remaps disabled (as in nnoremap), pass
           |False for the second parameter.
+        """.trimMargin()
+    ),
+
+    "persistInput" to buildHelp(
+        listOf(
+            "persistInput()",
+            "persistInput(path: String)"
+        ),
+        """Enable input history persistence for the current world, optionally
+          |providing the path to save the history. If not provided, it will pick
+          |a path in the ~/.config/judo directory with a filename based on the
+          |currently-connected world (which means this should be called AFTER a
+          |call to connect()).
+          |This will immediately attempt to import input history from the given
+          |file, and writes the new history on disconnect. Persistence is also
+          |disabled on disconnect, so you'll need to call this again the next time
+          |you connect.
         """.trimMargin()
     ),
 
@@ -306,6 +325,17 @@ abstract class BaseCmdMode(
         val file = File(pathToFile)
         readFile(file)
         judo.echo("Loaded $file")
+    }
+
+    fun persistInput() {
+        judo.connection?.let {
+            val fileName = hash(it.toString())
+            val filePath = "$USER_CONFIG_DIR/input-history/$fileName"
+            judo.persistInput(File(filePath))
+            return
+        }
+
+        throw IllegalStateException("You must be connected to use persistInput() without args")
     }
 
     fun readFile(file: File) {
