@@ -144,7 +144,7 @@ class NormalMode(
         // text object motions can't be used as an action
         !motion.isTextObject
     }.map { (keys, motion) ->
-        keys to motionAction(motion)
+        keys to motionActionWithCount(motion)
     })
 
     private fun continueSearch(direction: Int) {
@@ -156,7 +156,7 @@ class NormalMode(
         // TODO bell?
     }
 
-    override fun motionAction(motion: Motion): KeyAction =
+    internal fun motionActionWithCount(motion: Motion): KeyAction =
         { _ -> applyMotion(repeat(motion, count.toRepeatCount())) }
 
     private fun withOperator(action: OperatorFunc) {

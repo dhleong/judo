@@ -32,8 +32,6 @@ class OperatorPendingMode(
     private lateinit var opfunc: OperatorFunc
     private var currentFullLineMotionKey: Char = 0.toChar()
 
-    // FIXME refactor so we only have to enumerate motions once
-    //  and get them in both normal mode movements and here
     private val mapping = KeyMapping(
         ALL_MOTIONS.map { (keys, motion) ->
             keys to opFuncActionWith(motion)

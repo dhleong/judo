@@ -7,7 +7,6 @@ import net.dhleong.judo.input.keys
  */
 
 val ALL_MOTIONS = arrayListOf(
-    // TODO counts?
     keys("b") to wordMotion(-1, false),
     keys("B") to wordMotion(-1, true),
     keys("w") to wordMotion(1, false),

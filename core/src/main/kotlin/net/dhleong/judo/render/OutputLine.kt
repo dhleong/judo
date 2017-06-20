@@ -84,8 +84,6 @@ class OutputLine : CharSequence {
      * comfortably within [windowWidth] columns
      */
     fun getDisplayOutputLines(windowWidth: Int): List<OutputLine> {
-        // TODO if we know we fit on a single line, we could
-        // just return ourself in a singleton list
 
         if (rawChars.length < windowWidth) {
             // NOTE: this is not rigorous! Since rawChars has ansi
