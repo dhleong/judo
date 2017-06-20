@@ -56,7 +56,14 @@ class ReverseInputSearchMode(
             return
         }
 
+        val oldLength = searchBuffer.size
         searchBuffer.type(key)
+
+        if (searchBuffer.size < oldLength) {
+            // we deleted stuff; this invalidates the search progress
+            sendHistory.resetHistoryOffset()
+        }
+
         trySearch(false)
     }
 
@@ -70,7 +77,6 @@ class ReverseInputSearchMode(
     override fun renderInputBuffer(): String =
         "$SEARCH_BUFFER_PREFIX$searchBuffer$SEARCH_BUFFER_SUFFIX$buffer"
 
-    // TODO actually the cursor should be at the match location
     override fun getCursor(): Int =
         SEARCH_BUFFER_PREFIX.length + searchBuffer.cursor
 
