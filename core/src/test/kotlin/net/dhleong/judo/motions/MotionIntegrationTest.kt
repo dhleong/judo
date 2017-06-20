@@ -28,11 +28,31 @@ class MotionIntegrationTest {
     }
 
     @Test fun altBackSpace() {
-        judo.setInput("word word2 word3", 11)
+        judo.setInput("word word2 word3 word4", 22)
 
         judo.type(keys("i<alt bs>"))
         assertThat(renderer.inputLine)
-            .isEqualTo("word word3" to 5)
+            .isEqualTo("word word2 word3 " to 17)
+
+        judo.buffer.cursor = 11
+        judo.type(keys("<alt bs>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word3 " to 5)
+
+        judo.type(keys("<alt bs>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word3 " to 0)
+
+        // nop:
+        judo.type(keys("<alt bs>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word3 " to 0)
+
+        // nop:
+        judo.type(keys("<esc>A<alt bs>"))
+        assertThat(renderer.outputLines).isEmpty() // no error deleting last text
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
     }
 
     @Test fun moveFindBack() {

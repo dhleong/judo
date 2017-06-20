@@ -36,7 +36,13 @@ class InsertMode(
         keys("<down>") to { _ -> history.scroll(1) },
 
         keys("<alt bs>") to actionOn(wordMotion(-1, false)) { _, range ->
-            buffer.deleteWithCursor(range)
+            val wasWhitespace = range.start >= buffer.size ||
+                Character.isWhitespace(buffer.get(range.start))
+            buffer.deleteWithCursor(range.start..range.endInclusive)
+
+            if (wasWhitespace && !buffer.isEmpty()) {
+                ++buffer.cursor // move cursor 1 forward since we're in insert mode
+            }
         },
 
         // not strictly vim, but nice enough
