@@ -27,12 +27,14 @@ class InputHistoryTest {
 
         history.scroll(-1)
         assertThat(buffer.toString()).isEqualTo("Take my love")
+        assertThat(buffer.cursor).isEqualTo(11)
 
         history.scroll(-1)
         assertThat(buffer.toString()).isEqualTo("Take my land")
 
         history.scroll(-1)
         assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
+        assertThat(buffer.cursor).isEqualTo(27)
 
         // no more history; should be the same
         history.scroll(-1)
@@ -52,6 +54,22 @@ class InputHistoryTest {
         // no change
         history.scroll(1)
         assertThat(buffer.toString()).isEqualTo("I don't care")
+    }
+
+    @Test fun scrollHistoryUnclamped() {
+        history.push("Take me where I cannot stand")
+        history.push("Take my land")
+        history.push("Take my love")
+        buffer.set("I don't care")
+        assertThat(buffer.toString()).isEqualTo("I don't care")
+
+        history.scroll(-1, clampCursor = false)
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+        assertThat(buffer.cursor).isEqualTo(12)
+
+        history.scroll(-2, clampCursor = false)
+        assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
+        assertThat(buffer.cursor).isEqualTo(28)
     }
 
     @Test fun searchHistory() {

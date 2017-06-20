@@ -13,8 +13,10 @@ interface IInputHistory {
     /**
      * Scroll the history by [dir], where positive numbers move to more recent
      * items and negative numbers move to older, updating the attached InputBuffer
+     * @param clampCursor If True (default), will prevent the cursor from going past
+     *  buffer.size-1; if false, it will still clamp it to buffer.size
      */
-    fun scroll(dir: Int)
+    fun scroll(dir: Int, clampCursor: Boolean = true)
 
     /**
      * Search backwards from the current historyOffset position

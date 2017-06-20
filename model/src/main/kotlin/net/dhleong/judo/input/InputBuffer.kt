@@ -66,10 +66,19 @@ class InputBuffer {
     val size: Int
         get() = buffer.length
 
-    fun set(value: String) {
+    /**
+     * @param clampCursor If True (default), will prevent the cursor from going past
+     *  buffer.size-1; if false, it will still clamp it to buffer.size
+     */
+    fun set(value: String, clampCursor: Boolean = true) {
         buffer.setLength(0)
         buffer.append(value)
-        cursor = value.length
+
+        if (clampCursor) {
+            cursor = maxOf(0, value.length - 1)
+        } else {
+            cursor = value.length
+        }
     }
 
     fun delete(range: IntRange) {

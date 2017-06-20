@@ -34,7 +34,7 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
      * Scroll the history by [dir], where positive numbers move to more recent
      * items and negative numbers move to older, updating the attached InputBuffer
      */
-    override fun scroll(dir: Int) {
+    override fun scroll(dir: Int, clampCursor: Boolean) {
         if (lastBufferValue == null && dir < 0) {
             lastBufferValue = buffer.toString()
         }
@@ -46,11 +46,11 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
 
         if (historyOffset == 0) {
             lastBufferValue?.let {
-                buffer.set(it)
+                buffer.set(it, clampCursor)
                 lastBufferValue = null
             }
         } else {
-            buffer.set(contents[contents.size + historyOffset])
+            buffer.set(contents[contents.size + historyOffset], clampCursor)
         }
     }
 

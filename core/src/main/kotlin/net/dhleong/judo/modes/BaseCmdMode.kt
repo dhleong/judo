@@ -245,8 +245,8 @@ abstract class BaseCmdMode(
     })
 
     val mapping = KeyMapping(
-        keys("<up>") to { _ -> history.scroll(-1) },
-        keys("<down>") to { _ -> history.scroll(1) },
+        keys("<up>") to { _ -> history.scroll(-1, clampCursor = false) },
+        keys("<down>") to { _ -> history.scroll(1, clampCursor = false) },
 
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())

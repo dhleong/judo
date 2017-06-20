@@ -32,8 +32,8 @@ class InsertMode(
     override val name = "insert"
 
     private val mapping = KeyMapping(
-        keys("<up>") to { _ -> history.scroll(-1) },
-        keys("<down>") to { _ -> history.scroll(1) },
+        keys("<up>") to { _ -> history.scroll(-1, clampCursor = false) },
+        keys("<down>") to { _ -> history.scroll(1, clampCursor = false) },
 
         keys("<alt bs>") to actionOn(wordMotion(-1, false)) { _, range ->
             buffer.deleteWithCursor(range.start..range.endInclusive, clampCursor = false)
