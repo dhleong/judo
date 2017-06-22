@@ -593,14 +593,13 @@ class JudoCore(
         }
 
         if (e is ScriptExecutionException) {
-            renderer.appendOutput("${prefix}ScriptExecutionException:")
-            appendOutput(OutputLine(e.message!!))
+            appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"))
             e.stackTrace.map { "  $it" }
                 .forEach { renderer.appendOutput(it) }
             return
         }
 
-        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message} "))
+        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"))
         e.stackTrace.map { "  $it" }
             .forEach { renderer.appendOutput(it) }
         e.cause?.let {
