@@ -125,6 +125,10 @@ class PythonCmdMode(
         val modules = python.systemState.modules as PyStringMap
         modules.__setitem__("judo", asModule)
 
+        // don't override our input()!!
+        val builtins = modules.__getitem__("__builtin__")
+        builtins.dict.__setitem__("input", globals.__getitem__("input"))
+
         modules.keys().asIterable().forEach {
             keepModules.add(it.asString())
         }
