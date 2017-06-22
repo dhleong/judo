@@ -88,6 +88,22 @@ class PythonCmdModeTest {
             .isEqualTo("this is awesome")
     }
 
+    @Test fun alias_multiDecorator() {
+        mode.execute("""
+            |@alias('cool')
+            |@alias('shiny')
+            |def handleAlias(): return "awesome"
+            """.trimMargin())
+
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.hasAliasFor("shiny")).isTrue()
+
+        assertThat(judo.aliases.process("this is cool").toString())
+            .isEqualTo("this is awesome")
+        assertThat(judo.aliases.process("this is shiny").toString())
+            .isEqualTo("this is awesome")
+    }
+
     @Test fun alias_returnNothing() {
         mode.execute("""
             |@alias('cool')
@@ -119,6 +135,43 @@ class PythonCmdModeTest {
         assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
         judo.triggers.process("this is cool")
         assertThat(judo.echos).containsExactly("awesome")
+    }
+
+    @Test fun trigger_multiDecorator() {
+        mode.execute("""
+            |@trigger('cool')
+            |@trigger('shiny')
+            |def handleTrigger(): echo("awesome")
+            """.trimMargin())
+
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("shiny")).isTrue()
+
+        judo.triggers.process("this is cool")
+        assertThat(judo.echos).containsExactly("awesome")
+
+        judo.triggers.process("this is shiny")
+        assertThat(judo.echos).containsExactly("awesome", "awesome")
+    }
+
+    @Test fun triggerAndAlias() {
+        mode.execute("""
+            |@trigger('cool')
+            |@alias('shiny')
+            |def handleTriggerOrAlias(): echo("awesome")
+            """.trimMargin())
+
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("shiny")).isFalse()
+        assertThat(judo.aliases.hasAliasFor("cool")).isFalse()
+        assertThat(judo.aliases.hasAliasFor("shiny")).isTrue()
+
+        judo.triggers.process("this is cool")
+        assertThat(judo.echos).containsExactly("awesome")
+
+        judo.send("shiny", fromMap = false)
+        assertThat(judo.sends).isEmpty()
+        assertThat(judo.echos).containsExactly("awesome", "awesome")
     }
 
     @Test fun prompt() {

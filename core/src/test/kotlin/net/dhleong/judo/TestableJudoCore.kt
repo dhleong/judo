@@ -24,7 +24,10 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
     }
 
     override fun send(text: String, fromMap: Boolean) {
-        sends.add(text)
+        val processed = aliases.process(text)
+        if (!processed.isEmpty()) {
+            sends.add(processed.toString())
+        }
     }
 
     override fun echo(vararg objects: Any?) {
