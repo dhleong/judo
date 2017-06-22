@@ -30,6 +30,7 @@ class PythonCmdMode(
 ) : BaseCmdMode(judo, inputBuffer, rendererInfo, history) {
 
     private val python: PythonInterpreter
+    private val keepModules = HashSet<String>()
 
     init {
         Options.importSite = false
@@ -121,7 +122,12 @@ class PythonCmdMode(
 
         // also, add as a module
         val asModule = PyModule("judo", globals)
-        python.systemState.modules.__setitem__("judo", asModule)
+        val modules = python.systemState.modules as PyStringMap
+        modules.__setitem__("judo", asModule)
+
+        modules.keys().asIterable().forEach {
+            keepModules.add(it.asString())
+        }
     }
 
     private fun defineAlias(alias: String, handler: Any) {
@@ -194,6 +200,23 @@ class PythonCmdMode(
         wrapExceptions(lineExecution = true) {
             python.exec(code)
         }
+    }
+
+    override fun reload() {
+        // clean up modules
+        val modules = python.systemState.modules as PyStringMap
+        val toRemove = HashSet<PyObject>()
+        modules.keys().asIterable()
+            .filter { it.asString() !in keepModules }
+            .forEach {
+                toRemove.add(it)
+            }
+
+        for (keyToRemove in toRemove) {
+            modules.__delitem__(keyToRemove)
+        }
+
+        super.reload()
     }
 
     override fun readFile(file: File) {

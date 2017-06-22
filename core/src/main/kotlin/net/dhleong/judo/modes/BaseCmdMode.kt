@@ -372,9 +372,7 @@ abstract class BaseCmdMode(
         }
     }
 
-    fun reload() {
-        // FIXME: unload loaded modules
-
+    open fun reload() {
         lastReadFile?.let {
             readFile(it)
             judo.echo("Reloaded $it")

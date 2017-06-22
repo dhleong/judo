@@ -20,6 +20,9 @@ class AliasManager : IAliasManager {
     }
 
     private fun define(inputSpec: String, outputSpec: String?, parser: AliasProcesser) {
+        // de-dup
+        aliases.removeIf { it.original == inputSpec }
+
         aliases.add(Alias.compile(inputSpec, outputSpec, parser))
     }
 
