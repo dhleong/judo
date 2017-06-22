@@ -124,7 +124,8 @@ class PythonCmdMode(
             judo.aliases.define(alias, { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                        .__tojava__(String::class.java)
-                    as String
+                    as String?
+                    ?: ""
             })
         } else {
             judo.aliases.define(alias, handler as String)

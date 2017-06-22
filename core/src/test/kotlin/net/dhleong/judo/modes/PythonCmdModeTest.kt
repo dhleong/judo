@@ -88,6 +88,17 @@ class PythonCmdModeTest {
             .isEqualTo("this is awesome")
     }
 
+    @Test fun alias_returnNothing() {
+        mode.execute("""
+            |@alias('cool')
+            |def handleAlias(): pass
+            """.trimMargin())
+
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("cool").toString())
+            .isEmpty()
+    }
+
     @Test fun trigger() {
         mode.execute("""
             |def handleTrigger(): echo("awesome")

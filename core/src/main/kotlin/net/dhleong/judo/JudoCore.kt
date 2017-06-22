@@ -293,11 +293,29 @@ class JudoCore(
         scrollToBottom()
 
         val toSend: String
-        try {
-            toSend = aliases.process(text).toString()
-        } catch (e: AliasProcessingException) {
-            appendError(e)
-            return
+        if (fromMap || text.isEmpty()) {
+            // NOTE: we don't process text sent from mappings or
+            // scripts for aliases. Both would be done with send(),
+            // and it doesn't seem to make sense that to get
+            // alias-ified (not to mention the potential for unintended
+            // recursion). We can revisit this later if it's a problem
+            toSend = text
+        } else {
+            try {
+                val processed = aliases.process(text)
+                if (!text.isEmpty() && processed.isEmpty()) {
+                    // if the original text was empty, it's okay to
+                    // send it; if it *became* empty, however, we
+                    // probably don't want to (EG: an alias to a
+                    // function that sends stuff itself)
+                    return
+                }
+
+                toSend = processed.toString()
+            } catch (e: AliasProcessingException) {
+                appendError(e)
+                return
+            }
         }
 
         if (doEcho) {

@@ -20,7 +20,7 @@ class AliasManager : IAliasManager {
     private val MAX_ITERATIONS = 50
 
     override fun process(input: CharSequence): CharSequence {
-        val builder = IStringBuilder.from(StringBuilder(input))
+        val builder = IStringBuilder.from(input)
 
         // keep looping as long as *some* alias was applied,
         //  in case there was a recursive alias
