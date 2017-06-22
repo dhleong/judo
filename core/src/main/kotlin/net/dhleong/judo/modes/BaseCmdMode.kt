@@ -273,9 +273,27 @@ abstract class BaseCmdMode(
                 clearBuffer()
                 exitMode()
 
-                if (code == "help") {
-                    showHelp()
-                } else if (code.startsWith("help")) {
+                // some special no-arg "commands"
+                when (code) {
+                    "alias" -> {
+                        judo.echo()
+                        judo.echo(judo.aliases)
+                        return
+                    }
+
+                    "help" -> {
+                        showHelp()
+                        return
+                    }
+
+                    "trigger" -> {
+                        judo.echo()
+                        judo.echo(judo.triggers)
+                        return
+                    }
+                }
+
+                if (code.startsWith("help")) {
                     showHelp(code.substring(5))
                 } else if (!(code.contains('(') && code.contains(')')) && code !in COMMAND_HELP) {
                     showHelp(code)
@@ -355,6 +373,8 @@ abstract class BaseCmdMode(
     }
 
     fun reload() {
+        // FIXME: unload loaded modules
+
         lastReadFile?.let {
             readFile(it)
             judo.echo("Reloaded $it")

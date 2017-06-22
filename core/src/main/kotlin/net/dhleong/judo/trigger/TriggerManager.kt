@@ -30,4 +30,10 @@ class TriggerManager : ITriggerManager {
     fun hasTriggerFor(inputSpec: String): Boolean =
         aliases.hasAliasFor(inputSpec)
 
+    override fun toString(): String =
+        StringBuilder(1024).apply {
+            appendln("Triggers:")
+            appendln("=========")
+            aliases.describeContentsTo(this)
+        }.toString()
 }

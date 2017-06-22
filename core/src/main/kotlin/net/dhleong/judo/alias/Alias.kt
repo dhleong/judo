@@ -11,13 +11,14 @@ internal val VAR_REGEX = Regex("\\$(\\d+|\\{\\w+})")
  */
 class Alias(
     val original: String,
+    private val originalOutput: String?,
     private val pattern: Pattern,
     private val groups: List<String>,
     private val process: AliasProcesser
 ) {
 
     companion object {
-        fun compile(spec: String, processor: AliasProcesser): Alias {
+        fun compile(spec: String, outputSpec: String?, processor: AliasProcesser): Alias {
             val groups = mutableListOf<String>()
             var lastEnd = 0
             if (spec[0] == '^') {
@@ -54,7 +55,7 @@ class Alias(
                 if (spec[0] == '^') Pattern.compile("^$withVars(?=\\b|\\s|$)", Pattern.MULTILINE)
                 else Pattern.compile("\\b($withVars)\\b")
 
-            return Alias(spec, pattern, groups, processor)
+            return Alias(spec, outputSpec, pattern, groups, processor)
         }
     }
 
@@ -86,5 +87,14 @@ class Alias(
         input.replace(matcher.start(), matcher.end(), processed)
 
         return true
+    }
+
+    fun describeTo(out: Appendable) {
+        val aliasTo = originalOutput?.let { it } ?: "<function>"
+        out.apply {
+            append(original)
+            append('\t')
+            append(aliasTo)
+        }
     }
 }

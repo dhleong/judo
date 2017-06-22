@@ -194,7 +194,7 @@ class JudoCore(
     override fun echo(vararg objects: Any?) {
         // TODO colors?
         val asString = objects.joinToString(" ")
-        renderer.appendOutput("${ansi(0)}$asString")
+        appendOutput(OutputLine("${ansi(0)}$asString\n"))
 
         if (debug.isEnabled) {
             debugLogFile.appendText("\n## ECHO: $asString\n")
@@ -600,7 +600,7 @@ class JudoCore(
             return
         }
 
-        renderer.appendOutput("$prefix${e.javaClass.name}: ${e.message} ")
+        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message} "))
         e.stackTrace.map { "  $it" }
             .forEach { renderer.appendOutput(it) }
         e.cause?.let {

@@ -9,6 +9,7 @@ import org.python.core.Options
 import org.python.core.Py
 import org.python.core.PyException
 import org.python.core.PyFunction
+import org.python.core.PyModule
 import org.python.core.PyObject
 import org.python.core.PyStringMap
 import org.python.util.PythonInterpreter
@@ -117,6 +118,10 @@ class PythonCmdMode(
 
         // the naming here is insane, but correct
         python.locals = globals
+
+        // also, add as a module
+        val asModule = PyModule("judo", globals)
+        python.systemState.modules.__setitem__("judo", asModule)
     }
 
     private fun defineAlias(alias: String, handler: Any) {

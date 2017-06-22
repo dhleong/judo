@@ -4,20 +4,24 @@ import net.dhleong.judo.util.IStringBuilder
 
 class AliasManager : IAliasManager {
 
+    private val MAX_ITERATIONS = 50
+
     internal val aliases = mutableListOf<Alias>()
 
     override fun clear() =
         aliases.clear()
 
     override fun define(inputSpec: String, outputSpec: String) {
-        define(inputSpec, VariableOutputProcessor(outputSpec)::process)
+        define(inputSpec, outputSpec, VariableOutputProcessor(outputSpec)::process)
     }
 
     override fun define(inputSpec: String, parser: AliasProcesser) {
-        aliases.add(Alias.compile(inputSpec, parser))
+        define(inputSpec, null, parser)
     }
 
-    private val MAX_ITERATIONS = 50
+    private fun define(inputSpec: String, outputSpec: String?, parser: AliasProcesser) {
+        aliases.add(Alias.compile(inputSpec, outputSpec, parser))
+    }
 
     override fun process(input: CharSequence): CharSequence {
         val builder = IStringBuilder.from(input)
@@ -54,6 +58,19 @@ class AliasManager : IAliasManager {
 
     fun hasAliasFor(inputSpec: String): Boolean =
         aliases.any { it.original == inputSpec }
+
+    fun describeContentsTo(out: Appendable) =
+        aliases.forEach {
+            it.describeTo(out)
+            out.appendln()
+        }
+
+    override fun toString(): String =
+        StringBuilder(1024).apply {
+            appendln("Aliases:")
+            appendln("========")
+            describeContentsTo(this)
+        }.toString()
 }
 
 class VariableOutputProcessor(outputSpec: String) {
