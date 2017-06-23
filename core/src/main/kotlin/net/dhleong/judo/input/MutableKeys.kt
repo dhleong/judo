@@ -1,5 +1,7 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.util.describeTo
+import net.dhleong.judo.util.key
 import javax.swing.KeyStroke
 
 /**
@@ -61,6 +63,8 @@ interface Keys : Collection<KeyStroke> {
     fun slice(indices: IntRange): Keys
 
     fun clear()
+
+    fun describeTo(out: Appendable)
 }
 
 /**
@@ -87,6 +91,9 @@ class MutableKeys(initialCapacity: Int = 64) : Keys {
             && other.hashCode() == hash // bit of a hack
 
     override fun hashCode(): Int = hash
+
+    override fun describeTo(out: Appendable) =
+        strokes.forEach { it.describeTo(out) }
 
     fun push(stroke: KeyStroke) {
         strokes.add(stroke)

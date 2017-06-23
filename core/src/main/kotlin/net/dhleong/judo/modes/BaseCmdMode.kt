@@ -274,23 +274,8 @@ abstract class BaseCmdMode(
                 exitMode()
 
                 // some special no-arg "commands"
-                when (code) {
-                    "alias" -> {
-                        judo.echo()
-                        judo.echo(judo.aliases)
-                        return
-                    }
-
-                    "help" -> {
-                        showHelp()
-                        return
-                    }
-
-                    "trigger" -> {
-                        judo.echo()
-                        judo.echo(judo.triggers)
-                        return
-                    }
+                if (handleNoArgListingCommand(code)) {
+                    return
                 }
 
                 if (code.startsWith("help")) {
@@ -381,6 +366,46 @@ abstract class BaseCmdMode(
 
         judo.echo("No files read; nothing to reload")
     }
+
+    internal fun handleNoArgListingCommand(command: String): Boolean =
+        when (command) {
+            "alias" -> {
+                judo.echo()
+                judo.echo(judo.aliases)
+                true
+            }
+
+            "help" -> {
+                showHelp()
+                true
+            }
+
+            "cmap" -> {
+                judo.echo()
+                judo.printMappings("cmd")
+                true
+            }
+
+            "imap" -> {
+                judo.echo()
+                judo.printMappings("insert")
+                true
+            }
+
+            "nmap" -> {
+                judo.echo()
+                judo.printMappings("normal")
+                true
+            }
+
+            "trigger" -> {
+                judo.echo()
+                judo.echo(judo.triggers)
+                true
+            }
+
+            else -> false
+        }
 
     internal fun showHelp() {
         val commands = COMMAND_HELP.keys.sorted().toList()

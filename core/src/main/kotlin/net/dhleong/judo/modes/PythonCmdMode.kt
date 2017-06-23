@@ -63,8 +63,16 @@ class PythonCmdMode(
             "i" to "insert",
             "n" to "normal"
         ).forEach { (letter, modeName) ->
-            globals["${letter}map"] = asUnitPyFn<Any>(2) {
-                defineMap(modeName, it[0], it[1], true)
+            val minMapArgs =
+                if (letter.isEmpty()) 1
+                else 2
+            globals["${letter}map"] = asUnitPyFn<Any>(2, minArgs = minMapArgs) {
+                if (it.size == 1) {
+                    // special case; map(mode)
+                    judo.printMappings(it[0] as String)
+                } else {
+                    defineMap(modeName, it[0], it[1], true)
+                }
             }
             globals["${letter}noremap"] = asUnitPyFn<Any>(2) {
                 defineMap(modeName, it[0], it[1], false)
@@ -158,7 +166,8 @@ class PythonCmdMode(
             judo.map(
                 modeName,
                 fromKeys as String,
-                { mapTo.__call__() }
+                { mapTo.__call__() },
+                mapTo.toString()
             )
         } else {
             throw IllegalArgumentException("Unexpected map-to value")

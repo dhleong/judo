@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.util.key
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test

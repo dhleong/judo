@@ -246,14 +246,14 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    override fun map(mode: String, from: String, to: () -> Unit) {
+    override fun map(mode: String, from: String, to: () -> Unit, description: String) {
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")
             }
 
             val fromKeys = Keys.parse(from)
-            modeObj.userMappings.map(fromKeys, { _ -> to() })
+            modeObj.userMappings.map(fromKeys, { _ -> to() }, description)
             return
         }
 
@@ -262,6 +262,19 @@ class JudoCore(
             modes.keys
                 .filter { modes[it] is MappableMode }
                 .forEach { map(it, from, to) }
+            return
+        }
+
+        throw IllegalArgumentException("No such mode $mode")
+    }
+
+    override fun printMappings(mode: String) {
+        modes[mode]?.let { modeObj ->
+            if (modeObj !is MappableMode) {
+                throw IllegalArgumentException("$mode does not support mapping")
+            }
+
+            echo(modeObj.userMappings)
             return
         }
 

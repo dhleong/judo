@@ -1,8 +1,6 @@
 package net.dhleong.judo.input
 
 import net.dhleong.judo.IJudoCore
-import java.awt.event.KeyEvent
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -10,12 +8,14 @@ import javax.swing.KeyStroke
 
 typealias KeyAction = (IJudoCore) -> Unit
 
+data class KeyMapTarget(val action: KeyAction, val description: String)
+
 class KeyMapping() {
 
     val size: Int
         get() = keysMap.size
 
-    private val keysMap = HashMap<Keys, KeyAction>()
+    private val keysMap = HashMap<Keys, KeyMapTarget>()
     private val possibleMaps = HashMap<Keys, Int>()
 
     constructor(vararg mappings: Pair<Keys, KeyAction>) : this(listOf(*mappings))
@@ -31,12 +31,15 @@ class KeyMapping() {
         possibleMaps[keys]?.let { it > 0 }
             ?: false
 
-    fun match(keys: Keys): KeyAction? = keysMap[keys]
+    fun match(keys: Keys): KeyAction? = keysMap[keys]?.action
 
-    fun map(from: Keys, to: KeyAction) {
+    fun map(from: Keys, to: KeyAction, description: String = "(fn)") {
         if (from.isEmpty()) throw IllegalArgumentException("Mappings must not be empty")
 
-        keysMap[from] = to
+        keysMap[from] = KeyMapTarget(to, description.let {
+            if (it.isEmpty()) "(fn)"
+            else it
+        })
         (0 until from.size).forEach { mapEnd ->
             addPossible(from.slice(0..mapEnd), 1)
         }
@@ -52,6 +55,17 @@ class KeyMapping() {
             addPossible(from.slice(0..mapEnd), -1)
         }
     }
+
+    override fun toString(): String =
+        StringBuilder(1024).apply {
+            appendln("KeyMappings")
+            appendln("===========")
+            keysMap.forEach { (k, v) ->
+                k.describeTo(this)
+                append('\t')
+                appendln(v.description)
+            }
+        }.toString()
 
     private fun addPossible(slice: Keys, addCount: Int) {
         possibleMaps[slice]?.let {
@@ -69,40 +83,11 @@ class KeyMapping() {
             to.forEach {
                 core.feedKey(it, remap, true)
             }
-        })
+        }, StringBuilder().apply {
+            to.describeTo(this)
+        }.toString())
     }
 }
 
-fun key(string: String): KeyStroke {
-    val stroke: String
-    when (string) {
-        // special cases
-        " ", "20", "space" -> return KeyStroke.getKeyStroke(' ')
-        "bs" -> return KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
-        "alt bs" -> return KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, KeyEvent.ALT_DOWN_MASK)
-        "cr" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
-        "esc" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
-        "up" -> return KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
-        "down" -> return KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0)
-
-        else -> {
-            if ("typed" !in string) {
-                val lastSpace = string.lastIndexOf(' ')
-                if (lastSpace == -1) {
-                    stroke = "typed $string"
-                } else {
-                    val before = string.slice(0..lastSpace)
-                    val after = string.substring(lastSpace + 1)
-                    stroke = "$before typed $after"
-                }
-            } else {
-                stroke = string
-            }
-        }
-    }
-
-    return KeyStroke.getKeyStroke(stroke)
-        ?: throw IllegalArgumentException("Unable to parse `$stroke` into a KeyStroke")
-}
 
 fun keys(string: String) = Keys.parse(string)
