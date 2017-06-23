@@ -137,6 +137,17 @@ class PythonCmdModeTest {
         assertThat(judo.echos).containsExactly("awesome")
     }
 
+    @Test fun trigger_withDot() {
+        mode.execute("""
+            |@trigger('cool.')
+            |def handleTrigger(): echo("awesome.")
+            """.trimMargin())
+
+        assertThat(judo.triggers.hasTriggerFor("cool.")).isTrue()
+        judo.triggers.process("cool.")
+        assertThat(judo.echos).containsExactly("awesome.")
+    }
+
     @Test fun trigger_multiDecorator() {
         mode.execute("""
             |@trigger('cool')

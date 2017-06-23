@@ -53,7 +53,7 @@ class Alias(
             // do we need whitespace boundaries instead of word boundaries?
             val pattern =
                 if (spec[0] == '^') Pattern.compile("^$withVars(?=\\b|\\s|$)", Pattern.MULTILINE)
-                else Pattern.compile("\\b($withVars)\\b")
+                else Pattern.compile("\\b($withVars)(?=\\b|\\s|$)", Pattern.MULTILINE)
 
             return Alias(spec, outputSpec, pattern, groups, processor)
         }
