@@ -16,7 +16,7 @@ task clean(type: Delete) {
 }
 
 ext.vs = [
-    kotlin: '1.1.2-2',
+    kotlin: '1.1.3',
 
     commonsNet: '3.6',
     jline: '3.3.0',
