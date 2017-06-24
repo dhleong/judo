@@ -191,7 +191,7 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: ArrayList
                 if (atBoundary) -1 // don't bother searching; we're already there!
                 else findLastBefore(end) { Character.isWhitespace(it) }
 
-            if (boundary != -1) {
+            if (boundary != -1 && boundary > start) {
                 // found it!
                 // end *after* the whitespace
                 end = boundary + 1
@@ -200,7 +200,7 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: ArrayList
                     else WCWidth.wcwidth(codePointAt(end))
 
             } else {
-                // if we didn't find any boundary, just do a hard split
+                // if we didn't find any usable boundary, just do a hard split
                 // (or if this word ends RIGHT AT a boundary)
                 col = charWidth
             }

@@ -227,10 +227,8 @@ class JudoCore(
         if (MODE_STACK.read(state) && !modeStack.isEmpty()) {
             // actually, return to the previous mode
             val previousMode = modeStack.removeAt(modeStack.lastIndex)
-            echo("exitMode() into $previousMode (${previousMode.name})")
             activateMode(previousMode)
         } else {
-            echo("exitMode() into NORMAL")
             activateMode(normalMode)
         }
     }
