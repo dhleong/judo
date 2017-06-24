@@ -116,6 +116,7 @@ class JudoCore(
     })
 
     private var currentMode: Mode = normalMode
+    private val modeStack = ArrayList<Mode>()
 
     internal var running = true
     internal var doEcho = true
@@ -207,19 +208,31 @@ class JudoCore(
     override fun enterMode(modeName: String) {
         val mode = modes[modeName]
         if (mode != null) {
-            activateMode(mode)
+            enterMode(mode)
         } else {
             throw IllegalArgumentException("No such mode `$modeName`")
         }
     }
 
     override fun enterMode(mode: Mode) {
+        if (MODE_STACK.read(state) &&
+            (modeStack.isEmpty() || modeStack.last() != mode)) {
+            modeStack.add(currentMode)
+        }
+
         activateMode(mode)
     }
 
     override fun exitMode() {
-        // TODO actually, return to the previous mode
-        activateMode(normalMode)
+        if (MODE_STACK.read(state) && !modeStack.isEmpty()) {
+            // actually, return to the previous mode
+            val previousMode = modeStack.removeAt(modeStack.lastIndex)
+            echo("exitMode() into $previousMode (${previousMode.name})")
+            activateMode(previousMode)
+        } else {
+            echo("exitMode() into NORMAL")
+            activateMode(normalMode)
+        }
     }
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
@@ -364,6 +377,7 @@ class JudoCore(
         when (stroke.keyCode) {
             KeyEvent.VK_ESCAPE -> {
                 if (currentMode != normalMode) {
+                    modeStack.clear()
                     activateMode(normalMode)
                 }
                 return

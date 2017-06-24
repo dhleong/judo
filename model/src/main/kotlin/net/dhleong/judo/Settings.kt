@@ -13,7 +13,8 @@ val ALL_SETTINGS = mutableMapOf<String, Setting<*>>()
  */
 
 val WORD_WRAP = declareSetting("wordwrap", true)
-
+val MODE_STACK = declareSetting("modestack", true,
+    "If True, exitMode() returns to the previous mode; if False, always returns to Normal mode.")
 
 
 /**
@@ -23,7 +24,8 @@ class Setting<E : Any>(
     name: String,
     val userName: String,
     val type: Class<E>,
-    val default: E
+    val default: E,
+    val description: String
 ) : StateKind<E>(name) {
 
     /**
@@ -35,8 +37,13 @@ class Setting<E : Any>(
 
 }
 
-private inline fun <reified E : Any> declareSetting(userName: String, default: E): Setting<E> {
-    val setting = Setting("net.dhleong.judo.settings.$userName", userName, E::class.java, default)
+private inline fun <reified E : Any> declareSetting(
+    userName: String, default: E, description: String = ""
+): Setting<E> {
+    val setting = Setting(
+        "net.dhleong.judo.settings.$userName", userName, E::class.java, default,
+        description
+    )
     ALL_SETTINGS[userName] = setting
     return setting
 }
