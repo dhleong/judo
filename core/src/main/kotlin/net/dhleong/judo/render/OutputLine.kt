@@ -4,6 +4,7 @@ import net.dhleong.judo.util.ansi
 import net.dhleong.judo.util.findTrailingEscape
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
+import org.jline.utils.WCWidth
 
 private val ANSI_CLEAR = ansi(0)
 
@@ -60,19 +61,24 @@ class OutputLine : CharSequence {
     override fun subSequence(startIndex: Int, endIndex: Int): OutputLine =
         OutputLine(rawChars.subSequence(startIndex, endIndex))
 
-    fun getDisplayedLinesCount(windowWidth: Int) =
-        getDisplayLines(windowWidth).size
+    fun getDisplayedLinesCount(windowWidth: Int, wordWrap: Boolean) =
+        getDisplayLines(windowWidth, wordWrap).size
 
-    fun getDisplayLines(windowWidth: Int): List<AttributedString> {
+    fun getDisplayLines(windowWidth: Int, wordWrap: Boolean = false): List<AttributedString> {
         if (!dirty && lastWindowWidth == windowWidth) return cachedDisplayLines
 
         cachedDisplayLines.clear()
 
-        // TODO wrap by word?
-        cachedDisplayLines.addAll(
-            toAttributedString()
-                .columnSplitLength(windowWidth)
-        )
+        if (wordWrap) {
+            val attributed = toAttributedString()
+            attributed.wordWrapInto(windowWidth, cachedDisplayLines)
+
+        } else {
+            cachedDisplayLines.addAll(
+                toAttributedString()
+                    .columnSplitLength(windowWidth)
+            )
+        }
 
         dirty = false
         lastWindowWidth = windowWidth
@@ -83,7 +89,7 @@ class OutputLine : CharSequence {
      * Split this OutputLine into enough OutputLines to render
      * comfortably within [windowWidth] columns
      */
-    fun getDisplayOutputLines(windowWidth: Int): List<OutputLine> {
+    fun getDisplayOutputLines(windowWidth: Int, wordWrap: Boolean): List<OutputLine> {
 
         if (rawChars.length < windowWidth) {
             // NOTE: this is not rigorous! Since rawChars has ansi
@@ -94,7 +100,7 @@ class OutputLine : CharSequence {
             return listOf(this)
         }
 
-        val lines = getDisplayLines(windowWidth)
+        val lines = getDisplayLines(windowWidth, wordWrap)
         var previousHint: CharSequence = ""
         return lines.fold(ArrayList<OutputLine>(lines.size)) { result, it ->
             val outputLine = sealedOutputLine(it, previousHint)
@@ -160,6 +166,70 @@ class OutputLine : CharSequence {
         rawChars.insert(0, styleHint)
         dirty = true
     }
+}
+
+private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: ArrayList<AttributedString>) {
+    val attrLength = length
+    var start = 0
+    var end = 0
+    var col = 0
+
+    while (end < attrLength) {
+        val cp = codePointAt(end)
+        val charWidth =
+            if (isHidden(end)) 0
+            else WCWidth.wcwidth(cp)
+
+        if (cp == '\n'.toInt()) {
+            out.add(subSequence(start, end))
+            start = end + 1
+            col = 0
+        } else if (col + charWidth > windowWidth) {
+            // WRAP! search back for the previous word boundary (if necessary)
+            val atBoundary = end == attrLength - 1 || Character.isWhitespace(cp)
+            val boundary =
+                if (atBoundary) -1 // don't bother searching; we're already there!
+                else findLastBefore(end) { Character.isWhitespace(it) }
+
+            if (boundary != -1) {
+                // found it!
+                // end *after* the whitespace
+                end = boundary + 1
+                col =
+                    if (isHidden(end)) 0
+                    else WCWidth.wcwidth(codePointAt(end))
+
+            } else {
+                // if we didn't find any boundary, just do a hard split
+                // (or if this word ends RIGHT AT a boundary)
+                col = charWidth
+            }
+
+            out.add(subSequence(start, end))
+            start = end
+        } else {
+            col += charWidth
+        }
+
+        end += Character.charCount(cp)
+    }
+
+    out.add(subSequence(start, end))
+}
+
+private inline fun CharSequence.findLastBefore(beforeIndex: Int, predicate: (Char) -> Boolean): Int {
+    var i = beforeIndex - 1
+    while (i >= 0) {
+
+        if (predicate(this[i])) {
+            // found it!
+            return i
+        }
+
+        --i
+    }
+
+    return -1
 }
 
 /**

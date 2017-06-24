@@ -12,8 +12,11 @@ fun main(args: Array<String>) {
     // prevent OSX from showing the title bar and dock icon
     System.setProperty("apple.awt.UIElement", "true")
 
+    // shared settings
+    val settings = StateMap()
+
     // make sure we can render
-    val renderer = JLineRenderer()
+    val renderer = JLineRenderer(settings)
     renderer.validate()
 
     // clean up after ourselves
@@ -33,7 +36,7 @@ fun main(args: Array<String>) {
     }
 
     // the main thing
-    val judo = JudoCore(renderer, debug = debugLevel)
+    val judo = JudoCore(renderer, settings, debug = debugLevel)
 
     // if they have a global init.py, read it
     if (USER_CONFIG_FILE.exists()) {

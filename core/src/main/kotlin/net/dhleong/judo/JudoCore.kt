@@ -31,6 +31,7 @@ import java.awt.event.KeyEvent
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.io.PrintWriter
 import javax.swing.KeyStroke
 
 /**
@@ -48,13 +49,14 @@ enum class DebugLevel {
 
 class JudoCore(
     val renderer: JudoRenderer,
+    settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
 
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-    override val state = StateMap()
+    override val state = settings
 
     private val parsedPrompts = ArrayList<IStringBuilder>(2)
 
@@ -127,6 +129,7 @@ class JudoCore(
 
     init {
         activateMode(currentMode)
+        renderer.settings = state
         renderer.onResized = {
             updateStatusLine(currentMode)
             updateInputLine()
@@ -599,7 +602,7 @@ class JudoCore(
 
     private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
         if (isRoot) {
-            debugLogFile.printWriter().use {
+            PrintWriter(FileOutputStream(debugLogFile, true)).use {
                 it.println(prefix)
                 e.printStackTrace(it)
             }
@@ -623,12 +626,12 @@ class JudoCore(
     /** NOTE: public for testing only */
     fun onIncomingBuffer(buffer: CharArray, count: Int) {
         renderer.inTransaction {
+            val line = OutputLine(buffer, 0, count)
+
             try {
-                val line = OutputLine(buffer, 0, count)
                 appendOutput(line)
             } catch (e: Throwable) {
-//                appendError(e, "ERROR")
-                throw e
+                appendError(e, "ERROR")
             }
         }
     }

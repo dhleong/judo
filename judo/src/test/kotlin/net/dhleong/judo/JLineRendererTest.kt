@@ -13,9 +13,12 @@ import org.junit.Test
 class JLineRendererTest {
 
     lateinit var renderer: JLineRenderer
+    val settings = StateMap(
+        WORD_WRAP to false
+    )
 
     @Before fun setUp() {
-        renderer = JLineRenderer()
+        renderer = JLineRenderer(settings)
         renderer.windowWidth = 42
         renderer.windowHeight = 22
         renderer.outputWindowHeight = 20
@@ -134,7 +137,7 @@ class JLineRendererTest {
     @Test fun appendOutput_resumePartial_splitAnsi_integration() {
         // we've tested the core handling above, so let's make sure
         // JudoCore integrates into it correctly
-        val core = JudoCore(renderer)
+        val core = JudoCore(renderer, settings)
 
         val ansi = ansi(fg=2)
         val firstHalf = ansi.slice(0..ansi.lastIndex-1)
@@ -221,7 +224,7 @@ class JLineRendererTest {
 
     @Test fun catchSplitPrompts() {
 
-        val judo = JudoCore(renderer)
+        val judo = JudoCore(renderer, settings)
         judo.prompts.define("HP: $1", "(hp: $1)")
 
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
@@ -238,7 +241,7 @@ class JLineRendererTest {
 
     @Test fun catchSplitPrompts_splitAnsi() {
 
-        val judo = JudoCore(renderer)
+        val judo = JudoCore(renderer, settings)
         judo.prompts.define("HP: $1", "(hp: $1)")
 
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
@@ -409,7 +412,7 @@ class JLineRendererTest {
     }
 
     @Test fun continueStyleAcrossLines() {
-        val core = JudoCore(renderer)
+        val core = JudoCore(renderer, settings)
 
         val lineOne = "${ansi(1,1)}Take my love,\r\n"
         val lineTwo = "Take my land...\r\n"
@@ -434,7 +437,7 @@ class JLineRendererTest {
         assertThat(OutputLine(lineOne.trimEnd()).getFinalStyle().toString())
             .isEqualTo(ansi(1,4).toString())
 
-        val core = JudoCore(renderer)
+        val core = JudoCore(renderer, settings)
         core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
         core.onIncomingBuffer("\r\n".toCharArray(), 2) // empty line
         core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
@@ -455,7 +458,7 @@ class JLineRendererTest {
         assertThat(OutputLine(lineOne).getFinalStyle().toString())
             .isEqualTo(ansi(1,2).toString())
 
-        val core = JudoCore(renderer)
+        val core = JudoCore(renderer, settings)
         core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
         core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
 
@@ -474,7 +477,7 @@ class JLineRendererTest {
     }
 
     @Test fun continueEmptyStyleAcrossLines() {
-        val core = JudoCore(renderer)
+        val core = JudoCore(renderer, settings)
 
         val lineOne = "${ansi(1,1)}\r\n"
         val lineTwo = "Take my love...\r\n"

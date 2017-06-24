@@ -53,6 +53,8 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      */
     var onResized: OnResizedEvent?
 
+    var settings: StateMap
+
     /**
      * Make sure this renderer can be used
      */

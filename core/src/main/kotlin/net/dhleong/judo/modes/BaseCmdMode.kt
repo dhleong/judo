@@ -1,7 +1,9 @@
 package net.dhleong.judo.modes
 
+import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.Setting
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.IInputHistory
@@ -173,6 +175,15 @@ private val COMMAND_HELP = mutableMapOf(
     "send" to buildHelp(
         "send(text: String)",
         "Send some text to the connected server."
+    ),
+
+    "set" to buildHelp(
+        listOf(
+            "set(setting: String, value)",
+            "set(setting: String)",
+            "set"
+        ),
+        "Set or get the value of a setting, or list all settings"
     ),
 
     "startInsert" to buildHelp(
@@ -365,6 +376,57 @@ abstract class BaseCmdMode(
         }
 
         judo.echo("No files read; nothing to reload")
+    }
+
+    protected fun set(args: Array<Any>) =
+        when (args.size) {
+            1 -> echoSettingValue(args[0] as String)
+            2 -> {
+                val settingName = args[0] as String
+                set(settingName, args[1])
+                echoSettingValue(settingName)
+            }
+
+            else -> {
+                judo.echo("Settings")
+                judo.echo("========")
+                ALL_SETTINGS.keys.forEach(this::echoSettingValue)
+            }
+        }
+
+    private fun echoSettingValue(settingName: String) =
+        withSetting(settingName) { setting ->
+            val value = setting.read(judo.state)
+            val isDefaultFlag =
+                if (value == setting.default) " (default)"
+                else ""
+
+            val valueDisp =
+                if (value is String) """"$value""""
+                else value
+
+            judo.echo("${setting.userName} = $valueDisp$isDefaultFlag")
+        }
+
+    fun set(settingName: String, value: Any) {
+        withSetting(settingName) {
+            if (!it.type.isAssignableFrom(value.javaClass)) {
+                throw ScriptExecutionException(
+                    "$value is invalid for setting `$settingName` (requires: ${it.type})")
+            }
+
+            judo.state[it] = it.type.cast(value) as Any
+        }
+    }
+
+    private inline fun withSetting(settingName: String, block: (Setting<Any>) -> Unit) {
+        ALL_SETTINGS[settingName]?.let {
+            @Suppress("UNCHECKED_CAST")
+            block(it as Setting<Any>)
+            return
+        }
+
+        throw ScriptExecutionException("No such setting `$settingName`")
     }
 
     internal fun handleNoArgListingCommand(command: String): Boolean =

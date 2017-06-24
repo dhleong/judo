@@ -18,6 +18,7 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
     override val aliases = AliasManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
+    override val state = StateMap()
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
         maps.add(arrayOf(mode, from, to, remap))

@@ -2,10 +2,12 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.TestableJudoCore
 import net.dhleong.judo.TestableJudoRenderer
+import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.InputHistory
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
 import org.junit.Test
 
@@ -212,6 +214,33 @@ class PythonCmdModeTest {
 
         assertThat(judo.echos)
             .containsExactly("magic")
+    }
+
+    @Test fun settings() {
+        assertThat(judo.state[WORD_WRAP]).isNull()
+
+        assertThatThrownBy {
+            mode.execute("set('nonsense', True)")
+        }.hasMessageContaining("No such setting")
+
+        assertThatThrownBy {
+            mode.execute("set('wordwrap', 'string?')")
+        }.hasMessageContaining("is invalid for")
+
+        mode.execute("set('wordwrap', True)")
+
+        assertThat(judo.state[WORD_WRAP]).isEqualTo(true)
+    }
+
+    @Test fun echoSettings() {
+        assertThat(judo.state[WORD_WRAP]).isNull()
+
+        mode.execute("set('wordwrap')")
+        assertThat(judo.echos).containsExactly("wordwrap = true (default)")
+        judo.echos.clear()
+
+        mode.execute("set('wordwrap', False)")
+        assertThat(judo.echos).containsExactly("wordwrap = false")
     }
 
     @Test fun dontOverwiteBuiltins() {

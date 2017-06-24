@@ -1,6 +1,7 @@
 package net.dhleong.judo.motions
 
 import net.dhleong.judo.JudoCore
+import net.dhleong.judo.StateMap
 import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.setInput
@@ -19,7 +20,7 @@ class MotionIntegrationTest {
     lateinit var judo: JudoCore
 
     @Before fun setUp() {
-        judo = JudoCore(renderer)
+        judo = JudoCore(renderer, StateMap())
     }
 
     @After fun tearDown() {

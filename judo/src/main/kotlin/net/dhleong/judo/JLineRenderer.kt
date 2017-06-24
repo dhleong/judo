@@ -38,6 +38,7 @@ val KEY_DELETE = 127
 val KEY_TIMEOUT = -2
 
 class JLineRenderer(
+    override var settings: StateMap,
     val enableMouse: Boolean = false
 ) : JudoRenderer, BlockingKeySource {
 
@@ -317,13 +318,14 @@ class JLineRenderer(
         // TODO should we do better?
         searchResultLine = -1
 
+        val wordWrap = WORD_WRAP.read(settings)
         var scrolled = 0
         for (i in range) {
             if (i < 0) break
             if (i >= output.size) break
 
             scrollbackBottom = i
-            val displayedLines = output[end - i].getDisplayedLinesCount(width)
+            val displayedLines = output[end - i].getDisplayedLinesCount(width, wordWrap)
             val renderedLines = displayedLines - scrollbackOffset
             val newScrolled = scrolled + renderedLines
             if (newScrolled == desired) {
@@ -576,11 +578,12 @@ class JLineRenderer(
     }
 
     fun getDisplayLines(): List<AttributedString> {
+        val wordWrap = WORD_WRAP.read(settings)
         val start = output.lastIndex - scrollbackBottom
         val end = maxOf(0, start - outputWindowHeight)
         val lines = output.slice(end..start)
             .asSequence()
-            .flatMap { it.getDisplayLines(windowWidth).asSequence() }
+            .flatMap { it.getDisplayLines(windowWidth, wordWrap).asSequence() }
             .toList()
             .dropLast(scrollbackOffset)
             .takeLast(outputWindowHeight)
@@ -644,7 +647,7 @@ class JLineRenderer(
             linesAdded = 1
         } else {
             // full line. split away!
-            val split = splitCandidate.getDisplayOutputLines(windowWidth)
+            val split = splitCandidate.getDisplayOutputLines(windowWidth, WORD_WRAP.read(settings))
             linesAdded = split.size
             split.forEach(output::add)
         }
