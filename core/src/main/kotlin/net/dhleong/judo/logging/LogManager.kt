@@ -15,7 +15,7 @@ class LogManager : ILogManager {
     }
 
     override fun log(rawOutput: CharSequence) {
-        TODO("not implemented")
+//        TODO("not implemented")
     }
 
 }
