@@ -58,7 +58,12 @@ fun findTrailingEscape(chars: CharSequence): CharSequence? {
 
     return (lastIndex-1 downTo start)
         .firstOrNull { chars[it] == ESCAPE_CHAR }
-        ?.let { chars.subSequence(it..lastIndex) }
+        ?.let {
+            // NOTE: even though there *was* an `m`, it might actually
+            // be text; so, let's search for the definite `m`
+            val escapeSequenceEnd = chars.indexOf('m', startIndex = it)
+            chars.subSequence(it..escapeSequenceEnd)
+        }
 }
 
 fun stripAnsi(string: CharSequence): String =

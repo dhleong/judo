@@ -23,9 +23,6 @@ import java.io.StringWriter
 import java.util.EnumSet
 import javax.swing.KeyStroke
 
-
-
-
 /**
  * @author dhleong
  */

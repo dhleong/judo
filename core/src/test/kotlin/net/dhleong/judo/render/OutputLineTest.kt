@@ -19,6 +19,16 @@ class OutputLineTest {
 
     }
 
+    @Test fun getFinalStyle_butNotTooMuch() {
+        // this is from a real world situation: there happens to be
+        // an escape sequence *just* at the edge of the search limit,
+        // but there's some extra text before the end of the line.
+        // We want that style, but not the extra text
+        val line = OutputLine("E\u001B[0;32mmpori\u001B[1;30mum")
+        assertThat(line.getFinalStyle())
+            .isEqualTo("\u001B[1;30m")
+    }
+
     @Test(timeout = 3000) fun wordWrap() {
         val line = OutputLine("Take my love, take my land")
         assertThat(line.getWrappedStrings(10))
