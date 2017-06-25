@@ -26,6 +26,16 @@ class HtmlLogFormatterTest {
         assertThat(out).isEqualTo("&lt;mreynolds&gt;")
     }
 
+    @Test fun simpleColor() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[37;42mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span class="d7 b42">Color"""
+        )
+    }
+
     @Test fun trueColor() {
         val out = withStringWriter {
             formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor", it)

@@ -17,13 +17,22 @@ class HtmlLogFormatter : ILogFormatter {
 
     private val dateFormatter = SimpleDateFormat(DATE_FORMAT)
 
-    // TODO simple color classes
     private val STYLES =
         """
+        font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace;
         .i { font-style: italic; }
         .u { text-decoration: underline; }
         .s { text-decoration: line-through; }
         .s.u { text-decoration: line-through underline; }
+		.d0 { color: #000; } .l0 { color: #555; } .b40 { background-color: #000; } .b50 { background-color: #555 }
+		.d1 { color: #B00; } .l1 { color: #F55; } .b41 { background-color: #B00; } .b51 { background-color: #F55 }
+		.d2 { color: #0B0; } .l2 { color: #5F5; } .b42 { background-color: #0B0; } .b52 { background-color: #5F5 }
+		.d3 { color: #BB0; } .l3 { color: #FF5; } .b43 { background-color: #BB0; } .b53 { background-color: #FF5 }
+		.d4 { color: #00B; } .l4 { color: #55F; } .b44 { background-color: #00B; } .b54 { background-color: #55F }
+		.d5 { color: #B0B; } .l5 { color: #F5F; } .b45 { background-color: #B0B; } .b55 { background-color: #F5F }
+		.d6 { color: #0BB; } .l6 { color: #5FF; } .b46 { background-color: #0BB; } .b56 { background-color: #5FF }
+		.d7 { color: #BBB; } .l7 { color: #FFF; } .b47 { background-color: #BBB; } .b57 { background-color: #FFF }
+		.d9 { color: #FFF; } .l9 { color: #FFF; } .b49 { background-color: #000; } .b59 { background-color: #000 }
         """.trimIndent()
 
     private val HEADER_FORMAT =
@@ -93,8 +102,8 @@ class HtmlLogFormatter : ILogFormatter {
     }
 
     internal fun appendStyle(out: Writer) {
-        val simpleFg = stylist.fg in 0..16 && stylist.fg != 9
-        val simpleBg = stylist.bg in 0..16 && stylist.bg != 9
+        val simpleFg = stylist.fg in 0..7
+        val simpleBg = stylist.bg in 0..7
         if (stylist.hasStyle() || simpleFg || simpleBg) {
             out.write(" class=\"")
 
@@ -109,8 +118,8 @@ class HtmlLogFormatter : ILogFormatter {
             out.write("\"")
         }
 
-        val hasHexFg = stylist.fg < -1 || stylist.fg > 16
-        val hasHexBg = stylist.bg < -1 || stylist.bg > 16
+        val hasHexFg = stylist.fg < -1 || stylist.fg > 7
+        val hasHexBg = stylist.bg < -1 || stylist.bg > 7
         if (hasHexFg || hasHexBg) {
             out.write(" style=\"")
 
@@ -129,13 +138,15 @@ class HtmlLogFormatter : ILogFormatter {
         }
     }
 
-    private fun pickBgClass(): String {
-        TODO("simple bg class")
-    }
+    private fun pickBgClass(): String =
+        "b%d".format(
+            if (stylist.bg < 8) 40 + stylist.bg
+            else 50 + stylist.bg - 8
+        )
 
-    private fun pickFgClass(): String {
-        TODO("simple fg class")
-    }
+    private fun pickFgClass(): String =
+        (if (stylist.bold) "l%d"
+         else "d%d").format(stylist.fg)
 
     private fun writeClass(out: Writer, className: String, first: Boolean): Boolean {
         if (!first) out.append(' ')
