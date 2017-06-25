@@ -7,6 +7,7 @@ import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
+import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.modes.BaseCmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -54,6 +55,7 @@ class JudoCore(
 ) : IJudoCore {
 
     override val aliases = AliasManager()
+    override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val state = settings
@@ -494,6 +496,9 @@ class JudoCore(
 
             echo("Disconnected from $connection")
             updateStatusLine(currentMode)
+
+            // stop logging
+            logging.unconfigure()
         }
 
         this.connection = null
@@ -550,10 +555,15 @@ class JudoCore(
         }
     }
 
-    fun processOutput(rawOutput: CharSequence) {
-        outputCompletions.process(rawOutput)
-        triggers.process(rawOutput)
-        processAndStripPrompt(rawOutput)
+    internal fun processOutput(line: OutputLine) {
+        logging.log(line)
+
+        // convert to AttributedString before processing
+        // so we can ignore ANSI stuff when matching
+        val attributed = line.toAttributedString()
+        outputCompletions.process(attributed)
+        triggers.process(attributed)
+        processAndStripPrompt(attributed)
     }
 
     private fun activateMode(mode: Mode) {
@@ -666,7 +676,7 @@ class JudoCore(
                         buffer.subSequence(lastLineEnd, i),
                         isPartialLine = false
                     ) as OutputLine
-                    processOutput(actualLine.toAttributedString())
+                    processOutput(actualLine)
 
                     if (i + 1 < count && buffer[i + 1] == opposite) {
                         lastLineEnd = i + 2

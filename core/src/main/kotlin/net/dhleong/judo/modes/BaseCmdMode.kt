@@ -11,6 +11,7 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
+import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.hasCtrl
@@ -114,14 +115,27 @@ private val COMMAND_HELP = mutableMapOf(
         "Load and execute a script."
     ),
 
+    "logToFile" to buildHelp(
+        "logToFile(pathToFile: String, options: String)",
+        """Enable logging to the given file with the given options. `options` is
+          |a space-delimited string that may contain any of:
+          | append - Append output to the given file if it already exists, instead
+          |          of replacing it
+          | raw - Output the raw data received from the server, including ANSI codes
+          | plain - Output the plain text received from the server, with no coloring
+          | html - Output the data received from the server formatted as HTML.
+        """.trimMargin()
+    ),
+
     "input" to buildHelp(
         listOf(
             "input() -> String",
             "input(prompt: String) -> String"
         ),
-        "Request a string from the user, returning whatever they typed.\n" +
-        "NOTE: Unlike the equivalent function in Vim, input() DOES NOT\n" +
-        "currently consume pending input from mappings."
+        """Request a string from the user, returning whatever they typed.
+          |NOTE: Unlike the equivalent function in Vim, input() DOES NOT currently
+          |consume pending input from mappings.
+        """.trimMargin()
     ),
 
     "isConnected" to buildHelp(
@@ -341,6 +355,21 @@ abstract class BaseCmdMode(
         val file = File(pathToFile)
         readFile(file)
         judo.echo("Loaded $file")
+    }
+
+    fun logToFile(path: String, options: String = "append plain") {
+        val mode = when {
+            options.contains("append", ignoreCase = true) -> ILogManager.Mode.APPEND
+            else -> ILogManager.Mode.REPLACE
+        }
+        val format = when {
+            options.contains("html", ignoreCase = true) -> ILogManager.Format.HTML
+            options.contains("raw", ignoreCase = true) -> ILogManager.Format.RAW
+            else -> ILogManager.Format.PLAIN
+        }
+
+        // TODO resolve relative paths relative to the lastLoaded file?
+        judo.logging.configure(File(path), format, mode)
     }
 
     fun persistInput() {
