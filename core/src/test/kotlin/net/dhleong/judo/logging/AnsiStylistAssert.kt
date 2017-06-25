@@ -19,12 +19,28 @@ internal class AnsiStylistAssert(actual: AnsiStylist)
         return myself
     }
 
+    fun hasNoBg(): AnsiStylistAssert {
+        Java6Assertions.assertThat(actual.bg)
+            .isEqualTo(-1)
+            .overridingErrorMessage("Expected to have no specified bg, but was ${actual.bg}")
+        return myself
+    }
+
+
     fun hasFg(expected: Int): AnsiStylistAssert {
         Java6Assertions.assertThat(actual.fg)
             .describedAs("fg")
             .isEqualTo(expected)
         return myself
     }
+
+    fun hasNoFg(): AnsiStylistAssert {
+        Java6Assertions.assertThat(actual.fg)
+            .isEqualTo(-1)
+            .overridingErrorMessage("Expected to have no specified fg, but was ${actual.fg}")
+        return myself
+    }
+
 
     fun isBold(): AnsiStylistAssert {
         Java6Assertions.assertThat(actual.bold)

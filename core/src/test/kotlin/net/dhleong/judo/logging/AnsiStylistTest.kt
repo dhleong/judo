@@ -19,7 +19,7 @@ class AnsiStylistTest {
         stylist.readAnsi(ansi(fg=2))
         assertThat(stylist)
             .hasFg(2)
-            .hasBg(0)
+            .hasNoBg()
 
         stylist.readAnsi(ansi(bg=3))
         assertThat(stylist)
