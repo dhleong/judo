@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.IAliasManager
+import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.Closeable
@@ -56,6 +57,7 @@ interface IJudoCore {
 
     val aliases: IAliasManager
     val connection: Closeable?
+    val logging: ILogManager
     val prompts: IPromptManager
     val triggers: ITriggerManager
     val state: StateMap

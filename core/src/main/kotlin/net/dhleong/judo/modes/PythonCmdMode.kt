@@ -108,6 +108,10 @@ class PythonCmdMode(
         }
         globals["isConnected"] = asPyFn<Any, Boolean> { judo.isConnected() }
         globals["load"] = asUnitPyFn<String>(1) { load(it[0]) }
+        globals["logToFile"] = asUnitPyFn<String>(2, minArgs = 1) {
+            if (it.size == 1) logToFile(it[0])
+            else logToFile(it[0], it[1])
+        }
         globals["normal"] = asUnitPyFn<Any>(2, minArgs = 1) { feedKeys(it, mode = "normal") }
         globals["persistInput"] = asUnitPyFn<String>(1, minArgs = 0) {
             if (it.isNotEmpty()) {

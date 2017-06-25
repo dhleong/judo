@@ -7,6 +7,8 @@ import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
+import net.dhleong.judo.logging.ILogManager
+import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.modes.BaseCmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -54,6 +56,7 @@ class JudoCore(
 ) : IJudoCore {
 
     override val aliases = AliasManager()
+    override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val state = settings
@@ -639,6 +642,7 @@ class JudoCore(
     fun onIncomingBuffer(buffer: CharArray, count: Int) {
         renderer.inTransaction {
             val line = OutputLine(buffer, 0, count)
+            logging.log(line)
 
             try {
                 appendOutput(line)
