@@ -65,6 +65,8 @@ class HtmlLogFormatter : ILogFormatter {
         </html>
         """
 
+    private val COLOR_256_BLOCKS = charArrayOf('0', '5', '8', 'B', 'D', 'F')
+
     private val stylist = AnsiStylist()
 
     override fun writeHeader(out: Writer) {
@@ -170,9 +172,34 @@ class HtmlLogFormatter : ILogFormatter {
                 write(blue.toString())
                 write(")")
             }
-        } else {
+        } else if (intColor < 16) {
+            // high intensity color
+            out.write(when (intColor) {
+                8 -> "#888"
+                9 -> "#F00"
+                10 -> "#0F0"
+                11 -> "#FF0"
+                12 -> "#00F"
+                13 -> "#F0F"
+                14 -> "#0FF"
+                else -> "#FFF"
+            })
+        } else if (intColor < 232) {
             // 256 color
-            TODO("256 color")
+            val color = intColor - 16
+            val redPart = color / 36
+            val greenPart = (color % 36) / 6
+            val bluePart = (color % 6)
+
+            out.apply {
+                write("#")
+                append(COLOR_256_BLOCKS[redPart])
+                append(COLOR_256_BLOCKS[greenPart])
+                append(COLOR_256_BLOCKS[bluePart])
+            }
+        } else {
+            // grayscale
+            TODO("grayscale")
         }
     }
 }

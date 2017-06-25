@@ -36,6 +36,36 @@ class HtmlLogFormatterTest {
         )
     }
 
+    @Test fun color256_000() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;5;16mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: #000;">Color"""
+        )
+    }
+
+    @Test fun color256_FFF() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;5;231mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: #FFF;">Color"""
+        )
+    }
+
+    @Test fun color256_0FF() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;5;51mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: #0FF;">Color"""
+        )
+    }
+
     @Test fun trueColor() {
         val out = withStringWriter {
             formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor", it)
