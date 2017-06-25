@@ -27,5 +27,5 @@ interface ILogManager {
      */
     fun unconfigure()
 
-    fun log(rawOutput: CharSequence)
+    fun log(rawOutputLine: CharSequence)
 }

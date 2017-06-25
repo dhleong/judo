@@ -1,21 +1,64 @@
 package net.dhleong.judo.logging
 
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStreamWriter
+import java.io.Writer
+
+val DATE_FORMAT = "yyyy MMMM dd  hh:mm a"
 
 /**
  * @author dhleong
  */
 class LogManager : ILogManager {
+
+    var formatter: ILogFormatter? = null
+    var output: Writer? = null
+
     override fun configure(destination: File, format: ILogManager.Format, mode: ILogManager.Mode) {
-        TODO("not implemented")
+        val formatter = when (format) {
+            ILogManager.Format.RAW -> RawLogFormatter()
+            ILogManager.Format.HTML -> HtmlLogFormatter()
+            else -> PlainLogFormatter()
+        }
+
+        val append = mode == ILogManager.Mode.APPEND
+        val exists = destination.exists()
+        val output = BufferedWriter(
+            OutputStreamWriter(
+                FileOutputStream(
+                    destination,
+                    append
+                )
+            )
+        )
+
+        if (!(exists && append)) {
+            formatter.writeHeader(output)
+        }
+
+        this.formatter = formatter
+        this.output = output
     }
 
     override fun unconfigure() {
-        TODO("not implemented")
+        formatter = null
+        output?.let { out ->
+            out.flush()
+            out.close()
+
+            formatter?.apply {
+                writeFooter(out)
+            }
+        }
+        output = null
     }
 
-    override fun log(rawOutput: CharSequence) {
-//        TODO("not implemented")
+    override fun log(rawOutputLine: CharSequence) {
+        output?.let { out ->
+            formatter?.writeLine(rawOutputLine, out)
+        }
     }
 
 }
