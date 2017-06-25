@@ -127,12 +127,12 @@ class HtmlLogFormatter : ILogFormatter {
 
             if (hasHexFg) {
                 out.write("color: ")
-                colorToHex(stylist.fg, out)
+                writeIntColor(stylist.fg, out)
                 out.write(";")
             }
             if (hasHexBg) {
                 out.write("background-color: ")
-                colorToHex(stylist.bg, out)
+                writeIntColor(stylist.bg, out)
                 out.write(";")
             }
 
@@ -156,22 +156,14 @@ class HtmlLogFormatter : ILogFormatter {
         return false
     }
 
-    fun colorToHex(intColor: Int, out: Writer) {
+    fun writeIntColor(intColor: Int, out: Writer) {
         if (intColor < -1) {
             // "true" color
             val red = (intColor shr 16) and 0xFF
             val green = (intColor shr 8) and 0xFF
             val blue = intColor and 0xFF
 
-            out.apply {
-                write("rgb(")
-                write(red.toString())
-                write(",")
-                write(green.toString())
-                write(",")
-                write(blue.toString())
-                write(")")
-            }
+            writeRgb(red, green, blue, out)
         } else if (intColor < 16) {
             // high intensity color
             out.write(when (intColor) {
@@ -185,7 +177,10 @@ class HtmlLogFormatter : ILogFormatter {
                 else -> "#FFF"
             })
         } else if (intColor < 232) {
-            // 256 color
+            // 256 color (actually, 216 colors):
+            // the red increases one "block" (see constant above) every 36 numbers;
+            // the green increases one "block" every 6 numbers;
+            // and blue increases each step (within each 6-block of green)
             val color = intColor - 16
             val redPart = color / 36
             val greenPart = (color % 36) / 6
@@ -198,8 +193,24 @@ class HtmlLogFormatter : ILogFormatter {
                 append(COLOR_256_BLOCKS[bluePart])
             }
         } else {
-            // grayscale
-            TODO("grayscale")
+            // grayscale from black to white in 24 steps (IE [0,23])
+            // each one is ~10, but just multiplying by 10 doesn't get
+            // us very bright at 255 (actually it's 230). So, we'll just
+            // add 8 like on wikipedia
+            val gray = (intColor - 232) * 10 + 8
+            writeRgb(gray, gray, gray, out)
+        }
+    }
+
+    private fun writeRgb(red: Int, green: Int, blue: Int, out: Writer) {
+        out.apply {
+            write("rgb(")
+            write(red.toString())
+            write(",")
+            write(green.toString())
+            write(",")
+            write(blue.toString())
+            write(")")
         }
     }
 }

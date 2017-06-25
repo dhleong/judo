@@ -66,6 +66,26 @@ class HtmlLogFormatterTest {
         )
     }
 
+    @Test fun grayScale_8() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;5;232mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: rgb(8,8,8);">Color"""
+        )
+    }
+
+    @Test fun grayScale_238() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;5;255mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: rgb(238,238,238);">Color"""
+        )
+    }
+
     @Test fun trueColor() {
         val out = withStringWriter {
             formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor", it)
