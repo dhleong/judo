@@ -43,15 +43,16 @@ class LogManager : ILogManager {
     }
 
     override fun unconfigure() {
-        formatter = null
         output?.let { out ->
-            out.flush()
-            out.close()
-
             formatter?.apply {
                 writeFooter(out)
             }
+
+            out.flush()
+            out.close()
         }
+        
+        formatter = null
         output = null
     }
 
