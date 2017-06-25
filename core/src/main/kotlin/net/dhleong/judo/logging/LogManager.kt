@@ -51,7 +51,7 @@ class LogManager : ILogManager {
             out.flush()
             out.close()
         }
-        
+
         formatter = null
         output = null
     }

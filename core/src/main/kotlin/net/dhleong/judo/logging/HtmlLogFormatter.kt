@@ -19,7 +19,10 @@ class HtmlLogFormatter : ILogFormatter {
 
     private val STYLES =
         """
-        font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace;
+        body {
+            background-color: #000;
+            font-family: Consolas, Monaco, Lucida Console, Courier New, Courier, monospace;
+        }
         .i { font-style: italic; }
         .u { text-decoration: underline; }
         .s { text-decoration: line-through; }
@@ -48,7 +51,7 @@ class HtmlLogFormatter : ILogFormatter {
                 name="viewport"
                 content="width=device-width, initial-scale=1, user-scalable=0, maximum-scale=1, minimum-scale=1"
             >
-            <style type="text/css>
+            <style type="text/css">
             $STYLES
             </style>
           </head>
