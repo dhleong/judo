@@ -1,9 +1,12 @@
 package net.dhleong.judo.logging
 
 import net.dhleong.judo.util.ESCAPE_CHAR
+import java.io.IOException
 import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.Date
+
+
 
 /**
  * @author dhleong
@@ -14,9 +17,13 @@ class HtmlLogFormatter : ILogFormatter {
 
     private val dateFormatter = SimpleDateFormat(DATE_FORMAT)
 
-    // TODO styles
+    // TODO simple color classes
     private val STYLES =
         """
+        .i { font-style: italic; }
+        .u { text-decoration: underline; }
+        .s { text-decoration: line-through; }
+        .s.u { text-decoration: line-through underline; }
         """.trimIndent()
 
     private val HEADER_FORMAT =
@@ -62,10 +69,10 @@ class HtmlLogFormatter : ILogFormatter {
             val ch = input[i]
             when (ch) {
                 ESCAPE_CHAR -> {
-                    i = readAnsi(input, i)
-                    out.append("</span><span class=\"")
-                    appendStyleAsClasses(out)
-                    out.append("\">")
+                    i = stylist.readAnsi(input, i)
+                    out.append("</span><span")
+                    appendStyle(out)
+                    out.append(">")
                 }
 
                 '&' -> out.append("&amp;")
@@ -85,19 +92,237 @@ class HtmlLogFormatter : ILogFormatter {
         out.append(FOOTER)
     }
 
-    internal fun readAnsi(input: CharSequence, i: Int): Int {
-        // TODO
-        return i
+    internal fun appendStyle(out: Writer) {
+        val simpleFg = stylist.fg in 0..16 && stylist.fg != 9
+        val simpleBg = stylist.bg in 0..16 && stylist.bg != 9
+        if (stylist.hasStyle() || simpleFg || simpleBg) {
+            out.write(" class=\"")
+
+            var first = true
+            if (stylist.italic) first = writeClass(out, "i", first)
+            if (stylist.underline) first = writeClass(out, "u", first)
+            if (stylist.strikethrough) first = writeClass(out, "s", first)
+
+            if (simpleFg) first = writeClass(out, pickFgClass(), first)
+            if (simpleBg) writeClass(out, pickBgClass(), first)
+
+            out.write("\"")
+        }
+
+        val hasHexFg = stylist.fg < -1 || stylist.fg > 16
+        val hasHexBg = stylist.bg < -1 || stylist.bg > 16
+        if (hasHexFg || hasHexBg) {
+            out.write(" style=\"")
+
+            if (hasHexFg) {
+                out.write("color: ")
+                colorToHex(stylist.fg, out)
+                out.write(";")
+            }
+            if (hasHexBg) {
+                out.write("background-color: ")
+                colorToHex(stylist.bg, out)
+                out.write(";")
+            }
+
+            out.write("\"")
+        }
     }
 
-    internal fun appendStyleAsClasses(out: Writer) {
-        // TODO
+    private fun pickBgClass(): String {
+        TODO("simple bg class")
+    }
+
+    private fun pickFgClass(): String {
+        TODO("simple fg class")
+    }
+
+    private fun writeClass(out: Writer, className: String, first: Boolean): Boolean {
+        if (!first) out.append(' ')
+        out.append(className)
+        return false
+    }
+
+    fun colorToHex(intColor: Int, out: Writer) {
+        if (intColor < -1) {
+            // "true" color
+            val red = (intColor shr 16) and 0xFF
+            val green = (intColor shr 8) and 0xFF
+            val blue = intColor and 0xFF
+
+            out.apply {
+                write("rgb(")
+                write(red.toString())
+                write(",")
+                write(green.toString())
+                write(",")
+                write(blue.toString())
+                write(")")
+            }
+        } else {
+            // 256 color
+            TODO("256 color")
+        }
     }
 }
 
 internal class AnsiStylist {
-    var fg = 0
-    var bg = 0
+    var fg = -1
+    var bg = -1
     var bold = false
+    var faint = false
     var italic = false
+    var underline = false
+    var strikethrough = false
+
+    private val ansiWorkspace = StringBuilder()
+
+    // temporary state to avoid passing around args everywhere
+    // this makes us not threadsafe, but I can't imagine why
+    // we would ever need to be
+    private var offset = -1
+    private lateinit var input: CharSequence
+
+    fun hasStyle() = bold || faint || italic || underline || strikethrough
+
+    /**
+     * @return The new offset position
+     */
+    fun readAnsi(input: CharSequence, offset: Int): Int {
+        var i = offset
+        if (input[i++] != ESCAPE_CHAR) throw IllegalArgumentException("No escape sequence found")
+        if (input[i++] != '[') return i // just the
+
+        this.offset = i - 1 // start ON the [ for readNextIntPart to work
+        this.input = input
+
+        while (input[this.offset] != 'm') {
+            val number = readNextIntPart()
+            when (number) {
+                -1 -> return this.offset // unexpected end
+                0 -> reset()
+
+            // add flags
+                1 -> bold = true
+                2 -> faint = true
+                3 -> italic = true
+                4 -> underline = true
+//                        5 -> blink
+//                        7 -> inverse
+                9 -> strikethrough = true
+
+            // remove flags
+                21 -> bold = false
+                22 -> {
+                    bold = false
+                    faint = false
+                }
+                23 -> italic = false
+                24 -> underline = false
+                29 -> strikethrough = false
+
+            // basic colors
+                in 30..37 -> fg = (number - 30)
+                39 -> fg = -1
+
+                in 40..47 -> bg = (number - 40)
+                49 -> bg = -1
+
+            // fancy colors
+                38 -> fg = readColor()
+                48 -> bg = readColor()
+
+            // high-intensity colors
+                in 90..97 -> fg = (number - 90 + 8)
+                in 100..107 -> fg = (number - 100 + 8)
+            }
+        }
+
+        return this.offset
+    }
+
+    private fun readColor(): Int {
+        val int = readNextIntPart()
+        return when (int) {
+            -1 -> throw IOException("Unexpected end of sequence")
+
+            2 -> readTrueColor()
+            5 -> read256Color()
+
+            else -> throw IllegalArgumentException("Unexpected color type $int")
+        }
+    }
+
+    private fun readTrueColor(): Int {
+        val r = readNextIntPart()
+        val g = readNextIntPart()
+        val b = readNextIntPart()
+
+        if (r == -1 || g == -1 || b == -1) {
+            throw IOException("Unexpected end of sequence")
+        }
+
+        // NOTE: we don't actually use the alpha channel, and
+        // instead basically use it as a marker that we're using
+        // full rgb color; since -1 on a color means "none," we
+        // use FE instead of FF so #FFFFFF isn't interpreted as
+        // "no color"
+        return 0xFE shl 24 or (r shl 16) or (g shl 8) or b
+    }
+
+    private fun read256Color(): Int {
+        val color = readNextIntPart()
+        if (color == -1) throw IOException("Unexpected end of sequence")
+        return color
+    }
+
+    private fun readNextIntPart(): Int {
+        // NOTE: we should always start either on the opening `[`
+        // or a separating `;`
+        var i = offset + 1
+        val input = this.input
+        val end = input.length
+        while (i < end) {
+            val ch = input[i]
+            when (ch) {
+                'm', ';' -> {
+                    val number = ansiWorkspace.toInt()
+                    ansiWorkspace.setLength(0)
+
+                    // done!
+                    offset = i
+                    return number
+                }
+
+                else -> ansiWorkspace.append(ch)
+            }
+
+            ++i
+        }
+
+        return -1
+    }
+
+    fun reset() {
+        fg = -1
+        bg = -1
+        bold = false
+        faint = false
+        italic = false
+        underline = false
+        strikethrough = false
+    }
+}
+
+/**
+ * Zero-allocation toInt for very simple integers
+ */
+private fun CharSequence.toInt(): Int {
+    var int = 0
+
+    for (i in 0..lastIndex) {
+        int = (int * 10) + (this[i] - '0')
+    }
+
+    return int
 }

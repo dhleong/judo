@@ -1,5 +1,6 @@
 package net.dhleong.judo.logging
 
+import net.dhleong.judo.util.ESCAPE_CHAR
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -17,12 +18,32 @@ class HtmlLogFormatterTest {
         formatter = HtmlLogFormatter()
     }
 
-    @Test fun appendEntities() {
+    @Test fun entities() {
         val out = withStringWriter {
             formatter.writeLine("<mreynolds>", it)
         }
 
         assertThat(out).isEqualTo("&lt;mreynolds&gt;")
+    }
+
+    @Test fun trueColor() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span style="color: rgb(15,14,13);">Color"""
+        )
+    }
+
+    @Test fun italicTrueColor() {
+        val out = withStringWriter {
+            formatter.writeLine("$ESCAPE_CHAR[3;38;2;15;14;13mColor", it)
+        }
+
+        assertThat(out).isEqualTo(
+            """</span><span class="i" style="color: rgb(15,14,13);">Color"""
+        )
     }
 
     inline fun withStringWriter(block: (Writer) -> Unit): String {
