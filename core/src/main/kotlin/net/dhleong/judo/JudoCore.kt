@@ -2,9 +2,12 @@ package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcessingException
+import net.dhleong.judo.complete.DEFAULT_STOP_WORDS
+import net.dhleong.judo.complete.MarkovCompletionSource
 import net.dhleong.judo.complete.MultiplexCompletionSource
 import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
+import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.logging.LogManager
@@ -68,34 +71,44 @@ class JudoCore(
     private val sendHistory = InputHistory(buffer)
     private val cmdHistory = InputHistory(cmdBuffer)
 
-    private val commandCompletions = RecencyCompletionSource()
-    private val outputCompletions = RecencyCompletionSource()
-    private val weightedSelectorFactory = WeightedRandomSelector.distributeByWordIndex(
-        // first word? prefer commandCompletions by a lot;
-        // we'll still fallback to output if commandCompletion
-        // doesn't have anything
-        doubleArrayOf(.95, .05),
+    // fancy completions from stuff the user input
+    private val commandCompletions = MultiplexCompletionSource(
+        listOf(
+            MarkovCompletionSource(stopWords = DEFAULT_STOP_WORDS),
+            RecencyCompletionSource(maxCandidates = 1000)),
+        wordsBeforeFactory(WeightedRandomSelector.distributeByWordIndex(
+            // the markov trie has a max depth of 5; at that point, we start to suspect
+            // that it's not a structured command, so we let recency have more weight
+            doubleArrayOf(1.0, .0),
+            doubleArrayOf(1.0, .0),
+            doubleArrayOf(1.0, .0),
+            doubleArrayOf(1.0, .0),
 
-        // second word? slight preference to commands
-        doubleArrayOf(.65, .35),
-
-        // otherwise, just split it evenly
-        doubleArrayOf(.5, .5)
+            // after the first few words, still prefer markov, but
+            // give recent words a bit of a chance, too
+            doubleArrayOf(.5, .5)
+        ))
     )
+
+    // completions from stuff the server output
+    private val outputCompletions = RecencyCompletionSource()
+
+    // `completions` combines completions from output and from input
     private val completions = MultiplexCompletionSource(
         listOf(commandCompletions, outputCompletions),
-        { string, wordRange ->
+        wordsBeforeFactory(WeightedRandomSelector.distributeByWordIndex(
+            // first word? prefer commandCompletions ALWAYS;
+            // we'll still fallback to output if commandCompletion
+            // doesn't have anything
+            doubleArrayOf(1.0, .00),
 
-            val wordsBefore =
-                // convenient shortcut
-                if (wordRange.start == 0) 0
+            // second word? actually, prefer output a bit
+            // eg: get <thing>; enter <thing>; look <thing>
+            doubleArrayOf(.35, .65),
 
-                // TODO: optimize and fix (double whitespace anyone?)
-                else string.subSequence(0, wordRange.start)
-                    .count { Character.isWhitespace(it) }
-
-            weightedSelectorFactory(wordsBefore)
-        }
+            // otherwise, just split it evenly
+            doubleArrayOf(.5, .5)
+        ))
     )
 
     private val opMode = OperatorPendingMode(this, buffer)

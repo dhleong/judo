@@ -10,6 +10,8 @@ interface MultiplexSelector {
     fun select(candidates: List<String>): Int
 }
 
+typealias MultiplexSelectorFactory = (string: CharSequence, wordRange: IntRange) -> MultiplexSelector
+
 /**
  * [MultiplexCompletionSource] combines several sources and provides
  * a single interface across them, switching between them using some
@@ -20,7 +22,7 @@ interface MultiplexSelector {
  */
 class MultiplexCompletionSource(
     val sources: List<CompletionSource>,
-    val selectorFactory: (string: CharSequence, wordRange: IntRange) -> MultiplexSelector
+    val selectorFactory: MultiplexSelectorFactory
 ) : CompletionSource {
 
     override fun process(string: CharSequence) {
