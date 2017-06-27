@@ -64,21 +64,27 @@ class CompletionSuggester(private val completions: CompletionSource) {
         pendingSuggestions != null
 
     fun initialize(input: CharSequence, cursor: Int) {
+        val wordRange = calculateWordRange(input, cursor)
+        val word = input.subSequence(wordRange)
+        originalWord = word
+        suggestedWordStart = wordRange.first
+        capitalizationStrategy = CapitalizationStrategy.detect(word)
+        pendingSuggestions = completions.suggest(input, wordRange).iterator()
+    }
+
+    private fun calculateWordRange(input: CharSequence, cursor: Int): IntRange {
+        if (cursor > 0 && Character.isWhitespace(input[cursor - 1])) {
+            return cursor..cursor-1
+        }
+
         val move = wordStartMovement.calculate(input, cursor)
         val wordStart = move.endInclusive
 
-        val wordRange: IntRange
         if (wordStart < 0) {
-            wordRange = 0 until cursor
-            suggestedWordStart = 0
+            return 0 until cursor
         } else {
-            suggestedWordStart = wordStart
-            wordRange = wordStart until cursor
+            return wordStart until cursor
         }
-        val word = input.subSequence(wordRange)
-        originalWord = word
-        capitalizationStrategy = CapitalizationStrategy.detect(word)
-        pendingSuggestions = completions.suggest(input, wordRange).iterator()
     }
 
     /** NOTE: ASSUMES that initialize() was called */

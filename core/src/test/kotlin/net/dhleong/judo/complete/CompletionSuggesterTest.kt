@@ -146,4 +146,25 @@ class CompletionSuggesterTest {
         suggester.updateWithPrevSuggestion(buffer)
         assertThat(buffer.toString()).isEqualTo("  LA")
     }
+
+    @Test fun emptySecondWord() {
+        completions.process("laser lasso")
+
+        val buffer = InputBuffer()
+        buffer.set("my ")
+        buffer.cursor = 3
+        suggester.initialize(buffer.toChars(), buffer.cursor)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("my land")
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("my laser")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("my land")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("my ")
+    }
 }
