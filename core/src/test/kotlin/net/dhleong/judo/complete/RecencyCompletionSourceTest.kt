@@ -12,11 +12,7 @@ class RecencyCompletionSourceTest {
     lateinit var source: CompletionSource
 
     @Before fun setUp() {
-        // monotonically increasing time for testability
-        var time: Long = 0
-        source = RecencyCompletionSource(maxCandidates = 8) {
-            time++
-        }
+        source = RecencyCompletionSource(maxCandidates = 8)
         source.process("She sells seashells by the sea shore")
         source.process("She does!")
     }

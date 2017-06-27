@@ -1,68 +1,75 @@
 package net.dhleong.judo.complete
 
 import net.dhleong.judo.util.ForgivingSequence
-import net.dhleong.judo.util.removeWhile
-import java.util.TreeMap
 
 /**
  * @author dhleong
  */
 
-class CompletionCandidate(
-    val word: String,
-    val lastReference: Long = System.currentTimeMillis()
-) : Comparable<CompletionCandidate> {
-
-    override fun equals(other: Any?): Boolean {
-        return other is CompletionCandidate
-            && word == other.word
-    }
-
-    override fun hashCode(): Int = word.hashCode()
-
-    override fun compareTo(other: CompletionCandidate): Int {
-        val byTime = other.lastReference.compareTo(lastReference)
-        if (byTime != 0) return byTime
-        return word.compareTo(other.word)
-    }
-
-    override fun toString(): String =
-        "Candidate(word='$word')"
-}
-
 class RecencyCompletionSource(
-    val maxCandidates: Int = 5000,
-    val timer: () -> Long = System::currentTimeMillis
+    val maxCandidates: Int = 5000
 ) : CompletionSource {
 
-    private val candidates = TreeMap<CompletionCandidate, CompletionCandidate>()
+    private val candidates = LruCache<String, String>(maxCandidates)
 
     override fun process(string: CharSequence) {
         tokensFrom(string).forEach {
-            val now = timer()
             val normalized = it.toLowerCase()
 
-            // we can't query by string, and even if there was an
-            // older Candidate for this string, we wouldn't find it
-            // due to primarily sorting by time. So, don't bother
-            // searching and just always put(), then just dedup
-            // in suggest()
-            val candidate = CompletionCandidate(normalized, now)
-            candidates.put(candidate, candidate)
+            candidates.put(normalized, it)
         }
-
-        // prune
-        val max = maxCandidates
-        val oldest = candidates.descendingKeySet()
-        oldest.removeWhile { candidates.size > max }
     }
 
     override fun suggest(string: CharSequence, wordRange: IntRange): Sequence<String> {
         val partial = string.subSequence(wordRange)
         val partialLower = partial.toString().toLowerCase()
-        return ForgivingSequence { candidates.keys }.filter {
-            it.word.startsWith(partialLower)
-        }.distinct() // TODO can/should we prune dups from the map?
-         .map { it.word }
+        return ForgivingSequence { candidates.reverseIterable }.filter {
+            it.key.startsWith(partialLower)
+        }.map {
+            it.key // value?
+        }
+    }
+}
+
+internal class LruCache<K, V>(val maxCapacity: Int)
+    // NOTE: loadFactor > 1f so we don't have to re-hash; since input history is
+    // persisted, it is probably more likely that we will have large amount of
+    // entries, so it makes sense not to waste allocations with a smaller array
+    : LinkedHashMap<K, V>(maxCapacity * 3 / 4, 2f, /* accessOrder = */ true) {
+
+    // NOTE: LinkedHashMap doesn't provide reverse iteration for some insane reason,
+    // even though there's zero overhead. Sure, we could copy everything to a separate
+    // ArrayList every time something changes, but... why? Let's just use reflection
+    // and iterate ourselves. The overhead of reflection should be negligible here
+    // since we're caching the Fields and not using them in a perf-sensitive path.
+    val tailField = LinkedHashMap::class.java.getDeclaredField("tail")!!.apply {
+        isAccessible = true
+    }
+
+    val nodeBeforeField = Class.forName("java.util.LinkedHashMap\$Entry")
+        .getDeclaredField("before")!!.apply {
+            isAccessible = true
+        }
+
+    val reverseIterable = Iterable { ReverseIterator(tailField.get(this)) }
+
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean =
+        size > maxCapacity
+
+    inner class ReverseIterator(tailNode: Any) : Iterator<Map.Entry<K, V>> {
+
+        var next: Any? = tailNode
+
+        override fun hasNext(): Boolean = next != null
+
+        override fun next(): Map.Entry<K, V> {
+            val result = next
+
+            next = nodeBeforeField.get(result)
+
+            @Suppress("UNCHECKED_CAST")
+            return result as Map.Entry<K, V>
+        }
+
     }
 }
