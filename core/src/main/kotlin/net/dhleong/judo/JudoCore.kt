@@ -334,6 +334,7 @@ class JudoCore(
     override fun send(text: String, fromMap: Boolean) {
         scrollToBottom()
 
+        var doSend = true
         val toSend: String
         if (fromMap || text.isEmpty()) {
             // NOTE: we don't process text sent from mappings or
@@ -350,7 +351,7 @@ class JudoCore(
                     // send it; if it *became* empty, however, we
                     // probably don't want to (EG: an alias to a
                     // function that sends stuff itself)
-                    return
+                    doSend = false
                 }
 
                 toSend = processed.toString()
@@ -367,9 +368,9 @@ class JudoCore(
             echo(toSend) // TODO color?
         }
 
-        if (!fromMap && !toSend.isEmpty()) {
+        if (!fromMap && !text.isEmpty()) {
             // record it even if we couldn't send it
-            sendHistory.push(toSend)
+            sendHistory.push(text)
             sendHistory.resetHistoryOffset() // start back from most recent
 
             // also complete from sent things
@@ -377,12 +378,14 @@ class JudoCore(
             completions.process(text) // NOTE: we let all completers process commands
         }
 
-        connection?.let {
-            it.send(toSend)
-            return
-        }
+        if (doSend) {
+            connection?.let {
+                it.send(toSend)
+                return
+            }
 
-        appendError(Error("Not connected."))
+            appendError(Error("Not connected."))
+        }
     }
 
     override fun feedKey(stroke: KeyStroke, remap: Boolean, fromMap: Boolean) {
