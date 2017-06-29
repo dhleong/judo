@@ -85,10 +85,27 @@ class MutableKeys(initialCapacity: Int = 64) : Keys {
     override fun iterator(): Iterator<KeyStroke> = strokes.iterator()
     override fun isEmpty(): Boolean = strokes.isEmpty()
 
-    override fun equals(other: Any?): Boolean =
-        other is Keys
-            && other.size == size
-            && other.hashCode() == hash // bit of a hack
+    override fun equals(other: Any?): Boolean {
+        if (other !is Keys) return false
+        if (!(other.size == size
+                && other.hashCode() == hash)) {
+            // quick reject
+            return false
+        }
+
+        // okay, now make very certain
+        // we don't use .none{} or .all{} here because
+        // they create an iterator, and typing happens
+        // a lot. We could *probably* handle the garbage,
+        // but... this is still pretty readable.
+        @Suppress("LoopToCallChain")
+        for (i in indices) {
+            if (this[i] != other[i]) return false
+        }
+
+        // hurray!
+        return true
+    }
 
     override fun hashCode(): Int = hash
 

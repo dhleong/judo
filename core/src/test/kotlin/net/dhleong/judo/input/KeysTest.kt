@@ -8,6 +8,12 @@ import org.junit.Test
  * @author dhleong
  */
 class KeysTest {
+    @Test fun equality() {
+        assertThat(keys("<space>ps"))
+            .isEqualTo(keys("<space>ps"))
+            .isNotEqualTo(keys("<space>sp"))
+    }
+
     @Test fun parseSpecialKeys() {
         // by special I mean we use it to input
         // keys like `<ctrl d>`
