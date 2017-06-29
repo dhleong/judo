@@ -121,7 +121,7 @@ class JudoCore(
         InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
-        OutputSearchMode(this),
+        OutputSearchMode(this, outputCompletions),
         PythonCmdMode(this, cmdBuffer, renderer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 

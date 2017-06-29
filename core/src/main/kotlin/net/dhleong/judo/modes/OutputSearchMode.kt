@@ -2,6 +2,8 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.StateKind
+import net.dhleong.judo.complete.CompletionSuggester
+import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
@@ -19,7 +21,8 @@ val KEY_LAST_SEARCH_STRING = StateKind<CharSequence>("net.dhleong.judo.modes.sea
  * @author dhleong
  */
 class OutputSearchMode(
-    judo: IJudoCore
+    judo: IJudoCore,
+    completions: RecencyCompletionSource
 ) : BaseModeWithBuffer(judo, InputBuffer()),
     StatusBufferProvider {
 
@@ -33,6 +36,8 @@ class OutputSearchMode(
         keys("<ctrl e>") to motionAction(toEndMotion())
     )
     private val input = MutableKeys()
+
+    private val suggester = CompletionSuggester(completions)
 
     override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         when {
@@ -52,7 +57,17 @@ class OutputSearchMode(
                 exitMode()
                 return
             }
+
+            // NOTE: ctrl+i == tab
+            key.keyCode == KeyEvent.VK_TAB
+                || key.keyChar == 'i' && key.hasCtrl() -> {
+                performTabCompletionFrom(key, suggester)
+                return
+            }
         }
+
+        // input changed; suggestions go away
+        suggester.reset()
 
         // handle key mappings
         if (tryMappings(key, remap, input, mapping, null)) {
