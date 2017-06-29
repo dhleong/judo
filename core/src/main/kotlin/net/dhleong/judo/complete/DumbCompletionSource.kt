@@ -7,7 +7,7 @@ package net.dhleong.judo.complete
  *
  * @author dhleong
  */
-class DumbCompletionSource : CompletionSource {
+class DumbCompletionSource(private var normalize: Boolean = true) : CompletionSource {
 
     private val candidates = HashSet<String>(512)
     private val sortedList = ArrayList<String>(512)
@@ -15,7 +15,9 @@ class DumbCompletionSource : CompletionSource {
     override fun process(string: CharSequence) {
         val before = candidates.size
         tokensFrom(string).forEach {
-            val normalized = it.toLowerCase()
+            val normalized =
+                if (normalize) it.toLowerCase()
+                else it
             if (!candidates.contains(normalized)) {
                 candidates.add(normalized)
                 sortedList.add(normalized)

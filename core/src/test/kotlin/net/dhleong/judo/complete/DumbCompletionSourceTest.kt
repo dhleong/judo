@@ -33,4 +33,18 @@ class DumbCompletionSourceTest {
                 "love"
             )
     }
+
+    @Test fun nonNormalized() {
+        source = DumbCompletionSource(normalize = false)
+        source.process("logToFile")
+
+        assertThat(source.suggest("l").toList())
+            .containsExactly("logToFile")
+
+        assertThat(source.suggest("logto").toList())
+            .containsExactly("logToFile")
+
+        assertThat(source.suggest("logtof").toList())
+            .containsExactly("logToFile")
+    }
 }

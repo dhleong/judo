@@ -264,7 +264,7 @@ abstract class BaseCmdMode(
     override val userMappings = KeyMapping()
     override val name = "cmd"
 
-    private val suggester = CompletionSuggester(DumbCompletionSource().apply {
+    private val suggester = CompletionSuggester(DumbCompletionSource(normalize = false).apply {
         COMMAND_HELP.keys.forEach(this::process)
         process("help")
     })
