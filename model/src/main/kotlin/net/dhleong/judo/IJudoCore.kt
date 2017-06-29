@@ -61,6 +61,7 @@ interface IJudoCore {
     val prompts: IPromptManager
     val triggers: ITriggerManager
     val state: StateMap
+    val renderer: JudoRendererInfo
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)
@@ -75,6 +76,7 @@ interface IJudoCore {
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
     fun persistInput(file: File)
+    fun post(runnable: () -> Unit)
     fun printMappings(mode: String)
     fun quit()
     fun readKey(): KeyStroke
@@ -85,6 +87,7 @@ interface IJudoCore {
     fun seedCompletion(text: String)
     fun send(text: String, fromMap: Boolean)
     fun setCursorType(type: CursorType)
+    fun setMsdpVar(name: String, value: Any)
     fun unmap(mode: String, from: String)
 }
 

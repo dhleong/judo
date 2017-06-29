@@ -1,5 +1,6 @@
 package net.dhleong.judo.net
 
+import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
 import org.apache.commons.net.telnet.EchoOptionHandler
 import org.apache.commons.net.telnet.SimpleOptionHandler
@@ -13,8 +14,8 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class CommonsNetConnection(
+    private val judo: IJudoCore,
     private val address: String, private val port: Int,
-    rendererInfo: JudoRendererInfo,
     private val echo: (String) -> Unit
 ) : Connection() {
 
@@ -41,7 +42,7 @@ class CommonsNetConnection(
         client.setSocketFactory(socketFactory)
         client.connect(address, port)
 
-        input = client.inputStream
+        input = MsdpHandler.wrap(client.inputStream)
         output = client.outputStream
 
         val echoDebug = { text: String ->
@@ -50,9 +51,9 @@ class CommonsNetConnection(
             }
         }
 
-        val mtts = MttsTermTypeHandler(rendererInfo, echoDebug)
-        client.addOptionHandler(mtts)
+        val mtts = MttsTermTypeHandler(judo.renderer, echoDebug)
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
+        client.addOptionHandler(MsdpHandler(judo, { debug }, echoDebug))
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
             echoDebug("## TELNET < ${stringify(negotiation_code)} ${stringifyOption(option_code)}")

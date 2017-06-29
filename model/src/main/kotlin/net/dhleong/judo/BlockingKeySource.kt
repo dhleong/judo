@@ -7,5 +7,5 @@ import javax.swing.KeyStroke
  */
 
 interface BlockingKeySource {
-    fun readKey(): KeyStroke
+    fun readKey(): KeyStroke?
 }
