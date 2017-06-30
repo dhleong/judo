@@ -130,6 +130,20 @@ class PythonCmdModeTest {
             .containsExactly("awesome")
     }
 
+    @Test fun event_destructure() {
+        mode.execute("""
+            @event("cool")
+            def handleEvent(key, val):
+                echo("awesome %s:%s" % (key, val))
+            """.trimIndent())
+
+        assertThat(judo.events.has("cool")).isTrue()
+
+        judo.events.raise("cool", arrayOf("cold", "colder"))
+        assertThat(judo.echos)
+            .containsExactly("awesome cold:colder")
+    }
+
     @Test fun trigger() {
         mode.execute("""
             |def handleTrigger(): echo("awesome")

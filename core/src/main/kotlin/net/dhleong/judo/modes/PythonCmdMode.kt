@@ -172,8 +172,15 @@ class PythonCmdMode(
             0 -> { _ -> pyHandler.__call__() }
             1 -> { arg -> pyHandler.__call__(Py.java2py(arg)) }
             else -> { rawArg ->
-                // TODO destructure rawArg?
-                pyHandler.__call__(Py.java2py(rawArg))
+                if (rawArg !is Array<*>) {
+                    throw ScriptExecutionException(
+                        "$pyHandler expected $argCount arguments, but event arg was not an array")
+                }
+
+                val pythonArgs = Array<PyObject>(rawArg.size) { index ->
+                    Py.java2py(rawArg[index])
+                }
+                pyHandler.__call__(pythonArgs)
             }
         }
         declaredEvents.add(eventName to handler)

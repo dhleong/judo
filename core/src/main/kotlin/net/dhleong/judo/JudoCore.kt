@@ -504,6 +504,7 @@ class JudoCore(
             echo("# MSDP: SET($name) = $value")
         }
 
+        events.raise("MSDP", arrayOf(name, value))
         events.raise("MSDP:$name", value)
     }
 

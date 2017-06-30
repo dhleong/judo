@@ -59,7 +59,17 @@ private val COMMAND_HELP = mutableMapOf(
             "event(eventName: String, handler: Fn)",
             "@event(eventName: String)"
         ),
-        "Subscribe to an event with the provided handler"
+        """
+        Subscribe to an event with the provided handler.
+        Available events:
+
+         "Name": (args) Description
+         --------------------------
+         "MSDP ENABLED"   ():            The server declared support for MSDP
+         "MSDP"           (name, value): An MSDP variable was sent by the server.
+         "MSDP:{varName}" (value):       The server sent the value of the MSDP
+                                         variable {varName} (ex: "MSDP:COMMANDS")
+        """.trimIndent()
     ),
 
     "prompt" to buildHelp(
