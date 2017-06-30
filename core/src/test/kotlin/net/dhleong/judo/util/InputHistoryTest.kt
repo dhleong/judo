@@ -129,5 +129,23 @@ class InputHistoryTest {
         // not repeat the most recent
         assertThat(history.size).isEqualTo(4)
     }
+
+    @Test fun searchHistoryPastDups() {
+        history.push("Take my land")
+        history.push("Take my love")
+        history.push("Take me where I cannot stand")
+        history.push("Take my love")
+        assertThat(buffer.toString()).isEqualTo("")
+
+        assertThat(history.search("take my", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        assertThat(history.search("take my", true)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my land")
+
+        // and, as usual, stay put at the end
+        assertThat(history.search("take my", true)).isFalse()
+        assertThat(buffer.toString()).isEqualTo("Take my land")
+    }
 }
 

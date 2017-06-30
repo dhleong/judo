@@ -71,8 +71,11 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
                 historyOffset
             }
 
+        val original = buffer.toChars() // avoid string object creation
         for (i in contents.size + offset - 1 downTo 0) {
-            if (contents[i].contains(match, true)) {
+            if (contents[i].contains(match, true)
+                    && !(forceNext && original.isEqualTo(contents[i]))) {
+                // TODO if contents[i] IS equal to original, we could prune it?
                 buffer.set(contents[i])
                 historyOffset = -(contents.size - i - 1)
                 return true
@@ -93,4 +96,17 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
             contents.forEach { writer.appendln(it) }
         }
     }
+}
+
+internal fun CharSequence.isEqualTo(other: String): Boolean {
+    if (length != other.length) return false
+
+    // suppress because as-is, this doesn't create any
+    // allocations; the super cool call chain version does
+    @Suppress("LoopToCallChain")
+    for (i in indices) {
+        if (this[i] != other[i]) return false
+    }
+
+    return true
 }
