@@ -464,7 +464,7 @@ class JudoCore(
         }
     }
 
-    override fun post(runnable: () -> Unit) {
+    override fun onMainThread(runnable: () -> Unit) {
         // NOTE: wait until there is room in the queue
         postToUiQueue.put(runnable)
     }
@@ -478,7 +478,7 @@ class JudoCore(
             // TODO catch that in the feedKey loop
 
             if (key == null) {
-                // check the post-to-UI-thread queue
+                // check the onMainThread-to-UI-thread queue
                 // run a chunk at a time
                 for (i in 0..8) {
                     val runnable = postToUiQueue.poll()
@@ -497,16 +497,6 @@ class JudoCore(
 
     override fun setCursorType(type: CursorType) =
         renderer.setCursorType(type)
-
-    override fun setMsdpVar(name: String, value: Any) {
-        // TODO pass to scripting
-        if (debug.isEnabled) {
-            echo("# MSDP: SET($name) = $value")
-        }
-
-        events.raise("MSDP", arrayOf(name, value))
-        events.raise("MSDP:$name", value)
-    }
 
     override fun quit() {
         connection?.close()

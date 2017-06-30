@@ -78,7 +78,7 @@ interface IJudoCore {
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
     fun persistInput(file: File)
-    fun post(runnable: () -> Unit)
+    fun onMainThread(runnable: () -> Unit)
     fun printMappings(mode: String)
     fun quit()
     fun readKey(): KeyStroke
@@ -89,7 +89,6 @@ interface IJudoCore {
     fun seedCompletion(text: String)
     fun send(text: String, fromMap: Boolean)
     fun setCursorType(type: CursorType)
-    fun setMsdpVar(name: String, value: Any)
     fun unmap(mode: String, from: String)
 }
 

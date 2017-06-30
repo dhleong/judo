@@ -96,8 +96,13 @@ class MsdpHandler(
                 commands = value as List<String>
             }
 
-            judo.post {
-                judo.setMsdpVar(name, value)
+            judo.onMainThread {
+                if (isDebug()) {
+                    echoDebug("# MSDP: SET($name) = $value")
+                }
+
+                judo.events.raise("MSDP", arrayOf(name, value))
+                judo.events.raise("MSDP:$name", value)
 
                 if (gotCommands) {
                     judo.events.raise(EVENT_MSDP_ENABLED, "")
