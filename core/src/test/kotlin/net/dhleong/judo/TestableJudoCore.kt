@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.trigger.TriggerManager
 import java.lang.reflect.Proxy
@@ -16,6 +17,7 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
     val maps = ArrayList<Array<Any>>()
 
     override val aliases = AliasManager()
+    override val events = EventManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val state = StateMap()

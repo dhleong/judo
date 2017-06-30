@@ -8,6 +8,7 @@ import net.dhleong.judo.complete.MultiplexCompletionSource
 import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
+import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.logging.LogManager
@@ -36,6 +37,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 import java.io.PrintWriter
+import java.util.concurrent.ArrayBlockingQueue
 import javax.swing.KeyStroke
 
 /**
@@ -52,12 +54,13 @@ enum class DebugLevel {
 }
 
 class JudoCore(
-    val renderer: JudoRenderer,
+    override val renderer: JudoRenderer,
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
 
     override val aliases = AliasManager()
+    override val events = EventManager()
     override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
@@ -142,6 +145,7 @@ class JudoCore(
     private val statusLineWorkspace = IStringBuilder.create(128)
 
     private var keyStrokeProducer: BlockingKeySource? = null
+    private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
     init {
         activateMode(currentMode)
@@ -162,7 +166,7 @@ class JudoCore(
 
         lastConnect = address to port
 
-        val connection = CommonsNetConnection(address, port, renderer, { string -> echo(string) })
+        val connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
         connection.debug = debug.isEnabled
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
@@ -361,7 +365,7 @@ class JudoCore(
             }
         }
 
-        if (doEcho) {
+        if (doEcho && !(connection?.isTelnetSubsequence(toSend) ?: false)) {
             // always output what we sent
             // except... don't echo if the server has told us not to
             // (EG: passwords)
@@ -460,11 +464,31 @@ class JudoCore(
         }
     }
 
+    override fun onMainThread(runnable: () -> Unit) {
+        // NOTE: wait until there is room in the queue
+        postToUiQueue.put(runnable)
+    }
+
     override fun readKey(): KeyStroke {
-        val key = keyStrokeProducer!!.readKey() // must be initialized by now
-        // TODO check for esc/ctrl+c and throw InputInterruptedException...
-        // TODO catch that in the feedKey loop
-        return key
+        val producer = keyStrokeProducer!!
+        while (true) {
+            val key = producer.readKey() // must be initialized by now
+
+            // TODO check for esc/ctrl+c and throw InputInterruptedException...
+            // TODO catch that in the feedKey loop
+
+            if (key == null) {
+                // check the onMainThread-to-UI-thread queue
+                // run a chunk at a time
+                for (i in 0..8) {
+                    val runnable = postToUiQueue.poll()
+                    if (runnable != null) runnable.invoke()
+                    else break
+                }
+            } else {
+                return key
+            }
+        }
     }
 
     override fun searchForKeyword(text: CharSequence, direction: Int) {
@@ -558,7 +582,7 @@ class JudoCore(
         keyStrokeProducer = producer
         while (keepReading()) {
             try {
-                feedKey(producer.readKey(), remap, fromMap)
+                feedKey(readKey(), remap, fromMap)
             } catch (e: Throwable) {
                 appendError(e, "INTERNAL ERROR: ")
             }

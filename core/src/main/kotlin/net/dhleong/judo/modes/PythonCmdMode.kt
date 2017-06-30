@@ -31,6 +31,7 @@ class PythonCmdMode(
 
     private val python: PythonInterpreter
     private val keepModules = HashSet<String>()
+    private val declaredEvents = ArrayList<Pair<String, (Any) -> Unit>>()
 
     init {
         Options.importSite = false
@@ -44,6 +45,11 @@ class PythonCmdMode(
         // aliasing
         globals["alias"] = asMaybeDecorator<Any>(2) {
             defineAlias(it[0] as String, it[1])
+        }
+
+        // events
+        globals["event"] = asMaybeDecorator<Any>(takeArgs = 2) {
+            defineEvent(it[0] as String, it[1] as PyFunction)
         }
 
         // prompts
@@ -160,6 +166,27 @@ class PythonCmdMode(
         }
     }
 
+    private fun defineEvent(eventName: String, pyHandler: PyFunction) {
+        val argCount = pyHandler.__code__.__getattr__("co_argcount").asInt()
+        val handler: (Any) -> Unit = when (argCount) {
+            0 -> { _ -> pyHandler.__call__() }
+            1 -> { arg -> pyHandler.__call__(Py.java2py(arg)) }
+            else -> { rawArg ->
+                if (rawArg !is Array<*>) {
+                    throw ScriptExecutionException(
+                        "$pyHandler expected $argCount arguments, but event arg was not an array")
+                }
+
+                val pythonArgs = Array<PyObject>(rawArg.size) { index ->
+                    Py.java2py(rawArg[index])
+                }
+                pyHandler.__call__(pythonArgs)
+            }
+        }
+        declaredEvents.add(eventName to handler)
+        judo.events.register(eventName, handler)
+    }
+
     private fun defineMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
         if (mapTo is String) {
             judo.map(
@@ -232,6 +259,11 @@ class PythonCmdMode(
 
         for (keyToRemove in toRemove) {
             modules.__delitem__(keyToRemove)
+        }
+
+        // de-register event listeners
+        declaredEvents.forEach { (event, handler) ->
+            judo.events.unregister(event, handler)
         }
 
         super.reload()

@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.IAliasManager
+import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.trigger.ITriggerManager
@@ -57,10 +58,12 @@ interface IJudoCore {
 
     val aliases: IAliasManager
     val connection: Closeable?
+    val events: IEventManager
     val logging: ILogManager
     val prompts: IPromptManager
     val triggers: ITriggerManager
     val state: StateMap
+    val renderer: JudoRendererInfo
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)
@@ -74,6 +77,7 @@ interface IJudoCore {
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
+    fun onMainThread(runnable: () -> Unit)
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()

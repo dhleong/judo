@@ -205,38 +205,36 @@ class JLineRenderer(
         if (!isInTransaction) display()
     }
 
-    override fun readKey(): KeyStroke {
-        while (true) {
-            // NOTE: we wait an arbitrary amount of time, because on timeout
-            // we just loop again. BUT! We don't use the version without a
-            // timeout because if we wait for a *really long time* we occasionally
-            // encounter hangs, so hopefully this resolves that.
-            val char = terminal.reader().read(30000)
-            if (char == NonBlockingReader.READ_EXPIRED) {
-                Thread.yield()
-                continue
-            }
-
-            return when (char) {
-                KEY_ESCAPE -> {
-                    readEscape()?.let {
-                        return it
-                    }
-
-                    // not a known escape? ignore and try again
-                    return readKey()
-                }
-                127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
-                '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
-
-                in 1..26 -> {
-                    val actualChar = 'a' + char - 1
-                    return KeyStroke.getKeyStroke(actualChar, InputEvent.CTRL_DOWN_MASK)
-                }
-
-                else -> KeyStroke.getKeyStroke(char.toChar())
-            }
+    override fun readKey(): KeyStroke? {
+        // NOTE: we wait an arbitrary amount of time, because on timeout
+        // we just loop again. BUT! We don't use the version without a
+        // timeout because if we wait for a *really long time* we occasionally
+        // encounter hangs, so hopefully this resolves that.
+        val char = terminal.reader().read(300)
+        if (char == NonBlockingReader.READ_EXPIRED) {
+            return null
         }
+
+        return when (char) {
+            KEY_ESCAPE -> {
+                readEscape()?.let {
+                    return it
+                }
+
+                // not a known escape? ignore and try again
+                return null
+            }
+            127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
+            '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
+
+            in 1..26 -> {
+                val actualChar = 'a' + char - 1
+                return KeyStroke.getKeyStroke(actualChar, InputEvent.CTRL_DOWN_MASK)
+            }
+
+            else -> KeyStroke.getKeyStroke(char.toChar())
+        }
+
     }
 
     /**
