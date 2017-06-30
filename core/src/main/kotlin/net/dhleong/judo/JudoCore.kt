@@ -8,6 +8,7 @@ import net.dhleong.judo.complete.MultiplexCompletionSource
 import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
+import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.logging.LogManager
@@ -59,6 +60,7 @@ class JudoCore(
 ) : IJudoCore {
 
     override val aliases = AliasManager()
+    override val events = EventManager()
     override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
@@ -501,6 +503,8 @@ class JudoCore(
         if (debug.isEnabled) {
             echo("# MSDP: SET($name) = $value")
         }
+
+        events.raise("MSDP:$name", value)
     }
 
     override fun quit() {

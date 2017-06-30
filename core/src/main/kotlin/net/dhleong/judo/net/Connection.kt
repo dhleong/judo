@@ -15,6 +15,10 @@ import kotlin.concurrent.thread
  * @author dhleong
  */
 
+val TELNET_IAC = 255.toByte()
+val TELNET_SB = 250.toByte()
+val TELNET_SE = 240.toByte()
+
 abstract class Connection : Closeable {
     abstract val input: InputStream
     abstract val output: OutputStream
@@ -27,7 +31,7 @@ abstract class Connection : Closeable {
     private var readerThread: Thread? = null
     protected var isClosed = false
 
-    fun send(line: String) {
+    open fun send(line: String) {
         writer.write(line)
         writer.write("\r\n")
         writer.flush()
@@ -57,4 +61,9 @@ abstract class Connection : Closeable {
 
     abstract fun setWindowSize(width: Int, height: Int)
 
+    internal fun isTelnetSubsequence(line: String) =
+        line.length >= 3
+            && line[0].toByte() == TELNET_IAC
+            && line[1].toByte() == TELNET_SB
+            && line.last().toByte() == TELNET_SE
 }

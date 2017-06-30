@@ -7,9 +7,6 @@ import java.util.zip.Inflater
 import java.util.zip.InflaterInputStream
 import javax.net.SocketFactory
 
-val TELNET_IAC = 255.toByte()
-val TELNET_SB = 250.toByte()
-
 val TELNET_TELOPT_MCCP2 = 86.toByte()
 
 class MccpInputStream(val socket: MccpHandlingSocket, val delegate: InputStream): InputStream() {

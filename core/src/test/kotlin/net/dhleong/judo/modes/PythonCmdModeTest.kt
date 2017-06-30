@@ -117,6 +117,19 @@ class PythonCmdModeTest {
             .isEmpty()
     }
 
+    @Test fun event_fun() {
+        mode.execute("""
+            |def handleEvent(): echo("awesome")
+            |event('cool', handleEvent)
+            """.trimMargin())
+
+        assertThat(judo.events.has("cool")).isTrue()
+
+        judo.events.raise("cool", "cold")
+        assertThat(judo.echos)
+            .containsExactly("awesome")
+    }
+
     @Test fun trigger() {
         mode.execute("""
             |def handleTrigger(): echo("awesome")

@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.event.EVENT_MSDP_ENABLED
 import org.apache.commons.net.telnet.TelnetOptionHandler
 import java.io.FilterInputStream
 import java.io.InputStream
@@ -20,7 +21,7 @@ val MSDP_TABLE_CLOSE = 4
 val MSDP_ARRAY_OPEN = 5
 val MSDP_ARRAY_CLOSE = 6
 
-private val INITIAL_LIST = "REPORTABLE_VARIABLES"
+private val INITIAL_LIST = "COMMANDS"
 private val MSDP_LIST_COMMANDS = buildMsdpRequest("LIST", INITIAL_LIST)
 private val MSDP_SUBNEGOTIATION_MAX_LENGTH = 8192
 
@@ -73,25 +74,34 @@ class MsdpHandler(
         }
     }
 
-    private var requested = false
     private val varReader = MsdpReader()
+    private var commands: List<String>? = null
 
     override fun answerSubnegotiation(suboptionData: IntArray, suboptionLength: Int): IntArray? {
-        if (!requested) {
-            echoDebug("## TELNET > MSDP REPORT ROOMVNUM")
-            requested = true
-            return buildMsdpRequest("REPORT", "ROOMVNUM")
-        }
-
         if (suboptionData[1] == MSDP_VAR) {
 
             varReader.reset(suboptionData, 2, suboptionLength)
             val name = varReader.readString()
             val value = varReader.readObject()
-            echoDebug("## TELNET < MSDP VAR: $name <- $value")
+
+            if (isDebug()) {
+                echoDebug("## TELNET < MSDP VAR: $name <- $value")
+            }
+
+            var gotCommands = false
+            if (name == "COMMANDS") {
+                gotCommands = commands == null
+
+                @Suppress("UNCHECKED_CAST")
+                commands = value as List<String>
+            }
 
             judo.post {
                 judo.setMsdpVar(name, value)
+
+                if (gotCommands) {
+                    judo.events.raise(EVENT_MSDP_ENABLED, "")
+                }
             }
         } else if (isDebug()) {
             val asString = suboptionData.take(suboptionLength).map {
@@ -100,7 +110,6 @@ class MsdpHandler(
             }.toByteArray().toString(Charset.defaultCharset()).trim()
             echoDebug("## TELNET < MSDP: $asString")
         }
-
 
         return null
     }

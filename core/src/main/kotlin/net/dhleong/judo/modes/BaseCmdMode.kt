@@ -54,6 +54,14 @@ private val COMMAND_HELP = mutableMapOf(
         "Create a text alias."
     ),
 
+    "event" to buildHelp(
+        listOf(
+            "event(eventName: String, handler: Fn)",
+            "@event(eventName: String)"
+        ),
+        "Subscribe to an event with the provided handler"
+    ),
+
     "prompt" to buildHelp(
         listOf(
             "prompt(inputSpec: String, outputSpec: String)",

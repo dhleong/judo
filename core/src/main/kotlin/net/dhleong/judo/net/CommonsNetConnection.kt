@@ -88,6 +88,26 @@ class CommonsNetConnection(
         }
     }
 
+    override fun send(line: String) {
+        if (isTelnetSubsequence(line)) {
+            // hold commons.net's hand so it doesn't stomp on the
+            // user's IAC codes
+            val intArrayLength = line.length - 4 // IAC SE / IAC SB
+            val asIntArray = IntArray(intArrayLength)
+
+            // NOTE: `until` creates an IntRange object, so we just
+            // do the -1 by hand for now
+            for (i in 2..line.length - 2 - 1) {
+                asIntArray[i - 2] = line[i].toInt()
+            }
+
+            client.sendSubnegotiation(asIntArray)
+        } else {
+            // regular line; send it regularly
+            super.send(line)
+        }
+    }
+
     override fun setWindowSize(width: Int, height: Int) {
         if (width == lastWidth && height == lastHeight) return
 
