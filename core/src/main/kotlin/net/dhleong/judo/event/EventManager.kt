@@ -7,6 +7,7 @@ class EventManager : IEventManager {
 
     // NOTE: we currently support a single handler per event
     private val events = HashMap<String, (Any) -> Unit>()
+    private val eventThreadId = Thread.currentThread().id
 
     override fun clear() {
         events.clear()
@@ -21,6 +22,11 @@ class EventManager : IEventManager {
     }
 
     override fun raise(eventName: String, data: Any) {
+        if (Thread.currentThread().id != eventThreadId) {
+            throw IllegalStateException(
+                "Attempting to raise $eventName on non-event thread ${Thread.currentThread()}")
+        }
+
         events[eventName]?.let { handler ->
             handler(data)
         }
