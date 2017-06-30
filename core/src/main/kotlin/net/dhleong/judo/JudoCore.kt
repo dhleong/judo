@@ -365,7 +365,7 @@ class JudoCore(
             }
         }
 
-        if (doEcho) {
+        if (doEcho && !(connection?.isTelnetSubsequence(toSend) ?: false)) {
             // always output what we sent
             // except... don't echo if the server has told us not to
             // (EG: passwords)
