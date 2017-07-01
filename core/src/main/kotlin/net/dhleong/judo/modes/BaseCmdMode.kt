@@ -79,9 +79,9 @@ private val COMMAND_HELP = mutableMapOf(
 
     "prompt" to buildHelp(
         listOf(
-            "prompt(inputSpec: String, outputSpec: String)",
-            "prompt(inputSpec: String, handler: Fn)",
-            "@prompt(inputSpec: String)"
+            "prompt(inputSpec: String/Pattern, outputSpec: String)",
+            "prompt(inputSpec: String/Pattern, handler: Fn)",
+            "@prompt(inputSpec: String/Pattern)"
         ),
         """
         Prepare a prompt to be displayed in the status area.

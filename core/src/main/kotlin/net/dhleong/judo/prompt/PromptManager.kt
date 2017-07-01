@@ -2,6 +2,7 @@ package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.alias.AliasSpec
 import net.dhleong.judo.util.IStringBuilder
 
 /**
@@ -19,22 +20,26 @@ class PromptManager : IPromptManager {
     }
 
     override fun define(inputSpec: String, outputSpec: String) {
-        if (delegate.aliases.isNotEmpty()) {
-            // we should warn about this:
-//            throw IllegalStateException("Only a single prompt is supported right now")
-            delegate.aliases.clear()
-        }
-
+        // TODO support multiple prompts?
+        delegate.aliases.clear()
         delegate.define(inputSpec, outputSpec)
     }
 
     override fun define(inputSpec: String, parser: AliasProcesser) {
-        if (delegate.aliases.isNotEmpty()) {
-            // we should warn about this:
-//            throw IllegalStateException("Only a single prompt is supported right now")
-            delegate.aliases.clear()
-        }
+        // TODO support multiple prompts?
+        delegate.aliases.clear()
+        delegate.define(inputSpec, parser)
+    }
 
+    override fun define(inputSpec: AliasSpec, outputSpec: String) {
+        // TODO support multiple prompts?
+        delegate.aliases.clear()
+        delegate.define(inputSpec, outputSpec)
+    }
+
+    override fun define(inputSpec: AliasSpec, parser: AliasProcesser) {
+        // TODO support multiple prompts?
+        delegate.aliases.clear()
         delegate.define(inputSpec, parser)
     }
 

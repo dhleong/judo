@@ -1,6 +1,7 @@
 package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.alias.AliasSpec
 
 /**
  * Prompts are like Aliases that act on output and
@@ -15,6 +16,9 @@ interface IPromptManager {
 
     fun define(inputSpec: String, outputSpec: String)
     fun define(inputSpec: String, parser: AliasProcesser)
+
+    fun define(inputSpec: AliasSpec, outputSpec: String)
+    fun define(inputSpec: AliasSpec, parser: AliasProcesser)
 
     fun process(input: CharSequence, onPrompt: (index: Int, prompt: String) -> Unit): CharSequence
 

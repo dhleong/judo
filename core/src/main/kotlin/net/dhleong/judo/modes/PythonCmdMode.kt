@@ -61,7 +61,7 @@ class PythonCmdMode(
 
         // prompts
         globals["prompt"] = asMaybeDecorator<Any>(2) {
-            definePrompt(it[0] as String, it[1])
+            definePrompt(compileAliasSpec(it[0]), it[1])
         }
 
         // triggers
@@ -215,7 +215,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun definePrompt(alias: String, handler: Any) {
+    private fun definePrompt(alias: AliasSpec, handler: Any) {
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
