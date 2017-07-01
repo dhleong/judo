@@ -236,6 +236,38 @@ class MotionIntegrationTest {
             .isEqualTo("word word3" to 5)
     }
 
+    @Test fun deleteInnerQuotes() {
+        judo.setInput("word \"word2\" word3", 8)
+
+        judo.type(keys("di\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word \"\" word3" to 6)
+    }
+
+    @Test fun deleteInnerQuotes_hanging() {
+        judo.setInput("word \"", 0)
+
+        judo.type(keys("di\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word \"" to 0)
+    }
+
+    @Test fun deleteInnerQuotes_nothing() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("di\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 0)
+    }
+
+    @Test fun deleteInnerQuotes_searchForPair() {
+        judo.setInput("word \"word2\" word3", 0)
+
+        judo.type(keys("di\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word \"\" word3" to 6)
+    }
+
     @Test fun deleteOuterWord() {
         judo.setInput("word word2 word3", 5)
 
