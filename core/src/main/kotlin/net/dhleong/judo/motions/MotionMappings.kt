@@ -36,8 +36,16 @@ val ALL_MOTIONS = arrayListOf(
     keys("i\"") to innerPairwiseMotion('"', '"'),
     keys("i'") to innerPairwiseMotion('\'', '\''),
 
+    keys("i(") to innerPairwiseMotion('(', ')'),
+    keys("i)") to innerPairwiseMotion('(', ')'),
+    keys("ib") to innerPairwiseMotion('(', ')'),
+
     keys("a\"") to outerPairwiseMotion('"', '"'),
     keys("a'") to outerPairwiseMotion('\'', '\''),
+
+    keys("a(") to outerPairwiseMotion('(', ')'),
+    keys("a)") to outerPairwiseMotion('(', ')'),
+    keys("ab") to outerPairwiseMotion('(', ')'),
 
 
     keys("t") to tilMotion(1),

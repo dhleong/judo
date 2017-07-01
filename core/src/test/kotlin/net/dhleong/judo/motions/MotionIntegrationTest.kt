@@ -270,6 +270,22 @@ class MotionIntegrationTest {
             .isEqualTo("word \"\" word3" to 6)
     }
 
+    @Test fun deleteInnerParens() {
+        judo.setInput("word (word2) word3", 5)
+
+        judo.type(keys("dib"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word () word3" to 6)
+    }
+
+    @Test fun deleteInnerParens_searchForPair() {
+        judo.setInput("word (word2) word3", 0)
+
+        judo.type(keys("dib"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word () word3" to 6)
+    }
+
     @Test fun deleteOuterWord() {
         judo.setInput("word word2 word3", 5)
 
