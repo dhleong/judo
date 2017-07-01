@@ -20,10 +20,28 @@ class AliasManager : IAliasManager {
     }
 
     private fun define(inputSpec: String, outputSpec: String?, parser: AliasProcesser) {
+        define(inputSpec, Alias.compile(inputSpec, outputSpec, parser))
+    }
+
+
+    override fun define(inputSpec: AliasSpec, outputSpec: String) {
+        define(inputSpec, outputSpec, VariableOutputProcessor(outputSpec)::process)
+    }
+
+    override fun define(inputSpec: AliasSpec, parser: AliasProcesser) {
+        define(inputSpec, null, parser)
+    }
+
+    private fun define(inputSpec: AliasSpec, outputSpec: String?, parser: AliasProcesser) {
+        define(inputSpec.original, Alias(inputSpec.original, outputSpec, inputSpec, parser))
+    }
+
+    /** Shared implementation */
+    private fun define(inputSpec: String, alias: Alias) {
         // de-dup
         aliases.removeIf { it.original == inputSpec }
 
-        aliases.add(Alias.compile(inputSpec, outputSpec, parser))
+        aliases.add(alias)
     }
 
     override fun process(input: CharSequence): CharSequence {

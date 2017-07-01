@@ -47,11 +47,16 @@ private fun buildHelp(usages: Iterable<String>, description: String): String =
 private val COMMAND_HELP = mutableMapOf(
     "alias" to buildHelp(
         listOf(
-            "alias(inputSpec: String, outputSpec: String)",
-            "alias(inputSpec: String, handler: Fn)",
-            "@alias(inputSpec: String)"
+            "alias(inputSpec: String/Pattern, outputSpec: String)",
+            "alias(inputSpec: String/Pattern, handler: Fn)",
+            "@alias(inputSpec: String/Pattern)"
         ),
-        "Create a text alias."
+        """
+        Create a text alias. You may use re.compile() to match against
+        a regular expression, eg:
+            import re
+            alias(re.compile("^study (.*)"), "say I'd like to study '$1'")
+        """.trimIndent()
     ),
 
     "event" to buildHelp(
