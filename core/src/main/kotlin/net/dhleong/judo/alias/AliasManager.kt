@@ -1,6 +1,7 @@
 package net.dhleong.judo.alias
 
 import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.util.PatternSpec
 
 class AliasManager : IAliasManager {
 
@@ -24,15 +25,15 @@ class AliasManager : IAliasManager {
     }
 
 
-    override fun define(inputSpec: AliasSpec, outputSpec: String) {
+    override fun define(inputSpec: PatternSpec, outputSpec: String) {
         define(inputSpec, outputSpec, VariableOutputProcessor(outputSpec)::process)
     }
 
-    override fun define(inputSpec: AliasSpec, parser: AliasProcesser) {
+    override fun define(inputSpec: PatternSpec, parser: AliasProcesser) {
         define(inputSpec, null, parser)
     }
 
-    private fun define(inputSpec: AliasSpec, outputSpec: String?, parser: AliasProcesser) {
+    private fun define(inputSpec: PatternSpec, outputSpec: String?, parser: AliasProcesser) {
         define(inputSpec.original, Alias(inputSpec.original, outputSpec, inputSpec, parser))
     }
 

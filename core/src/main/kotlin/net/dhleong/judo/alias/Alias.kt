@@ -1,6 +1,8 @@
 package net.dhleong.judo.alias
 
 import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternSpec
 import net.dhleong.judo.util.stripAnsi
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -11,17 +13,17 @@ internal class RegexAliasSpec(
     override val original: String,
     private val pattern: Pattern,
     private val groupNames: List<String>
-) : AliasSpec {
+) : PatternSpec {
     override val groups = groupNames.size
 
-    override fun matcher(input: CharSequence): AliasMatcher =
+    override fun matcher(input: CharSequence): PatternMatcher =
         RegexAliasMatcher(pattern.matcher(input), groupNames)
 }
 
 internal class RegexAliasMatcher(
     private val matcher: Matcher,
     private val groups: List<String>
-) : AliasMatcher {
+) : PatternMatcher {
     override fun find(): Boolean = matcher.find()
 
     override fun group(index: Int): String =
@@ -34,11 +36,11 @@ internal class RegexAliasMatcher(
 }
 
 /**
- * Given a string representing a simple AliasSpec (that is,
+ * Given a string representing a simple input spec (that is,
  *  $1/$2-style variable placeholders and no regex except
- *  for `^`), compile an AliasSpec
+ *  for `^`), compile a PatternSpec
  */
-fun compileSimpleAliasSpec(spec: String): AliasSpec {
+fun compileSimplePatternSpec(spec: String): PatternSpec {
     val groups = mutableListOf<String>()
     var lastEnd = 0
     if (spec[0] == '^') {
@@ -84,13 +86,13 @@ fun compileSimpleAliasSpec(spec: String): AliasSpec {
 class Alias(
     val original: String,
     private val originalOutput: String?,
-    private val spec: AliasSpec,
+    private val spec: PatternSpec,
     private val process: AliasProcesser
 ) {
 
     companion object {
         fun compile(spec: String, outputSpec: String?, processor: AliasProcesser): Alias {
-            val compiledSpec = compileSimpleAliasSpec(spec)
+            val compiledSpec = compileSimplePatternSpec(spec)
             return Alias(spec, outputSpec, compiledSpec, processor)
         }
     }

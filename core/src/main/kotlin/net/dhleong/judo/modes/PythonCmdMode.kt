@@ -2,13 +2,13 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
-import net.dhleong.judo.alias.AliasMatcher
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.alias.AliasSpec
-import net.dhleong.judo.alias.compileSimpleAliasSpec
+import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
 import org.python.core.PyCallIter
 import org.python.core.PyException
@@ -160,7 +160,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineAlias(alias: AliasSpec, handler: Any) {
+    private fun defineAlias(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
             val handlerFn: AliasProcesser = { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
@@ -215,7 +215,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun definePrompt(alias: AliasSpec, handler: Any) {
+    private fun definePrompt(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
@@ -227,7 +227,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineTrigger(alias: AliasSpec, handler: PyFunction) {
+    private fun defineTrigger(alias: PatternSpec, handler: PyFunction) {
         judo.triggers.define(alias, { args ->
             handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
         })
@@ -393,9 +393,9 @@ private class PyGlobals : PyStringMap() {
 }
 
 
-internal fun compileAliasSpec(input: Any): AliasSpec =
+internal fun compileAliasSpec(input: Any): PatternSpec =
     when (input) {
-        is String -> compileSimpleAliasSpec(input)
+        is String -> compileSimplePatternSpec(input)
         is PatternObject -> {
             // first, try to compile it as a Java regex Pattern;
             // that will be much more efficient than delegating
@@ -426,14 +426,14 @@ internal class CoercedRegexAliasSpec(
     override val original: String,
     private val pattern: Pattern,
     override val groups: Int
-) : AliasSpec {
-    override fun matcher(input: CharSequence): AliasMatcher =
+) : PatternSpec {
+    override fun matcher(input: CharSequence): PatternMatcher =
         CoercedRegexAliasMatcher(pattern.matcher(input))
 }
 
 internal class CoercedRegexAliasMatcher(
     private val matcher: Matcher
-) : AliasMatcher {
+) : PatternMatcher {
     override fun find(): Boolean = matcher.find()
 
     override fun group(index: Int): String =
@@ -453,10 +453,10 @@ internal class CoercedRegexAliasMatcher(
  */
 internal class PyPatternSpec(
     private val pattern: PatternObject
-) : AliasSpec {
+) : PatternSpec {
     override val groups: Int = pattern.groups
 
-    override fun matcher(input: CharSequence): AliasMatcher =
+    override fun matcher(input: CharSequence): PatternMatcher =
         PyPatternMatcher(
             pattern.finditer(arrayOf(Py.java2py(input.toString())), emptyArray())
                 as PyCallIter
@@ -465,7 +465,7 @@ internal class PyPatternSpec(
     override val original: String = pattern.pattern.string
 }
 
-internal class PyPatternMatcher(finditer: PyIterator) : AliasMatcher {
+internal class PyPatternMatcher(finditer: PyIterator) : PatternMatcher {
 
     private var iterator = finditer.iterator()
     private var current: MatchObject? = null

@@ -2,7 +2,7 @@ package net.dhleong.judo.trigger
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.alias.AliasSpec
+import net.dhleong.judo.util.PatternSpec
 
 /**
  * @author dhleong
@@ -18,7 +18,7 @@ class TriggerManager : ITriggerManager {
         aliases.define(inputSpec, toAliasProcessor(parser))
     }
 
-    override fun define(inputSpec: AliasSpec, parser: TriggerProcessor) {
+    override fun define(inputSpec: PatternSpec, parser: TriggerProcessor) {
         aliases.define(inputSpec, toAliasProcessor(parser))
     }
 

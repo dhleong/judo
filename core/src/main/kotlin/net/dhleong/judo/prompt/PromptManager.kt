@@ -2,8 +2,8 @@ package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.alias.AliasSpec
 import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.util.PatternSpec
 
 /**
  * @author dhleong
@@ -31,13 +31,13 @@ class PromptManager : IPromptManager {
         delegate.define(inputSpec, parser)
     }
 
-    override fun define(inputSpec: AliasSpec, outputSpec: String) {
+    override fun define(inputSpec: PatternSpec, outputSpec: String) {
         // TODO support multiple prompts?
         delegate.aliases.clear()
         delegate.define(inputSpec, outputSpec)
     }
 
-    override fun define(inputSpec: AliasSpec, parser: AliasProcesser) {
+    override fun define(inputSpec: PatternSpec, parser: AliasProcesser) {
         // TODO support multiple prompts?
         delegate.aliases.clear()
         delegate.define(inputSpec, parser)
