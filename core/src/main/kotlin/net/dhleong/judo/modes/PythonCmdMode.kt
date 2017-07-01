@@ -2,19 +2,29 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
-import org.python.core.Options
+import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
+import org.python.core.PyCallIter
 import org.python.core.PyException
 import org.python.core.PyFunction
+import org.python.core.PyIterator
 import org.python.core.PyModule
 import org.python.core.PyObject
 import org.python.core.PyStringMap
+import org.python.modules.sre.MatchObject
+import org.python.modules.sre.PatternObject
 import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
 /**
  * Python-based Command mode
@@ -41,7 +51,7 @@ class PythonCmdMode(
 
         // aliasing
         globals["alias"] = asMaybeDecorator<Any>(2) {
-            defineAlias(it[0] as String, it[1])
+            defineAlias(compileAliasSpec(it[0]), it[1])
         }
 
         // events
@@ -51,12 +61,12 @@ class PythonCmdMode(
 
         // prompts
         globals["prompt"] = asMaybeDecorator<Any>(2) {
-            definePrompt(it[0] as String, it[1])
+            definePrompt(compileAliasSpec(it[0]), it[1])
         }
 
         // triggers
         globals["trigger"] = asMaybeDecorator<Any>(2) {
-            defineTrigger(it[0] as String, it[1] as PyFunction)
+            defineTrigger(compileAliasSpec(it[0]), it[1] as PyFunction)
         }
 
         // map invocations
@@ -150,14 +160,16 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineAlias(alias: String, handler: Any) {
+    private fun defineAlias(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
-            judo.aliases.define(alias, { args ->
+            val handlerFn: AliasProcesser = { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                        .__tojava__(String::class.java)
                     as String?
                     ?: ""
-            })
+            }
+
+            judo.aliases.define(alias, handlerFn)
         } else {
             judo.aliases.define(alias, handler as String)
         }
@@ -203,7 +215,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun definePrompt(alias: String, handler: Any) {
+    private fun definePrompt(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
@@ -215,7 +227,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineTrigger(alias: String, handler: PyFunction) {
+    private fun defineTrigger(alias: PatternSpec, handler: PyFunction) {
         judo.triggers.define(alias, { args ->
             handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
         })
@@ -378,4 +390,103 @@ private class PyGlobals : PyStringMap() {
         reservedSet.add(key)
         super.__setitem__(key, Py.java2py(value))
     }
+}
+
+
+internal fun compileAliasSpec(input: Any): PatternSpec =
+    when (input) {
+        is String -> compileSimplePatternSpec(input)
+        is PatternObject -> {
+            // first, try to compile it as a Java regex Pattern;
+            // that will be much more efficient than delegating
+            // to Python regex stuff (since we have to allocate
+            // arrays for just about every call)
+            val patternAsString = input.pattern.string
+            try {
+                val javaPattern = Pattern.compile(patternAsString)
+
+                // if we got here, huzzah! no compile issues
+                CoercedRegexAliasSpec(
+                    patternAsString,
+                    javaPattern,
+                    input.groups
+                )
+            } catch (e: PatternSyntaxException) {
+                // alas, fallback to using the python pattern
+                PyPatternSpec(input)
+            }
+        }
+
+        else -> throw IllegalArgumentException(
+            "Invalid alias type: $input (${input.javaClass})")
+    }
+
+
+internal class CoercedRegexAliasSpec(
+    override val original: String,
+    private val pattern: Pattern,
+    override val groups: Int
+) : PatternSpec {
+    override fun matcher(input: CharSequence): PatternMatcher =
+        CoercedRegexAliasMatcher(pattern.matcher(input))
+}
+
+internal class CoercedRegexAliasMatcher(
+    private val matcher: Matcher
+) : PatternMatcher {
+    override fun find(): Boolean = matcher.find()
+
+    override fun group(index: Int): String =
+        // NOTE group 0 is the entire pattern
+        matcher.group(index + 1)
+
+    override val start: Int
+        get() = matcher.start()
+    override val end: Int
+        get() = matcher.end()
+}
+
+
+/**
+ * If we can't use the Python pattern as a Java pattern,
+ *  we have to fall back to this
+ */
+internal class PyPatternSpec(
+    private val pattern: PatternObject
+) : PatternSpec {
+    override val groups: Int = pattern.groups
+
+    override fun matcher(input: CharSequence): PatternMatcher =
+        PyPatternMatcher(
+            pattern.finditer(arrayOf(Py.java2py(input.toString())), emptyArray())
+                as PyCallIter
+        )
+
+    override val original: String = pattern.pattern.string
+}
+
+internal class PyPatternMatcher(finditer: PyIterator) : PatternMatcher {
+
+    private var iterator = finditer.iterator()
+    private var current: MatchObject? = null
+
+    override fun find(): Boolean =
+        if (iterator.hasNext()) {
+            current = iterator.next() as MatchObject
+            true
+        } else {
+            current = null
+            false
+        }
+
+    override fun group(index: Int): String =
+        // NOTE: group 0 means everything that matched, but
+        // index 0 means that actual matching group; so, index + 1
+        current!!.group(arrayOf(Py.java2py(index + 1))).asString()
+
+    override val start: Int
+        get() = current!!.start().asInt()
+    override val end: Int
+        get() = current!!.end().asInt()
+
 }

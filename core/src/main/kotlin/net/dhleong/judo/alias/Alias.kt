@@ -1,10 +1,84 @@
 package net.dhleong.judo.alias
 
 import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternSpec
 import net.dhleong.judo.util.stripAnsi
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 internal val VAR_REGEX = Regex("\\$(\\d+|\\{\\w+})")
+
+internal class RegexAliasSpec(
+    override val original: String,
+    private val pattern: Pattern,
+    private val groupNames: List<String>
+) : PatternSpec {
+    override val groups = groupNames.size
+
+    override fun matcher(input: CharSequence): PatternMatcher =
+        RegexAliasMatcher(pattern.matcher(input), groupNames)
+}
+
+internal class RegexAliasMatcher(
+    private val matcher: Matcher,
+    private val groups: List<String>
+) : PatternMatcher {
+    override fun find(): Boolean = matcher.find()
+
+    override fun group(index: Int): String =
+        matcher.group(groups[index])
+
+    override val start: Int
+        get() = matcher.start()
+    override val end: Int
+        get() = matcher.end()
+}
+
+/**
+ * Given a string representing a simple input spec (that is,
+ *  $1/$2-style variable placeholders and no regex except
+ *  for `^`), compile a PatternSpec
+ */
+fun compileSimplePatternSpec(spec: String): PatternSpec {
+    val groups = mutableListOf<String>()
+    var lastEnd = 0
+    if (spec[0] == '^') {
+        lastEnd = 1
+    }
+
+    val withVars = StringBuilder()
+    VAR_REGEX.findAll(spec).forEach { matchResult ->
+        val raw = matchResult.groups[1]!!.value
+        if (raw[0] == '{') {
+            // TODO support named variables
+            throw IllegalArgumentException("Named variables not yet supported")
+        }
+
+        withVars.append(Regex.escape(
+            spec.substring(lastEnd, matchResult.range.start)
+        ))
+        lastEnd = matchResult.range.endInclusive + 1
+
+        val baseName =
+            if (raw[0] == '{') raw.substring(1..raw.length - 2)
+            else raw
+        val name = "VAR$baseName"
+        groups.add(name)
+        withVars.append("(?<$name>.+?)")
+    }
+
+    withVars.append(Regex.escape(
+        spec.substring(lastEnd, spec.length)
+    ))
+
+    // do we need whitespace boundaries instead of word boundaries?
+    val pattern =
+        if (spec[0] == '^') Pattern.compile("^$withVars(?=\\b|\\s|$)", Pattern.MULTILINE)
+        else Pattern.compile("\\b($withVars)(?=\\b|\\s|$)", Pattern.MULTILINE)
+
+    return RegexAliasSpec(spec, pattern, groups)
+}
 
 /**
  * @author dhleong
@@ -12,52 +86,18 @@ internal val VAR_REGEX = Regex("\\$(\\d+|\\{\\w+})")
 class Alias(
     val original: String,
     private val originalOutput: String?,
-    private val pattern: Pattern,
-    private val groups: List<String>,
+    private val spec: PatternSpec,
     private val process: AliasProcesser
 ) {
 
     companion object {
         fun compile(spec: String, outputSpec: String?, processor: AliasProcesser): Alias {
-            val groups = mutableListOf<String>()
-            var lastEnd = 0
-            if (spec[0] == '^') {
-                lastEnd = 1
-            }
-
-            val withVars = StringBuilder()
-            VAR_REGEX.findAll(spec).forEach { matchResult ->
-                val raw = matchResult.groups[1]!!.value
-                if (raw[0] == '{') {
-                    // TODO support named variables
-                    throw IllegalArgumentException("Named variables not yet supported")
-                }
-
-                withVars.append(Regex.escape(
-                    spec.substring(lastEnd, matchResult.range.start)
-                ))
-                lastEnd = matchResult.range.endInclusive + 1
-
-                val baseName =
-                    if (raw[0] == '{') raw.substring(1..raw.length - 2)
-                    else raw
-                val name = "VAR$baseName"
-                groups.add(name)
-                withVars.append("(?<$name>.+?)")
-            }
-
-            withVars.append(Regex.escape(
-                spec.substring(lastEnd, spec.length)
-            ))
-
-            // do we need whitespace boundaries instead of word boundaries?
-            val pattern =
-                if (spec[0] == '^') Pattern.compile("^$withVars(?=\\b|\\s|$)", Pattern.MULTILINE)
-                else Pattern.compile("\\b($withVars)(?=\\b|\\s|$)", Pattern.MULTILINE)
-
-            return Alias(spec, outputSpec, pattern, groups, processor)
+            val compiledSpec = compileSimplePatternSpec(spec)
+            return Alias(spec, outputSpec, compiledSpec, processor)
         }
     }
+
+    private val emptyStringArray = emptyArray<String>()
 
     /** @return True if we did anything */
     fun apply(input: IStringBuilder): Boolean {
@@ -67,24 +107,24 @@ class Alias(
     }
 
     fun parse(input: IStringBuilder, postProcess: (String) -> String, keepAnsi: Boolean = false): Boolean {
-        val matcher = pattern.matcher(input)
+        val matcher = spec.matcher(input)
 
         val vars =
-            if (groups.isEmpty()) emptyArray<String>()
-            else Array(groups.size) { "" }
+            if (spec.groups == 0) emptyStringArray
+            else Array(spec.groups) { "" }
 
         if (!matcher.find()) return false
 
         // extract variables
-        for (i in 0 until groups.size) {
-            val value = matcher.group(groups[i])
+        for (i in 0..spec.groups - 1) {
+            val value = matcher.group(i)
             vars[i] =
                 if (keepAnsi) value
                 else stripAnsi(value)
         }
 
         val processed = postProcess(process(vars))
-        input.replace(matcher.start(), matcher.end(), processed)
+        input.replace(matcher.start, matcher.end, processed)
 
         return true
     }

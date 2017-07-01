@@ -47,11 +47,16 @@ private fun buildHelp(usages: Iterable<String>, description: String): String =
 private val COMMAND_HELP = mutableMapOf(
     "alias" to buildHelp(
         listOf(
-            "alias(inputSpec: String, outputSpec: String)",
-            "alias(inputSpec: String, handler: Fn)",
-            "@alias(inputSpec: String)"
+            "alias(inputSpec: String/Pattern, outputSpec: String)",
+            "alias(inputSpec: String/Pattern, handler: Fn)",
+            "@alias(inputSpec: String/Pattern)"
         ),
-        "Create a text alias."
+        """
+        Create a text alias. You may use re.compile() to match against
+        a regular expression, eg:
+            import re
+            alias(re.compile("^study (.*)"), "say I'd like to study '$1'")
+        """.trimIndent()
     ),
 
     "event" to buildHelp(
@@ -74,19 +79,22 @@ private val COMMAND_HELP = mutableMapOf(
 
     "prompt" to buildHelp(
         listOf(
-            "prompt(inputSpec: String, outputSpec: String)",
-            "prompt(inputSpec: String, handler: Fn)",
-            "@prompt(inputSpec: String)"
+            "prompt(inputSpec: String/Pattern, outputSpec: String)",
+            "prompt(inputSpec: String/Pattern, handler: Fn)",
+            "@prompt(inputSpec: String/Pattern)"
         ),
-        "Prepare a prompt to be displayed in the status area."
+        """
+        Prepare a prompt to be displayed in the status area.
+        See :help alias for more about inputSpec.
+        """.trimIndent()
     ),
 
     "trigger" to buildHelp(
         listOf(
-            "trigger(inputSpec: String, handler: Fn)",
-            "@trigger(inputSpec: String)"
+            "trigger(inputSpec: String/Pattern, handler: Fn)",
+            "@trigger(inputSpec: String/Pattern)"
         ),
-        "Declare a trigger."
+        "Declare a trigger. See :help alias for more about inputSpec."
     ),
 
     "complete" to buildHelp(

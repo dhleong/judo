@@ -1,5 +1,7 @@
 package net.dhleong.judo.trigger
 
+import net.dhleong.judo.util.PatternSpec
+
 typealias TriggerProcessor = (args: Array<String>) -> Unit
 
 /**
@@ -13,6 +15,7 @@ interface ITriggerManager {
     fun clear()
 
     fun define(inputSpec: String, parser: TriggerProcessor)
+    fun define(inputSpec: PatternSpec, parser: TriggerProcessor)
 
     fun process(input: CharSequence)
 

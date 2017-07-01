@@ -117,6 +117,41 @@ class PythonCmdModeTest {
             .isEmpty()
     }
 
+    @Test fun alias_regex() {
+        mode.execute("""
+            |import re
+            |@alias(re.compile('^cool(.*)'))
+            |def handleAlias(arg): echo(arg.strip())
+            """.trimMargin())
+
+        assertThat(judo.aliases.process("cool cool story bro").toString())
+            .isEmpty()
+        assertThat(judo.echos).containsExactly("cool story bro")
+
+        // the regex should match nothing
+        assertThat(judo.aliases.process("cool").toString())
+            .isEmpty()
+        assertThat(judo.echos).containsExactly("cool story bro", "")
+    }
+
+    @Test fun alias_pyOnlyRegex() {
+        // NOTE: breaking the black box a bit here for thorough testing;
+        // when possible, we compile the python regex into Java regex
+        // for better efficiency, but some (very few) things in python regex
+        // don't translate; in such sad situations, we fallback to delegating
+        // to the python regex stuff.
+        // The (?L) flag is such a thing
+        mode.execute("""
+            |import re
+            |@alias(re.compile(r'(?L)^cool(.*)'))
+            |def handleAlias(arg): echo(arg.strip())
+            """.trimMargin())
+
+        assertThat(judo.aliases.process("cool cool story bro").toString())
+            .isEmpty()
+        assertThat(judo.echos).containsExactly("cool story bro")
+    }
+
     @Test fun event_fun() {
         mode.execute("""
             |def handleEvent(): echo("awesome")
@@ -164,6 +199,17 @@ class PythonCmdModeTest {
         assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
         judo.triggers.process("this is cool")
         assertThat(judo.echos).containsExactly("awesome")
+    }
+
+    @Test fun trigger_regex() {
+        mode.execute("""
+            import re
+            @trigger(re.compile('cool(.*)'))
+            def handleTrigger(thing): echo("awesome%s" % thing)
+            """.trimIndent())
+
+        judo.triggers.process("cool story bro")
+        assertThat(judo.echos).containsExactly("awesome story bro")
     }
 
     @Test fun trigger_withDot() {

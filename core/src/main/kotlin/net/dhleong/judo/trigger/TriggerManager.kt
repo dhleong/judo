@@ -1,6 +1,8 @@
 package net.dhleong.judo.trigger
 
 import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.util.PatternSpec
 
 /**
  * @author dhleong
@@ -13,11 +15,13 @@ class TriggerManager : ITriggerManager {
         aliases.clear()
 
     override fun define(inputSpec: String, parser: TriggerProcessor) {
-        aliases.define(inputSpec, { args ->
-            parser.invoke(args)
-            "" // ignore result
-        })
+        aliases.define(inputSpec, toAliasProcessor(parser))
     }
+
+    override fun define(inputSpec: PatternSpec, parser: TriggerProcessor) {
+        aliases.define(inputSpec, toAliasProcessor(parser))
+    }
+
 
     override fun process(input: CharSequence) {
         aliases.process(input)
@@ -36,4 +40,10 @@ class TriggerManager : ITriggerManager {
             appendln("=========")
             aliases.describeContentsTo(this)
         }.toString()
+
+    private fun toAliasProcessor(parser: TriggerProcessor): AliasProcesser =
+        { args ->
+            parser.invoke(args)
+            "" // ignore result
+        }
 }
