@@ -12,6 +12,8 @@ import org.junit.Before
 import org.junit.Test
 
 /**
+ * TODO refactor into multiple, separate files
+ *
  * @author dhleong
  */
 class MotionIntegrationTest {
@@ -306,6 +308,46 @@ class MotionIntegrationTest {
         judo.type(keys("daW"))
         assertThat(renderer.inputLine)
             .isEqualTo("word w@rd2" to 9)
+    }
+
+    @Test fun deleteOuterQuotes() {
+        judo.setInput("word \"word2\" word3", 8)
+
+        judo.type(keys("da\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word  word3" to 5)
+    }
+
+    @Test fun deleteOuterQuotes_all() {
+        judo.setInput("\"word2\"", 0)
+
+        judo.type(keys("da\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
+    }
+
+    @Test fun deleteOuterQuotes_hanging() {
+        judo.setInput("word \"", 0)
+
+        judo.type(keys("da\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word \"" to 0)
+    }
+
+    @Test fun deleteOuterQuotes_nothing() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("da\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 0)
+    }
+
+    @Test fun deleteOuterQuotes_searchForPair() {
+        judo.setInput("word \"word2\" word3", 0)
+
+        judo.type(keys("da\""))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word  word3" to 5)
     }
 
     @Test fun changeToEnd_last() {

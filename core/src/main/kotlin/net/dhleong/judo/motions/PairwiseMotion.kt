@@ -3,15 +3,25 @@ package net.dhleong.judo.motions
 /**
  * @author dhleong
  */
+
 fun innerPairwiseMotion(open: Char, close: Char): Motion =
     createMotion(Motion.Flags.TEXT_OBJECT) { buffer, cursor ->
-        calculateInnerPair(open, close, buffer, cursor, isRecursion = false)
+        calculateInnerPair(open, close, buffer, cursor)
+    }
+
+fun outerPairwiseMotion(open: Char, close: Char): Motion =
+    createMotion(Motion.Flags.TEXT_OBJECT) { buffer, cursor ->
+        val inner = calculateInnerPair(open, close, buffer, cursor)
+        if (inner.first == inner.last) inner // no dice
+        else {
+            inner.first - 1..inner.last + 1
+        }
     }
 
 internal fun calculateInnerPair(
     open: Char, close: Char,
     buffer: CharSequence, cursor: Int,
-    isRecursion: Boolean
+    isRecursion: Boolean = false
 ): IntRange {
     val closeRange = calculateFind(1, close, buffer, cursor)
     if (closeRange.last == cursor) {

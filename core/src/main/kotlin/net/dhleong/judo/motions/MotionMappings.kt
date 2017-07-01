@@ -23,14 +23,22 @@ val ALL_MOTIONS = arrayListOf(
     keys("h") to charMotion(-1),
     keys("l") to charMotion(1),
 
+    // word object
+    //
     keys("iw") to innerWordObjectMotion(false),
     keys("iW") to innerWordObjectMotion(true),
 
     keys("aw") to outerWordObjectMotion(false),
     keys("aW") to outerWordObjectMotion(true),
 
+    // pairwise objects
+    //
     keys("i\"") to innerPairwiseMotion('"', '"'),
     keys("i'") to innerPairwiseMotion('\'', '\''),
+
+    keys("a\"") to outerPairwiseMotion('"', '"'),
+    keys("a'") to outerPairwiseMotion('\'', '\''),
+
 
     keys("t") to tilMotion(1),
     keys("T") to tilMotion(-1),
