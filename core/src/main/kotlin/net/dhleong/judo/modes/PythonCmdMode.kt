@@ -29,14 +29,11 @@ class PythonCmdMode(
     private var completions: CompletionSource
 ) : BaseCmdMode(judo, inputBuffer, rendererInfo, history) {
 
-    private val python: PythonInterpreter
+    private val python = PythonInterpreter()
     private val keepModules = HashSet<String>()
     private val declaredEvents = ArrayList<Pair<String, (Any) -> Unit>>()
 
     init {
-        Options.importSite = false
-        python = PythonInterpreter()
-
         val globals = PyGlobals()
 
         // "constants" (don't know if we can actually make them constant)

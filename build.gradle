@@ -29,7 +29,7 @@ ext.deps = [
     commonsNet: "commons-net:commons-net:${vs.commonsNet}",
 
     jline: "org.jline:jline:${vs.jline}",
-    jython: "org.python:jython:${vs.jython}",
+    jython: "org.python:jython-standalone:${vs.jython}",
 
     test: [
         assertj: 'org.assertj:assertj-core:2.4.1',
