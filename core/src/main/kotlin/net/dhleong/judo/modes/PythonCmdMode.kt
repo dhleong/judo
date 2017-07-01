@@ -51,7 +51,7 @@ class PythonCmdMode(
 
         // aliasing
         globals["alias"] = asMaybeDecorator<Any>(2) {
-            defineAlias(it[0], it[1])
+            defineAlias(compileAliasSpec(it[0]), it[1])
         }
 
         // events
@@ -66,7 +66,7 @@ class PythonCmdMode(
 
         // triggers
         globals["trigger"] = asMaybeDecorator<Any>(2) {
-            defineTrigger(it[0] as String, it[1] as PyFunction)
+            defineTrigger(compileAliasSpec(it[0]), it[1] as PyFunction)
         }
 
         // map invocations
@@ -160,9 +160,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineAlias(alias: Any, handler: Any) {
-        val aliasSpec = compileAliasSpec(alias)
-
+    private fun defineAlias(alias: AliasSpec, handler: Any) {
         if (handler is PyFunction) {
             val handlerFn: AliasProcesser = { args ->
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
@@ -171,9 +169,9 @@ class PythonCmdMode(
                     ?: ""
             }
 
-            judo.aliases.define(aliasSpec, handlerFn)
+            judo.aliases.define(alias, handlerFn)
         } else {
-            judo.aliases.define(aliasSpec, handler as String)
+            judo.aliases.define(alias, handler as String)
         }
     }
 
@@ -229,7 +227,7 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineTrigger(alias: String, handler: PyFunction) {
+    private fun defineTrigger(alias: AliasSpec, handler: PyFunction) {
         judo.triggers.define(alias, { args ->
             handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
         })

@@ -83,15 +83,18 @@ private val COMMAND_HELP = mutableMapOf(
             "prompt(inputSpec: String, handler: Fn)",
             "@prompt(inputSpec: String)"
         ),
-        "Prepare a prompt to be displayed in the status area."
+        """
+        Prepare a prompt to be displayed in the status area.
+        See :help alias for more about inputSpec.
+        """.trimIndent()
     ),
 
     "trigger" to buildHelp(
         listOf(
-            "trigger(inputSpec: String, handler: Fn)",
-            "@trigger(inputSpec: String)"
+            "trigger(inputSpec: String/Pattern, handler: Fn)",
+            "@trigger(inputSpec: String/Pattern)"
         ),
-        "Declare a trigger."
+        "Declare a trigger. See :help alias for more about inputSpec."
     ),
 
     "complete" to buildHelp(

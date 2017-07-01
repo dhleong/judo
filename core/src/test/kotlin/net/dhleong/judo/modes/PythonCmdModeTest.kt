@@ -201,6 +201,17 @@ class PythonCmdModeTest {
         assertThat(judo.echos).containsExactly("awesome")
     }
 
+    @Test fun trigger_regex() {
+        mode.execute("""
+            import re
+            @trigger(re.compile('cool(.*)'))
+            def handleTrigger(thing): echo("awesome%s" % thing)
+            """.trimIndent())
+
+        judo.triggers.process("cool story bro")
+        assertThat(judo.echos).containsExactly("awesome story bro")
+    }
+
     @Test fun trigger_withDot() {
         mode.execute("""
             |@trigger('cool.')
