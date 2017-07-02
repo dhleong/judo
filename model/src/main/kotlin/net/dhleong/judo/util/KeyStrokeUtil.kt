@@ -53,6 +53,7 @@ fun key(string: String): KeyStroke {
         "esc" -> return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
         "up" -> return KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
         "down" -> return KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0)
+        "tab" -> return KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0)
 
         else -> {
             if ("typed" !in string) {

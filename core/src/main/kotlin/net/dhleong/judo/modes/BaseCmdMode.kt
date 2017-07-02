@@ -308,6 +308,7 @@ abstract class BaseCmdMode(
 
     override fun onEnter() {
         clearBuffer()
+        suggester.reset()
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {

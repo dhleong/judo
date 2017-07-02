@@ -38,6 +38,7 @@ class ScriptInputMode(
 
     override fun onEnter() {
         judo.setCursorType(CursorType.PIPE)
+        suggester.reset()
     }
 
     override fun onExit() {

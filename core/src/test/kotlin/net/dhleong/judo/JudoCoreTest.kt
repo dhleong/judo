@@ -167,6 +167,22 @@ class JudoCoreTest {
 
         tmpFile.deleteOnExit()
     }
+
+    @Test fun resetCompletionOnModeChange() {
+        // seed completion
+        judo.seedCompletion("take love")
+
+        judo.feedKeys("itake l<tab>")
+        assertThat(renderer.outputLines).isEmpty() // no errors
+        assertThat(renderer.inputLine)
+            .isEqualTo("take love" to 9)
+
+        judo.feedKeys("<esc>ddi<tab>")
+
+        assertThat(renderer.outputLines).isEmpty() // no errors
+        assertThat(renderer.inputLine)
+            .isEqualTo("take" to 4)
+    }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =

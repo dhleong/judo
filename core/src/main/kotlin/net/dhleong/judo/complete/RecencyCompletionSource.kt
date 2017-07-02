@@ -51,7 +51,11 @@ internal class LruCache<K, V>(val maxCapacity: Int)
             isAccessible = true
         }
 
-    val reverseIterable = Iterable { ReverseIterator(tailField.get(this)) }
+    val reverseIterable = Iterable {
+        val tail = tailField.get(this)
+        if (tail == null) emptySequence<Map.Entry<K, V>>().iterator()
+        else ReverseIterator(tailField.get(this))
+    }
 
     override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, V>?): Boolean =
         size > maxCapacity

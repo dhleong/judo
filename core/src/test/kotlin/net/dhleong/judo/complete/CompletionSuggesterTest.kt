@@ -147,6 +147,19 @@ class CompletionSuggesterTest {
         assertThat(buffer.toString()).isEqualTo("  LA")
     }
 
+    @Test fun empty() {
+        val buffer = InputBuffer()
+        buffer.set("")
+        buffer.cursor = 0
+        suggester.initialize(buffer.toChars(), buffer.cursor)
+
+        suggester.updateWithNextSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("land")
+
+        suggester.updateWithPrevSuggestion(buffer)
+        assertThat(buffer.toString()).isEqualTo("")
+    }
+
     @Test fun emptySecondWord() {
         completions.process("laser lasso")
 

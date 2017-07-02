@@ -54,6 +54,7 @@ class InsertMode(
 
     override fun onEnter() {
         judo.setCursorType(CursorType.PIPE)
+        suggester.reset()
     }
 
     override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {

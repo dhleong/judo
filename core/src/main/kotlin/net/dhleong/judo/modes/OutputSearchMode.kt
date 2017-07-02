@@ -84,6 +84,7 @@ class OutputSearchMode(
 
     override fun onEnter() {
         clearBuffer()
+        suggester.reset()
     }
 
     override fun renderStatusBuffer(): String = "/$buffer"
