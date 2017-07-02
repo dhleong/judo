@@ -8,6 +8,7 @@ import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.motions.Motion
+import net.dhleong.judo.motions.normalizeForMotion
 import net.dhleong.judo.util.hasShift
 import javax.swing.KeyStroke
 
@@ -30,8 +31,12 @@ abstract class BaseModeWithBuffer(
             }
         }
 
-    protected fun applyMotion(motion: Motion) =
+    protected fun applyMotion(motion: Motion, clampCursor: Boolean = true) {
         motion.applyTo(judo, buffer)
+        if (clampCursor && buffer.cursor > buffer.lastIndex) {
+            buffer.cursor = maxOf(0, buffer.lastIndex)
+        }
+    }
 
     /**
      * Convenience to create a KeyAction that just applies
@@ -42,6 +47,7 @@ abstract class BaseModeWithBuffer(
 
     protected fun rangeOf(motion: Motion) =
         motion.calculate(judo, buffer)
+            .normalizeForMotion(motion)
 
     /** @return True if we handled it as a mapping (or might yet) */
     protected fun tryMappings(

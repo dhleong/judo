@@ -42,11 +42,13 @@ class NormalMode(
         keys("/") to { core -> core.enterMode("search") },
 
         keys("a") to { core ->
-            applyMotion(charMotion(1))
+            applyMotion(charMotion(1), clampCursor = false)
             core.enterMode("insert")
         },
         keys("A") to { core ->
+            // it's like $a
             applyMotion(toEndMotion())
+            applyMotion(charMotion(1), clampCursor = false)
             core.enterMode("insert")
         },
 

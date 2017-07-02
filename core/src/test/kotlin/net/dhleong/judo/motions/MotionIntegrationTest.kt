@@ -51,7 +51,6 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("word3 " to 0)
 
-        // nop:
         judo.type(keys("<esc>A<alt bs>"))
         assertThat(renderer.outputLines).isEmpty() // no error deleting last text
         assertThat(renderer.inputLine)
@@ -96,6 +95,13 @@ class MotionIntegrationTest {
             .isEqualTo("" to 0)
     }
 
+    @Test fun moveCharRight_butNotBeyond() {
+        judo.setInput("word", 3)
+        judo.type(keys("l"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word" to 3)
+    }
+
     @Test fun moveToFirst() {
         judo.setInput("word word2 word3", 11)
 
@@ -104,6 +110,18 @@ class MotionIntegrationTest {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 0)
     }
+
+    @Test fun moveToEnd_butNotBeyond() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 15)
+
+        judo.type(keys("ciw"))
+        assertThat(renderer.outputLines).isEmpty() //  no error
+    }
+
 
     @Test fun changeBackEmpty() {
         judo.setInput("", 0)

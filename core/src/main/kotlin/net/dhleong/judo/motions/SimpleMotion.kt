@@ -23,8 +23,8 @@ fun xCharMotion(step: Int) =
     }
 
 fun toEndMotion(): Motion =
-    createMotion { buffer, cursor ->
-        cursor..buffer.length
+    createMotion(Motion.Flags.INCLUSIVE) { buffer, cursor ->
+        cursor..buffer.lastIndex
     }
 
 fun toStartMotion(): Motion =
