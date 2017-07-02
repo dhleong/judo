@@ -29,6 +29,7 @@ interface IJudoWindow {
     val width: Int
     val height: Int
     val isFocusable: Boolean get() = currentBuffer.isFocusable
+    var isFocused: Boolean
 
     var currentBuffer: IJudoBuffer
 
@@ -36,6 +37,8 @@ interface IJudoWindow {
 
     fun getDisplayLines(lines: MutableList<CharSequence>)
     fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence
+
+    fun updateStatusLine(line: CharSequence, cursor: Int = -1)
 }
 
 interface IJudoTabpage {
@@ -54,4 +57,14 @@ interface IJudoTabpage {
     fun resize(width: Int, height: Int)
 
     fun getDisplayLines(lines: MutableList<CharSequence>)
+}
+
+class IdManager {
+    private var nextBufferId = 0
+    private var nextTabpageId = 0
+    private var nextWindowId = 0
+
+    fun newBuffer() = ++nextBufferId
+    fun newTabpage() = ++nextTabpageId
+    fun newWindow() = ++nextWindowId
 }

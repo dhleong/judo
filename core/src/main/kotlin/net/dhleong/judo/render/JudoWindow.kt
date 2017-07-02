@@ -10,17 +10,23 @@ import org.jline.utils.AttributedStringBuilder
  * @author dhleong
  */
 class JudoWindow(
-    override val id: Int,
+    ids: IdManager,
     private val settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
-    initialBuffer: IJudoBuffer
+    initialBuffer: IJudoBuffer,
+    isFocusable: Boolean? = null
 ) : IJudoWindow {
 
+    override val id = ids.newWindow()
     override var width: Int = initialWidth
     override var height: Int = initialHeight
 
     override var currentBuffer: IJudoBuffer = initialBuffer
+    override var isFocused: Boolean = false
+    override val isFocusable: Boolean
+        get() = providedFocusable ?: super.isFocusable
+    private val providedFocusable = isFocusable
 
     private var displayWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
@@ -32,6 +38,9 @@ class JudoWindow(
 
     private var lastSearchKeyword: String = ""
     private var searchResultLine = -1
+
+    private var status = AttributedString.EMPTY
+    private var cursor = 0
 
     override fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence {
         val buffer = currentBuffer
@@ -54,10 +63,14 @@ class JudoWindow(
     }
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
+        val displayHeight =
+            if (isFocusable) height - 1 // make room for status line
+            else height
+
         val buffer = currentBuffer
         val wordWrap = WORD_WRAP.read(settings)
         val start = buffer.lastIndex - scrollbackBottom
-        val end = maxOf(0, start - height)
+        val end = maxOf(0, start - displayHeight)
 
         displayWorkspace.clear()
 
@@ -71,7 +84,7 @@ class JudoWindow(
         }
 
         val displayEnd = displayWorkspace.size - scrollbackOffset
-        val displayStart = displayEnd - height
+        val displayStart = displayEnd - displayHeight
 
         val listStart = lines.size
         @Suppress("LoopToCallChain") // no extra allocations please, thanks
@@ -97,6 +110,67 @@ class JudoWindow(
                 lines[lineIndex] = newString
             }
         }
+
+        if (isFocusable && isFocused) {
+            lines.add(status)
+        }
+    }
+
+    override fun updateStatusLine(line: CharSequence, cursor: Int) {
+        if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
+        status = AttributedString.fromAnsi(line.toString())
+        this.cursor = cursor
+    }
+}
+
+/**
+ * Special window that delegates to two separate windows, one
+ * containing the primary output buffer for a Connection, and
+ * one containing prompts extracted for that Connection.
+ */
+class PrimaryJudoWindow(
+    ids: IdManager,
+    settings: StateMap,
+    outputBuffer: JudoBuffer,
+    initialWidth: Int,
+    initialHeight: Int
+) : IJudoWindow {
+
+    override val id = ids.newWindow()
+    override val width = initialWidth
+    override val height = initialHeight
+    override var isFocused: Boolean
+        get() = promptWindow.isFocused
+        set(value) {
+            promptWindow.isFocused = isFocused
+        }
+
+    override var currentBuffer: IJudoBuffer
+        get() = outputWindow.currentBuffer
+        set(value) {
+            outputWindow.currentBuffer = value
+        }
+
+    val outputWindow = JudoWindow(ids, settings, initialWidth, initialHeight, outputBuffer, isFocusable = false)
+
+    val promptBuffer = JudoBuffer(ids.newBuffer(), isFocusable = true)
+    val promptWindow = JudoWindow(ids, settings, initialWidth, 1, promptBuffer)
+
+    override fun updateStatusLine(line: CharSequence, cursor: Int) =
+        promptWindow.updateStatusLine(line, cursor)
+
+    override fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence =
+        outputWindow.appendLine(line, isPartialLine)
+
+    override fun resize(width: Int, height: Int) {
+        val availableHeight = promptWindow.height - height
+        outputWindow.resize(width, availableHeight)
+    }
+
+    override fun getDisplayLines(lines: MutableList<CharSequence>) {
+        // easy
+        outputWindow.getDisplayLines(lines)
+        promptWindow.getDisplayLines(lines)
     }
 
 }

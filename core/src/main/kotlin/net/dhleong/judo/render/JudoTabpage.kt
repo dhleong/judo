@@ -6,16 +6,15 @@ import net.dhleong.judo.StateMap
  * @author dhleong
  */
 class JudoTabpage(
-    override val id: Int,
+    private val ids: IdManager,
     private val settings: StateMap,
     initialWindow: IJudoWindow
 ) : IJudoTabpage {
 
+    override var id = ids.newTabpage()
     override var width: Int = initialWindow.width
     override var height: Int = initialWindow.height
     override var currentWindow: IJudoWindow = initialWindow
-
-    private var nextWindowId = initialWindow.id + 1
 
     private val rootStack = RootStack(this).apply {
         child = WindowStack(this, initialWindow)
@@ -38,7 +37,7 @@ class JudoTabpage(
     override fun hsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val newWindow = JudoWindow(++nextWindowId, settings, parent.width, cols, buffer)
+        val newWindow = JudoWindow(ids, settings, parent.width, cols, buffer)
 
         if (parent is VerticalStack) {
             parent.add(WindowStack(parent, newWindow))
