@@ -228,6 +228,15 @@ class MotionIntegrationTest {
             .isEqualTo("word word2 " to 10)
     }
 
+    @Test fun deleteInnerWord_empty() {
+        judo.setInput("", 0)
+
+        judo.type(keys("diw"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
+    }
+
     @Test fun deleteInnerWord_symbols() {
         judo.setInput("word w@rd2 word3", 5)
 
