@@ -241,7 +241,8 @@ class JLineRenderer2Test {
 
     @Test fun continueTrailingStyleAcrossSplitLines() {
         renderer.windowWidth = 12
-        renderer.currentTabpage!!.resize(12, renderer.windowHeight - 1)
+        renderer.windowHeight = 7
+//        renderer.currentTabpage!!.resize(12, renderer.windowHeight - 1)
         val lineOne = "\r\n${ansi(1,2)}\r\nTake my love\r\nTake"
         val lineTwo = " my land...\r\nTake me where..."
 
@@ -249,6 +250,10 @@ class JLineRenderer2Test {
             .isEqualTo(ansi(1,2).toString())
 
         val core = JudoCore(renderer, settings)
+        renderer.onResized?.invoke()
+        // NOTE: input line takes 1 from the 7 above
+        assertThat(renderer.currentTabpage!!.currentWindow.height).isEqualTo(6)
+
         core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
         core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
 
@@ -268,7 +273,12 @@ class JLineRenderer2Test {
         assertThat(bufferContents[5])
             .isEqualTo("${ansi(1,2)}Take me where...${ansi(0)}")
 
-        val windowContents = (window as PrimaryJudoWindow).outputWindow.getDisplayStrings()
+        // NOTE: status line takes 1 from the 6 above
+        val outputWindow = (window as PrimaryJudoWindow).outputWindow
+        assertThat(outputWindow.height).isEqualTo(5)
+
+        val windowContents = outputWindow.getDisplayStrings()
+        assertThat(windowContents).hasSize(outputWindow.height)
         assertThat(windowContents[0])
             .isEqualTo("${ansi(1,2)}Take my love${ansi(0)}")
         assertThat(windowContents[1])

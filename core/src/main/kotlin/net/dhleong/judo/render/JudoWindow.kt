@@ -277,8 +277,8 @@ class PrimaryJudoWindow(
 ) : IJudoWindow {
 
     override val id = ids.newWindow()
-    override val width = initialWidth
-    override val height = initialHeight
+    override var width = initialWidth
+    override var height = initialHeight
     override var isFocused: Boolean
         get() = promptWindow.isFocused
         set(value) {
@@ -316,6 +316,8 @@ class PrimaryJudoWindow(
     override fun resize(width: Int, height: Int) {
         val availableHeight = height - promptWindow.height
         outputWindow.resize(width, availableHeight)
+        this.width = width
+        this.height = height
     }
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) {

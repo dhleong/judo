@@ -27,6 +27,8 @@ import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
@@ -151,14 +153,28 @@ class JudoCore(
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
-    private val ids = IdManager()
-    private val outputBuffer = JudoBuffer(ids)
-    private val primaryWindow = PrimaryJudoWindow(
-        ids, settings, outputBuffer,
-        renderer.windowWidth, renderer.windowHeight)
-    private val tabpage = JudoTabpage(ids, settings, primaryWindow)
+    private val ids: IdManager
+    private val outputBuffer: IJudoBuffer
+    private val primaryWindow: PrimaryJudoWindow
+    private val tabpage: IJudoTabpage
 
     init {
+        val rendererTabpage = renderer.currentTabpage
+        if (rendererTabpage != null) {
+            // NOTE: this should only happen in tests
+            ids = IdManager()
+            tabpage = rendererTabpage
+            primaryWindow = tabpage.currentWindow as PrimaryJudoWindow
+            outputBuffer = primaryWindow.outputWindow.currentBuffer
+        } else {
+            ids = IdManager()
+            outputBuffer = JudoBuffer(ids)
+            primaryWindow = PrimaryJudoWindow(
+                ids, settings, outputBuffer,
+                renderer.windowWidth, renderer.windowHeight)
+            tabpage = JudoTabpage(ids, settings, primaryWindow)
+        }
+
         primaryWindow.isFocused = true
         renderer.currentTabpage = tabpage
         renderer.settings = state
