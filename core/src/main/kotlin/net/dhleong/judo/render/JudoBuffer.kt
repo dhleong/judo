@@ -24,7 +24,7 @@ class JudoBuffer(
 
     private var hadPartialLine = false
 
-    override fun appendLine(
+    @Synchronized override fun appendLine(
         line: CharSequence, isPartialLine: Boolean,
         windowWidthHint: Int, wordWrap: Boolean
     ): CharSequence {
@@ -36,7 +36,7 @@ class JudoBuffer(
 
     override fun get(index: Int): CharSequence = output[index]
 
-    override fun replaceLastLine(result: CharSequence) {
+    @Synchronized override fun replaceLastLine(result: CharSequence) {
         // TODO remove the line completely if empty?
         // TODO split line?
         output[output.lastIndex] = when (result) {
@@ -45,7 +45,7 @@ class JudoBuffer(
         }
     }
 
-    override fun clear() {
+    @Synchronized override fun clear() {
         output.clear()
     }
 

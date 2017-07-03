@@ -33,12 +33,26 @@ interface IJudoWindow {
 
     var currentBuffer: IJudoBuffer
 
-    fun resize(width: Int, height: Int)
-
-    fun getDisplayLines(lines: MutableList<CharSequence>)
     fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence
 
+    fun getDisplayLines(lines: MutableList<CharSequence>)
+
+    fun resize(width: Int, height: Int)
+
+    /**
+     * @param count Number of lines to scroll, where a POSITIVE number
+     *  moves backward in history, and a NEGATIVE number moves forward
+     */
+    fun scrollLines(count: Int)
+
+    /**
+     * @see scrollLines
+     */
+    fun scrollPages(count: Int)
+    fun scrollToBottom()
+
     fun updateStatusLine(line: CharSequence, cursor: Int = -1)
+    fun searchForKeyword(word: CharSequence, direction: Int)
 }
 
 interface IJudoTabpage {

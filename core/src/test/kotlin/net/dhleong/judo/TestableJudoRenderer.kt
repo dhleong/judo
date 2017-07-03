@@ -8,7 +8,7 @@ import java.lang.reflect.Proxy
 
 class TestableJudoRenderer(
     private val state: RendererState = RendererState()
-) : JudoRenderer by createRendererProxy(state) {
+) : JudoRenderer2 by createRendererProxy(state) {
 
     var settableWindowWidth: Int
         get() = state.windowWidth
@@ -21,15 +21,15 @@ class TestableJudoRenderer(
         get() = state.outputLines
 }
 
-class RendererState(var windowWidth: Int = 90) {
+class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
     val outputLines = mutableListOf<Pair<String, Boolean>>()
     var inputLine: Pair<String, Int> = "" to 0
 }
 
-private fun createRendererProxy(state: RendererState): JudoRenderer {
+private fun createRendererProxy(state: RendererState): JudoRenderer2 {
     return Proxy.newProxyInstance(
         ClassLoader.getSystemClassLoader(),
-        arrayOf(JudoRenderer::class.java)
+        arrayOf(JudoRenderer2::class.java)
     ) { _, method, args ->
         when (method.name) {
             "appendOutput" -> {
@@ -41,6 +41,7 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
             }
 
             "getWindowWidth" -> state.windowWidth
+            "getWindowHeight" -> state.windowHeight
 
             "inTransaction" -> {
                 @Suppress("UNCHECKED_CAST")
@@ -54,5 +55,5 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
 
             else -> null // ignore
         }
-    } as JudoRenderer
+    } as JudoRenderer2
 }

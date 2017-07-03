@@ -27,7 +27,11 @@ import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.JudoTabpage
 import net.dhleong.judo.render.OutputLine
+import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
@@ -54,7 +58,7 @@ enum class DebugLevel {
 }
 
 class JudoCore(
-    override val renderer: JudoRenderer,
+    override val renderer: JudoRenderer2,
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
@@ -147,17 +151,30 @@ class JudoCore(
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
+    private val ids = IdManager()
+    private val outputBuffer = JudoBuffer(ids.newBuffer(), true)
+    private val primaryWindow = PrimaryJudoWindow(
+        ids, settings, outputBuffer,
+        renderer.windowWidth, renderer.windowHeight)
+    private val tabpage = JudoTabpage(ids, settings, primaryWindow)
+
     init {
-        activateMode(currentMode)
+        primaryWindow.isFocused = true
+        renderer.currentTabpage = tabpage
         renderer.settings = state
         renderer.onResized = {
-            updateStatusLine(currentMode)
-            updateInputLine()
+            renderer.inTransaction {
+                tabpage.resize(renderer.windowWidth, renderer.windowHeight - 1)
+                updateStatusLine(currentMode)
+                updateInputLine()
+            }
         }
 
         if (debug.isEnabled) {
             System.setErr(PrintStream(debugLogFile.outputStream()))
         }
+
+        activateMode(currentMode)
     }
 
     override fun connect(address: String, port: Int) {
@@ -324,11 +341,11 @@ class JudoCore(
     }
 
     override fun scrollPages(count: Int) {
-        renderer.scrollPages(count)
+        tabpage.currentWindow.scrollPages(count)
     }
 
     override fun scrollToBottom() {
-        renderer.scrollToBottom()
+        tabpage.currentWindow.scrollToBottom()
     }
 
     override fun seedCompletion(text: String) {
@@ -404,11 +421,11 @@ class JudoCore(
             }
 
             KeyEvent.VK_PAGE_UP -> {
-                renderer.scrollLines(1)
+                tabpage.currentWindow.scrollLines(1)
                 return
             }
             KeyEvent.VK_PAGE_DOWN -> {
-                renderer.scrollLines(-1)
+                tabpage.currentWindow.scrollLines(-1)
                 return
             }
         }
@@ -417,10 +434,13 @@ class JudoCore(
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        if (newMode is StatusBufferProvider) {
-            renderer.updateStatusLine(newMode.renderStatusBuffer(), newMode.getCursor())
-        } else {
-            updateInputLine()
+        renderer.inTransaction {
+            if (newMode is StatusBufferProvider) {
+                tabpage.currentWindow.updateStatusLine(
+                    newMode.renderStatusBuffer(), newMode.getCursor())
+            } else {
+                updateInputLine()
+            }
         }
     }
 
@@ -492,7 +512,9 @@ class JudoCore(
     }
 
     override fun searchForKeyword(text: CharSequence, direction: Int) {
-        renderer.searchForKeyword(text, direction)
+        renderer.inTransaction {
+            tabpage.currentWindow.searchForKeyword(text, direction)
+        }
     }
 
     override fun setCursorType(type: CursorType) =
@@ -530,7 +552,7 @@ class JudoCore(
             // dump the parsed prompts for visual effect
             echo("")
             parsedPrompts.forEach {
-                renderer.appendOutput(it)
+                appendOutput(OutputLine(it))
             }
             parsedPrompts.clear()
 
@@ -617,7 +639,8 @@ class JudoCore(
             updateInputLine()
 
             if (mode is StatusBufferProvider) {
-                renderer.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
+//                renderer.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
+                tabpage.currentWindow.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
             } else {
                 updateStatusLine(mode)
             }
@@ -639,7 +662,7 @@ class JudoCore(
     }
 
     private fun updateStatusLine(mode: Mode) {
-        renderer.updateStatusLine(buildStatusLine(mode).toAnsiString())
+        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode).toAnsiString())
     }
 
     internal fun buildStatusLine(mode: Mode): IStringBuilder {
@@ -673,13 +696,13 @@ class JudoCore(
         if (e is ScriptExecutionException) {
             appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"))
             e.stackTrace.map { "  $it" }
-                .forEach { renderer.appendOutput(it) }
+                .forEach { appendOutput(OutputLine(it)) }
             return
         }
 
         appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"))
         e.stackTrace.map { "  $it" }
-            .forEach { renderer.appendOutput(it) }
+            .forEach { appendOutput(OutputLine(it)) }
         e.cause?.let {
             appendError(it, "Caused by: ", isRoot = false)
         }
@@ -698,7 +721,7 @@ class JudoCore(
         }
     }
 
-    internal fun appendOutput(buffer: OutputLine) {
+    @Synchronized internal fun appendOutput(buffer: OutputLine) {
         val count = buffer.length
         renderer.inTransaction {
             var lastLineEnd = 0
@@ -712,7 +735,7 @@ class JudoCore(
                         if (char == '\n') '\r'
                         else '\n'
 
-                    val actualLine = renderer.appendOutput(
+                    val actualLine = primaryWindow.appendLine(
                         buffer.subSequence(lastLineEnd, i),
                         isPartialLine = false
                     ) as OutputLine
@@ -727,7 +750,7 @@ class JudoCore(
             }
 
             if (lastLineEnd < count) {
-                renderer.appendOutput(
+                primaryWindow.appendLine(
                     buffer.subSequence(lastLineEnd, count),
                     isPartialLine = true
                 )
@@ -740,11 +763,12 @@ class JudoCore(
         val result = prompts.process(actualLine, this::onPrompt)
         if (result.length != originalLength) {
             // we found a prompt! clean up the output
-            renderer.replaceLastLine(result)
+            outputBuffer.replaceLastLine(result)
         }
     }
 
     internal fun onPrompt(index: Int, prompt: CharSequence) {
+        // FIXME: pass to primaryWindow.promptBuffer
         if (parsedPrompts.lastIndex < index) {
             parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { IStringBuilder.EMPTY })
         }

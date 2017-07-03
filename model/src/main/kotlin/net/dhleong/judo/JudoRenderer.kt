@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.IJudoTabpage
 import java.io.Closeable
 import java.util.EnumSet
 
@@ -100,4 +101,35 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
 
     fun updateInputLine(line: String, cursor: Int)
     fun updateStatusLine(line: String, cursor: Int = -1)
+}
+
+interface JudoRenderer2 : JudoRendererInfo, Closeable {
+
+    val windowHeight: Int
+
+    /**
+     * Fired if the [windowWidth] or [windowHeight]
+     *  values changed; run inside a transaction
+     */
+    var onResized: OnResizedEvent?
+
+    var settings: StateMap
+
+    var currentTabpage: IJudoTabpage?
+
+    fun inTransaction(block: () -> Unit)
+
+    /**
+     * Make sure this renderer can be used
+     */
+    fun validate()
+
+    /**
+     * Attempt to set the current cursor type
+     */
+    fun setCursorType(type: CursorType)
+
+    fun updateInputLine(line: String, cursor: Int)
+
+    fun redraw()
 }

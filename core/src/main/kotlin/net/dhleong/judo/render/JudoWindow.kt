@@ -84,11 +84,17 @@ class JudoWindow(
         }
 
         val displayEnd = displayWorkspace.size - scrollbackOffset
-        val displayStart = displayEnd - displayHeight
+        val displayStart = maxOf(0, displayEnd - displayHeight)
+        val actualDisplayedLines = displayEnd - displayStart
+
+        for (i in 1..(displayHeight - actualDisplayedLines)) {
+            // add blank lines to fill the window
+            lines.add(AttributedString.EMPTY)
+        }
 
         val listStart = lines.size
         @Suppress("LoopToCallChain") // no extra allocations please, thanks
-        for (i in displayStart..displayEnd) {
+        for (i in displayStart..displayEnd - 1) {
             lines.add(displayWorkspace[i])
         }
 
@@ -113,6 +119,9 @@ class JudoWindow(
 
         if (isFocusable && isFocused) {
             lines.add(status)
+        } else if (isFocusable) {
+            // TODO faded out status?
+            lines.add(AttributedString.EMPTY)
         }
     }
 
@@ -120,6 +129,127 @@ class JudoWindow(
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         status = AttributedString.fromAnsi(line.toString())
         this.cursor = cursor
+    }
+
+    @Synchronized override fun scrollLines(count: Int) {
+        // take into account wrapped lines
+        val output = currentBuffer
+        val width = this.width
+        val desired = Math.abs(count)
+        val step = count / desired
+        val end = output.size - 1
+
+        val rangeEnd = minOf(end, scrollbackBottom + count)
+        val range =
+            if (count > 0) scrollbackBottom..rangeEnd
+            else scrollbackBottom downTo rangeEnd
+
+        // clear search result on scroll (?)
+        // TODO should we do better?
+        searchResultLine = -1
+
+        val wordWrap = WORD_WRAP.read(settings)
+        var scrolled = 0
+        for (i in range) {
+            if (i < 0) break
+            if (i >= output.size) break
+
+            scrollbackBottom = i
+            val line = output[end - i] as OutputLine
+            val displayedLines = line.getDisplayedLinesCount(width, wordWrap)
+            val renderedLines = displayedLines - scrollbackOffset
+            val newScrolled = scrolled + renderedLines
+            if (newScrolled == desired) {
+                // exactly where we want to be, no offset necessary
+                scrollbackBottom = maxOf(
+                    0,
+                    minOf(
+                        end,
+                        scrollbackBottom + step
+                    )
+                )
+                scrollbackOffset = 0
+                break
+            } else if (newScrolled > desired) {
+                // the logical line had too many visual lines;
+                // offset into it
+                scrollbackOffset += step * (desired - scrolled)
+                if (scrollbackOffset < 0) {
+                    // scrolling backwards, so this was a reverse offset
+                    scrollbackOffset += displayedLines
+                }
+                break
+            } else if (newScrolled < desired
+                    && (step > 0 && scrollbackBottom == end
+                        || step < 0 && scrollbackBottom == 0)) {
+                // end of the line; just stop
+                break
+            }
+
+            scrolled = newScrolled
+            scrollbackOffset = 0 // we've moved on; reset the offset
+        }
+    }
+
+    override fun scrollPages(count: Int) {
+        scrollLines(height * count)
+    }
+
+    override fun scrollToBottom() {
+        scrollbackBottom = 0
+        searchResultLine = -1
+    }
+
+    override fun searchForKeyword(word: CharSequence, direction: Int) {
+        val originalSearchResultLine = searchResultLine
+        val originalScrollbackBottom = scrollbackBottom
+        val originalScrollbackOffset = scrollbackOffset
+
+        if (word != lastSearchKeyword) {
+            lastSearchKeyword = word.toString()
+            searchResultLine = -1
+        }
+
+        val lines = mutableListOf<CharSequence>()
+        do {
+            val lastScrollbackBottom = scrollbackBottom
+            val lastScrollbackOffset = scrollbackOffset
+
+            getDisplayLines(lines)
+            val last =
+                if (direction > 0) lines.lastIndex
+                else 0
+            val iterateStart =
+                if (searchResultLine == -1) last
+                else searchResultLine - direction
+
+            if (iterateStart >= 0) {
+                val range =
+                    if (direction > 0) iterateStart downTo 0
+                    else iterateStart..lines.lastIndex
+                for (i in range) {
+                    val line = lines[i]
+                    if (line.contains(word, true)) {
+                        searchResultLine = i
+                        return
+                    }
+                }
+            }
+
+            scrollPages(direction)
+        } while (searchResultLine == -1
+            && (scrollbackBottom > lastScrollbackBottom || scrollbackOffset != lastScrollbackOffset))
+
+        // couldn't find anything; reset position
+        scrollbackBottom = originalScrollbackBottom
+        scrollbackOffset = originalScrollbackOffset
+
+        if (originalSearchResultLine != -1) {
+            searchResultLine = originalSearchResultLine
+        }
+
+        // TODO bell? echo?
+        appendLine("Pattern not found: $word", isPartialLine = false)
     }
 }
 
@@ -142,8 +272,9 @@ class PrimaryJudoWindow(
     override var isFocused: Boolean
         get() = promptWindow.isFocused
         set(value) {
-            promptWindow.isFocused = isFocused
+            promptWindow.isFocused = value
         }
+    override val isFocusable = true // primary window is ALWAYS focusable
 
     override var currentBuffer: IJudoBuffer
         get() = outputWindow.currentBuffer
@@ -151,10 +282,16 @@ class PrimaryJudoWindow(
             outputWindow.currentBuffer = value
         }
 
-    val outputWindow = JudoWindow(ids, settings, initialWidth, initialHeight, outputBuffer, isFocusable = false)
+    val outputWindow = JudoWindow(ids, settings,
+        initialWidth, initialHeight - 1,
+        outputBuffer,
+        isFocusable = false)
 
     val promptBuffer = JudoBuffer(ids.newBuffer(), isFocusable = true)
-    val promptWindow = JudoWindow(ids, settings, initialWidth, 1, promptBuffer)
+    val promptWindow = JudoWindow(ids, settings,
+        initialWidth, 1,
+        promptBuffer,
+        isFocusable = true)
 
     override fun updateStatusLine(line: CharSequence, cursor: Int) =
         promptWindow.updateStatusLine(line, cursor)
@@ -163,7 +300,7 @@ class PrimaryJudoWindow(
         outputWindow.appendLine(line, isPartialLine)
 
     override fun resize(width: Int, height: Int) {
-        val availableHeight = promptWindow.height - height
+        val availableHeight = height - promptWindow.height
         outputWindow.resize(width, availableHeight)
     }
 
@@ -173,4 +310,9 @@ class PrimaryJudoWindow(
         promptWindow.getDisplayLines(lines)
     }
 
+    override fun scrollLines(count: Int) = outputWindow.scrollLines(count)
+    override fun scrollPages(count: Int) = outputWindow.scrollPages(count)
+    override fun scrollToBottom() = outputWindow.scrollToBottom()
+    override fun searchForKeyword(word: CharSequence, direction: Int) =
+        outputWindow.searchForKeyword(word, direction)
 }
