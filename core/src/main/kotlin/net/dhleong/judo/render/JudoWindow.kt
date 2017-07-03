@@ -84,12 +84,12 @@ class JudoWindow(
         val displayStart = maxOf(0, displayEnd - displayHeight)
         val actualDisplayedLines = displayEnd - displayStart
 
+        val listStart = lines.size
         for (i in 1..(displayHeight - actualDisplayedLines)) {
             // add blank lines to fill the window
             lines.add(AttributedString.EMPTY)
         }
 
-        val listStart = lines.size
         @Suppress("LoopToCallChain") // no extra allocations please, thanks
         for (i in displayStart..displayEnd - 1) {
             lines.add(displayWorkspace[i])
@@ -214,6 +214,7 @@ class JudoWindow(
             val lastScrollbackBottom = scrollbackBottom
             val lastScrollbackOffset = scrollbackOffset
 
+            lines.clear()
             getDisplayLines(lines)
             val last =
                 if (direction > 0) lines.lastIndex
@@ -260,7 +261,7 @@ class JudoWindow(
 class PrimaryJudoWindow(
     ids: IdManager,
     settings: StateMap,
-    outputBuffer: JudoBuffer,
+    outputBuffer: IJudoBuffer,
     initialWidth: Int,
     initialHeight: Int
 ) : IJudoWindow {

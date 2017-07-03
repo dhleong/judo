@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
 import org.assertj.core.api.Assertions.assertThat
+import org.jline.utils.AttributedString
 import org.junit.Test
 
 /**
@@ -42,5 +43,5 @@ class PrimaryJudoWindowTest {
 fun IJudoWindow.getDisplayStrings(): List<String> =
     with(mutableListOf<CharSequence>()) {
         getDisplayLines(this)
-        map { it.toString() }
+        map { (it as AttributedString).toAnsi() }
     }

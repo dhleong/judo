@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -23,390 +24,158 @@ class JudoWindowTest {
         window = JudoWindow(ids, settings, 42, 20, buffer, isFocusable = false)
     }
 
-    @Test fun appendOutput_empty() {
+    @Test fun scrollBack() {
+        window.width = 6
+        window.height = 2
 
-        // basically make sure it doesn't crash
-        window.appendLine(OutputLine(""), isPartialLine = true)
-        window.appendLine(OutputLine(""), isPartialLine = false)
+        window.appendLine("Take my love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.appendLine("Take me where I cannot stand", isPartialLine = false)
 
         assertThat(window.getDisplayStrings())
-            .containsExactly(*Array(20) { "" })
+            .containsExactly("nnot s", "tand")
+
+        window.scrollPages(1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        window.scrollPages(1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("y land", "Take m")
+
+        window.scrollPages(-1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        window.scrollPages(-1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
     }
 
-    @Test fun appendOutput_resumePartial() {
-        // append without a line end and continue that line
-        // in a separate append. It's TCP so stuff happens
+    @Test fun scrollBackWrapping() {
+        window.width = 42
+        window.height = 2
 
-        window.appendLine("", isPartialLine = false)
-        window.appendLine("Take my love,", isPartialLine = false)
-        window.appendLine("Take my", isPartialLine = true)
-        window.appendLine(" land,", isPartialLine = false)
-        window.appendLine("Take me where...", isPartialLine = false)
-        window.appendLine("I don't care, I'm still free", isPartialLine = false)
+        window.appendLine("Take My love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.appendLine("Take me where I cannot stand", isPartialLine = false)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take me where I cannot stand")
 
-        window.height = 5
+        // now resize the window and force wrapping
+        window.width = 6
+        assertThat(window.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+
+        window.scrollPages(1) // bot=0; off=2
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        window.scrollPages(1) // bot=0; off=4
+        assertThat(window.getDisplayStrings())
+            .containsExactly("y land", "Take m")
+
+        window.scrollPages(1) // bot=1; off=1
+        assertThat(window.getDisplayStrings())
+            .containsExactly("y love", "Take m")
+
+        window.scrollPages(1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("", "Take M")
+
+        // repeat; we're at the top
+        window.scrollPages(1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("", "Take M")
+
+        // go back down
+        window.scrollPages(-1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("y love", "Take m")
+
+        window.scrollPages(-2) // skip...
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        window.scrollPages(-1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("nnot s", "tand")
+    }
+
+    @Test fun maintainScrollback() {
+        window.width = 42
+        window.height = 2
+
+        window.appendLine("Take My love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.appendLine("Take me where I cannot stand", isPartialLine = false)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take me where I cannot stand")
+
+        // now resize the window and force wrapping
+        window.width = 6
+        window.scrollPages(1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+
+        window.appendLine("PAR", isPartialLine = true)
+        window.appendLine("TS", isPartialLine = false)
+        window.appendLine("LINES", isPartialLine = false)
+
+        // since we're scrolled, we should stay
+        // where we are
+        assertThat(window.getDisplayStrings())
+            .containsExactly("e wher", "e I ca")
+    }
+
+    @Test fun search() {
+        window.width = 12
+        window.height = 2
+
+        window.appendLine("Take My love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.appendLine("Take me where I cannot stand", isPartialLine = false)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "e I cannot s",
+                "tand")
+
+        window.searchForKeyword("m", direction = 1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
+            )
+
+        window.searchForKeyword("m", direction = 1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "Take ${ansi(inverse = true)}m${ansi(0)}y land",
+                "Take me wher"
+            )
+
+        // step back
+        window.searchForKeyword("m", direction = -1)
+        assertThat(window.getDisplayStrings())
+            .containsExactly(
+                "Take my land",
+                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
+            )
+
+        // go to next page
+        window.searchForKeyword("m", direction = 1)
+        window.searchForKeyword("m", direction = 1)
         assertThat(window.getDisplayStrings())
             .containsExactly(
                 "",
-                "Take my love,",
-                "Take my land,",
-                "Take me where...",
-                "I don't care, I'm still free"
+                "Take ${ansi(inverse = true)}M${ansi(0)}y love"
             )
-        assertThat(window.getScrollback()).isEqualTo(0)
     }
 
-//    @Test fun appendOutput_resumePartial_continueAnsi() {
-//        // append without a line end and continue that line
-//        // in a separate append. It's TCP so stuff happens
-//
-//        renderer.appendOutput("", isPartialLine = false)
-//        renderer.appendOutput("${ansi(1,6)}Take my ", isPartialLine = true)
-//        renderer.appendOutput("love", isPartialLine = false)
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "",
-//                "${ansi(1,6)}Take my love${ansi(0)}"
-//            )
-//        assertThat(renderer.getScrollback()).isEqualTo(0)
-//    }
-//
-//    @Test fun appendOutput_resumePartial_continueAnsi2() {
-//
-//        // continuation of the partial line has its own ansi;
-//        // use previous line's ansi to start, but don't stomp
-//        // on the new ansi
-//        val first = OutputLine("${ansi(1,6)}Take my ")
-//        val second = OutputLine("lo${ansi(1,7)}ve")
-//        renderer.appendOutput(first, isPartialLine = true)
-//        renderer.appendOutput(second, isPartialLine = false)
-//
-//        assertThat(renderer.getDisplayStrings()).hasSize(1)
-//        assertThat(renderer.getDisplayStrings()[0])
-//            .isEqualTo(
-//                "${ansi(1,6)}Take my lo${ansi(fg=7)}ve${ansi(0)}"
-//            )
-//        assertThat(renderer.getScrollback()).isEqualTo(0)
-//    }
-//
-//    @Test fun appendOutput_resumePartial_trailingAnsi() {
-//        // append without a line end and continue that line
-//        // in a separate append. It's TCP so stuff happens
-//
-//        val trailingAnsiLine = OutputLine("${ansi(1,6)}Take my ${ansi(1,2)}")
-//        renderer.appendOutput("", isPartialLine = false)
-//        renderer.appendOutput(trailingAnsiLine, isPartialLine = true)
-//        renderer.appendOutput("love", isPartialLine = false)
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "",
-//                "${ansi(1,6)}Take my ${ansi(fg=2)}love${ansi(0)}"
-//            )
-//        assertThat(renderer.getScrollback()).isEqualTo(0)
-//    }
-//
-//    @Test fun appendOutput_resumePartial_splitAnsi() {
-//        // append without a line end and continue that line
-//        // in a separate append. It's TCP so stuff happens
-//
-//        val ansi = ansi(1,2)
-//        val firstHalf = ansi.slice(0..3)
-//        val secondHalf = ansi.slice(4..ansi.lastIndex)
-//        assertThat("$firstHalf$secondHalf").isEqualTo(ansi.toString())
-//
-//        renderer.appendOutput(
-//            OutputLine("${ansi(1,6)}Take my $firstHalf"),
-//            isPartialLine = true)
-//        renderer.appendOutput(
-//            OutputLine("${secondHalf}love"),
-//            isPartialLine = false)
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "${ansi(1,6)}Take my ${ansi(fg=2)}love${ansi(0)}"
-//            )
-//        assertThat(renderer.getScrollback()).isEqualTo(0)
-//    }
-//
-//    @Test fun appendOutput_resumePartial_splitAnsi_integration() {
-//        // we've tested the core handling above, so let's make sure
-//        // JudoCore integrates into it correctly
-//        val core = JudoCore(renderer, settings)
-//
-//        val ansi = ansi(fg=2)
-//        val firstHalf = ansi.slice(0..ansi.lastIndex-1)
-//        val secondHalf = ansi.slice(ansi.lastIndex..ansi.lastIndex)
-//        assertThat("$firstHalf$secondHalf").isEqualTo(ansi.toString())
-//        assertThat("$secondHalf").isEqualTo("m")
-//
-//        val lineOne = "${ansi(1,1)}Take my $firstHalf"
-//        val lineTwo = "${secondHalf}l${ansi(1,6)}ove"
-//
-//        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
-//        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
-//
-//        if (renderer.getDisplayStrings()[0].startsWith("ERROR")) {
-//            throw AssertionError(renderer.getDisplayStrings().joinToString("\n"))
-//        }
-//
-//        assertThat(renderer.getDisplayStrings()[0])
-//            .isEqualTo("${ansi(1,1)}Take my ${ansi(fg=2)}l${ansi(fg=6)}ove${ansi(0)}")
-//    }
-//
-//    @Test fun fitInputLineToWindow() {
-//        renderer.windowWidth = 12
-//
-//        renderer.updateInputLine("Take my love, Take my land... ", 0)
-//        renderer.fitInputLineToWindow().let { (line, cursor) ->
-//            assertThat(line.toString()).isEqualTo("Take my lov…")
-//            assertThat(cursor).isEqualTo(0)
-//        }
-//
-//        renderer.updateInputLine("Take my love, Take my land... ", 14)
-//        renderer.fitInputLineToWindow().let { (line, cursor) ->
-//            assertThat(line.toString()).isEqualTo("… love, Tak…")
-//            assertThat(cursor).isEqualTo(8)
-//        }
-//
-//        renderer.updateInputLine("Take my love, Take my land... ", 19)
-//        renderer.fitInputLineToWindow().let { (line, cursor) ->
-//            assertThat(line.toString()).isEqualTo("… Take my l…")
-//            assertThat(cursor).isEqualTo(7)
-//        }
-//
-//        renderer.updateInputLine("Take my love, Take my land... ", 30)
-//        renderer.fitInputLineToWindow().let { (line, cursor) ->
-//            assertThat(line.toString()).isEqualTo("…d... ")
-//            assertThat(cursor).isEqualTo(6)
-//        }
-//    }
-//
-//    @Test fun fitInputLineToWindow_type() {
-//        renderer.windowWidth = 12
-//
-//        renderer.typeAndFit("Take my love",
-//            expected = "… love" to 6)
-//
-//        renderer.typeAndFit("Take my love,",
-//            expected = "… love," to 7)
-//    }
-//
-//    @Test fun fitInputLineToWindow_type_page3() {
-//        renderer.windowWidth = 12
-//
-//        renderer.typeAndFit("Take my love, take my lan",
-//            expected = "…my lan" to 7)
-//
-//        renderer.typeAndFit("Take my love, take my land",
-//            expected = "…my land" to 8)
-//
-//        renderer.typeAndFit("Take my love, take my land,",
-//            expected = "…my land," to 9)
-//
-//        renderer.typeAndFit("Take my love, take my land, ",
-//            expected = "…my land, " to 10)
-//
-//        renderer.typeAndFit("Take my love, take my land, t",
-//            expected = "…my land, t" to 11)
-//
-//        renderer.typeAndFit("Take my love, take my land, ta",
-//            expected = "…d, ta" to 6)
-//
-//        renderer.typeAndFit("Take my love, take my land, tak",
-//            expected = "…d, tak" to 7)
-//    }
-//
-//    @Test fun catchSplitPrompts() {
-//
-//        val judo = JudoCore(renderer, settings)
-//        judo.prompts.define("HP: $1", "(hp: $1)")
-//
-//        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
-//        val first = prompt.substring(0..8)
-//        val second = prompt.substring(9..prompt.lastIndex)
-//        assertThat("$first$second").isEqualTo(prompt)
-//
-//        judo.onIncomingBuffer(first.toCharArray(), first.length)
-//        judo.onIncomingBuffer(second.toCharArray(), second.length)
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("")
-//    }
-//
-//    @Test fun catchSplitPrompts_splitAnsi() {
-//
-//        val judo = JudoCore(renderer, settings)
-//        judo.prompts.define("HP: $1", "(hp: $1)")
-//
-//        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
-//        val first = prompt.substring(0..5)
-//        val second = prompt.substring(6..prompt.lastIndex)
-//        assertThat("$first$second").isEqualTo(prompt)
-//
-//        judo.onIncomingBuffer(first.toCharArray(), first.length)
-//        judo.onIncomingBuffer(second.toCharArray(), second.length)
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("")
-//    }
-//
-//    @Test fun scrollBack() {
-//        renderer.windowWidth = 6
-//        renderer.windowHeight = 4
-//        renderer.outputWindowHeight = 2
-//
-//        renderer.appendOutput("Take my love")
-//        renderer.appendOutput("Take my land")
-//        renderer.appendOutput("Take me where I cannot stand")
-//
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("nnot s", "tand")
-//
-//        renderer.scrollPages(1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//
-//        renderer.scrollPages(1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("y land", "Take m")
-//
-//        renderer.scrollPages(-1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//
-//        renderer.scrollPages(-1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("nnot s", "tand")
-//    }
-//
-//    @Test fun scrollBackWrapping() {
-//        renderer.windowWidth = 42
-//        renderer.windowHeight = 4
-//        renderer.outputWindowHeight = 2
-//
-//        renderer.appendOutput("Take My love")
-//        renderer.appendOutput("Take my land")
-//        renderer.appendOutput("Take me where I cannot stand")
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take my land",
-//                "Take me where I cannot stand")
-//
-//        // now resize the window and force wrapping
-//        renderer.windowWidth = 6
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("nnot s", "tand")
-//
-//        renderer.scrollPages(1) // bot=0; off=2
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//
-//        renderer.scrollPages(1) // bot=0; off=4
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("y land", "Take m")
-//
-//        renderer.scrollPages(1) // bot=1; off=1
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("y love", "Take m")
-//
-//        renderer.scrollPages(1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("Take M")
-//
-//        // repeat; we're at the top
-//        renderer.scrollPages(1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("Take M")
-//
-//        // go back down
-//        renderer.scrollPages(-1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("y love", "Take m")
-//
-//        renderer.scrollPages(-2) // skip...
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//
-//        renderer.scrollPages(-1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("nnot s", "tand")
-//    }
-//
-//    @Test fun maintainScrollback() {
-//        renderer.windowWidth = 42
-//        renderer.windowHeight = 4
-//        renderer.outputWindowHeight = 2
-//
-//        renderer.appendOutput("Take My love")
-//        renderer.appendOutput("Take my land")
-//        renderer.appendOutput("Take me where I cannot stand")
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take my land",
-//                "Take me where I cannot stand")
-//
-//        // now resize the window and force wrapping
-//        renderer.windowWidth = 6
-//        renderer.scrollPages(1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//
-//        renderer.appendOutput("PAR", isPartialLine = true)
-//        renderer.appendOutput("TS", isPartialLine = false)
-//        renderer.appendOutput("LINES")
-//
-//        // since we're scrolled, we should stay
-//        // where we are
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly("e wher", "e I ca")
-//    }
-//
-//    @Test fun search() {
-//        renderer.windowWidth = 12
-//        renderer.windowHeight = 4
-//        renderer.outputWindowHeight = 2
-//
-//        renderer.appendOutput("Take My love")
-//        renderer.appendOutput("Take my land")
-//        renderer.appendOutput("Take me where I cannot stand")
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "e I cannot s",
-//                "tand")
-//
-//        renderer.searchForKeyword("m", direction = 1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take my land",
-//                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
-//            )
-//
-//        renderer.searchForKeyword("m", direction = 1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take ${ansi(inverse = true)}m${ansi(0)}y land",
-//                "Take me wher"
-//            )
-//
-//        // step back
-//        renderer.searchForKeyword("m", direction = -1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take my land",
-//                "Take ${ansi(inverse = true)}m${ansi(0)}e wher"
-//            )
-//
-//        // go to next page
-//        renderer.searchForKeyword("m", direction = 1)
-//        renderer.searchForKeyword("m", direction = 1)
-//        assertThat(renderer.getDisplayStrings())
-//            .containsExactly(
-//                "Take ${ansi(inverse = true)}M${ansi(0)}y love"
-//            )
-//    }
-//
 //    @Test fun continueStyleAcrossLines() {
 //        val core = JudoCore(renderer, settings)
 //
