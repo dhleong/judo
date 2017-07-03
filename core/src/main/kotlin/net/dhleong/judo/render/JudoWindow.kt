@@ -324,6 +324,11 @@ class PrimaryJudoWindow(
         promptWindow.getDisplayLines(lines)
     }
 
+    fun setPromptHeight(promptHeight: Int) {
+        promptWindow.height = maxOf(1, promptHeight)
+        resize(width, height)
+    }
+
     override fun getScrollback(): Int = outputWindow.getScrollback()
     override fun scrollLines(count: Int) = outputWindow.scrollLines(count)
     override fun scrollPages(count: Int) = outputWindow.scrollPages(count)

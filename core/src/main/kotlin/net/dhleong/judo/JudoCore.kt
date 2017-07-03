@@ -552,9 +552,10 @@ class JudoCore(
             // dump the parsed prompts for visual effect
             echo("")
             parsedPrompts.forEach {
-                appendOutput(OutputLine(it))
+                primaryWindow.outputWindow.appendLine(it, isPartialLine = false)
             }
             parsedPrompts.clear()
+            primaryWindow.promptBuffer.clear()
 
             echo("Disconnected from $connection")
             updateStatusLine(currentMode)
@@ -779,6 +780,7 @@ class JudoCore(
         parsedPrompts[index] = IStringBuilder.from(prompt)
 
         renderer.inTransaction {
+            primaryWindow.setPromptHeight(parsedPrompts.size)
             primaryWindow.promptBuffer.set(parsedPrompts)
             updateStatusLine(currentMode)
         }

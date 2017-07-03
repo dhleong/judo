@@ -277,7 +277,7 @@ class JLineRenderer2(
         }
     }
 
-    override fun redraw() {
+    @Synchronized override fun redraw() {
         val (lines, cursorRow, cursorCol) = getDisplayLines()
 
         val cursorPos = windowSize.cursorPos(
