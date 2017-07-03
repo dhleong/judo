@@ -18,7 +18,7 @@ interface IJudoBuffer {
     fun clear()
     fun replaceLastLine(result: CharSequence)
 
-    fun set(newContents: List<CharSequence>) {}
+    fun set(newContents: List<CharSequence>)
 }
 
 interface InputReceivingBuffer : IJudoBuffer {

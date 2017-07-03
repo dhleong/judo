@@ -50,6 +50,14 @@ class JudoBuffer(
         output.clear()
     }
 
+    override fun set(newContents: List<CharSequence>) {
+        output.clear()
+        @Suppress("LoopToCallChain") // no extra allocations, please
+        for (line in newContents) {
+            output.add(line as? OutputLine ?: OutputLine(line))
+        }
+    }
+
     private fun appendOutputLineInternal(
         line: OutputLine, isPartialLine: Boolean,
         windowWidthHint: Int, wordWrap: Boolean

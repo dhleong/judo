@@ -15,7 +15,8 @@ class JudoWindow(
     initialWidth: Int,
     initialHeight: Int,
     initialBuffer: IJudoBuffer,
-    override val isFocusable: Boolean = false
+    override val isFocusable: Boolean = false,
+    val statusLineOverlaysOutput: Boolean = false
 ) : IJudoWindow {
 
     override val id = ids.newWindow()
@@ -61,7 +62,7 @@ class JudoWindow(
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
         val displayHeight =
-            if (isFocusable) height - 1 // make room for status line
+            if (isFocusable && !statusLineOverlaysOutput) height - 1 // make room for status line
             else height
 
         val buffer = currentBuffer
@@ -80,12 +81,21 @@ class JudoWindow(
             )
         }
 
-        val displayEnd = displayWorkspace.size - scrollbackOffset
+        var displayEnd = displayWorkspace.size - scrollbackOffset
+        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+            displayEnd -= 1
+        }
+
         val displayStart = maxOf(0, displayEnd - displayHeight)
-        val actualDisplayedLines = displayEnd - displayStart
+        val actualDisplayedLines = maxOf(0, displayEnd - displayStart)
+
+        var blankLinesNeeded = (displayHeight - actualDisplayedLines)
+        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+            blankLinesNeeded -= 1
+        }
 
         val listStart = lines.size
-        for (i in 1..(displayHeight - actualDisplayedLines)) {
+        for (i in 1..blankLinesNeeded) {
             // add blank lines to fill the window
             lines.add(AttributedString.EMPTY)
         }
@@ -116,7 +126,7 @@ class JudoWindow(
 
         if (isFocusable && isFocused) {
             lines.add(status)
-        } else if (isFocusable) {
+        } else if (isFocusable && !statusLineOverlaysOutput) {
             // TODO faded out status?
             lines.add(AttributedString.EMPTY)
         }
@@ -291,7 +301,8 @@ class PrimaryJudoWindow(
     val promptWindow = JudoWindow(ids, settings,
         initialWidth, 1,
         promptBuffer,
-        isFocusable = true)
+        isFocusable = true,
+        statusLineOverlaysOutput = true)
 
     override fun updateStatusLine(line: CharSequence, cursor: Int) =
         promptWindow.updateStatusLine(line, cursor)

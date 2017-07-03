@@ -670,14 +670,13 @@ class JudoCore(
         val availableCols = renderer.windowWidth - modeIndicator.length
         statusLineWorkspace.setLength(0)
         if (parsedPrompts.isNotEmpty()) {
-            // TODO support multiple prompts?
-            val prompt = parsedPrompts[0]
+            val prompt = parsedPrompts.last()
             val promptColsToPrint = minOf(prompt.length, availableCols)
             val partialPrompt = prompt.subSequence(0, promptColsToPrint)
             statusLineWorkspace.append(partialPrompt)
         }
 
-        for (i in statusLineWorkspace.length until availableCols) {
+        for (i in statusLineWorkspace.length..availableCols-1) {
             statusLineWorkspace.append(" ")
         }
 

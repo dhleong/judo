@@ -13,7 +13,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.jline.utils.AttributedString
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -300,21 +299,22 @@ class JLineRenderer2Test {
     }
 
 
-    @Ignore("TODO: overlay status line")
     @Test fun promptRender() {
         window.appendLine("Take my love", isPartialLine = false)
         window.appendLine("Take my land", isPartialLine = false)
-        window.updateStatusLine("            <status>")
-        window.promptBuffer.set(listOf("[prompt]"))
+        window.updateStatusLine("[prompt]    <status>")
+        window.promptWindow.resize(window.width, 2)
+        window.promptBuffer.set(listOf("[prompt1]", "[prompt2]"))
+        window.resize(window.width, window.height)
         renderer.updateInputLine("Test", 4)
 
         val (lines, cursorRow, cursorCol) = renderer.getDisplayLines()
         assertThat(lines.map { it.toString() })
             .containsExactly(
                 "",
-                "",
                 "Take my love",
                 "Take my land",
+                "[prompt1]",
                 "[prompt]    <status>",
                 "Test"
             )
