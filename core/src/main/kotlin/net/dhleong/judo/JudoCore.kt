@@ -60,7 +60,7 @@ enum class DebugLevel {
 }
 
 class JudoCore(
-    override val renderer: JudoRenderer2,
+    override val renderer: JudoRenderer,
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {

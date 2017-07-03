@@ -13,7 +13,7 @@ import java.lang.reflect.Proxy
 
 class TestableJudoRenderer(
     private val state: RendererState = RendererState()
-) : JudoRenderer2 by createRendererProxy(state) {
+) : JudoRenderer by createRendererProxy(state) {
 
     var settableWindowWidth: Int
         get() = state.windowWidth
@@ -38,10 +38,10 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
     var inputLine: Pair<String, Int> = "" to 0
 }
 
-private fun createRendererProxy(state: RendererState): JudoRenderer2 {
+private fun createRendererProxy(state: RendererState): JudoRenderer {
     return Proxy.newProxyInstance(
         ClassLoader.getSystemClassLoader(),
-        arrayOf(JudoRenderer2::class.java)
+        arrayOf(JudoRenderer::class.java)
     ) { _, method, args ->
         when (method.name) {
 
@@ -62,5 +62,5 @@ private fun createRendererProxy(state: RendererState): JudoRenderer2 {
 
             else -> null // ignore
         }
-    } as JudoRenderer2
+    } as JudoRenderer
 }
