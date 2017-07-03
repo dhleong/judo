@@ -282,19 +282,30 @@ class JLineRenderer2(
         }
     }
 
+    private var renderedSplashScreen = false
+
     @Synchronized override fun redraw() {
         val (lines, cursorRow, cursorCol) = getDisplayLines()
         if (lines.isEmpty()) {
             // splash screen?
-            window.update(
-                listOf(AttributedString.fromAnsi("Loading Judo...")),
-                windowSize.cursorPos(
-                    windowHeight - 1,
-                    0
+            if (windowHeight > 0) {
+                renderedSplashScreen = true
+                window.resize(windowWidth, windowHeight)
+                window.update(
+                    listOf(AttributedString.fromAnsi("Loading Judo...")),
+                    windowSize.cursorPos(windowHeight - 1, 0)
                 )
-            )
-            terminal.flush()
+                terminal.flush()
+            }
+
+            // either way, don't do anything else
             return
+        }
+
+        if (renderedSplashScreen) {
+            renderedSplashScreen = false
+            window.clear()
+            window.reset()
         }
 
         val cursorPos = windowSize.cursorPos(
