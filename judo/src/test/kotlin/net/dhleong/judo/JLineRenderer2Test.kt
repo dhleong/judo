@@ -322,6 +322,30 @@ class JLineRenderer2Test {
         assertThat(cursorRow).isEqualTo(6)
         assertThat(cursorCol).isEqualTo(4)
     }
+
+    @Test fun cursorInStatusLine() {
+        window.appendLine("Take my love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.promptWindow.resize(window.width, 2)
+        window.promptBuffer.set(listOf("[prompt1]", "[prompt2]"))
+        window.resize(window.width, window.height)
+        renderer.updateInputLine("Test", 4)
+        window.updateStatusLine(":cmdMode", 8)
+
+        val (lines, cursorRow, cursorCol) = renderer.getDisplayLines()
+        assertThat(lines.map { it.toString() })
+            .containsExactly(
+                "",
+                "Take my love",
+                "Take my land",
+                "[prompt1]",
+                ":cmdMode",
+                "Test"
+            )
+
+        assertThat(cursorRow).isEqualTo(4)
+        assertThat(cursorCol).isEqualTo(8)
+    }
 }
 
 fun IJudoBuffer.getAnsiContents(): List<String> =

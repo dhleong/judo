@@ -38,7 +38,7 @@ class JudoWindow(
     private var searchResultLine = -1
 
     private var status = AttributedString.EMPTY
-    private var cursor = 0
+    override var statusCursor: Int = -1
 
     override fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence {
         val buffer = currentBuffer
@@ -137,7 +137,7 @@ class JudoWindow(
     override fun updateStatusLine(line: CharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         status = AttributedString.fromAnsi(line.toString())
-        this.cursor = cursor
+        statusCursor = cursor
     }
 
     @Synchronized override fun scrollLines(count: Int) {
@@ -291,6 +291,9 @@ class PrimaryJudoWindow(
         set(value) {
             outputWindow.currentBuffer = value
         }
+
+    override val statusCursor: Int
+        get() = promptWindow.statusCursor
 
     val outputWindow = JudoWindow(ids, settings,
         initialWidth, initialHeight - 1,

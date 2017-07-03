@@ -769,17 +769,18 @@ class JudoCore(
     }
 
     internal fun onPrompt(index: Int, prompt: CharSequence) {
-        // FIXME: pass to primaryWindow.promptBuffer
         if (parsedPrompts.lastIndex < index) {
-            parsedPrompts.addAll((parsedPrompts.lastIndex..index).map { IStringBuilder.EMPTY })
+            for (i in maxOf(0, parsedPrompts.lastIndex)..index) {
+                parsedPrompts.add(IStringBuilder.EMPTY)
+            }
         }
 
         // make sure prompt colors don't bleed
         parsedPrompts[index] = IStringBuilder.from(prompt)
-//        updateStatusLine(currentMode)
 
         renderer.inTransaction {
             primaryWindow.promptBuffer.set(parsedPrompts)
+            updateStatusLine(currentMode)
         }
     }
 }

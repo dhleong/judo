@@ -303,29 +303,40 @@ class JLineRenderer2(
 
     fun getDisplayLines(): Triple<List<AttributedString>, Int, Int> {
         val tabpage = currentTabpage ?: return Triple(emptyList<AttributedString>(), 0, 0)
+        val window = tabpage.currentWindow
 
         outputWorkspace.clear()
         tabpage.getDisplayLines(outputWorkspace)
 
-        // FIXME cursor in a status line?
-        val rawInputCursor =
-            if (tabpage.currentWindow.isFocusable) cursor
-            else 0
+        val isCursorOnStatus = window.isFocusable && window.isFocused && window.statusCursor != -1
+        val rawInputCursor = when {
+            isCursorOnStatus -> 0
+            tabpage.currentWindow.isFocusable -> cursor
+            else -> 0
+        }
         val (inputLine, inputCursor) = fitInputLineToWindow(input, rawInputCursor)
         outputWorkspace.add(inputLine)
 
-        // FIXME cursor on status line?
+        val rawStatusCursor = when {
+            isCursorOnStatus -> window.statusCursor
+            else -> 0
+        }
+
         val cursorRow: Int
         val cursorCol: Int
-//        if (isCursorOnStatus) {
-//            cursorRow = windowHeight - 1
-//            cursorCol = statusCursor
-//        } else {
-        cursorRow = windowHeight
-        cursorCol = inputCursor
-//        }
+        if (isCursorOnStatus) {
+            val windowY = tabpage.getYPositionOf(window)
+            val windowBottom = window.height + windowY
+            cursorRow = windowBottom - 1
+            cursorCol = rawStatusCursor
+        } else {
+            cursorRow = windowHeight
+            cursorCol = inputCursor
+        }
 
-        // FIXME don't create an extra list every time
+        // NOTE: JLine uses our list as-is, so if we modify it
+        // after the fact, things get weiiiird. We could maybe
+        // double-buffer it to avoid constantly allocating new arrays...
         return Triple(outputWorkspace.map { it as AttributedString }, cursorRow, cursorCol)
     }
 

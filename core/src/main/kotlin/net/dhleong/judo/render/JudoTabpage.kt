@@ -57,6 +57,9 @@ class JudoTabpage(
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         rootStack.getDisplayLines(lines)
+
+    override fun getYPositionOf(window: IJudoWindow): Int =
+        rootStack.getYPositionOf(window)
 }
 
 /**
@@ -71,6 +74,7 @@ internal interface IStack {
 
     fun add(item: IStack)
     fun getDisplayLines(lines: MutableList<CharSequence>)
+    fun getYPositionOf(window: IJudoWindow): Int
     fun replace(old: IStack, new: IStack)
     fun resize(width: Int, height: Int)
 }
@@ -87,6 +91,8 @@ internal class RootStack(private var tabpage: JudoTabpage) : IStack {
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         child.getDisplayLines(lines)
+    override fun getYPositionOf(window: IJudoWindow): Int =
+        child.getYPositionOf(window)
     override fun replace(old: IStack, new: IStack) {
         if (old != child) throw IllegalArgumentException("old is not current")
         child = new
@@ -109,6 +115,10 @@ internal class WindowStack(
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         window.getDisplayLines(lines)
+
+    override fun getYPositionOf(window: IJudoWindow) =
+        if (window == this.window) 0
+        else -1
     override fun resize(width: Int, height: Int) =
         window.resize(width, height)
 }
@@ -145,6 +155,19 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
         for (row in contents) {
             row.getDisplayLines(lines)
         }
+    }
+
+    override fun getYPositionOf(window: IJudoWindow): Int {
+        var yOffset = 0
+        for (row in contents) {
+            val rowY = row.getYPositionOf(window)
+            if (rowY != -1) return yOffset + rowY
+
+            yOffset += row.height + 1 // +1 for separator
+        }
+
+        // not in this stack
+        return -1
     }
 
     override fun resize(width: Int, height: Int) {

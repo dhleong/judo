@@ -34,6 +34,9 @@ interface IJudoWindow {
 
     var currentBuffer: IJudoBuffer
 
+    /** Must be -1 when cursor is not focused on status line */
+    val statusCursor: Int
+
     fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence
 
     fun getDisplayLines(lines: MutableList<CharSequence>)
@@ -73,6 +76,7 @@ interface IJudoTabpage {
     fun resize(width: Int, height: Int)
 
     fun getDisplayLines(lines: MutableList<CharSequence>)
+    fun getYPositionOf(window: IJudoWindow): Int
 }
 
 class IdManager {
