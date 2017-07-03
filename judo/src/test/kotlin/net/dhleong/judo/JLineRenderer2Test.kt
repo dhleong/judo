@@ -1,7 +1,6 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.render.IJudoTabpage
-import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
@@ -9,6 +8,7 @@ import net.dhleong.judo.render.PrimaryJudoWindow
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -16,7 +16,7 @@ import org.junit.Test
  */
 class JLineRenderer2Test {
     lateinit var renderer: JLineRenderer2
-    lateinit var window: IJudoWindow
+    lateinit var window: PrimaryJudoWindow
     lateinit var page: IJudoTabpage
 
     val settings = StateMap(
@@ -25,7 +25,7 @@ class JLineRenderer2Test {
 
     @Before fun setUp() {
         val ids = IdManager()
-        val buffer = JudoBuffer(ids.newBuffer(), false)
+        val buffer = JudoBuffer(ids)
 
         window = PrimaryJudoWindow(ids, settings, buffer, 20, 5)
         window.isFocused = true
@@ -48,17 +48,6 @@ class JLineRenderer2Test {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("Test", 4)
 
-        val windowLines = mutableListOf<CharSequence>()
-        window.getDisplayLines(windowLines)
-        assertThat(windowLines.map { it.toString() })
-            .containsExactly(
-                "",
-                "",
-                "Take my love",
-                "Take my land",
-                "<status>"
-            )
-
         val (lines, cursorRow, cursorCol) = renderer.getDisplayLines()
         assertThat(lines.map { it.toString() })
             .containsExactly(
@@ -67,6 +56,29 @@ class JLineRenderer2Test {
                 "Take my love",
                 "Take my land",
                 "<status>",
+                "Test"
+            )
+
+        assertThat(cursorRow).isEqualTo(6)
+        assertThat(cursorCol).isEqualTo(4)
+    }
+
+    @Ignore("TODO: overlay status line")
+    @Test fun promptRender() {
+        window.appendLine("Take my love", isPartialLine = false)
+        window.appendLine("Take my land", isPartialLine = false)
+        window.updateStatusLine("            <status>")
+        window.promptBuffer.set(listOf("[prompt]"))
+        renderer.updateInputLine("Test", 4)
+
+        val (lines, cursorRow, cursorCol) = renderer.getDisplayLines()
+        assertThat(lines.map { it.toString() })
+            .containsExactly(
+                "",
+                "",
+                "Take my love",
+                "Take my land",
+                "[prompt]    <status>",
                 "Test"
             )
 

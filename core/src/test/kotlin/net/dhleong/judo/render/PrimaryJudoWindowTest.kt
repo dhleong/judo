@@ -10,7 +10,7 @@ import org.junit.Test
 class PrimaryJudoWindowTest {
     private val ids = IdManager()
     private val settings = StateMap()
-    private val outputBuffer = JudoBuffer(ids.newBuffer(), true)
+    private val outputBuffer = JudoBuffer(ids)
     private val primaryWindow = PrimaryJudoWindow(
         ids, settings, outputBuffer,
         -1, -1)
@@ -39,7 +39,7 @@ class PrimaryJudoWindowTest {
 
 }
 
-private fun IJudoWindow.getDisplayStrings(): List<String> =
+fun IJudoWindow.getDisplayStrings(): List<String> =
     with(mutableListOf<CharSequence>()) {
         getDisplayLines(this)
         map { it.toString() }

@@ -9,10 +9,11 @@ private val DEFAULT_SCROLLBACK_SIZE = 20_000
  * @author dhleong
  */
 class JudoBuffer(
-    override val id: Int,
-    override val isFocusable: Boolean,
+    ids: IdManager,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
+
+    override val id = ids.newBuffer()
 
     override val size: Int
         get() = output.size

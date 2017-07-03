@@ -15,7 +15,7 @@ class JudoWindow(
     initialWidth: Int,
     initialHeight: Int,
     initialBuffer: IJudoBuffer,
-    isFocusable: Boolean? = null
+    override val isFocusable: Boolean = false
 ) : IJudoWindow {
 
     override val id = ids.newWindow()
@@ -24,9 +24,6 @@ class JudoWindow(
 
     override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
-    override val isFocusable: Boolean
-        get() = providedFocusable ?: super.isFocusable
-    private val providedFocusable = isFocusable
 
     private var displayWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
@@ -124,6 +121,8 @@ class JudoWindow(
             lines.add(AttributedString.EMPTY)
         }
     }
+
+    override fun getScrollback(): Int = scrollbackBottom
 
     override fun updateStatusLine(line: CharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
@@ -287,7 +286,7 @@ class PrimaryJudoWindow(
         outputBuffer,
         isFocusable = false)
 
-    val promptBuffer = JudoBuffer(ids.newBuffer(), isFocusable = true)
+    val promptBuffer = JudoBuffer(ids)
     val promptWindow = JudoWindow(ids, settings,
         initialWidth, 1,
         promptBuffer,
@@ -310,6 +309,7 @@ class PrimaryJudoWindow(
         promptWindow.getDisplayLines(lines)
     }
 
+    override fun getScrollback(): Int = outputWindow.getScrollback()
     override fun scrollLines(count: Int) = outputWindow.scrollLines(count)
     override fun scrollPages(count: Int) = outputWindow.scrollPages(count)
     override fun scrollToBottom() = outputWindow.scrollToBottom()

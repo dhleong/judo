@@ -5,7 +5,6 @@ package net.dhleong.judo.render
  */
 interface IJudoBuffer {
     val id: Int
-    val isFocusable: Boolean
     val size: Int
     val lastIndex: Int
 
@@ -18,6 +17,8 @@ interface IJudoBuffer {
 
     fun clear()
     fun replaceLastLine(result: CharSequence)
+
+    fun set(newContents: List<out CharSequence>) {}
 }
 
 interface InputReceivingBuffer : IJudoBuffer {
@@ -28,7 +29,7 @@ interface IJudoWindow {
     val id: Int
     val width: Int
     val height: Int
-    val isFocusable: Boolean get() = currentBuffer.isFocusable
+    val isFocusable: Boolean
     var isFocused: Boolean
 
     var currentBuffer: IJudoBuffer
@@ -36,6 +37,7 @@ interface IJudoWindow {
     fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence
 
     fun getDisplayLines(lines: MutableList<CharSequence>)
+    fun getScrollback(): Int
 
     fun resize(width: Int, height: Int)
 

@@ -152,7 +152,7 @@ class JudoCore(
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
     private val ids = IdManager()
-    private val outputBuffer = JudoBuffer(ids.newBuffer(), true)
+    private val outputBuffer = JudoBuffer(ids)
     private val primaryWindow = PrimaryJudoWindow(
         ids, settings, outputBuffer,
         renderer.windowWidth, renderer.windowHeight)
@@ -762,8 +762,10 @@ class JudoCore(
         val originalLength = actualLine.length
         val result = prompts.process(actualLine, this::onPrompt)
         if (result.length != originalLength) {
-            // we found a prompt! clean up the output
-            outputBuffer.replaceLastLine(result)
+            renderer.inTransaction {
+                // we found a prompt! clean up the output
+                outputBuffer.replaceLastLine(result)
+            }
         }
     }
 
@@ -775,7 +777,11 @@ class JudoCore(
 
         // make sure prompt colors don't bleed
         parsedPrompts[index] = IStringBuilder.from(prompt)
-        updateStatusLine(currentMode)
+//        updateStatusLine(currentMode)
+
+        renderer.inTransaction {
+            primaryWindow.promptBuffer.set(parsedPrompts)
+        }
     }
 }
 
