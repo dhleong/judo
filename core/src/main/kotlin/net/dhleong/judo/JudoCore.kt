@@ -171,7 +171,7 @@ class JudoCore(
             outputBuffer = JudoBuffer(ids)
             primaryWindow = PrimaryJudoWindow(
                 ids, settings, outputBuffer,
-                renderer.windowWidth, renderer.windowHeight)
+                renderer.windowWidth, renderer.windowHeight - 1)
             tabpage = JudoTabpage(ids, settings, primaryWindow)
         }
 
@@ -180,7 +180,6 @@ class JudoCore(
         renderer.settings = state
         renderer.onResized = {
             renderer.inTransaction {
-                tabpage.resize(renderer.windowWidth, renderer.windowHeight - 1)
                 updateStatusLine(currentMode)
                 updateInputLine()
             }

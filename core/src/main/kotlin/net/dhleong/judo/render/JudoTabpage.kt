@@ -52,8 +52,11 @@ class JudoTabpage(
         return newWindow
     }
 
-    override fun resize(width: Int, height: Int) =
+    override fun resize(width: Int, height: Int) {
         rootStack.resize(width, height)
+        this.width = width
+        this.height = height
+    }
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         rootStack.getDisplayLines(lines)
@@ -113,8 +116,14 @@ internal class WindowStack(
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
 
-    override fun getDisplayLines(lines: MutableList<CharSequence>) =
+    override fun getDisplayLines(lines: MutableList<CharSequence>) {
+        val old = lines.size
         window.getDisplayLines(lines)
+        val added = lines.size - old
+        if (added != height) {
+            throw IllegalStateException("$window created $added lines but had height $height")
+        }
+    }
 
     override fun getYPositionOf(window: IJudoWindow) =
         if (window == this.window) 0

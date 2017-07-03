@@ -42,7 +42,7 @@ class JLineRenderer2Test {
         renderer.windowWidth = 20
         renderer.windowHeight = 6
         renderer.currentTabpage = page
-        page.resize(renderer.windowWidth, renderer.windowHeight - 1)
+        renderer.updateSize()
     }
 
     @After fun tearDown() {
@@ -66,7 +66,7 @@ class JLineRenderer2Test {
                 "Test"
             )
 
-        assertThat(cursorRow).isEqualTo(6)
+        assertThat(cursorRow).isEqualTo(5)
         assertThat(cursorCol).isEqualTo(4)
     }
 
@@ -242,7 +242,8 @@ class JLineRenderer2Test {
     @Test fun continueTrailingStyleAcrossSplitLines() {
         renderer.windowWidth = 12
         renderer.windowHeight = 7
-//        renderer.currentTabpage!!.resize(12, renderer.windowHeight - 1)
+        renderer.updateSize()
+
         val lineOne = "\r\n${ansi(1,2)}\r\nTake my love\r\nTake"
         val lineTwo = " my land...\r\nTake me where..."
 
@@ -250,7 +251,6 @@ class JLineRenderer2Test {
             .isEqualTo(ansi(1,2).toString())
 
         val core = JudoCore(renderer, settings)
-        renderer.onResized?.invoke()
         // NOTE: input line takes 1 from the 7 above
         assertThat(renderer.currentTabpage!!.currentWindow.height).isEqualTo(6)
 
@@ -329,7 +329,7 @@ class JLineRenderer2Test {
                 "Test"
             )
 
-        assertThat(cursorRow).isEqualTo(6)
+        assertThat(cursorRow).isEqualTo(5)
         assertThat(cursorCol).isEqualTo(4)
     }
 

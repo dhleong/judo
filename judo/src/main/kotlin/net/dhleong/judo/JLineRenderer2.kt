@@ -126,7 +126,12 @@ class JLineRenderer2(
         windowWidth = size.columns
         window.resize(windowHeight, windowWidth)
 
+        updateSize()
+    }
+
+    internal fun updateSize() {
         doInTransaction {
+            currentTabpage?.resize(windowWidth, windowHeight - 1)
             window.clear()
             onResized?.invoke()
         }
@@ -279,11 +284,27 @@ class JLineRenderer2(
 
     @Synchronized override fun redraw() {
         val (lines, cursorRow, cursorCol) = getDisplayLines()
+        if (lines.isEmpty()) {
+            // splash screen?
+            window.update(
+                listOf(AttributedString.fromAnsi("Loading Judo...")),
+                windowSize.cursorPos(
+                    windowHeight - 1,
+                    0
+                )
+            )
+            terminal.flush()
+            return
+        }
 
         val cursorPos = windowSize.cursorPos(
             cursorRow,
             cursorCol
         )
+
+        if (lines.size != windowHeight) {
+            throw IllegalStateException("Expected $windowHeight lines but got ${lines.size}")
+        }
 
         window.resize(windowHeight, windowWidth)
         window.update(lines, cursorPos)
@@ -308,6 +329,13 @@ class JLineRenderer2(
         outputWorkspace.clear()
         tabpage.getDisplayLines(outputWorkspace)
 
+        if (outputWorkspace.size != windowHeight - 1) {
+            throw IllegalStateException(
+                "$tabpage generated ${outputWorkspace.size} lines, " +
+                "but expected ${windowHeight - 1} (height = ${tabpage.height})"
+            )
+        }
+
         val isCursorOnStatus = window.isFocusable && window.isFocused && window.statusCursor != -1
         val rawInputCursor = when {
             isCursorOnStatus -> 0
@@ -330,7 +358,7 @@ class JLineRenderer2(
             cursorRow = windowBottom - 1
             cursorCol = rawStatusCursor
         } else {
-            cursorRow = windowHeight
+            cursorRow = windowHeight - 1
             cursorCol = inputCursor
         }
 
