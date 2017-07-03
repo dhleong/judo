@@ -21,7 +21,7 @@ import org.junit.Test
  * @author dhleong
  */
 class JLineRendererTest {
-    
+
     lateinit var renderer: JLineRenderer
     lateinit var outputBuffer: JudoBuffer
     lateinit var window: PrimaryJudoWindow

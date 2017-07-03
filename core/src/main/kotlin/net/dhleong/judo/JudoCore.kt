@@ -711,13 +711,13 @@ class JudoCore(
         if (e is ScriptExecutionException) {
             appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"))
             e.stackTrace.map { "  $it" }
-                .forEach { appendOutput(OutputLine(it)) }
+                .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
             return
         }
 
         appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"))
         e.stackTrace.map { "  $it" }
-            .forEach { appendOutput(OutputLine(it)) }
+            .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
         e.cause?.let {
             appendError(it, "Caused by: ", isRoot = false)
         }
