@@ -101,6 +101,14 @@ class OutputLine : CharSequence {
         }
 
         val lines = getDisplayLines(windowWidth, wordWrap)
+        if (lines.size == 1) {
+            // NOTE: in the special case of a single line with a trailing
+            // ansi, getDisplayLines will drop it; since we know we render
+            // to a single line, we can just return ourselves to ensure
+            // we don't lose it
+            return listOf(this)
+        }
+
         var previousHint: CharSequence = ""
         return lines.fold(ArrayList<OutputLine>(lines.size)) { result, it ->
             val outputLine = sealedOutputLine(it, previousHint)

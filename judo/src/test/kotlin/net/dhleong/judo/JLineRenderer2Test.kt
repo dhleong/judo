@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
@@ -9,12 +10,15 @@ import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
+import org.jline.utils.AttributedString
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
 /**
+ * TODO: A lot of these are more like JudoCore+JudoWindow/JudoBuffer integration tests
+ * But since JudoCore depends on a JudoRenderer2, we've put them here for now....
  * @author dhleong
  */
 class JLineRenderer2Test {
@@ -194,6 +198,107 @@ class JLineRenderer2Test {
             .containsExactly("")
     }
 
+    @Test fun continueStyleAcrossLines() {
+        val core = JudoCore(renderer, settings)
+
+        val lineOne = "${ansi(1,1)}Take my love,\r\n"
+        val lineTwo = "Take my land...\r\n"
+
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        val buffer = core.renderer.currentTabpage!!.currentWindow.currentBuffer
+        if (buffer[0].startsWith("ERROR")) {
+            throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
+        }
+
+        val bufferContents = buffer.getAnsiContents()
+        assertThat(bufferContents[0])
+            .isEqualTo("${ansi(1,1)}Take my love,${ansi(0)}")
+        assertThat(bufferContents[1])
+            .isEqualTo("${ansi(1,1)}Take my land...${ansi(0)}")
+    }
+
+    @Test fun continueTrailingStyleAcrossLines() {
+        val lineOne = "${ansi(1,2)}Take my love,${ansi(1,4)}\r\n"
+        val lineTwo = "Take my land...\r\n"
+
+        assertThat(OutputLine(lineOne.trimEnd()).getFinalStyle().toString())
+            .isEqualTo(ansi(1,4).toString())
+
+        val core = JudoCore(renderer, settings)
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer("\r\n".toCharArray(), 2) // empty line
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        val buffer = core.renderer.currentTabpage!!.currentWindow.currentBuffer
+        if (buffer[0].startsWith("ERROR")) {
+            throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
+        }
+
+        assertThat(buffer.getAnsiContents()[2])
+            .isEqualTo("${ansi(1,4)}Take my land...${ansi(0)}")
+    }
+
+    @Test fun continueTrailingStyleAcrossSplitLines() {
+        renderer.windowWidth = 12
+        renderer.currentTabpage!!.resize(12, renderer.windowHeight - 1)
+        val lineOne = "\r\n${ansi(1,2)}\r\nTake my love\r\nTake"
+        val lineTwo = " my land...\r\nTake me where..."
+
+        assertThat(OutputLine(lineOne).getFinalStyle().toString())
+            .isEqualTo(ansi(1,2).toString())
+
+        val core = JudoCore(renderer, settings)
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        val window = core.renderer.currentTabpage!!.currentWindow
+        val buffer = window.currentBuffer
+        if (buffer[0].startsWith("ERROR")) {
+            throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
+        }
+
+        val bufferContents = buffer.getAnsiContents()
+        assertThat(bufferContents[2])
+            .isEqualTo("${ansi(1,2)}Take my love${ansi(0)}")
+        assertThat(bufferContents[3])
+            .isEqualTo("${ansi(1,2)}Take my land${ansi(0)}")
+        assertThat(bufferContents[4])
+            .isEqualTo("${ansi(1,2)}...${ansi(0)}")
+        assertThat(bufferContents[5])
+            .isEqualTo("${ansi(1,2)}Take me where...${ansi(0)}")
+
+        val windowContents = (window as PrimaryJudoWindow).outputWindow.getDisplayStrings()
+        assertThat(windowContents[0])
+            .isEqualTo("${ansi(1,2)}Take my love${ansi(0)}")
+        assertThat(windowContents[1])
+            .isEqualTo("${ansi(1,2)}Take my land${ansi(0)}")
+        assertThat(windowContents[2])
+            .isEqualTo("${ansi(1,2)}...${ansi(0)}")
+        assertThat(windowContents[3])
+            .isEqualTo("${ansi(1,2)}Take me wher${ansi(0)}")
+    }
+
+    @Test fun continueEmptyStyleAcrossLines() {
+        val core = JudoCore(renderer, settings)
+
+        val lineOne = "${ansi(1,1)}\r\n"
+        val lineTwo = "Take my love...\r\n"
+
+        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
+        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
+
+        val window = core.renderer.currentTabpage!!.currentWindow
+        val buffer = window.currentBuffer
+        if (buffer[0].startsWith("ERROR")) {
+            throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
+        }
+
+        assertThat(buffer.getAnsiContents()[1])
+            .isEqualTo("${ansi(1,1)}Take my love...${ansi(0)}")
+    }
+
 
     @Ignore("TODO: overlay status line")
     @Test fun promptRender() {
@@ -228,3 +333,9 @@ private fun JLineRenderer2.typeAndFit(text: String, expected: Pair<String, Int>)
     val (line, cursor) = fitInputLineToWindow()
     assertThat(line.toString() to cursor).isEqualTo(expected)
 }
+
+fun IJudoWindow.getDisplayStrings(): List<String> =
+    with(mutableListOf<CharSequence>()) {
+        getDisplayLines(this)
+        map { (it as AttributedString).toAnsi() }
+    }

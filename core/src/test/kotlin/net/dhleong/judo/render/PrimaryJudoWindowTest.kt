@@ -37,7 +37,6 @@ class PrimaryJudoWindowTest {
                 "<status>"
             )
     }
-
 }
 
 fun IJudoWindow.getDisplayStrings(): List<String> =
