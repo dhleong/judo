@@ -21,7 +21,7 @@ class JudoCoreTest {
     lateinit var judo: JudoCore
 
     @Before fun setUp() {
-        renderer.outputLines.clear()
+        renderer.output.clear()
         judo = JudoCore(renderer, StateMap())
     }
 
@@ -30,11 +30,11 @@ class JudoCoreTest {
 
         assertThat(renderer.outputLines)
             .containsExactly(
-                ""              to false,
-                "Take my love," to false,
-                ""              to false,
-                "Take my land," to false,
-                "Take me"       to true
+                "",
+                "Take my love,",
+                "",
+                "Take my land,",
+                "Take me"
             )
     }
 
@@ -43,11 +43,11 @@ class JudoCoreTest {
 
         assertThat(renderer.outputLines)
             .containsExactly(
-                ""              to false,
-                "Take my love," to false,
-                "Take my land," to false,
-                ""              to false,
-                "Take me"       to true
+                "",
+                "Take my love,",
+                "Take my land,",
+                "",
+                "Take me"
             )
     }
 
@@ -59,9 +59,9 @@ class JudoCoreTest {
 
         assertThat(renderer.outputLines)
             .containsExactly(
-                ""                                          to false,
-                "${0x27}[1;30m${0x27}[1;37mTake my love,"   to false,
-                "${0x27}[1;30m${0x27}[1;37mTake my land,"   to true
+                "",
+                "${0x27}[1;30m${0x27}[1;37mTake my love,",
+                "${0x27}[1;30m${0x27}[1;37mTake my land,"
             )
     }
 
@@ -72,12 +72,11 @@ class JudoCoreTest {
 
         assertThat(renderer.outputLines)
             .containsExactly(
-                ""                              to false,
-                "Take my love,"                 to false,
-                "Take my"                       to true,
-                " land,"                        to false,
-                "Take me where..."              to false,
-                "I don't care, I'm still free"  to true
+                "",
+                "Take my love,",
+                "Take my land,",
+                "Take me where...",
+                "I don't care, I'm still free"
             )
     }
 

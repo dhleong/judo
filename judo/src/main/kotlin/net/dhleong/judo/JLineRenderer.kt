@@ -1,8 +1,6 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.render.OutputLine
-import net.dhleong.judo.util.CircularArrayList
-import net.dhleong.judo.util.ansi
+import net.dhleong.judo.render.IJudoTabpage
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
 import org.jline.terminal.MouseEvent
@@ -23,10 +21,6 @@ import java.io.StringWriter
 import java.util.EnumSet
 import javax.swing.KeyStroke
 
-/**
- * @author dhleong
- */
-
 // ascii codes:
 val KEY_ESCAPE = 27
 val KEY_DELETE = 127
@@ -34,12 +28,13 @@ val KEY_DELETE = 127
 // this is returned by read() when it times out
 val KEY_TIMEOUT = -2
 
+/**
+ * @author dhleong
+ */
 class JLineRenderer(
     override var settings: StateMap,
     val enableMouse: Boolean = false
-) : JudoRenderer, BlockingKeySource {
-
-    private val DEFAULT_SCROLLBACK_SIZE = 20_000
+) : JudoRenderer, BlockingKeySource  {
 
     override val terminalType: String
         get() = terminal.type
@@ -47,38 +42,25 @@ class JLineRenderer(
 
     override var onResized: OnResizedEvent? = null
 
+    override var currentTabpage: IJudoTabpage? = null
+
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
+    private val originalAttributes: Attributes
 
     override var windowHeight = -1
     override var windowWidth = -1
-    internal var outputWindowHeight = -1
     private val windowSize = Size(0, 0)
 
-    private val output = CircularArrayList<OutputLine>(DEFAULT_SCROLLBACK_SIZE)
-
-    /** offset from end of output */
-    private var scrollbackBottom = 0
-
-    /** offset within output[scrollbackBottom] */
-    private var scrollbackOffset = 0
-
-    private var lastSearchKeyword: String = ""
-    private var searchResultLine = -1
-
-    private var hadPartialLine = false
-
     private var input = AttributedString.EMPTY
-    private var status = AttributedString.EMPTY
     private var cursor = 0
-    private var isCursorOnStatus = false
-
-    private val workspace = mutableListOf<AttributedString>()
-    private val originalAttributes: Attributes
-
-    private var isInTransaction = false
 
     private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> KeyStroke?>>(8)
+
+    private var cursorType: CursorType = CursorType.BLOCK
+
+    private var isInTransaction = false
+    private val outputWorkspace = ArrayList<CharSequence>(64)
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
@@ -145,41 +127,44 @@ class JLineRenderer(
         terminal.close()
     }
 
-    override fun appendOutput(line: CharSequence, isPartialLine: Boolean): OutputLine {
-        val outputLine = line as? OutputLine ?: OutputLine(line)
-        val result = appendOutputLineInternal(outputLine, isPartialLine)
-        hadPartialLine = isPartialLine
+    private fun resize() {
+        val size = terminal.size
+        windowSize.copy(size)
+        windowHeight = size.rows
+        windowWidth = size.columns
+        window.resize(windowHeight, windowWidth)
 
-        if (!isInTransaction) display()
-        return result
+        updateSize()
     }
 
-    override fun replaceLastLine(result: CharSequence) {
-        // TODO remove the line completely if empty?
-
-        output[output.lastIndex] = when (result) {
-            is OutputLine -> result
-            else -> OutputLine(result)
+    internal fun updateSize() {
+        doInTransaction {
+            currentTabpage?.resize(windowWidth, windowHeight - 1)
+            window.clear()
+            onResized?.invoke()
         }
-        if (!isInTransaction) display()
     }
 
-    private var cursorType: CursorType = CursorType.BLOCK
+    private fun handleSignal(signal: Terminal.Signal) {
+        try {
+            when (signal) {
+                Terminal.Signal.WINCH -> resize()
+                Terminal.Signal.CONT -> {
+                    terminal.enterRawMode()
+                    resize()
+                }
+                else -> {
+                    // TODO ?
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
 
     override fun setCursorType(type: CursorType) {
-        cursorType = type
-    }
-
-    // TODO it'd be great if this could be inline somehow...
-    override fun inTransaction(block: () -> Unit) {
-        val alreadyInTransaction = isInTransaction
-        isInTransaction = true
-
-        block()
-
-        if (!alreadyInTransaction) {
-            isInTransaction = false
-            display()
+        doInTransaction {
+            cursorType = type
         }
     }
 
@@ -190,19 +175,10 @@ class JLineRenderer(
     }
 
     override fun updateInputLine(line: String, cursor: Int) {
-        input = AttributedString.fromAnsi(line)
-        this.cursor = cursor
-        isCursorOnStatus = false
-        if (!isInTransaction) display()
-    }
-
-    override fun updateStatusLine(line: String, cursor: Int) {
-        status = AttributedString.fromAnsi(line)
-        if (cursor >= 0) {
+        doInTransaction {
+            input = AttributedString.fromAnsi(line)
             this.cursor = cursor
-            isCursorOnStatus = true
         }
-        if (!isInTransaction) display()
     }
 
     override fun readKey(): KeyStroke? {
@@ -297,206 +273,60 @@ class JLineRenderer(
         }
     }
 
-    @Synchronized override fun scrollLines(count: Int) {
-        // take into account wrapped lines
-        val width = windowWidth
-        val desired = Math.abs(count)
-        val step = count / desired
-        val end = output.size - 1
+    // TODO it'd be great if this could be inline somehow...
+    override fun inTransaction(block: () -> Unit) {
+        doInTransaction(block)
+    }
 
-        val rangeEnd = minOf(end, scrollbackBottom + count)
-        val range =
-            if (count > 0) scrollbackBottom..rangeEnd
-            else scrollbackBottom downTo rangeEnd
+    internal inline fun doInTransaction(block: () -> Unit) {
+        val alreadyInTransaction = isInTransaction
+        isInTransaction = true
 
-        // clear search result on scroll (?)
-        // TODO should we do better?
-        searchResultLine = -1
+        block()
 
-        val wordWrap = WORD_WRAP.read(settings)
-        var scrolled = 0
-        for (i in range) {
-            if (i < 0) break
-            if (i >= output.size) break
+        if (!alreadyInTransaction) {
+            isInTransaction = false
+            redraw()
+        }
+    }
 
-            scrollbackBottom = i
-            val displayedLines = output[end - i].getDisplayedLinesCount(width, wordWrap)
-            val renderedLines = displayedLines - scrollbackOffset
-            val newScrolled = scrolled + renderedLines
-            if (newScrolled == desired) {
-                // exactly where we want to be, no offset necessary
-                scrollbackBottom = maxOf(
-                    0,
-                    minOf(
-                        end,
-                        scrollbackBottom + step
-                    )
+    private var renderedSplashScreen = false
+
+    @Synchronized override fun redraw() {
+        val (lines, cursorRow, cursorCol) = getDisplayLines()
+        if (lines.isEmpty()) {
+            // splash screen?
+            if (windowHeight > 0) {
+                renderedSplashScreen = true
+                window.resize(windowWidth, windowHeight)
+                window.update(
+                    listOf(AttributedString.fromAnsi("Loading Judo...")),
+                    windowSize.cursorPos(windowHeight - 1, 0)
                 )
-                scrollbackOffset = 0
-                break
-            } else if (newScrolled > desired) {
-                // the logical line had too many visual lines;
-                // offset into it
-                scrollbackOffset += step * (desired - scrolled)
-                if (scrollbackOffset < 0) {
-                    // scrolling backwards, so this was a reverse offset
-                    scrollbackOffset += displayedLines
-                }
-                break
-            } else if (newScrolled < desired
-                    && (step > 0 && scrollbackBottom == end
-                        || step < 0 && scrollbackBottom == 0)) {
-                // end of the line; just stop
-                break
+                terminal.flush()
             }
 
-            scrolled = newScrolled
-            scrollbackOffset = 0 // we've moved on; reset the offset
+            // either way, don't do anything else
+            return
         }
 
-        if (!isInTransaction) display()
-    }
-
-    override fun scrollPages(count: Int) {
-        scrollLines(outputWindowHeight * count)
-    }
-
-    override fun scrollToBottom() {
-        scrollbackBottom = 0
-        searchResultLine = -1
-        if (!isInTransaction) display()
-    }
-
-    /**
-     * How many lines we've scrolled back
-     */
-    override fun getScrollback(): Int = scrollbackBottom
-
-    override fun searchForKeyword(word: CharSequence, direction: Int) {
-        val originalSearchResultLine = searchResultLine
-        val originalScrollbackBottom = scrollbackBottom
-        val originalScrollbackOffset = scrollbackOffset
-
-        if (word != lastSearchKeyword) {
-            lastSearchKeyword = word.toString()
-            searchResultLine = -1
-        }
-
-        do {
-            val lastScrollbackBottom = scrollbackBottom
-            val lastScrollbackOffset = scrollbackOffset
-
-            val lines = getDisplayLines()
-            val last =
-                if (direction > 0) lines.lastIndex
-                else 0
-            val iterateStart =
-                if (searchResultLine == -1) last
-                else searchResultLine - direction
-
-            if (iterateStart >= 0) {
-                val range =
-                    if (direction > 0) iterateStart downTo 0
-                    else iterateStart..lines.lastIndex
-                for (i in range) {
-                    val line = lines[i]
-                    if (line.contains(word, true)) {
-                        searchResultLine = i
-                        return
-                    }
-                }
-            }
-
-            scrollPages(direction)
-        } while (searchResultLine == -1
-            && (scrollbackBottom > lastScrollbackBottom || scrollbackOffset != lastScrollbackOffset))
-
-        // couldn't find anything; reset position
-        scrollbackBottom = originalScrollbackBottom
-        scrollbackOffset = originalScrollbackOffset
-
-        if (originalSearchResultLine != -1) {
-            searchResultLine = originalSearchResultLine
-        }
-
-        // TODO bell? echo?
-        appendOutput("Pattern not found: $word")
-
-    }
-
-    private fun resize() {
-        val size = terminal.size
-        windowSize.copy(size)
-        windowHeight = size.rows
-        windowWidth = size.columns
-        outputWindowHeight = windowHeight - 2
-        window.resize(windowHeight, windowWidth)
-
-        inTransaction {
+        if (renderedSplashScreen) {
+            renderedSplashScreen = false
             window.clear()
-            onResized?.invoke()
-        }
-    }
-
-    private fun handleSignal(signal: Terminal.Signal) {
-        try {
-            when (signal) {
-                Terminal.Signal.WINCH -> resize()
-                Terminal.Signal.CONT -> {
-                    terminal.enterRawMode()
-                    resize()
-                }
-                else -> {
-                    // TODO ?
-                }
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
-    @Synchronized private fun display() {
-        if (outputWindowHeight <= 0) return
-
-        workspace.clear()
-
-        val toOutput = getDisplayLines()
-        (toOutput.size..outputWindowHeight).forEach {
-            workspace.add(AttributedString.EMPTY)
-        }
-        workspace.addAll(toOutput)
-
-        val rawStatusCursor =
-            if (isCursorOnStatus) cursor
-            else 0
-        val (statusLine, statusCursor) = fitInputLineToWindow(status, rawStatusCursor)
-        workspace.add(statusLine)
-
-        val rawInputCursor =
-            if (isCursorOnStatus) 0
-            else cursor
-        val (inputLine, inputCursor) = fitInputLineToWindow(input, rawInputCursor)
-        workspace.add(inputLine)
-
-        val cursorPos: Int
-        if (isCursorOnStatus) {
-            cursorPos = windowSize.cursorPos(
-                windowHeight - 1,
-                statusCursor
-            )
-        } else {
-            cursorPos = windowSize.cursorPos(
-                windowHeight,
-                inputCursor
-            )
+            window.reset()
         }
 
-        // NOTE: jline keeps a reference to the list we provide this
-        // method, so we have to make a quick copy. If this becomes an
-        // issue, we might be able to "double buffer" and keep an active
-        // and a dirty workspace, and swap between them...
+        val cursorPos = windowSize.cursorPos(
+            cursorRow,
+            cursorCol
+        )
+
+        if (lines.size != windowHeight) {
+            throw IllegalStateException("Expected $windowHeight lines but got ${lines.size}")
+        }
+
         window.resize(windowHeight, windowWidth)
-        window.update(workspace.toList(), cursorPos)
+        window.update(lines, cursorPos)
         terminal.flush()
 
         try {
@@ -509,6 +339,52 @@ class JLineRenderer(
             // Anyway, it only happens from the JLineRenderer constructor,
             // so we can safely ignore it
         }
+    }
+
+    fun getDisplayLines(): Triple<List<AttributedString>, Int, Int> {
+        val tabpage = currentTabpage ?: return Triple(emptyList<AttributedString>(), 0, 0)
+        val window = tabpage.currentWindow
+
+        outputWorkspace.clear()
+        tabpage.getDisplayLines(outputWorkspace)
+
+        if (outputWorkspace.size != windowHeight - 1) {
+            throw IllegalStateException(
+                "$tabpage generated ${outputWorkspace.size} lines, " +
+                "but expected ${windowHeight - 1} (height = ${tabpage.height})"
+            )
+        }
+
+        val isCursorOnStatus = window.isFocusable && window.isFocused && window.statusCursor != -1
+        val rawInputCursor = when {
+            isCursorOnStatus -> 0
+            tabpage.currentWindow.isFocusable -> cursor
+            else -> 0
+        }
+        val (inputLine, inputCursor) = fitInputLineToWindow(input, rawInputCursor)
+        outputWorkspace.add(inputLine)
+
+        val rawStatusCursor = when {
+            isCursorOnStatus -> window.statusCursor
+            else -> 0
+        }
+
+        val cursorRow: Int
+        val cursorCol: Int
+        if (isCursorOnStatus) {
+            val windowY = tabpage.getYPositionOf(window)
+            val windowBottom = window.height + windowY
+            cursorRow = windowBottom - 1
+            cursorCol = rawStatusCursor
+        } else {
+            cursorRow = windowHeight - 1
+            cursorCol = inputCursor
+        }
+
+        // NOTE: JLine uses our list as-is, so if we modify it
+        // after the fact, things get weiiiird. We could maybe
+        // double-buffer it to avoid constantly allocating new arrays...
+        return Triple(outputWorkspace.map { it as AttributedString }, cursorRow, cursorCol)
     }
 
     // visible for testing
@@ -570,90 +446,6 @@ class JLineRenderer(
         }
 
         return withIndicator.toAttributedString() to (absolutePageCursor + cursorOffset)
-    }
-
-    fun getDisplayLines(): List<AttributedString> {
-        val wordWrap = WORD_WRAP.read(settings)
-        val start = output.lastIndex - scrollbackBottom
-        val end = maxOf(0, start - outputWindowHeight)
-        val lines = output.slice(end..start)
-            .asSequence()
-            .flatMap { it.getDisplayLines(windowWidth, wordWrap).asSequence() }
-            .toList()
-            .dropLast(scrollbackOffset)
-            .takeLast(outputWindowHeight)
-
-        if (searchResultLine >= 0) {
-            val lineIndex = searchResultLine
-            val original = lines[lineIndex]
-            val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
-            if (wordStart >= 0) {
-                val wordEnd = wordStart + lastSearchKeyword.length
-                val word = original.substring(wordStart, wordEnd)
-                val highlighted = "${ansi(inverse = true)}$word${ansi(0)}"
-
-                val new = AttributedStringBuilder(original.length)
-                new.append(original, 0, wordStart)
-                new.appendAnsi(highlighted)
-                new.append(original, wordEnd, original.length)
-                val newString = new.toAttributedString()
-
-                val mutableLines = lines.toMutableList()
-                mutableLines[lineIndex] = newString
-                return mutableLines
-            }
-        }
-
-        return lines
-    }
-
-    /**
-     * @return The actual [OutputLine] that was put into the buffer
-     */
-    private fun appendOutputLineInternal(line: OutputLine, isPartialLine: Boolean): OutputLine {
-        val splitCandidate: OutputLine
-        val linesMod: Int
-        if (hadPartialLine) {
-            hadPartialLine = false
-
-            // we're adding one less than expected, because at least
-            // one part of OutputLine is replacing something
-            linesMod = -1
-
-            // merge partial line
-            val original = output.removeLast()
-            original.append(line)
-
-            splitCandidate = original
-        } else {
-            // new line
-            if (output.isNotEmpty()) {
-                val previous = output.last()
-                line.setStyleHint(previous.getFinalStyle())
-            }
-            splitCandidate = line
-            linesMod = 0 // no change
-        }
-
-        val linesAdded: Int
-        if (isPartialLine) {
-            // never split partial lines right away
-            output.add(splitCandidate)
-            linesAdded = 1
-        } else {
-            // full line. split away!
-            val split = splitCandidate.getDisplayOutputLines(windowWidth, WORD_WRAP.read(settings))
-            linesAdded = split.size
-            split.forEach(output::add)
-        }
-
-        val atBottom = scrollbackBottom == 0 && scrollbackOffset == 0
-        if (!atBottom) {
-            val change = linesAdded + linesMod
-            scrollbackBottom += change
-        }
-
-        return splitCandidate
     }
 }
 

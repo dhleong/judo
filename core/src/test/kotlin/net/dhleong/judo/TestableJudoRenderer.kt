@@ -1,5 +1,10 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.JudoTabpage
+import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.getAnsiContents
 import java.lang.reflect.Proxy
 
 /**
@@ -17,12 +22,19 @@ class TestableJudoRenderer(
     val inputLine: Pair<String, Int>
         get() = state.inputLine
 
-    val outputLines: MutableList<Pair<String, Boolean>>
-        get() = state.outputLines
+    val output: JudoBuffer
+        get() = state.output
+    val outputLines: List<String>
+        get() = state.output.getAnsiContents()
 }
 
-class RendererState(var windowWidth: Int = 90) {
-    val outputLines = mutableListOf<Pair<String, Boolean>>()
+class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
+
+    val settings = StateMap()
+    val ids = IdManager()
+    val output = JudoBuffer(ids)
+    val primaryWindow = PrimaryJudoWindow(ids, settings, output, windowWidth, windowHeight)
+    val tabpage = JudoTabpage(ids, settings, primaryWindow)
     var inputLine: Pair<String, Int> = "" to 0
 }
 
@@ -32,15 +44,11 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
         arrayOf(JudoRenderer::class.java)
     ) { _, method, args ->
         when (method.name) {
-            "appendOutput" -> {
-                val line = args[0] as CharSequence
-                val isPartial = args[1] as Boolean
-
-                state.outputLines.add(line.toString() to isPartial)
-                args[0] // return the charsequence
-            }
 
             "getWindowWidth" -> state.windowWidth
+            "getWindowHeight" -> state.windowHeight
+
+            "getCurrentTabpage" -> state.tabpage
 
             "inTransaction" -> {
                 @Suppress("UNCHECKED_CAST")

@@ -4,6 +4,7 @@ import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.prompt.IPromptManager
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.Closeable
 import java.io.File
@@ -64,6 +65,7 @@ interface IJudoCore {
     val triggers: ITriggerManager
     val state: StateMap
     val renderer: JudoRendererInfo
+    val tabpage: IJudoTabpage
 
     fun echo(vararg objects: Any?)
     fun enterMode(modeName: String)

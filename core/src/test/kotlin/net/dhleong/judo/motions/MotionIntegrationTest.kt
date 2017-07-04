@@ -4,6 +4,7 @@ import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.input.keys
+import net.dhleong.judo.render.getAnsiContents
 import net.dhleong.judo.setInput
 import net.dhleong.judo.type
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +28,7 @@ class MotionIntegrationTest {
 
     @After fun tearDown() {
         // if not empty, it contained errors
-        assertThat(renderer.outputLines).isEmpty()
+        assertThat(renderer.output.getAnsiContents()).isEmpty()
     }
 
     @Test fun altBackSpace() {

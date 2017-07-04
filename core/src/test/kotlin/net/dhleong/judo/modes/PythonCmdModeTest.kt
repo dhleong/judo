@@ -3,10 +3,11 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.TestableJudoCore
 import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.assertThat
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.util.InputHistory
-import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
 import org.junit.Test
@@ -19,7 +20,7 @@ class PythonCmdModeTest {
     val judo = TestableJudoCore()
     val input = InputBuffer()
     val mode = PythonCmdMode(
-        judo, input,
+        judo, IdManager(), input,
         TestableJudoRenderer(),
         InputHistory(input),
         DumbCompletionSource()
@@ -325,6 +326,56 @@ class PythonCmdModeTest {
 
         assertThat(judo.echos)
             .containsExactly("magic")
+    }
+
+    @Test fun hsplit() {
+        mode.execute("""
+            newWin = hsplit(20)
+            echo(newWin.id)
+            echo(newWin.buffer)
+            newWin.buffer.append("test")
+            """.trimIndent())
+
+        assertThat(judo.echos).isNotEmpty()
+        val window = judo.tabpage.findWindowById(judo.echos[0] as Int)
+        assertThat(window).isNotNull
+
+        val buffer = window!!.currentBuffer
+        assertThat(buffer[0].toString())
+            .isEqualTo("test")
+
+        judo.echos.clear()
+        mode.execute("""
+            newWin.buffer.set(['Foo', 'Bar'])
+            echo(len(newWin.buffer))
+            """.trimIndent())
+
+        assertThat(buffer[0].toString())
+            .isEqualTo("Foo")
+        assertThat(buffer[1].toString())
+            .isEqualTo("Bar")
+        assertThat(buffer.size).isEqualTo(2)
+        assertThat(judo.echos).containsExactly(2)
+    }
+
+    @Test fun hsplit_resize() {
+        mode.execute("""
+            newWin = hsplit(20)
+            echo(newWin.id)
+            echo(newWin.buffer)
+            newWin.buffer.append("test")
+            newWin.resize(newWin.width, 4)
+            """.trimIndent())
+
+        assertThat(judo.echos).isNotEmpty()
+        val window = judo.tabpage.findWindowById(judo.echos[0] as Int)!!
+
+        assertThat(window).hasHeight(4)
+
+        val primary = judo.tabpage.currentWindow
+        assertThat(primary)
+            .isNotSameAs(window)
+            .hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
     }
 }
 

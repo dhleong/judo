@@ -7,6 +7,11 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
@@ -33,6 +38,7 @@ import java.util.regex.PatternSyntaxException
  */
 class PythonCmdMode(
     judo: IJudoCore,
+    private val ids: IdManager,
     inputBuffer: InputBuffer,
     rendererInfo: JudoRendererInfo,
     history: IInputHistory,
@@ -112,6 +118,13 @@ class PythonCmdMode(
         globals["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
         globals["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
         globals["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
+        globals["hsplit"] = asPyFn<Any, PyObject>(1) {
+            val newBuffer = JudoBuffer(ids)
+            PyWindow(judo.tabpage,
+                if (it[0] is Int) judo.tabpage.hsplit(it[0] as Int, newBuffer)
+                else judo.tabpage.hsplit(it[0] as Float, newBuffer)
+            )
+        }
         globals["input"] = asPyFn<String, String?>(1, minArgs = 0) {
             if (it.isNotEmpty()) {
                 readInput(it[0])
@@ -141,6 +154,7 @@ class PythonCmdMode(
         globals["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         globals["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
         globals["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }
+        globals["unsplit"] = asUnitPyFn<Any> { judo.tabpage.unsplit() }
         globals["untrigger"] = asUnitPyFn<String>(1) { judo.triggers.undefine(it[0]) }
 
         // the naming here is insane, but correct
@@ -309,8 +323,58 @@ class PythonCmdMode(
             throw ScriptExecutionException(e.toString())
         }
     }
-
 }
+
+internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
+    val resize = asUnitPyFn<Int>(2) {
+        window.resize(it[0], it[1])
+        tabpage.resize()
+    }
+
+    return object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject? =
+            when (name ?: "") {
+                "buffer" -> PyBuffer(window, window.currentBuffer) // cache?
+                "height" -> Py.java2py(window.height)
+                "width" -> Py.java2py(window.width)
+                "id" -> Py.java2py(window.id)
+
+                "close" -> asUnitPyFn<Any> { tabpage.close(window) } // not used oft enough to cache
+                "resize" -> resize
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+}
+
+internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
+    val append = asUnitPyFn<String>(1) {
+        buffer.appendLine(it[0], false, window.width, false)
+    }
+    val clear = asUnitPyFn<Any> {
+        buffer.clear()
+    }
+    val set = asUnitPyFn<List<String>>(1) {
+        buffer.set(it[0])
+    }
+
+    return object : PyObject() {
+        override fun __len__(): Int {
+            return buffer.size
+        }
+
+        override fun __findattr_ex__(name: String?): PyObject =
+            when (name ?: "") {
+                "append" -> append
+                "clear" -> clear
+                "set" -> set
+                "id" -> Py.java2py(buffer.id)
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+}
+
 
 /**
  * Create a Python function that can be used either as a normal
@@ -391,7 +455,6 @@ private class PyGlobals : PyStringMap() {
         super.__setitem__(key, Py.java2py(value))
     }
 }
-
 
 internal fun compileAliasSpec(input: Any): PatternSpec =
     when (input) {
