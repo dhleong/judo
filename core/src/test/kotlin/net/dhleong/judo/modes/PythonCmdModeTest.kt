@@ -344,13 +344,18 @@ class PythonCmdModeTest {
         assertThat(buffer[0].toString())
             .isEqualTo("test")
 
-        mode.execute("newWin.buffer.set(['Foo', 'Bar'])")
+        judo.echos.clear()
+        mode.execute("""
+            newWin.buffer.set(['Foo', 'Bar'])
+            echo(len(newWin.buffer))
+            """.trimIndent())
 
         assertThat(buffer[0].toString())
             .isEqualTo("Foo")
         assertThat(buffer[1].toString())
             .isEqualTo("Bar")
         assertThat(buffer.size).isEqualTo(2)
+        assertThat(judo.echos).containsExactly(2)
     }
 }
 

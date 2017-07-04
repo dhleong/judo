@@ -349,6 +349,10 @@ internal fun PyBuffer(buffer: IJudoBuffer): PyObject {
     }
 
     return object : PyObject() {
+        override fun __len__(): Int {
+            return buffer.size
+        }
+
         override fun __findattr_ex__(name: String?): PyObject =
             when (name ?: "") {
                 "append" -> append
