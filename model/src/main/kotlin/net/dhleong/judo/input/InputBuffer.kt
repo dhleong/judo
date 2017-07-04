@@ -134,17 +134,18 @@ class InputBuffer {
     }
 
     private fun normalizeRange(range: IntRange): Pair<IntRange, Int>? {
+        val bufferEnd = maxOf(0, buffer.lastIndex)
         if (range.start < range.endInclusive) {
             // forward delete
             val end = (range.endInclusive - 1)
             if (end < 0) return null
 
-            return (range.start..end) to minOf(buffer.lastIndex, range.start)
+            return (range.start..end) to minOf(bufferEnd, range.start)
         } else {
             val end = (range.start - 1)
             if (end < 0) return null
 
-            return (range.endInclusive..end) to minOf(buffer.lastIndex, range.endInclusive)
+            return (range.endInclusive..end) to minOf(bufferEnd, range.endInclusive)
         }
     }
 }

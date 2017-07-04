@@ -133,6 +133,15 @@ class MotionIntegrationTest {
             .isEqualTo("l" to 1) // no change
     }
 
+    @Test fun changeForwardEmpty() {
+        judo.setInput("", 0)
+
+        judo.type(keys("clh"))
+        assertThat(renderer.outputLines).isEmpty() // no error
+        assertThat(renderer.inputLine)
+            .isEqualTo("h" to 1) // no change
+    }
+
     @Test fun changeWordForward() {
         judo.setInput("word word2 word3", 5)
 
