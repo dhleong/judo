@@ -10,6 +10,7 @@ import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.motions.wordMotion
 import net.dhleong.judo.util.hasCtrl
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
@@ -27,6 +28,10 @@ class ScriptInputMode(
     override val name = "input"
 
     private val mapping = KeyMapping(
+        keys("<alt bs>") to actionOn(wordMotion(-1, false)) { _, range ->
+            buffer.deleteWithCursor(range, clampCursor = false)
+        },
+
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())
     )

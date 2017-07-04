@@ -36,7 +36,6 @@ class InsertMode(
         keys("<down>") to { _ -> history.scroll(1, clampCursor = false) },
 
         keys("<alt bs>") to actionOn(wordMotion(-1, false)) { _, range ->
-//            buffer.deleteWithCursor(range.start..range.endInclusive, clampCursor = false)
             buffer.deleteWithCursor(range, clampCursor = false)
         },
 
