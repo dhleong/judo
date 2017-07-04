@@ -153,6 +153,7 @@ class PythonCmdMode(
         globals["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         globals["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
         globals["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }
+        globals["unsplit"] = asUnitPyFn<Any> { judo.tabpage.unsplit() }
         globals["untrigger"] = asUnitPyFn<String>(1) { judo.triggers.undefine(it[0]) }
 
         // the naming here is insane, but correct

@@ -570,6 +570,7 @@ class JudoCore(
             }
             parsedPrompts.clear()
             primaryWindow.promptBuffer.clear()
+            tabpage.unsplit()
 
             echo("Disconnected from $connection")
             updateStatusLine(currentMode)

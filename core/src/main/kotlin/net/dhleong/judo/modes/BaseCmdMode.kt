@@ -262,6 +262,11 @@ private val COMMAND_HELP = mutableMapOf(
         "Delete the alias with the specified inputSpec"
     ),
 
+    "unsplit" to buildHelp(
+        "unsplit()",
+        "Remove any split windows"
+    ),
+
     "untrigger" to buildHelp(
         "untrigger(inputSpec: String)",
         "Delete the trigger with the specified inputSpec"
@@ -447,6 +452,9 @@ abstract class BaseCmdMode(
 
     open fun reload() {
         lastReadFile?.let {
+            // clear any split windows
+            judo.tabpage.unsplit()
+
             readFile(it)
             judo.echo("Reloaded $it")
             return

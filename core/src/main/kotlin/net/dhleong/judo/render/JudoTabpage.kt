@@ -9,7 +9,7 @@ import org.jline.utils.AttributedString
 class JudoTabpage(
     private val ids: IdManager,
     private val settings: StateMap,
-    initialWindow: IJudoWindow
+    private val initialWindow: IJudoWindow
 ) : IJudoTabpage {
 
     override var id = ids.newTabpage()
@@ -63,6 +63,14 @@ class JudoTabpage(
         rootStack.resize(width, height)
         this.width = width
         this.height = height
+    }
+
+    override fun unsplit() {
+        val newStack = WindowStack(rootStack, initialWindow)
+        currentStack = newStack
+        currentWindow = initialWindow
+        rootStack.child = newStack
+        rootStack.resize(width, height)
     }
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
@@ -168,6 +176,8 @@ internal abstract class BaseStack(
 internal class VerticalStack(parent: IStack, width: Int, height: Int)
     : BaseStack(parent, width, height) {
 
+    private var cachedSeparator: AttributedString? = null
+
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
             var available = height
@@ -194,8 +204,7 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
         for (i in contents.indices) {
             if (i > 0) {
                 // separator
-                // TODO cache this:
-                lines.add(AttributedString.fromAnsi("-".repeat(width)))
+                lines.add(getSeparator())
             }
 
             val row = contents[i]
@@ -237,4 +246,14 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
         }
     }
 
+    private fun getSeparator(): AttributedString {
+        cachedSeparator?.let {
+            if (it.length == width) return it
+        }
+
+        // TODO fancy separator?
+        val newSeparator = AttributedString.fromAnsi("-".repeat(width))
+        cachedSeparator = newSeparator
+        return newSeparator
+    }
 }
