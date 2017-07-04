@@ -329,7 +329,7 @@ internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject =
     object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-                "buffer" -> PyBuffer(window.currentBuffer) // cache?
+                "buffer" -> PyBuffer(window, window.currentBuffer) // cache?
                 "close" -> asUnitPyFn<Any> { tabpage.close(window) }
                 "id" -> Py.java2py(window.id)
 
@@ -337,9 +337,9 @@ internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject =
             }
     }
 
-internal fun PyBuffer(buffer: IJudoBuffer): PyObject {
+internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
     val append = asUnitPyFn<String>(1) {
-        buffer.appendLine(it[0], false, 42, false)
+        buffer.appendLine(it[0], false, window.width, false)
     }
     val clear = asUnitPyFn<Any> {
         buffer.clear()
