@@ -102,6 +102,34 @@ class InputHistoryTest {
         assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
     }
 
+    @Test fun searchMultiWord() {
+        history.push("Take me where I cannot stand")
+        history.push("Take my land")
+        history.push("Take my love")
+        assertThat(buffer.toString()).isEqualTo("")
+
+        assertThat(history.search("t", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        assertThat(history.search("t w", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take me where I cannot stand")
+    }
+
+    @Test fun searchMultiWordByWord() {
+        history.push("Take me where I kannot stand") // see below
+        history.push("Take my land")
+        history.push("Take my love")
+        assertThat(buffer.toString()).isEqualTo("")
+
+        assertThat(history.search("t", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take my love")
+
+        // NOTE: "take" also has a k, but since there's a space, what
+        // we're *really* after is "take ... kannot"
+        assertThat(history.search("t k", false)).isTrue()
+        assertThat(buffer.toString()).isEqualTo("Take me where I kannot stand")
+    }
+
     @Test fun searchAfterScroll() {
         history.push("Take me where I cannot stand")
         history.push("Take my land")

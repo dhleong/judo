@@ -62,10 +62,10 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
      * @return True if a match was found, else false.
      */
     override fun search(match: String, forceNext: Boolean): Boolean {
+        val matches = predicateForSearch(match)
         // NOTE offset will always be negative (or 0)
         val offset =
-            if (forceNext &&
-                    contents[contents.lastIndex + historyOffset].contains(match, true)) {
+            if (forceNext && contents[contents.lastIndex + historyOffset].matches()) {
                 historyOffset - 1
             } else {
                 historyOffset
@@ -73,7 +73,7 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
 
         val original = buffer.toChars() // avoid string object creation
         for (i in contents.size + offset - 1 downTo 0) {
-            if (contents[i].contains(match, true)
+            if (contents[i].matches()
                     && !(forceNext && original.isEqualTo(contents[i]))) {
                 // TODO if contents[i] IS equal to original, we could prune it?
                 buffer.set(contents[i])
@@ -83,6 +83,37 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
         }
 
         return false
+    }
+
+    private fun predicateForSearch(match: String): String.() -> Boolean {
+        if (' ' !in match) {
+            // simple search
+            return { contains(match, ignoreCase = true) }
+        }
+
+        // per-word match
+        val words = match.split(" ")
+        return {
+            // every "word" has to be found AFTER the previous, AND
+            // after a word break (IE: whitespace)
+            var last = 0
+            words.all {
+                if (last == -1) {
+                    // there was no more word boundary after the last word
+                    false
+                } else {
+                    val wordIndex = indexOf(it, last, ignoreCase = true)
+                    if (wordIndex == -1) {
+                        // no dice
+                        false
+                    } else {
+                        // found! keep going (after the next whitespace)
+                        last = indexOf(' ', wordIndex)
+                        true
+                    }
+                }
+            }
+        }
     }
 
     fun writeTo(path: File) {
