@@ -22,11 +22,33 @@ class JudoTabpage(
     }
     private var currentStack = rootStack.child
 
+    override fun close(window: IJudoWindow) {
+        if (window is PrimaryJudoWindow) {
+            throw IllegalArgumentException("You cannot close the primary window!")
+        }
+
+        val winStack = rootStack.stackWithWindow { it == window }
+            ?: throw IllegalArgumentException("No such window on this tabpage")
+
+        var stack = winStack.parent
+        stack.remove(winStack)
+
+        while (stack.parent != stack) {
+            val collapseChild = stack.getCollapseChild()
+                ?: break // nothing else
+
+            stack.parent.replace(stack, collapseChild)
+            stack = stack.parent
+        }
+
+        resize(width, height)
+    }
+
     override fun findWindowById(id: Int) =
-        rootStack.firstWindow { it.id == id }
+        rootStack.stackWithWindow { it.id == id }?.window
 
     override fun findWindowByBufferId(id: Int) =
-        rootStack.firstWindow { it.currentBuffer.id == id }
+        rootStack.stackWithWindow { it.currentBuffer.id == id }?.window
 
     override fun vsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         TODO("not implemented")
@@ -91,9 +113,17 @@ internal interface IStack {
     val parent: IStack
 
     fun add(item: IStack)
-    fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow?
+    fun stackWithWindow(predicate: (IJudoWindow) -> Boolean): WindowStack?
+
+    /**
+     * If we have just a single child that can be collapsed
+     * into our parent, return it here
+     */
+    fun getCollapseChild(): IStack?
+
     fun getDisplayLines(lines: MutableList<CharSequence>)
     fun getYPositionOf(window: IJudoWindow): Int
+    fun remove(child: IStack)
     fun replace(old: IStack, new: IStack)
     fun resize(width: Int, height: Int)
 }
@@ -108,12 +138,14 @@ internal class RootStack(private var tabpage: JudoTabpage) : IStack {
         get() = tabpage.height
 
     override fun add(item: IStack) = throw UnsupportedOperationException()
-    override fun firstWindow(predicate: (IJudoWindow) -> Boolean) =
-        child.firstWindow(predicate)
+    override fun getCollapseChild(): IStack? = null
+    override fun stackWithWindow(predicate: (IJudoWindow) -> Boolean) =
+        child.stackWithWindow(predicate)
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         child.getDisplayLines(lines)
     override fun getYPositionOf(window: IJudoWindow): Int =
         child.getYPositionOf(window)
+    override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) {
         if (old != child) throw IllegalArgumentException("old is not current")
         child = new
@@ -132,10 +164,12 @@ internal class WindowStack(
         get() = window.height
 
     override fun add(item: IStack) = throw UnsupportedOperationException()
+    override fun getCollapseChild(): IStack? = null
+    override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
 
-    override fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow? =
-        if (predicate(window)) window
+    override fun stackWithWindow(predicate: (IJudoWindow) -> Boolean): WindowStack? =
+        if (predicate(window)) this
         else null
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
@@ -161,9 +195,9 @@ internal abstract class BaseStack(
 
     internal val contents = ArrayList<IStack>(4)
 
-    override fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow? =
+    override fun stackWithWindow(predicate: (IJudoWindow) -> Boolean): WindowStack? =
         contents.asSequence()
-            .map { it.firstWindow(predicate) }
+            .map { it.stackWithWindow(predicate) }
             .firstOrNull { it != null }
 
     override fun replace(old: IStack, new: IStack) {
@@ -199,6 +233,14 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
         resize(width, height)
     }
 
+    override fun getCollapseChild(): IStack? {
+        if (contents.size == 1) {
+            return contents[0]
+        }
+
+        return null
+    }
+
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
         // vertical stack is easy
         for (i in contents.indices) {
@@ -223,6 +265,12 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
 
         // not in this stack
         return -1
+    }
+
+    override fun remove(child: IStack) {
+        if (!contents.remove(child)) {
+            throw IllegalArgumentException("$child not contained in $this")
+        }
     }
 
     override fun resize(width: Int, height: Int) {

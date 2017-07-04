@@ -27,6 +27,30 @@ class JudoTabpageTest {
         tabpage = JudoTabpage(ids, settings, primary)
     }
 
+    @Test fun closeWindow_singleSplit() {
+
+        primary.appendLine("Take my land", isPartialLine = false)
+        primary.updateStatusLine("[status]")
+
+        val buffer = JudoBuffer(ids)
+        val window = tabpage.hsplit(2, buffer)
+        window.appendLine("Take my love", isPartialLine = false)
+
+        // close
+        tabpage.close(window)
+
+        assertThat(primary.height).isEqualTo(6)
+        assertThat(tabpage.getDisplayStrings())
+            .containsExactly(
+                "",
+                "",
+                "",
+                "",
+                "Take my land",
+                "[status]"
+            )
+    }
+
     @Test fun hsplit() {
         primary.appendLine("Take my land", isPartialLine = false)
         primary.updateStatusLine("[status]")

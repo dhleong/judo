@@ -82,6 +82,7 @@ interface IJudoTabpage {
     fun getYPositionOf(window: IJudoWindow): Int
 
     fun unsplit()
+    fun close(window: IJudoWindow)
 }
 
 class IdManager {

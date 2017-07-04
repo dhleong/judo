@@ -8,6 +8,7 @@ import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
@@ -119,7 +120,7 @@ class PythonCmdMode(
         globals["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
         globals["hsplit"] = asPyFn<Any, PyObject>(1) {
             val newBuffer = JudoBuffer(ids)
-            PyWindow(
+            PyWindow(judo.tabpage,
                 if (it[0] is Int) judo.tabpage.hsplit(it[0] as Int, newBuffer)
                 else judo.tabpage.hsplit(it[0] as Float, newBuffer)
             )
@@ -322,15 +323,14 @@ class PythonCmdMode(
             throw ScriptExecutionException(e.toString())
         }
     }
-
 }
 
-internal fun PyWindow(window: IJudoWindow): PyObject =
+internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject =
     object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-            // TODO cache
-                "buffer" -> PyBuffer(window.currentBuffer)
+                "buffer" -> PyBuffer(window.currentBuffer) // cache?
+                "close" -> asUnitPyFn<Any> { tabpage.close(window) }
                 "id" -> Py.java2py(window.id)
 
                 else -> super.__findattr_ex__(name)

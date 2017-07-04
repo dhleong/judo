@@ -144,9 +144,10 @@ private val COMMAND_HELP = mutableMapOf(
         """
         Create a new window by splitting the active window. The new window
         will be `rows` tall, or `perc` % of the active window's height.
-        The resulting Window object has the following attributes:
+        The resulting Window object has the following attributes and methods:
             id - The window's unique, numeric ID
             buffer - The window's underlying Buffer object
+            close() - Close the window
 
         A Buffer object has the following attributes and methods:
             id - The buffer's unique, numeric ID
@@ -154,6 +155,7 @@ private val COMMAND_HELP = mutableMapOf(
             clear() - Remove all lines from the buffer
             set(lines: String[]) - Replace the buffer's contents
                                    with the given lines list
+        Buffer also supports len() to get the number of lines
         """.trimIndent()
     ),
 
