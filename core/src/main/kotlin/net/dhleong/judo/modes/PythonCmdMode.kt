@@ -7,6 +7,10 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
@@ -33,6 +37,7 @@ import java.util.regex.PatternSyntaxException
  */
 class PythonCmdMode(
     judo: IJudoCore,
+    private val ids: IdManager,
     inputBuffer: InputBuffer,
     rendererInfo: JudoRendererInfo,
     history: IInputHistory,
@@ -112,6 +117,13 @@ class PythonCmdMode(
         globals["echo"] = asUnitPyFn<Any>(Int.MAX_VALUE) { judo.echo(*it) }
         globals["enterMode"] = asUnitPyFn<String>(1) { judo.enterMode(it[0]) }
         globals["exitMode"] = asUnitPyFn<Any> { judo.exitMode() }
+        globals["hsplit"] = asPyFn<Any, PyObject>(1) {
+            val newBuffer = JudoBuffer(ids)
+            PyWindow(
+                if (it[0] is Int) judo.tabpage.hsplit(it[0] as Int, newBuffer)
+                else judo.tabpage.hsplit(it[0] as Float, newBuffer)
+            )
+        }
         globals["input"] = asPyFn<String, String?>(1, minArgs = 0) {
             if (it.isNotEmpty()) {
                 readInput(it[0])
@@ -312,6 +324,43 @@ class PythonCmdMode(
 
 }
 
+internal fun PyWindow(window: IJudoWindow): PyObject =
+    object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject? =
+            when (name ?: "") {
+            // TODO cache
+                "buffer" -> PyBuffer(window.currentBuffer)
+                "id" -> Py.java2py(window.id)
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+
+internal fun PyBuffer(buffer: IJudoBuffer): PyObject {
+    val append = asUnitPyFn<String>(1) {
+        buffer.appendLine(it[0], false, 42, false)
+    }
+    val clear = asUnitPyFn<Any> {
+        buffer.clear()
+    }
+    val set = asUnitPyFn<List<String>>(1) {
+        buffer.set(it[0])
+    }
+
+    return object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject =
+            when (name ?: "") {
+                "append" -> append
+                "clear" -> clear
+                "set" -> set
+                "id" -> Py.java2py(buffer.id)
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+}
+
+
 /**
  * Create a Python function that can be used either as a normal
  * function OR a decorator
@@ -391,7 +440,6 @@ private class PyGlobals : PyStringMap() {
         super.__setitem__(key, Py.java2py(value))
     }
 }
-
 
 internal fun compileAliasSpec(input: Any): PatternSpec =
     when (input) {

@@ -67,6 +67,9 @@ interface IJudoTabpage {
 
     var currentWindow: IJudoWindow
 
+    fun findWindowById(id: Int): IJudoWindow?
+    fun findWindowByBufferId(id: Int): IJudoWindow?
+
     fun vsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow
     fun vsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow
 

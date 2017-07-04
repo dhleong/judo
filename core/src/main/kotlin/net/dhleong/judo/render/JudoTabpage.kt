@@ -1,6 +1,7 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
+import org.jline.utils.AttributedString
 
 /**
  * @author dhleong
@@ -21,6 +22,12 @@ class JudoTabpage(
     }
     private var currentStack = rootStack.child
 
+    override fun findWindowById(id: Int) =
+        rootStack.firstWindow { it.id == id }
+
+    override fun findWindowByBufferId(id: Int) =
+        rootStack.firstWindow { it.currentBuffer.id == id }
+
     override fun vsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         TODO("not implemented")
     }
@@ -34,10 +41,10 @@ class JudoTabpage(
         return hsplit(containerHeight * percentage, buffer)
     }
 
-    override fun hsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow {
+    override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val newWindow = JudoWindow(ids, settings, parent.width, cols, buffer)
+        val newWindow = JudoWindow(ids, settings, parent.width, rows, buffer)
 
         if (parent is VerticalStack) {
             parent.add(WindowStack(parent, newWindow))
@@ -76,6 +83,7 @@ internal interface IStack {
     val parent: IStack
 
     fun add(item: IStack)
+    fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow?
     fun getDisplayLines(lines: MutableList<CharSequence>)
     fun getYPositionOf(window: IJudoWindow): Int
     fun replace(old: IStack, new: IStack)
@@ -92,6 +100,8 @@ internal class RootStack(private var tabpage: JudoTabpage) : IStack {
         get() = tabpage.height
 
     override fun add(item: IStack) = throw UnsupportedOperationException()
+    override fun firstWindow(predicate: (IJudoWindow) -> Boolean) =
+        child.firstWindow(predicate)
     override fun getDisplayLines(lines: MutableList<CharSequence>) =
         child.getDisplayLines(lines)
     override fun getYPositionOf(window: IJudoWindow): Int =
@@ -116,6 +126,10 @@ internal class WindowStack(
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
 
+    override fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow? =
+        if (predicate(window)) window
+        else null
+
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
         val old = lines.size
         window.getDisplayLines(lines)
@@ -139,6 +153,11 @@ internal abstract class BaseStack(
 
     internal val contents = ArrayList<IStack>(4)
 
+    override fun firstWindow(predicate: (IJudoWindow) -> Boolean): IJudoWindow? =
+        contents.asSequence()
+            .map { it.firstWindow(predicate) }
+            .firstOrNull { it != null }
+
     override fun replace(old: IStack, new: IStack) {
         val oldIndex = contents.indexOf(old)
         if (oldIndex < 0) throw IllegalArgumentException("old stack not found")
@@ -150,18 +169,36 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
     : BaseStack(parent, width, height) {
 
     override fun add(item: IStack) {
-        val otherHeightDelta = item.height / contents.size
-        for (row in contents) {
-            row.resize(width, maxOf(2, row.height - otherHeightDelta))
+        if (contents.isNotEmpty()) {
+            var available = height
+            for (row in contents) {
+                available -= row.height
+            }
+
+            // reduce the size of other buffers to make room for the new item
+            if (available < item.height) {
+                val otherHeightDelta = (item.height - available) / contents.size
+                for (row in contents) {
+                    row.resize(width, maxOf(2, row.height - otherHeightDelta))
+                }
+            }
         }
 
-        contents.add(item)
+        // insert at the top
+        contents.add(0, item)
         resize(width, height)
     }
 
     override fun getDisplayLines(lines: MutableList<CharSequence>) {
         // vertical stack is easy
-        for (row in contents) {
+        for (i in contents.indices) {
+            if (i > 0) {
+                // separator
+                // TODO cache this:
+                lines.add(AttributedString.fromAnsi("-".repeat(width)))
+            }
+
+            val row = contents[i]
             row.getDisplayLines(lines)
         }
     }
@@ -190,9 +227,9 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
             val requestedHeight = item.height
             val remainingRows = last - i
             val allottedHeight = maxOf(0,
-                minOf(requestedHeight, availableHeight) -
-                // leave room for the remaining rows
-                2 * remainingRows
+                minOf(requestedHeight, availableHeight -
+                    // leave room for the remaining rows
+                    2 * remainingRows)
             )
             availableHeight -= allottedHeight
 

@@ -123,6 +123,8 @@ class JudoCore(
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
 
+    private val ids = IdManager()
+
     private val debugLogFile = File("debug-log.txt")
 
     private val modes = sequenceOf(
@@ -131,7 +133,7 @@ class JudoCore(
         normalMode,
         opMode,
         OutputSearchMode(this, outputCompletions),
-        PythonCmdMode(this, cmdBuffer, renderer, cmdHistory, completions),
+        PythonCmdMode(this, ids, cmdBuffer, renderer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>(), { map, mode ->
@@ -153,21 +155,18 @@ class JudoCore(
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
-    private val ids: IdManager
     private val outputBuffer: IJudoBuffer
     private val primaryWindow: PrimaryJudoWindow
-    private val tabpage: IJudoTabpage
+    override val tabpage: IJudoTabpage
 
     init {
         val rendererTabpage = renderer.currentTabpage
         if (rendererTabpage != null) {
             // NOTE: this should only happen in tests
-            ids = IdManager()
             tabpage = rendererTabpage
             primaryWindow = tabpage.currentWindow as PrimaryJudoWindow
             outputBuffer = primaryWindow.outputWindow.currentBuffer
         } else {
-            ids = IdManager()
             outputBuffer = JudoBuffer(ids)
             primaryWindow = PrimaryJudoWindow(
                 ids, settings, outputBuffer,

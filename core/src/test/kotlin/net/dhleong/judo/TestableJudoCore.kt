@@ -3,6 +3,11 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.JudoTabpage
+import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.trigger.TriggerManager
 import java.lang.reflect.Proxy
 
@@ -21,6 +26,15 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val state = StateMap()
+
+    val ids = IdManager()
+    override var tabpage: IJudoTabpage = JudoTabpage(
+        ids, state,
+        PrimaryJudoWindow(ids, state,
+            JudoBuffer(ids),
+            42, 24
+        )
+    )
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
         maps.add(arrayOf(mode, from, to, remap))
