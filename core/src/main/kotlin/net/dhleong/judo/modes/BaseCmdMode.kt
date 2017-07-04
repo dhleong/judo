@@ -136,21 +136,25 @@ private val COMMAND_HELP = mutableMapOf(
         "Print some output to the screen locally."
     ),
 
-    "load" to buildHelp(
-        "load(pathToFile: String)",
-        "Load and execute a script."
-    ),
+    "hsplit" to buildHelp(
+        listOf(
+            "hsplit(rows: Int) -> Window",
+            "hsplit(perc: Float) -> Window"
+        ),
+        """
+        Create a new window by splitting the active window. The new window
+        will be `rows` tall, or `perc` % of the active window's height.
+        The resulting Window object has the following attributes:
+            id - The window's unique, numeric ID
+            buffer - The window's underlying Buffer object
 
-    "logToFile" to buildHelp(
-        "logToFile(pathToFile: String, options: String)",
-        """Enable logging to the given file with the given options. `options` is
-          |a space-delimited string that may contain any of:
-          | append - Append output to the given file if it already exists, instead
-          |          of replacing it
-          | raw - Output the raw data received from the server, including ANSI codes
-          | plain - Output the plain text received from the server, with no coloring
-          | html - Output the data received from the server formatted as HTML.
-        """.trimMargin()
+        A Buffer object has the following attributes and methods:
+            id - The buffer's unique, numeric ID
+            append(line: String) - Append a line to the buffer
+            clear() - Remove all lines from the buffer
+            set(lines: String[]) - Replace the buffer's contents
+                                   with the given lines list
+        """.trimIndent()
     ),
 
     "input" to buildHelp(
@@ -167,6 +171,23 @@ private val COMMAND_HELP = mutableMapOf(
     "isConnected" to buildHelp(
         "isConnected() -> Boolean",
         "Check if connected."
+    ),
+
+    "load" to buildHelp(
+        "load(pathToFile: String)",
+        "Load and execute a script."
+    ),
+
+    "logToFile" to buildHelp(
+        "logToFile(pathToFile: String, options: String)",
+        """Enable logging to the given file with the given options. `options` is
+          |a space-delimited string that may contain any of:
+          | append - Append output to the given file if it already exists, instead
+          |          of replacing it
+          | raw - Output the raw data received from the server, including ANSI codes
+          | plain - Output the plain text received from the server, with no coloring
+          | html - Output the data received from the server formatted as HTML.
+        """.trimMargin()
     ),
 
     "normal" to buildHelp(
