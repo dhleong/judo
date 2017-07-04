@@ -7,8 +7,6 @@ import org.assertj.core.api.Java6Assertions
  * @author dhleong
  */
 
-internal fun assertThat(actual: AnsiStylist) = AnsiStylistAssert(actual)
-
 internal class AnsiStylistAssert(actual: AnsiStylist)
     : AbstractAssert<AnsiStylistAssert, AnsiStylist>(actual, AnsiStylistAssert::class.java) {
 

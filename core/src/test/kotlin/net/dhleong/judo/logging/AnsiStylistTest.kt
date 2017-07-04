@@ -1,5 +1,6 @@
 package net.dhleong.judo.logging
 
+import net.dhleong.judo.assertThat
 import net.dhleong.judo.util.ESCAPE_CHAR
 import net.dhleong.judo.util.ansi
 import org.junit.Before

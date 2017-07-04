@@ -3,6 +3,8 @@ package net.dhleong.judo.render
 import net.dhleong.judo.StateMap
 import org.jline.utils.AttributedString
 
+val WINDOW_MIN_HEIGHT = 2
+
 /**
  * @author dhleong
  */
@@ -81,6 +83,7 @@ class JudoTabpage(
         return newWindow
     }
 
+    override fun resize() = resize(width, height)
     override fun resize(width: Int, height: Int) {
         rootStack.resize(width, height)
         this.width = width
@@ -223,7 +226,10 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
             if (available < item.height) {
                 val otherHeightDelta = (item.height - available) / contents.size
                 for (row in contents) {
-                    row.resize(width, maxOf(2, row.height - otherHeightDelta))
+                    row.resize(width, maxOf(
+                        WINDOW_MIN_HEIGHT,
+                        row.height - otherHeightDelta
+                    ))
                 }
             }
         }
@@ -283,11 +289,14 @@ internal class VerticalStack(parent: IStack, width: Int, height: Int)
             val item = contents[i]
             val requestedHeight = item.height
             val remainingRows = last - i
-            val allottedHeight = maxOf(0,
-                minOf(requestedHeight, availableHeight -
-                    // leave room for the remaining rows
-                    2 * remainingRows)
-            )
+            val allottedHeight =
+                if (remainingRows == 0) availableHeight
+                else maxOf(
+                    WINDOW_MIN_HEIGHT,
+                    minOf(requestedHeight,
+                        // leave room for the remaining rows
+                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
+                )
             availableHeight -= allottedHeight
 
             item.resize(width, allottedHeight)

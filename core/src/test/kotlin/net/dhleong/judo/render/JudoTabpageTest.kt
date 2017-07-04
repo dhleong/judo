@@ -1,7 +1,7 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
-import org.assertj.core.api.Assertions.assertThat
+import net.dhleong.judo.assertThat
 import org.jline.utils.AttributedString
 import org.junit.Before
 import org.junit.Test
@@ -39,7 +39,7 @@ class JudoTabpageTest {
         // close
         tabpage.close(window)
 
-        assertThat(primary.height).isEqualTo(6)
+        assertThat(primary).hasHeight(6)
         assertThat(tabpage.getDisplayStrings())
             .containsExactly(
                 "",
@@ -68,8 +68,8 @@ class JudoTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love", isPartialLine = false)
 
-        assertThat(window.height).isEqualTo(2)
-        assertThat(primary.height).isEqualTo(3)
+        assertThat(window).hasHeight(2)
+        assertThat(primary).hasHeight(3)
 
         assertThat(tabpage.getDisplayStrings())
             .containsExactly(
@@ -90,8 +90,8 @@ class JudoTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love", isPartialLine = false)
 
-        assertThat(window.height).isEqualTo(2)
-        assertThat(primary.height).isEqualTo(3)
+        assertThat(window).hasHeight(2)
+        assertThat(primary).hasHeight(3)
 
         assertThat(tabpage.getDisplayStrings())
             .containsExactly(
@@ -127,6 +127,23 @@ class JudoTabpageTest {
             )
     }
 
+    @Test fun resizeSplit() {
+        tabpage.resize(tabpage.width, 8)
+
+        val buffer = JudoBuffer(ids)
+        val window = tabpage.hsplit(2, buffer)
+        window.appendLine("Take my love", isPartialLine = false)
+
+        assertThat(window).hasHeight(2)
+        assertThat(primary).hasHeight(5) // NOTE: separator!
+
+        window.resize(window.width, 4)
+        tabpage.resize()
+
+        assertThat(window).hasHeight(4)
+        assertThat(primary).hasHeight(3)
+    }
+
     @Test fun resplit() {
         primary.appendLine("Take my land", isPartialLine = false)
         primary.updateStatusLine("[status]")
@@ -135,8 +152,8 @@ class JudoTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love", isPartialLine = false)
 
-        assertThat(window.height).isEqualTo(2)
-        assertThat(primary.height).isEqualTo(3)
+        assertThat(window).hasHeight(2)
+        assertThat(primary).hasHeight(3)
 
         // make sure we're good and unsplit
         tabpage.unsplit()

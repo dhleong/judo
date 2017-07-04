@@ -147,7 +147,10 @@ private val COMMAND_HELP = mutableMapOf(
         The resulting Window object has the following attributes and methods:
             id - The window's unique, numeric ID
             buffer - The window's underlying Buffer object
+            height - The height of the window in rows
+            width - The width of the window in columns
             close() - Close the window
+            resize(width, height) - Resize the window
 
         A Buffer object has the following attributes and methods:
             id - The buffer's unique, numeric ID

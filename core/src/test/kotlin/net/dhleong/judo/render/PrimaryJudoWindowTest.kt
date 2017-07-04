@@ -1,8 +1,7 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
-import org.assertj.core.api.Assertions.assertThat
-import org.jline.utils.AttributedString
+import net.dhleong.judo.assertThat
 import org.junit.Test
 
 /**
@@ -19,17 +18,16 @@ class PrimaryJudoWindowTest {
     @Test fun resize() {
         primaryWindow.resize(20, 5)
 
-        // TODO WindowAssertion ?
-        assertThat(primaryWindow.outputWindow.height).isEqualTo(4)
-        assertThat(primaryWindow.promptWindow.height).isEqualTo(1)
+        assertThat(primaryWindow.outputWindow).hasHeight(4)
+        assertThat(primaryWindow.promptWindow).hasHeight(1)
 
         primaryWindow.isFocused = true
         primaryWindow.appendLine("Take my love", isPartialLine = false)
         primaryWindow.appendLine("Take my land", isPartialLine = false)
         primaryWindow.updateStatusLine("<status>")
 
-        assertThat(primaryWindow.getDisplayStrings())
-            .containsExactly(
+        assertThat(primaryWindow)
+            .displaysStrings(
                 "",
                 "",
                 "Take my love",
@@ -39,8 +37,3 @@ class PrimaryJudoWindowTest {
     }
 }
 
-fun IJudoWindow.getDisplayStrings(): List<String> =
-    with(mutableListOf<CharSequence>()) {
-        getDisplayLines(this)
-        map { (it as AttributedString).toAnsi() }
-    }

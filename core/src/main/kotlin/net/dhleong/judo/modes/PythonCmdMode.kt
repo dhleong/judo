@@ -325,17 +325,27 @@ class PythonCmdMode(
     }
 }
 
-internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject =
-    object : PyObject() {
+internal fun PyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
+    val resize = asUnitPyFn<Int>(2) {
+        window.resize(it[0], it[1])
+        tabpage.resize()
+    }
+
+    return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
                 "buffer" -> PyBuffer(window, window.currentBuffer) // cache?
-                "close" -> asUnitPyFn<Any> { tabpage.close(window) }
+                "height" -> Py.java2py(window.height)
+                "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
+
+                "close" -> asUnitPyFn<Any> { tabpage.close(window) } // not used oft enough to cache
+                "resize" -> resize
 
                 else -> super.__findattr_ex__(name)
             }
     }
+}
 
 internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
     val append = asUnitPyFn<String>(1) {
