@@ -8,6 +8,7 @@ import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
 import org.junit.Test
@@ -211,6 +212,28 @@ class PythonCmdModeTest {
 
         judo.triggers.process("cool story bro")
         assertThat(judo.echos).containsExactly("awesome story bro")
+    }
+
+    @Test fun trigger_stripColor() {
+        mode.execute("""
+            |@trigger('cool $1')
+            |def handleTrigger(thing): echo("awesome %s" % thing)
+            """.trimMargin())
+
+        judo.triggers.process("cool ${ansi(1,2)}st${ansi(1,3)}or${ansi(1,4)}y")
+        assertThat(judo.echos).containsExactly("awesome story")
+    }
+
+    @Test fun trigger_keepColor() {
+        mode.execute("""
+            |@trigger('cool $1', 'color')
+            |def handleTrigger(thing): echo("awesome %s" % thing)
+            """.trimMargin())
+
+        judo.triggers.process("cool ${ansi(1,2)}st${ansi(1,3)}or${ansi(1,4)}y")
+        assertThat(judo.echos).hasSize(1)
+        assertThat(judo.echos[0] as String).isEqualTo(
+            "awesome ${ansi(1,2)}st${ansi(fg=3)}or${ansi(fg=4)}y${ansi(0)}")
     }
 
     @Test fun trigger_withDot() {

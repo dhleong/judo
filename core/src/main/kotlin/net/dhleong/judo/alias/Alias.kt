@@ -2,8 +2,10 @@ package net.dhleong.judo.alias
 
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
-import net.dhleong.judo.util.stripAnsi
+import org.jline.utils.AttributedCharSequence
+import java.util.EnumSet
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -12,7 +14,8 @@ internal val VAR_REGEX = Regex("\\$(\\d+|\\{\\w+})")
 internal class RegexAliasSpec(
     override val original: String,
     private val pattern: Pattern,
-    private val groupNames: List<String>
+    private val groupNames: List<String>,
+    override val flags: EnumSet<PatternProcessingFlags> = PatternProcessingFlags.NONE
 ) : PatternSpec {
     override val groups = groupNames.size
 
@@ -31,8 +34,13 @@ internal class RegexAliasMatcher(
 
     override val start: Int
         get() = matcher.start()
+    override fun start(index: Int): Int =
+        matcher.start(groups[index])
+
     override val end: Int
         get() = matcher.end()
+    override fun end(index: Int): Int =
+        matcher.end(groups[index])
 }
 
 /**
@@ -40,7 +48,10 @@ internal class RegexAliasMatcher(
  *  $1/$2-style variable placeholders and no regex except
  *  for `^`), compile a PatternSpec
  */
-fun compileSimplePatternSpec(spec: String): PatternSpec {
+fun compileSimplePatternSpec(
+    spec: String, flags: EnumSet<PatternProcessingFlags> = PatternProcessingFlags.NONE
+): PatternSpec {
+
     val groups = mutableListOf<String>()
     var lastEnd = 0
     if (spec[0] == '^') {
@@ -77,7 +88,7 @@ fun compileSimplePatternSpec(spec: String): PatternSpec {
         if (spec[0] == '^') Pattern.compile("^$withVars(?=\\b|\\s|$)", Pattern.MULTILINE)
         else Pattern.compile("\\b($withVars)(?=\\b|\\s|$)", Pattern.MULTILINE)
 
-    return RegexAliasSpec(spec, pattern, groups)
+    return RegexAliasSpec(spec, pattern, groups, flags)
 }
 
 /**
@@ -101,12 +112,10 @@ class Alias(
 
     /** @return True if we did anything */
     fun apply(input: IStringBuilder): Boolean {
-        // `keepAnsi = true` is a minor hax optimization;
-        // we know we don't need to bother with that here
-        return parse(input, { it }, keepAnsi = true)
+        return parse(input, { it })
     }
 
-    fun parse(input: IStringBuilder, postProcess: (String) -> String, keepAnsi: Boolean = false): Boolean {
+    fun parse(input: IStringBuilder, postProcess: (String) -> String): Boolean {
         val matcher = spec.matcher(input)
 
         val vars =
@@ -117,10 +126,14 @@ class Alias(
 
         // extract variables
         for (i in 0..spec.groups - 1) {
-            val value = matcher.group(i)
-            vars[i] =
-                if (keepAnsi) value
-                else stripAnsi(value)
+            vars[i] = when {
+                PatternProcessingFlags.KEEP_COLOR in spec.flags -> {
+                    (input.slice(matcher.start(i), matcher.end(i)) as AttributedCharSequence)
+                        .toAnsi()
+                }
+
+                else -> input.substring(matcher.start(i), matcher.end(i))
+            }
         }
 
         val processed = postProcess(process(vars))

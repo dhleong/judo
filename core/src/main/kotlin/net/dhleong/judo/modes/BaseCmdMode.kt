@@ -92,9 +92,15 @@ private val COMMAND_HELP = mutableMapOf(
     "trigger" to buildHelp(
         listOf(
             "trigger(inputSpec: String/Pattern, handler: Fn)",
+            "trigger(inputSpec: String/Pattern, options: String, handler: Fn)",
+            "@trigger(inputSpec: String/Pattern, options: String)",
             "@trigger(inputSpec: String/Pattern)"
         ),
-        "Declare a trigger. See :help alias for more about inputSpec."
+        """
+        Declare a trigger. See :help alias for more about inputSpec.
+        `options` is a space-separated string that may contain any of:
+         color - Keep color codes in the values passed to the handler
+        """.trimIndent()
     ),
 
     "complete" to buildHelp(
@@ -186,7 +192,7 @@ private val COMMAND_HELP = mutableMapOf(
     "logToFile" to buildHelp(
         "logToFile(pathToFile: String, options: String)",
         """Enable logging to the given file with the given options. `options` is
-          |a space-delimited string that may contain any of:
+          |a space-separated string that may contain any of:
           | append - Append output to the given file if it already exists, instead
           |          of replacing it
           | raw - Output the raw data received from the server, including ANSI codes

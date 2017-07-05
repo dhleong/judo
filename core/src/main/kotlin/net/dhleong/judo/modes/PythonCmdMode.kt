@@ -13,6 +13,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
 import org.python.core.PyCallIter
@@ -27,6 +28,7 @@ import org.python.modules.sre.PatternObject
 import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
+import java.util.EnumSet
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
@@ -57,7 +59,7 @@ class PythonCmdMode(
 
         // aliasing
         globals["alias"] = asMaybeDecorator<Any>(2) {
-            defineAlias(compileAliasSpec(it[0]), it[1])
+            defineAlias(compilePatternSpec(it[0], ""), it[1])
         }
 
         // events
@@ -67,12 +69,16 @@ class PythonCmdMode(
 
         // prompts
         globals["prompt"] = asMaybeDecorator<Any>(2) {
-            definePrompt(compileAliasSpec(it[0]), it[1])
+            definePrompt(compilePatternSpec(it[0], ""), it[1])
         }
 
-        // triggers
-        globals["trigger"] = asMaybeDecorator<Any>(2) {
-            defineTrigger(compileAliasSpec(it[0]), it[1] as PyFunction)
+        // triggers: trigger('input', 'flags', fn)
+        globals["trigger"] = asMaybeDecorator<Any>(3, minArgs = 1) {
+            if (it.size == 2) {
+                defineTrigger(compilePatternSpec(it[0], ""), it[1] as PyFunction)
+            } else {
+                defineTrigger(compilePatternSpec(it[0], it[1] as String), it[2] as PyFunction)
+            }
         }
 
         // map invocations
@@ -382,9 +388,11 @@ internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
  */
 inline private fun <reified T: Any> asMaybeDecorator(
         takeArgs: Int,
+        minArgs: Int = takeArgs - 1,
         crossinline fn: (Array<T>) -> Unit): PyObject {
-    return asPyFn<T, PyObject?>(takeArgs, minArgs = takeArgs-1) { args ->
-        if (args.size == takeArgs - 1) {
+    return asPyFn<T, PyObject?>(takeArgs, minArgs) { args ->
+        if (args.size in minArgs..(takeArgs - 1)
+                && args.last() !is PyFunction) {
             // decorator mode; we return a function that accepts
             // a function and finally calls `fn`
             asPyFn<PyObject, PyObject>(1) { wrappedArgs ->
@@ -456,9 +464,19 @@ private class PyGlobals : PyStringMap() {
     }
 }
 
-internal fun compileAliasSpec(input: Any): PatternSpec =
-    when (input) {
-        is String -> compileSimplePatternSpec(input)
+internal fun compilePatternSpec(input: Any, flags: String): PatternSpec {
+    val flagsSet: EnumSet<PatternProcessingFlags>
+    if (flags.isNotBlank()) {
+        flagsSet = EnumSet.copyOf(PatternProcessingFlags.NONE)
+        if (flags.contains("color", ignoreCase = true)) {
+            flagsSet.add(PatternProcessingFlags.KEEP_COLOR)
+        }
+    } else {
+        flagsSet = PatternProcessingFlags.NONE
+    }
+
+    return when (input) {
+        is String -> compileSimplePatternSpec(input, flagsSet)
         is PatternObject -> {
             // first, try to compile it as a Java regex Pattern;
             // that will be much more efficient than delegating
@@ -472,23 +490,26 @@ internal fun compileAliasSpec(input: Any): PatternSpec =
                 CoercedRegexAliasSpec(
                     patternAsString,
                     javaPattern,
-                    input.groups
+                    input.groups,
+                    flagsSet
                 )
             } catch (e: PatternSyntaxException) {
                 // alas, fallback to using the python pattern
-                PyPatternSpec(input)
+                PyPatternSpec(input, flagsSet)
             }
         }
 
         else -> throw IllegalArgumentException(
             "Invalid alias type: $input (${input.javaClass})")
     }
+}
 
 
 internal class CoercedRegexAliasSpec(
     override val original: String,
     private val pattern: Pattern,
-    override val groups: Int
+    override val groups: Int,
+    override val flags: EnumSet<PatternProcessingFlags>
 ) : PatternSpec {
     override fun matcher(input: CharSequence): PatternMatcher =
         CoercedRegexAliasMatcher(pattern.matcher(input))
@@ -505,8 +526,13 @@ internal class CoercedRegexAliasMatcher(
 
     override val start: Int
         get() = matcher.start()
+    override fun start(index: Int): Int =
+        matcher.start(index + 1)
+
     override val end: Int
         get() = matcher.end()
+    override fun end(index: Int): Int =
+        matcher.end(index + 1)
 }
 
 
@@ -515,7 +541,8 @@ internal class CoercedRegexAliasMatcher(
  *  we have to fall back to this
  */
 internal class PyPatternSpec(
-    private val pattern: PatternObject
+    private val pattern: PatternObject,
+    override val flags: EnumSet<PatternProcessingFlags>
 ) : PatternSpec {
     override val groups: Int = pattern.groups
 
@@ -549,7 +576,13 @@ internal class PyPatternMatcher(finditer: PyIterator) : PatternMatcher {
 
     override val start: Int
         get() = current!!.start().asInt()
+
+    override fun start(index: Int): Int =
+        current!!.start(Py.java2py(index + 1)).asInt()
+
     override val end: Int
         get() = current!!.end().asInt()
 
+    override fun end(index: Int): Int =
+        current!!.end(Py.java2py(index + 1)).asInt()
 }
