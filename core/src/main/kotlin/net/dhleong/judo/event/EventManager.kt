@@ -6,7 +6,7 @@ package net.dhleong.judo.event
 class EventManager : IEventManager {
 
     // NOTE: we currently support a single handler per event
-    private val events = HashMap<String, (Any) -> Unit>()
+    private val events = HashMap<String, EventHandler>()
     private val eventThreadId = Thread.currentThread().id
 
     override fun clear() {
@@ -15,13 +15,13 @@ class EventManager : IEventManager {
 
     override fun has(eventName: String) = eventName in events
 
-    override fun unregister(eventName: String, handler: (Any) -> Unit) {
+    override fun unregister(eventName: String, handler: EventHandler) {
         if (events[eventName] == handler) {
             events.remove(eventName)
         }
     }
 
-    override fun raise(eventName: String, data: Any) {
+    override fun raise(eventName: String, data: Any?) {
         if (Thread.currentThread().id != eventThreadId) {
             throw IllegalStateException(
                 "Attempting to raise $eventName on non-event thread ${Thread.currentThread()}")
@@ -32,7 +32,7 @@ class EventManager : IEventManager {
         }
     }
 
-    override fun register(eventName: String, handler: (Any) -> Unit) {
+    override fun register(eventName: String, handler: EventHandler) {
         events[eventName] = handler
     }
 

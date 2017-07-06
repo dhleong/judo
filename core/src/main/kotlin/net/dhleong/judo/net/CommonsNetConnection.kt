@@ -39,6 +39,7 @@ class CommonsNetConnection(
     private var lastHeight = -1
 
     init {
+        client.connectTimeout = DEFAULT_CONNECT_TIMEOUT
         client.setSocketFactory(socketFactory)
         client.connect(address, port)
 

@@ -41,6 +41,7 @@ import net.dhleong.judo.util.ansi
 import java.awt.event.KeyEvent
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.util.concurrent.ArrayBlockingQueue
@@ -193,11 +194,21 @@ class JudoCore(
 
     override fun connect(address: String, port: Int) {
         disconnect()
-        echo("Connecting to $address:$port...")
+        appendOutput(OutputLine("Connecting to $address:$port... "))
 
         lastConnect = address to port
 
-        val connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
+        val connection: Connection
+        try {
+            connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
+            echo("Connected.")
+            events.raise("CONNECTED")
+        } catch (e: IOException) {
+            appendError(e, "Failed.\nNETWORK ERROR: ")
+            return
+        }
+
+
         connection.debug = debug.isEnabled
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
@@ -577,6 +588,10 @@ class JudoCore(
 
             // stop logging
             logging.unconfigure()
+
+            onMainThread {
+                events.raise("DISCONNECTED")
+            }
         }
 
         this.connection = null
@@ -712,17 +727,21 @@ class JudoCore(
         }
 
         if (e is ScriptExecutionException) {
-            appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"), process = false)
-            e.stackTrace.map { "  $it" }
-                .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
+            renderer.inTransaction {
+                appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"), process = false)
+                e.stackTrace.map { "  $it" }
+                    .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
+            }
             return
         }
 
-        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"), process = false)
-        e.stackTrace.map { "  $it" }
-            .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
-        e.cause?.let {
-            appendError(it, "Caused by: ", isRoot = false)
+        renderer.inTransaction {
+            appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"), process = false)
+            e.stackTrace.map { "  $it" }
+                .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
+            e.cause?.let {
+                appendError(it, "Caused by: ", isRoot = false)
+            }
         }
     }
 

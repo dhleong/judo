@@ -5,6 +5,7 @@ import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
+import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IJudoBuffer
@@ -49,7 +50,7 @@ class PythonCmdMode(
 
     private val python = PythonInterpreter()
     private val keepModules = HashSet<String>()
-    private val declaredEvents = ArrayList<Pair<String, (Any) -> Unit>>()
+    private val declaredEvents = ArrayList<Pair<String, EventHandler>>()
 
     init {
         val globals = PyGlobals()
@@ -199,7 +200,7 @@ class PythonCmdMode(
 
     private fun defineEvent(eventName: String, pyHandler: PyFunction) {
         val argCount = pyHandler.__code__.__getattr__("co_argcount").asInt()
-        val handler: (Any) -> Unit = when (argCount) {
+        val handler: EventHandler = when (argCount) {
             0 -> { _ -> wrapExceptions { pyHandler.__call__() } }
             1 -> { arg -> wrapExceptions { pyHandler.__call__(Py.java2py(arg)) } }
             else -> { rawArg ->

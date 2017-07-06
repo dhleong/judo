@@ -105,7 +105,7 @@ class MsdpHandler(
                 judo.events.raise("MSDP:$name", value)
 
                 if (gotCommands) {
-                    judo.events.raise(EVENT_MSDP_ENABLED, "")
+                    judo.events.raise(EVENT_MSDP_ENABLED)
                 }
             }
         } else if (isDebug()) {

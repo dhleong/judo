@@ -20,6 +20,9 @@ val TELNET_SB = 250.toByte()
 val TELNET_SE = 240.toByte()
 
 abstract class Connection : Closeable {
+    /** in ms */
+    val DEFAULT_CONNECT_TIMEOUT = 20000
+
     abstract val input: InputStream
     abstract val output: OutputStream
 

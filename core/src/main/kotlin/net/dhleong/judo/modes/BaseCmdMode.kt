@@ -70,6 +70,8 @@ private val COMMAND_HELP = mutableMapOf(
 
          "Name": (args) Description
          --------------------------
+         "CONNECTED"      ():            Connected to the server
+         "DISCONNECTED"   ():            Disconnected to the server
          "MSDP ENABLED"   ():            The server declared support for MSDP
          "MSDP"           (name, value): An MSDP variable was sent by the server.
          "MSDP:{varName}" (value):       The server sent the value of the MSDP
