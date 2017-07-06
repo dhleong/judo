@@ -561,7 +561,7 @@ class JudoCore(
 
         throw IllegalArgumentException("No such mode $mode")    }
 
-    fun onDisconnect(connection: Connection) {
+    @Synchronized internal fun onDisconnect(connection: Connection) {
         renderer.inTransaction {
             // dump the parsed prompts for visual effect
             echo("")
@@ -658,7 +658,6 @@ class JudoCore(
             updateInputLine()
 
             if (mode is StatusBufferProvider) {
-//                renderer.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
                 tabpage.currentWindow.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
             } else {
                 updateStatusLine(mode)
@@ -703,6 +702,7 @@ class JudoCore(
         return statusLineWorkspace
     }
 
+    @Synchronized
     private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
         if (isRoot) {
             PrintWriter(FileOutputStream(debugLogFile, true)).use {
