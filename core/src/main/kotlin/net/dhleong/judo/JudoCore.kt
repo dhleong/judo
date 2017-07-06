@@ -582,10 +582,8 @@ class JudoCore(
         this.connection = null
 
         state[KEY_PERSIST_INPUT_HISTORY_PATH]?.let { path ->
-            try {
+            redirectErrors("FAILED TO PERSIST INPUT: ") {
                 sendHistory.writeTo(path)
-            } catch (e: Exception) {
-                appendError(e, "FAILED TO PERSIST INPUT: ")
             }
         }
         state.remove(KEY_PERSIST_INPUT_HISTORY_PATH)
@@ -597,11 +595,18 @@ class JudoCore(
     fun readFile(file: File) {
         val cmdMode = modes["cmd"] as BaseCmdMode
 
-        try {
+        redirectErrors("ERROR: ") {
             cmdMode.readFile(file)
-        } catch (e: Throwable) {
-            appendError(e, "ERROR: ")
         }
+    }
+
+    /**
+     * Execute some script in command mode;
+     * this is for testing purposes
+     */
+    internal fun executeScript(code: String) {
+        val cmdMode = modes["cmd"] as BaseCmdMode
+        cmdMode.execute(code)
     }
 
     /**
@@ -619,10 +624,8 @@ class JudoCore(
 
         keyStrokeProducer = producer
         while (keepReading()) {
-            try {
+            redirectErrors("INTERNAL ERROR: ") {
                 feedKey(readKey(), remap, fromMap)
-            } catch (e: Throwable) {
-                appendError(e, "INTERNAL ERROR: ")
             }
 
             Thread.yield()
@@ -709,13 +712,13 @@ class JudoCore(
         }
 
         if (e is ScriptExecutionException) {
-            appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"))
+            appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"), process = false)
             e.stackTrace.map { "  $it" }
                 .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
             return
         }
 
-        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"))
+        appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"), process = false)
         e.stackTrace.map { "  $it" }
             .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
         e.cause?.let {
@@ -728,15 +731,13 @@ class JudoCore(
         renderer.inTransaction {
             val line = OutputLine(buffer, 0, count)
 
-            try {
+            redirectErrors("ERROR: ") {
                 appendOutput(line)
-            } catch (e: Throwable) {
-                appendError(e, "ERROR")
             }
         }
     }
 
-    @Synchronized internal fun appendOutput(buffer: OutputLine) {
+    @Synchronized internal fun appendOutput(buffer: OutputLine, process: Boolean = true) {
         val count = buffer.length
         renderer.inTransaction {
             var lastLineEnd = 0
@@ -754,7 +755,7 @@ class JudoCore(
                         buffer.subSequence(lastLineEnd, i),
                         isPartialLine = false
                     ) as OutputLine
-                    processOutput(actualLine)
+                    if (process) processOutput(actualLine)
 
                     if (i + 1 < count && buffer[i + 1] == opposite) {
                         lastLineEnd = i + 2
@@ -798,6 +799,14 @@ class JudoCore(
             primaryWindow.setPromptHeight(parsedPrompts.size)
             primaryWindow.promptBuffer.set(parsedPrompts)
             updateStatusLine(currentMode)
+        }
+    }
+
+    private inline fun redirectErrors(prefix: String = "", block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            appendError(e, prefix)
         }
     }
 }

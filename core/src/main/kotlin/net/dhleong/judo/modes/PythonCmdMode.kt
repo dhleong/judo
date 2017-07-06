@@ -183,10 +183,12 @@ class PythonCmdMode(
     private fun defineAlias(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
             val handlerFn: AliasProcesser = { args ->
-                handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
-                       .__tojava__(String::class.java)
-                    as String?
-                    ?: ""
+                wrapExceptions {
+                    handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+                           .__tojava__(String::class.java)
+                        as String?
+                        ?: ""
+                }
             }
 
             judo.aliases.define(alias, handlerFn)
@@ -198,8 +200,8 @@ class PythonCmdMode(
     private fun defineEvent(eventName: String, pyHandler: PyFunction) {
         val argCount = pyHandler.__code__.__getattr__("co_argcount").asInt()
         val handler: (Any) -> Unit = when (argCount) {
-            0 -> { _ -> pyHandler.__call__() }
-            1 -> { arg -> pyHandler.__call__(Py.java2py(arg)) }
+            0 -> { _ -> wrapExceptions { pyHandler.__call__() } }
+            1 -> { arg -> wrapExceptions { pyHandler.__call__(Py.java2py(arg)) } }
             else -> { rawArg ->
                 if (rawArg !is Array<*>) {
                     throw ScriptExecutionException(
@@ -209,7 +211,9 @@ class PythonCmdMode(
                 val pythonArgs = Array<PyObject>(rawArg.size) { index ->
                     Py.java2py(rawArg[index])
                 }
-                pyHandler.__call__(pythonArgs)
+                wrapExceptions {
+                    pyHandler.__call__(pythonArgs)
+                }
             }
         }
         declaredEvents.add(eventName to handler)
@@ -227,7 +231,11 @@ class PythonCmdMode(
             judo.map(
                 modeName,
                 fromKeys as String,
-                { mapTo.__call__() },
+                {
+                    wrapExceptions {
+                        mapTo.__call__()
+                    }
+                },
                 mapTo.toString()
             )
         } else {
@@ -238,9 +246,11 @@ class PythonCmdMode(
     private fun definePrompt(alias: PatternSpec, handler: Any) {
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
-                handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
-                    .__tojava__(String::class.java)
-                    as String
+                wrapExceptions {
+                    handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+                        .__tojava__(String::class.java)
+                        as String
+                }
             })
         } else {
             judo.prompts.define(alias, handler as String)
@@ -249,7 +259,9 @@ class PythonCmdMode(
 
     private fun defineTrigger(alias: PatternSpec, handler: PyFunction) {
         judo.triggers.define(alias, { args ->
-            handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+            wrapExceptions {
+                handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+            }
         })
     }
 
@@ -313,9 +325,9 @@ class PythonCmdMode(
         }
     }
 
-    private inline fun wrapExceptions(lineExecution: Boolean = false, block: () -> Unit) {
+    private inline fun <R> wrapExceptions(lineExecution: Boolean = false, block: () -> R): R {
         try {
-            block()
+            return block()
         } catch (e: PyException) {
             if (lineExecution) {
                 // if the single line execution's cause was a ScriptExecution,

@@ -182,6 +182,20 @@ class JudoCoreTest {
         assertThat(renderer.inputLine)
             .isEqualTo("take" to 4)
     }
+
+    @Test fun triggerScriptingError() {
+        judo.executeScript(
+            """
+            import re
+            @trigger(re.compile("(take.*)"))
+            def my_trigger(my, love): echo('triggered!')
+            """.trimIndent())
+
+        val buffer = "take my love\r\n".toCharArray()
+        judo.onIncomingBuffer(buffer, buffer.size)
+        assertThat(renderer.outputLines)
+            .contains("TypeError: my_trigger() takes exactly 2 arguments (1 given)")
+    }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =
