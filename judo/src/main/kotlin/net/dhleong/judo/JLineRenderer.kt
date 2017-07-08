@@ -282,11 +282,13 @@ class JLineRenderer(
         val alreadyInTransaction = isInTransaction
         isInTransaction = true
 
-        block()
-
-        if (!alreadyInTransaction) {
-            isInTransaction = false
-            redraw()
+        try {
+            block()
+        } finally {
+            if (!alreadyInTransaction) {
+                isInTransaction = false
+                redraw()
+            }
         }
     }
 
