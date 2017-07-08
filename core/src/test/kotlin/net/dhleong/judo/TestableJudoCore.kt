@@ -40,6 +40,10 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
         maps.add(arrayOf(mode, from, to, remap))
     }
 
+    override fun unmap(mode: String, from: String) {
+        maps.removeIf { it[0] == mode && it[1] == from }
+    }
+
     override fun send(text: String, fromMap: Boolean) {
         val processed = aliases.process(text)
         if (!processed.isEmpty()) {
@@ -62,8 +66,9 @@ private fun createCoreProxy(): IJudoCore {
     return Proxy.newProxyInstance(
         ClassLoader.getSystemClassLoader(),
         arrayOf(IJudoCore::class.java)
-    ) { _, _, _ ->
+    ) { _, method, _ ->
         // by default, nothing is implemented
-        TODO("not implemented")
+        throw UnsupportedOperationException(
+            "${method.name} is not implemented")
     } as IJudoCore
 }

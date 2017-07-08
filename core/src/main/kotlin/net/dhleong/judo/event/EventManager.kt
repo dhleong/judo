@@ -13,6 +13,9 @@ class EventManager : IEventManager {
         events.clear()
     }
 
+    override fun clear(entry: Pair<String, EventHandler>) =
+        unregister(entry.first, entry.second)
+
     override fun has(eventName: String) = eventName in events
 
     override fun unregister(eventName: String, handler: EventHandler) {

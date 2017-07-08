@@ -67,6 +67,8 @@ class AliasManager : IAliasManager {
         aliases.removeIf { it.original == inputSpec }
     }
 
+    override fun clear(entry: String) = undefine(entry)
+
     /**
      * Non-recursive processing that supports a postProcess step
      */

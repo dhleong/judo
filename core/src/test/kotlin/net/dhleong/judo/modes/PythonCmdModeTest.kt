@@ -12,6 +12,8 @@ import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayInputStream
+import java.io.File
 
 /**
  * @author dhleong
@@ -400,5 +402,56 @@ class PythonCmdModeTest {
             .isNotSameAs(window)
             .hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
     }
+
+    @Test fun readFileClearsOld() {
+        mode.readLikeFile("test.py", """
+            alias('shiny $1', 'Mighty fine $1')
+
+            @event('CONNECTED')
+            def on_connect(): pass
+
+            nmap('gkf', 'ikeep flyin<cr>')
+            prompt('foo $1>', '[$1]')
+
+            @trigger('foo')
+            def on_foo(): pass
+            """.trimIndent())
+
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assertThat(judo.events.has("CONNECTED")).isTrue()
+        assertThat(judo.events.has("DISCONNECTED")).isFalse()
+        assertThat(judo.prompts.size).isEqualTo(1)
+        assertThat(judo.maps).contains(arrayOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
+
+        // read a different file, and no change to original
+        mode.readLikeFile("different.py", """
+            @event("DISCONNECTED")
+            def on_disconnect(): pass
+            """.trimIndent())
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assertThat(judo.events.has("CONNECTED")).isTrue()
+        assertThat(judo.events.has("DISCONNECTED")).isTrue()
+        assertThat(judo.prompts.size).isEqualTo(1)
+        assertThat(judo.maps).contains(arrayOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
+
+        // read the original file (which is now inexplicably empty) and
+        // clear out the things it created...
+        mode.readLikeFile("test.py","")
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isFalse()
+        assertThat(judo.events.has("CONNECTED")).isFalse()
+        assertThat(judo.maps).isEmpty()
+        assertThat(judo.prompts.size).isEqualTo(0)
+        assertThat(judo.triggers.hasTriggerFor("foo")).isFalse()
+
+        // ... but the other file is intact
+        assertThat(judo.events.has("DISCONNECTED")).isTrue()
+    }
+
+
 }
+
+private fun PythonCmdMode.readLikeFile(fileName: String, fileContents: String) =
+    readFile(File(fileName), ByteArrayInputStream(fileContents.toByteArray()))
 

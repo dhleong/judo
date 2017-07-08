@@ -19,6 +19,8 @@ class PromptManager : IPromptManager {
         delegate.clear()
     }
 
+    override fun clear(entry: String) = delegate.undefine(entry)
+
     override fun define(inputSpec: String, outputSpec: String) {
         // TODO support multiple prompts?
         delegate.aliases.clear()

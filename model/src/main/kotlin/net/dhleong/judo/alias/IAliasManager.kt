@@ -1,11 +1,11 @@
 package net.dhleong.judo.alias
 
+import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
 typealias AliasProcesser = (args: Array<String>) -> String
 
-interface IAliasManager {
-    fun clear()
+interface IAliasManager : Clearable<String> {
 
     fun define(inputSpec: String, outputSpec: String)
     fun define(inputSpec: String, parser: AliasProcesser)

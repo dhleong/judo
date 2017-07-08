@@ -6,6 +6,7 @@ import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.Setting
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
+import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.KeyMapping
@@ -14,6 +15,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.hasCtrl
 import net.dhleong.judo.util.hash
 import java.awt.event.KeyEvent
@@ -329,6 +331,10 @@ abstract class BaseCmdMode(
     override val userMappings = KeyMapping()
     override val name = "cmd"
 
+    private val mapClearable = MapClearable(judo)
+    private val clearQueue = ArrayList<QueuedClear<*>>()
+    protected var currentClearableContext: String? = null
+
     private val suggester = CompletionSuggester(DumbCompletionSource(normalize = false).apply {
         COMMAND_HELP.keys.forEach(this::process)
         process("help")
@@ -449,17 +455,26 @@ abstract class BaseCmdMode(
         throw IllegalStateException("You must be connected to use persistInput() without args")
     }
 
-    open fun readFile(file: File) {
+    fun readFile(file: File) {
         if (!(file.exists() && file.canRead())) {
             throw IllegalArgumentException("Unable to load $file")
         }
 
+        file.inputStream().use {
+            readFile(file, it)
+        }
+    }
+
+    open fun readFile(file: File, inputStream: InputStream) {
         if (file != USER_CONFIG_FILE) {
             lastReadFile = file
         }
 
-        file.inputStream().use {
-            readFile(file.name, it)
+        val context = file.absolutePath
+        withClearableContext(context) {
+            clearQueuedForContext(context)
+
+            readFile(file.name, inputStream)
         }
     }
 
@@ -631,7 +646,71 @@ abstract class BaseCmdMode(
         buffer.clear()
         input.clear()
     }
+
+    protected fun clearQueuedForContext(context: String) {
+        val iter = clearQueue.iterator()
+        while (iter.hasNext()) {
+            val candidate = iter.next()
+            if (candidate.context == context) {
+                candidate.clear()
+                iter.remove()
+            }
+        }
+    }
+
+    protected fun queueAlias(specOriginal: String) =
+        enqueueClear(judo.aliases, specOriginal)
+
+    protected fun queueEvent(event: String, handler: EventHandler) =
+        enqueueClear(judo.events, event to handler)
+
+    protected fun queueMap(mode: String, keysFrom: String) =
+        enqueueClear(mapClearable, mode to keysFrom)
+
+    protected fun queuePrompt(spec: String) =
+        enqueueClear(judo.prompts, spec)
+
+    protected fun queueTrigger(spec: String) =
+        enqueueClear(judo.triggers, spec)
+
+    private fun <T> enqueueClear(source: Clearable<T>, entry: T) =
+        currentClearableContext?.let {
+            clearQueue.add(QueuedClear(it, source, entry))
+        }
+
+    protected inline fun withClearableContext(context: String, block: () -> Unit) {
+        val oldContext = currentClearableContext
+        currentClearableContext = context
+        try {
+            block()
+        } finally {
+            currentClearableContext = oldContext
+        }
+    }
+
 }
 
 class ScriptExecutionException(traceback: String)
     : RuntimeException(traceback)
+
+
+internal class MapClearable(private val judo: IJudoCore) : Clearable<Pair<String, String>> {
+    override fun clear() {
+        throw UnsupportedOperationException()
+    }
+
+    override fun clear(entry: Pair<String, String>) {
+        val (mode, keys) = entry
+        judo.unmap(mode, keys)
+    }
+}
+
+internal class QueuedClear<T>(
+    val context: String,
+    val source: Clearable<T>,
+    val entry: T
+) {
+    fun clear() {
+        source.clear(entry)
+    }
+}

@@ -1,6 +1,7 @@
 package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
 /**
@@ -11,8 +12,7 @@ import net.dhleong.judo.util.PatternSpec
  * @author dhleong
  */
 
-interface IPromptManager {
-    fun clear()
+interface IPromptManager : Clearable<String> {
 
     fun define(inputSpec: String, outputSpec: String)
     fun define(inputSpec: String, parser: AliasProcesser)

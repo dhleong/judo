@@ -1,5 +1,6 @@
 package net.dhleong.judo.trigger
 
+import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
 typealias TriggerProcessor = (args: Array<String>) -> Unit
@@ -11,9 +12,7 @@ typealias TriggerProcessor = (args: Array<String>) -> Unit
  *
  * @author dhleong
  */
-interface ITriggerManager {
-    fun clear()
-
+interface ITriggerManager : Clearable<String> {
     fun define(inputSpec: String, parser: TriggerProcessor)
     fun define(inputSpec: PatternSpec, parser: TriggerProcessor)
 

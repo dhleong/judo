@@ -31,6 +31,8 @@ class TriggerManager : ITriggerManager {
         aliases.undefine(inputSpec)
     }
 
+    override fun clear(entry: String) = undefine(entry)
+
     fun hasTriggerFor(inputSpec: String): Boolean =
         aliases.hasAliasFor(inputSpec)
 

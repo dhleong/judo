@@ -50,7 +50,6 @@ class PythonCmdMode(
 
     private val python = PythonInterpreter()
     private val keepModules = HashSet<String>()
-    private val declaredEvents = ArrayList<Pair<String, EventHandler>>()
 
     init {
         val globals = PyGlobals()
@@ -182,6 +181,7 @@ class PythonCmdMode(
     }
 
     private fun defineAlias(alias: PatternSpec, handler: Any) {
+        queueAlias(alias.original)
         if (handler is PyFunction) {
             val handlerFn: AliasProcesser = { args ->
                 wrapExceptions {
@@ -217,8 +217,8 @@ class PythonCmdMode(
                 }
             }
         }
-        declaredEvents.add(eventName to handler)
         judo.events.register(eventName, handler)
+        queueEvent(eventName, handler)
     }
 
     private fun defineMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
@@ -242,9 +242,12 @@ class PythonCmdMode(
         } else {
             throw IllegalArgumentException("Unexpected map-to value")
         }
+
+        queueMap(modeName, fromKeys)
     }
 
     private fun definePrompt(alias: PatternSpec, handler: Any) {
+        queuePrompt(alias.original)
         if (handler is PyFunction) {
             judo.prompts.define(alias, { args ->
                 wrapExceptions {
@@ -259,6 +262,7 @@ class PythonCmdMode(
     }
 
     private fun defineTrigger(alias: PatternSpec, handler: PyFunction) {
+        queueTrigger(alias.original)
         judo.triggers.define(alias, { args ->
             wrapExceptions {
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
@@ -303,21 +307,18 @@ class PythonCmdMode(
             modules.__delitem__(keyToRemove)
         }
 
-        // de-register event listeners
-        declaredEvents.forEach { (event, handler) ->
-            judo.events.unregister(event, handler)
-        }
-
         super.reload()
     }
 
-    override fun readFile(file: File) {
-        val fileDir = file.parentFile
-        python.exec(
-            """import sys
-              |sys.path.insert(0, '${fileDir.absolutePath}')
-            """.trimMargin())
-        super.readFile(file)
+    override fun readFile(file: File, inputStream: InputStream) {
+        file.parentFile?.let { fileDir ->
+            python.exec(
+                """
+                import sys
+                sys.path.insert(0, '${fileDir.absolutePath}')
+                """.trimIndent())
+        }
+        super.readFile(file, inputStream)
     }
 
     override fun readFile(fileName: String, stream: InputStream) {
