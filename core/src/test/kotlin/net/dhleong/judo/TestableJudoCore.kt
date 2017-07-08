@@ -55,6 +55,10 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
         objects.forEach { echos.add(it) }
     }
 
+    override fun echoRaw(vararg objects: Any?) {
+        objects.forEach { echos.add(it) }
+    }
+
     fun clearTestable() {
         echos.clear()
         sends.clear()
