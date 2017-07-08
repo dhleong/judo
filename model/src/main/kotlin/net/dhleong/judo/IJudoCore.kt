@@ -68,6 +68,8 @@ interface IJudoCore {
     val tabpage: IJudoTabpage
 
     fun echo(vararg objects: Any?)
+    /** not processed for triggers, etc. */
+    fun echoRaw(vararg objects: Any?)
     fun enterMode(modeName: String)
     fun enterMode(mode: Mode)
     fun exitMode()

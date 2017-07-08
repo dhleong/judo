@@ -545,8 +545,8 @@ abstract class BaseCmdMode(
     internal fun handleNoArgListingCommand(command: String): Boolean =
         when (command) {
             "alias" -> {
-                judo.echo()
-                judo.echo(judo.aliases)
+                judo.echoRaw()
+                judo.echoRaw(judo.aliases)
                 true
             }
 
@@ -556,26 +556,26 @@ abstract class BaseCmdMode(
             }
 
             "cmap" -> {
-                judo.echo()
+                judo.echoRaw()
                 judo.printMappings("cmd")
                 true
             }
 
             "imap" -> {
-                judo.echo()
+                judo.echoRaw()
                 judo.printMappings("insert")
                 true
             }
 
             "nmap" -> {
-                judo.echo()
+                judo.echoRaw()
                 judo.printMappings("normal")
                 true
             }
 
             "trigger" -> {
-                judo.echo()
-                judo.echo(judo.triggers)
+                judo.echoRaw()
+                judo.echoRaw(judo.triggers)
                 true
             }
 
@@ -590,7 +590,7 @@ abstract class BaseCmdMode(
         if (colWidth >= rendererInfo.windowWidth) {
             // super small renderer (whaaat?)
             // just be lazy
-            commands.forEach { judo.echo(it) }
+            commands.forEach { judo.echoRaw(it) }
             return
         }
 
@@ -608,7 +608,7 @@ abstract class BaseCmdMode(
             if (word >= cols) {
                 // end of the line; dump it and start over
                 word = 0
-                judo.echo(line.toString())
+                judo.echoRaw(line.toString())
                 line.setLength(0)
             }
         }
@@ -616,11 +616,11 @@ abstract class BaseCmdMode(
 
     internal fun showHelp(command: String) {
         COMMAND_HELP[command]?.let {
-            it.split("\n").forEach { judo.echo(it) }
+            it.split("\n").forEach { judo.echoRaw(it) }
             return
         }
 
-        judo.echo("No such command: $command")
+        judo.echoRaw("No such command: $command")
     }
 
     private fun exitMode() {

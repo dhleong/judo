@@ -257,9 +257,18 @@ class JudoCore(
     }
 
     override fun echo(vararg objects: Any?) {
-        // TODO colors?
         val asString = objects.joinToString(" ")
-        appendOutput(OutputLine("${ansi(0)}$asString\n"))
+        doEcho(true, asString)
+    }
+
+    override fun echoRaw(vararg objects: Any?) {
+        val asString = objects.joinToString(" ")
+        doEcho(false, asString)
+    }
+
+    private fun doEcho(process: Boolean, asString: String) {
+        // TODO colors?
+        appendOutput(OutputLine("${ansi(0)}$asString\n"), process = process)
 
         if (debug.isEnabled) {
             debugLogFile.appendText("\n## ECHO: $asString\n")
@@ -349,7 +358,7 @@ class JudoCore(
                 throw IllegalArgumentException("$mode does not support mapping")
             }
 
-            echo(modeObj.userMappings)
+            echoRaw(modeObj.userMappings)
             return
         }
 
