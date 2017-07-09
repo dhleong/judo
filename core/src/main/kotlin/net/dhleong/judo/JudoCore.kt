@@ -582,6 +582,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")    }
 
     @Synchronized internal fun onDisconnect(connection: Connection) {
+        doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect
             echo("")
