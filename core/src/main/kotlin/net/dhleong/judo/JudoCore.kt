@@ -201,6 +201,7 @@ class JudoCore(
         val connection: Connection
         try {
             connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
+            connection.debug = debug.isEnabled
             echo("Connected.")
             events.raise("CONNECTED")
         } catch (e: IOException) {
@@ -209,7 +210,6 @@ class JudoCore(
         }
 
 
-        connection.debug = debug.isEnabled
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
         connection.onEchoStateChanged = { doEcho ->

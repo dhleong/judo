@@ -17,6 +17,7 @@ fun assertThat(actual: IJudoWindow?) = IJudoWindowAssert(actual)
 // imports for convenience:
 fun <T> assertThat(actual: List<T>) = assertThat(actual)!!
 fun assertThat(actual: Boolean?) = assertThat(actual)!!
+fun assertThat(actual: Byte?) = assertThat(actual)!!
 fun assertThat(actual: CharSequence?) = assertThat(actual)!!
 fun assertThat(actual: Int?) = assertThat(actual)!!
 fun assertThat(actual: String?) = assertThat(actual)!!

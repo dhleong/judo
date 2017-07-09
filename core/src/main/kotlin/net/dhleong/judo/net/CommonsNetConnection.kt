@@ -53,6 +53,7 @@ class CommonsNetConnection(
         }
 
         val mtts = MttsTermTypeHandler(judo.renderer, echoDebug)
+        client.addOptionHandler(mtts)
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
         client.addOptionHandler(MsdpHandler(judo, { debug }, echoDebug))
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
@@ -139,13 +140,24 @@ class CommonsNetConnection(
             else -> "[$negotiationCode]"
         }
 
-    private fun stringifyOption(optionCode: Int): String {
-        val known = TelnetOption.getOption(optionCode)
-        if (known == "UNASSIGNED") {
-            return "[$optionCode]"
+    private fun stringifyOption(optionCode: Int): String =
+        when (optionCode) {
+            TELNET_TELOPT_MSDP.toInt() -> "MSDP"
+            70 -> "MSSP" // server status
+            85 -> "MCCP1" // legacy; don't use
+            TELNET_TELOPT_MCCP2.toInt() -> "MCCP"
+            90 -> "MSP" // mud sound
+            91 -> "MXP" // mud extension
+            93 -> "ZMP" // zenith mud
+            201 -> "GCMP"
+            239 -> "EOR" // used for prompt marking
+            249 -> "GA" // used for prompt marking
+            else -> {
+                val known = TelnetOption.getOption(optionCode)
+                if (known == "UNASSIGNED") "[$optionCode]"
+                else known
+            }
         }
-        return known
-    }
 
 }
 
