@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.OutputLine
 import org.jline.terminal.Attributes
 import org.jline.terminal.Attributes.*
 import org.jline.terminal.MouseEvent
@@ -363,8 +364,14 @@ class JLineRenderer(
             tabpage.currentWindow.isFocusable -> cursor
             else -> 0
         }
-        val (inputLine, inputCursor) = fitInputLineToWindow(input, rawInputCursor)
-        outputWorkspace.add(inputLine)
+        val (inputLines, inputCursor) = fitInputLinesToWindow(input, rawInputCursor)
+        outputWorkspace.addAll(inputLines)
+
+        // trim off extra lines at the beginning
+        // This is not super efficient, but it shouldn't happen often enough to be a problem
+        for (r in 1..(inputLines.size - 1)) {
+            outputWorkspace.removeAt(0)
+        }
 
         val rawStatusCursor = when {
             isCursorOnStatus -> window.statusCursor
@@ -379,14 +386,56 @@ class JLineRenderer(
             cursorRow = windowBottom - 1
             cursorCol = rawStatusCursor
         } else {
-            cursorRow = windowHeight - 1
-            cursorCol = inputCursor
+            val (inputCursorRow, inputCursorCol) = inputCursor
+            cursorRow = windowHeight - inputLines.size + inputCursorRow
+            cursorCol = inputCursorCol
         }
 
         // NOTE: JLine uses our list as-is, so if we modify it
         // after the fact, things get weiiiird. We could maybe
         // double-buffer it to avoid constantly allocating new arrays...
         return Triple(outputWorkspace.map { it as AttributedString }, cursorRow, cursorCol)
+    }
+
+    // visible for testing
+    internal fun fitInputLinesToWindow(): Pair<List<AttributedString>, Pair<Int, Int>> =
+        fitInputLinesToWindow(input, cursor)
+
+    private fun fitInputLinesToWindow(line: AttributedString, cursor: Int): Pair<List<AttributedString>, Pair<Int, Int>> {
+        val maxLineWidth = windowWidth
+        val maxLines = MAX_INPUT_LINES.read(settings)
+
+        if (line.length < maxLineWidth || maxLines == 1) {
+            // convenient shortcut
+            val (scrolledLine, cursorCol) = fitInputLineToWindow(line, cursor)
+            return listOf(scrolledLine) to (0 to cursorCol)
+        }
+
+        val output = OutputLine(line)
+        val lines = output.getDisplayLines(maxLineWidth, WORD_WRAP.read(settings))
+
+        val cursor = fitCursorInLines(lines, cursor)
+
+        // FIXME TODO limit number of lines
+
+        return lines to cursor
+    }
+
+    private fun fitCursorInLines(lines: List<AttributedString>, cursor: Int): Pair<Int, Int> {
+        // thanks to word-wrap, cursor row/col is not an exact fit, so just go find it
+        var cursorCol = cursor
+
+        val lastLine = lines.lastIndex
+        for (row in lines.indices) {
+            val rowLen = lines[row].length
+            if (cursorCol < rowLen || (row == lastLine && cursorCol == rowLen)) {
+                return row to cursorCol
+            }
+
+            cursorCol -= rowLen
+        }
+
+        throw IllegalStateException("Couldn't fit cursor $cursor in $lines")
     }
 
     // visible for testing
