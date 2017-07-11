@@ -29,6 +29,13 @@ class OutputLineTest {
             .isEqualTo("\u001B[1;30m")
     }
 
+    @Test fun getFinalStyle_elaborate() {
+        // another real world situation: really long trailing style
+        val line = OutputLine("Background 2\u001B[0;37;40m")
+        assertThat(line.getFinalStyle())
+            .isEqualTo("\u001B[0;37;40m")
+    }
+
     @Test(timeout = 3000) fun wordWrap() {
         val line = OutputLine("Take my love, take my land")
         assertThat(line.getWrappedStrings(10))
