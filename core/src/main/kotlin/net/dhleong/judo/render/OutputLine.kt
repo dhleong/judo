@@ -195,9 +195,11 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: ArrayList
         } else if (col + charWidth > windowWidth) {
             // WRAP! search back for the previous word boundary (if necessary)
             val atBoundary = end == attrLength - 1 || Character.isWhitespace(cp)
-            val boundary =
-                if (atBoundary) -1 // don't bother searching; we're already there!
-                else findLastBefore(end) { Character.isWhitespace(it) }
+            val boundary = when {
+                (atBoundary && Character.isWhitespace(cp)) -> -1
+
+                else -> findLastBefore(end) { Character.isWhitespace(it) }
+            }
 
             if (boundary != -1 && boundary > start) {
                 // found it!

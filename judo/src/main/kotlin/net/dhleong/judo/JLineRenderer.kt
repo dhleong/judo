@@ -29,6 +29,8 @@ val KEY_DELETE = 127
 // this is returned by read() when it times out
 val KEY_TIMEOUT = -2
 
+internal val ELLIPSIS = "…"
+
 /**
  * @author dhleong
  */
@@ -62,6 +64,7 @@ class JLineRenderer(
 
     private var isInTransaction = false
     private val outputWorkspace = ArrayList<CharSequence>(64)
+    private var lastInputLinesCount: Int = 1
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
@@ -296,6 +299,7 @@ class JLineRenderer(
     private var renderedSplashScreen = false
 
     @Synchronized override fun redraw() {
+        val lastInputLineCount = this.lastInputLinesCount
         val (lines, cursorRow, cursorCol) = getDisplayLines()
         if (lines.isEmpty()) {
             // splash screen?
@@ -313,7 +317,10 @@ class JLineRenderer(
             return
         }
 
-        if (renderedSplashScreen) {
+        // NOTE: for whatever reason, when we the number of input lines goes down,
+        // the rendering gets messed up if we don't reset first; increasing the count
+        // seems to work just fine.
+        if (renderedSplashScreen || lastInputLineCount > this.lastInputLinesCount) {
             renderedSplashScreen = false
             window.clear()
             window.reset()
@@ -366,6 +373,7 @@ class JLineRenderer(
         }
         val (inputLines, inputCursor) = fitInputLinesToWindow(input, rawInputCursor)
         outputWorkspace.addAll(inputLines)
+        lastInputLinesCount = inputLines.size
 
         // trim off extra lines at the beginning
         // This is not super efficient, but it shouldn't happen often enough to be a problem
@@ -383,7 +391,7 @@ class JLineRenderer(
         if (isCursorOnStatus) {
             val windowY = tabpage.getYPositionOf(window)
             val windowBottom = window.height + windowY
-            cursorRow = windowBottom - 1
+            cursorRow = windowBottom - inputLines.size
             cursorCol = rawStatusCursor
         } else {
             val (inputCursorRow, inputCursorCol) = inputCursor
@@ -412,13 +420,60 @@ class JLineRenderer(
         }
 
         val output = OutputLine(line)
-        val lines = output.getDisplayLines(maxLineWidth, WORD_WRAP.read(settings))
+        var lines = output.getDisplayLines(maxLineWidth, WORD_WRAP.read(settings))
+        var fitCursor = fitCursorInLines(lines, cursor)
 
-        val cursor = fitCursorInLines(lines, cursor)
+        if (fitCursor.second == maxLineWidth) {
+            fitCursor = fitCursor.first + 1 to 0
+            lines = lines.toMutableList().apply { add(AttributedString.EMPTY) }
+        }
 
-        // FIXME TODO limit number of lines
+        if (lines.size <= maxLines) {
+            // easy case
+            return lines to fitCursor
+        }
 
-        return lines to cursor
+        // limit number of lines
+        val (cursorRow, cursorCol) = fitCursor
+        val start = maxOf(cursorRow - maxLines / 2, 0)
+        val end = minOf(start + maxLines, lines.size) - 1
+        val result = ArrayList<AttributedString>(maxLines)
+
+        val first = lines[start]
+        if (start == 0) {
+            result.add(first)
+        } else {
+            result.add(
+                with(AttributedStringBuilder(first.length)) {
+                    appendAnsi(ELLIPSIS)
+                    append(first, 1, first.length)
+
+                    toAttributedString()
+                }
+            )
+        }
+
+        // no extra allocations, please
+        @Suppress("LoopToCallChain")
+        for (i in 1..end - 2) { // extra -1 in lieu of inefficient `until`;
+            result.add(lines[i])
+        }
+
+        val last = lines[end]
+        if (end == lines.lastIndex) {
+            result.add(last)
+        } else {
+            result.add(
+                with(AttributedStringBuilder(last.length)) {
+                    append(last, 0, last.length - 1)
+                    appendAnsi(ELLIPSIS)
+
+                    toAttributedString()
+                }
+            )
+        }
+
+        return result to ((cursorRow - start) to cursorCol)
     }
 
     private fun fitCursorInLines(lines: List<AttributedString>, cursor: Int): Pair<Int, Int> {
@@ -486,11 +541,11 @@ class JLineRenderer(
             )
 
             withIndicator = with(AttributedStringBuilder(maxLineWidth)) {
-                if (hasMorePrev) append("…")
+                if (hasMorePrev) append(ELLIPSIS)
 
                 append(windowedInput)
 
-                if (hasMoreNext) append("…")
+                if (hasMoreNext) append(ELLIPSIS)
 
                 toAttributedString()
             }

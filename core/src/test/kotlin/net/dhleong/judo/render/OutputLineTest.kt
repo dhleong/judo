@@ -42,6 +42,12 @@ class OutputLineTest {
             .containsExactly("Take my ", "love, take", " my land")
     }
 
+    @Test(timeout = 3000) fun wordWrap_end() {
+        val line = OutputLine("Take my love,    ta")
+        assertThat(line.getWrappedStrings(10))
+            .containsExactly("Take my ", "love,    ", "ta")
+    }
+
     @Test(timeout = 3000) fun wordWrapSuper() {
         // just don't spin-loop forever
         val line = OutputLine(" at net.dhleong.judo.modes.PythonCmdMode$\$special$\$inlined\$forEach\$lambda$1.__call__(PythonCmdMode.kt:308)")
