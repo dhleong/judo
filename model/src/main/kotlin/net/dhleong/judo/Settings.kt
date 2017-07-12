@@ -13,9 +13,12 @@ val ALL_SETTINGS = mutableMapOf<String, Setting<*>>()
  */
 
 val WORD_WRAP = declareSetting("wordwrap", true)
+
 val MODE_STACK = declareSetting("modestack", true,
     "If True, exitMode() returns to the previous mode; if False, always returns to Normal mode.")
 
+val MAX_INPUT_LINES = declareSetting("inputlines", 1,
+    "Maximum number of lines the input field can expand to before the text gets scrolled.")
 
 /**
  * @param userName User-facing setting name; used as `set([userName], value)`

@@ -163,6 +163,51 @@ class JLineRendererTest {
             expected = "…d, tak" to 7)
     }
 
+
+    @Test fun fitInputLinesToWindow() {
+        renderer.windowWidth = 12
+        renderer.settings[MAX_INPUT_LINES] = 2
+
+        renderer.updateInputLine("Take my love, Take my land... ", 0)
+        renderer.fitInputLinesToWindow().let { (lines, cursor) ->
+            assertThat(lines.map { it.toString() })
+                .containsExactly("Take my love", ", Take my l…")
+            assertThat(cursor).isEqualTo(0 to 0)
+        }
+
+        renderer.updateInputLine("Take my love, Take my land... ", 14)
+        renderer.fitInputLinesToWindow().let { (lines, cursor) ->
+            assertThat(lines.map { it.toString() })
+                .containsExactly("Take my love", ", Take my l…")
+            assertThat(cursor).isEqualTo(1 to 2)
+        }
+
+        renderer.updateInputLine("Take my love, Take my land... ", 19)
+        renderer.fitInputLinesToWindow().let { (lines, cursor) ->
+            assertThat(lines.map { it.toString() })
+                .containsExactly("Take my love", ", Take my l…")
+            assertThat(cursor).isEqualTo(1 to 7)
+        }
+
+        renderer.updateInputLine("Take my love, Take my land... ", 30)
+        renderer.fitInputLinesToWindow().let { (lines, cursor) ->
+            assertThat(lines.map { it.toString() })
+                .containsExactly("… Take my la", "nd... ")
+            assertThat(cursor).isEqualTo(1 to 6)
+        }
+    }
+
+    @Test fun fitInputLinesToWindow_type() {
+        renderer.windowWidth = 12
+        renderer.settings[MAX_INPUT_LINES] = 2
+
+        renderer.typeMultiAndFit("Take my love, Take my",
+            expected = listOf("Take my love", ", Take my") to (1 to 9))
+
+        renderer.typeMultiAndFit("Take my    l",
+            expected = listOf("Take my    l", "") to (1 to 0))
+    }
+
     @Test fun catchSplitPrompts() {
         val judo = JudoCore(renderer, settings)
         judo.prompts.define("HP: $1", "(hp: $1)")
@@ -367,6 +412,14 @@ private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) 
 
     val (line, cursor) = fitInputLineToWindow()
     assertThat(line.toString() to cursor).isEqualTo(expected)
+}
+
+private fun JLineRenderer.typeMultiAndFit(text: String, expected: Pair<List<String>, Pair<Int, Int>>) {
+    updateInputLine(text, text.length)
+
+    val (lines, cursor) = fitInputLinesToWindow()
+    assertThat(lines.map { it.toString() } to cursor)
+        .isEqualTo(expected)
 }
 
 fun IJudoWindow.getDisplayStrings(): List<String> =
