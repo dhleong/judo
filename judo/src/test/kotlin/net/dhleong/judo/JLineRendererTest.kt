@@ -208,6 +208,33 @@ class JLineRendererTest {
             expected = listOf("Take my    l", "") to (1 to 0))
     }
 
+    @Test fun fitInputLinesToWindow2() {
+        renderer.windowWidth = 20
+        renderer.windowHeight = 6
+        renderer.settings[MAX_INPUT_LINES] = 4
+        renderer.settings[WORD_WRAP] = true
+
+        val text = "The quick red fox jumped over the lazy brown dog. The quick red fox jumped"
+        renderer.typeMultiAndFit(text,
+            expected = listOf(
+                "…umped over the lazy",
+                " brown dog. The ",
+                "quick red fox jumped",
+                ""
+            ) to (3 to 0))
+
+        renderer.updateInputLine(text, 0)
+        renderer.fitInputLinesToWindow().let { (lines, cursor) ->
+            assertThat(lines.map { it.toString() })
+                .containsExactly(
+                    "The quick red fox ",
+                    "jumped over the lazy",
+                    " brown dog. The ",
+                    "quick red fox jumped")
+            assertThat(cursor).isEqualTo(0 to 0)
+        }
+    }
+
     @Test fun catchSplitPrompts() {
         val judo = JudoCore(renderer, settings)
         judo.prompts.define("HP: $1", "(hp: $1)")

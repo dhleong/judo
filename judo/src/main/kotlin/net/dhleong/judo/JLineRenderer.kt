@@ -435,9 +435,16 @@ class JLineRenderer(
 
         // limit number of lines
         val (cursorRow, cursorCol) = fitCursor
-        val start = maxOf(cursorRow - maxLines / 2, 0)
+        var start = maxOf(cursorRow - maxLines / 2, 0)
         val end = minOf(start + maxLines, lines.size) - 1
         val result = ArrayList<AttributedString>(maxLines)
+
+        if (end == lines.lastIndex) {
+            // NOTE: end is inclusive, so we don't want end - start = maxLines
+            while (end - start < (maxLines - 1) && start > 0) {
+                --start
+            }
+        }
 
         val first = lines[start]
         if (start == 0) {
@@ -455,7 +462,7 @@ class JLineRenderer(
 
         // no extra allocations, please
         @Suppress("LoopToCallChain")
-        for (i in 1..end - 2) { // extra -1 in lieu of inefficient `until`;
+        for (i in (start + 1)..end - 1) {
             result.add(lines[i])
         }
 
