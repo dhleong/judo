@@ -9,6 +9,8 @@ import java.io.File
  */
 
 fun main(args: Array<String>) {
+    var closed = false
+
     // prevent OSX from showing the title bar and dock icon
     System.setProperty("apple.awt.UIElement", "true")
 
@@ -22,7 +24,9 @@ fun main(args: Array<String>) {
     // clean up after ourselves
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
-            renderer.close()
+            if (!closed) {
+                renderer.close()
+            }
         }
     })
 
@@ -48,8 +52,11 @@ fun main(args: Array<String>) {
             // read world.py
             val worldPy = File(argsList[0].replace("^~", USER_HOME)).absoluteFile
             if (!(worldPy.exists() && worldPy.canRead())) {
+                closed = true
+
                 judo.quit()
                 renderer.close()
+
                 System.err.println("Unable to open world file $worldPy")
                 System.exit(2)
                 return
