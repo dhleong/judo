@@ -9,6 +9,7 @@ import net.dhleong.judo.render.JudoTabpage
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.util.ansi
+import net.dhleong.judo.util.stripAnsi
 import org.assertj.core.api.Assertions.assertThat
 import org.jline.utils.AttributedString
 import org.junit.After
@@ -90,7 +91,7 @@ class JLineRendererTest {
 
         val buffer = core.renderer.currentTabpage!!.currentWindow.currentBuffer
         assertThat(buffer.size)
-            .overridingErrorMessage("Expected a non-empty output")
+            .overridingErrorMessage("Expected a non-empty outputWindow")
             .isGreaterThan(0)
         if (buffer[0].startsWith("ERROR")) {
             throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
@@ -433,6 +434,12 @@ class JLineRendererTest {
 
 fun IJudoBuffer.getAnsiContents(): List<String> =
     (0..this.lastIndex).map { (this[it] as OutputLine).toAttributedString().toAnsi() }
+
+fun IJudoBuffer.getRawContents(): List<String> =
+    (0..this.lastIndex).map { (this[it] as OutputLine).toAnsi() }
+
+fun IJudoBuffer.getStringContents(): List<String> =
+    (0..this.lastIndex).map { stripAnsi(this[it]) }
 
 private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {
     updateInputLine(text, text.length)
