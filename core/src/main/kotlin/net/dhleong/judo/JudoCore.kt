@@ -203,7 +203,6 @@ class JudoCore(
             connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
             connection.debug = debug.isEnabled
             echo("Connected.")
-            events.raise("CONNECTED")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")
             return
@@ -243,6 +242,7 @@ class JudoCore(
         }
 
         this.connection = connection
+        events.raise("CONNECTED")
     }
 
     override fun createUserMode(name: String) {
