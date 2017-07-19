@@ -16,6 +16,7 @@ dependencies {
     compile project(':model')
 
     compile deps.kotlin
+    compile deps.guava
     compile deps.jline
     compile deps.jython
     compile deps.commonsNet

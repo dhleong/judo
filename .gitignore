@@ -2,3 +2,4 @@
 *.iml
 build/
 debug-log.txt
+out/

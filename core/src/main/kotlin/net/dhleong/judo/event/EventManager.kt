@@ -1,12 +1,15 @@
 package net.dhleong.judo.event
 
+import com.google.common.collect.HashMultimap
+
+
 /**
  * @author dhleong
  */
 class EventManager : IEventManager {
 
-    // NOTE: we currently support a single handler per event
-    private val events = HashMap<String, EventHandler>()
+    // NOTE: we now support a multiple handlers per event
+    private val events = HashMultimap.create<String, EventHandler>()
     private val eventThreadId = Thread.currentThread().id
 
     override fun clear() {
@@ -16,12 +19,10 @@ class EventManager : IEventManager {
     override fun clear(entry: Pair<String, EventHandler>) =
         unregister(entry.first, entry.second)
 
-    override fun has(eventName: String) = eventName in events
+    override fun has(eventName: String) = events.containsKey(eventName)
 
     override fun unregister(eventName: String, handler: EventHandler) {
-        if (events[eventName] == handler) {
-            events.remove(eventName)
-        }
+        events.remove(eventName, handler)
     }
 
     override fun raise(eventName: String, data: Any?) {
@@ -30,13 +31,13 @@ class EventManager : IEventManager {
                 "Attempting to raise $eventName on non-event thread ${Thread.currentThread()}")
         }
 
-        events[eventName]?.let { handler ->
-            handler(data)
+        events[eventName]?.let { handlers ->
+            handlers.forEach { it(data) }
         }
     }
 
     override fun register(eventName: String, handler: EventHandler) {
-        events[eventName] = handler
+        events.put(eventName, handler)
     }
 
 }
