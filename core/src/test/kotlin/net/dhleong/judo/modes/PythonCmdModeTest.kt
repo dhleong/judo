@@ -316,7 +316,7 @@ class PythonCmdModeTest {
     }
 
     @Test fun settings() {
-        assertThat(judo.state[WORD_WRAP]).isNull()
+        assertThat(WORD_WRAP !in judo.state).isTrue()
 
         assertThatThrownBy {
             mode.execute("set('nonsense', True)")
@@ -332,7 +332,7 @@ class PythonCmdModeTest {
     }
 
     @Test fun echoSettings() {
-        assertThat(judo.state[WORD_WRAP]).isNull()
+        assertThat(WORD_WRAP !in judo.state).isTrue()
 
         mode.execute("set('wordwrap')")
         assertThat(judo.echos).containsExactly("wordwrap = true (default)")
