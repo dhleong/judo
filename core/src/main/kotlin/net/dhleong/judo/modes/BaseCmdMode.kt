@@ -509,7 +509,7 @@ abstract class BaseCmdMode(
 
     private fun echoSettingValue(settingName: String) =
         withSetting(settingName) { setting ->
-            val value = setting.read(judo.state)
+            val value = judo.state[setting]
             val isDefaultFlag =
                 if (value == setting.default) " (default)"
                 else ""

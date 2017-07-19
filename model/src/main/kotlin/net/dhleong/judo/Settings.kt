@@ -35,8 +35,8 @@ class Setting<E : Any>(
      * Read the value of this setting from the StateMap,
      * returning our default value if not explicitly set
      */
-    fun read(state: StateMap): E =
-        state[this] ?: default
+    @Deprecated("Just use state[this] instead", ReplaceWith("state[this]"))
+    fun read(state: StateMap): E = state[this]
 
 }
 

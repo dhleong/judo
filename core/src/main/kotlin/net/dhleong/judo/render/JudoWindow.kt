@@ -43,7 +43,7 @@ class JudoWindow(
     override fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence {
         val buffer = currentBuffer
         val previousLength = buffer.size
-        val wordWrap = WORD_WRAP.read(settings)
+        val wordWrap = settings[WORD_WRAP]
         val result = buffer.appendLine(line, isPartialLine, width, wordWrap)
         val linesAdded = buffer.size - previousLength
 
@@ -66,7 +66,7 @@ class JudoWindow(
             else height
 
         val buffer = currentBuffer
-        val wordWrap = WORD_WRAP.read(settings)
+        val wordWrap = settings[WORD_WRAP]
         val start = buffer.lastIndex - scrollbackBottom
         val end = maxOf(0, start - displayHeight)
 
@@ -157,7 +157,7 @@ class JudoWindow(
         // TODO should we do better?
         searchResultLine = -1
 
-        val wordWrap = WORD_WRAP.read(settings)
+        val wordWrap = settings[WORD_WRAP]
         var scrolled = 0
         for (i in range) {
             if (i < 0) break

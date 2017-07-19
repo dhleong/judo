@@ -411,7 +411,7 @@ class JLineRenderer(
 
     private fun fitInputLinesToWindow(line: AttributedString, cursor: Int): Pair<List<AttributedString>, Pair<Int, Int>> {
         val maxLineWidth = windowWidth
-        val maxLines = MAX_INPUT_LINES.read(settings)
+        val maxLines = settings[MAX_INPUT_LINES]
 
         if (line.length < maxLineWidth || maxLines == 1) {
             // convenient shortcut
@@ -420,7 +420,7 @@ class JLineRenderer(
         }
 
         val output = OutputLine(line)
-        var lines = output.getDisplayLines(maxLineWidth, WORD_WRAP.read(settings))
+        var lines = output.getDisplayLines(maxLineWidth, settings[WORD_WRAP])
         var fitCursor = fitCursorInLines(lines, cursor)
 
         if (fitCursor.second == maxLineWidth) {

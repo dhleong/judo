@@ -285,7 +285,7 @@ class JudoCore(
     }
 
     override fun enterMode(mode: Mode) {
-        if (MODE_STACK.read(state) &&
+        if (state[MODE_STACK] &&
             (modeStack.isEmpty() || modeStack.last() != mode)) {
             modeStack.add(currentMode)
         }
@@ -294,7 +294,7 @@ class JudoCore(
     }
 
     override fun exitMode() {
-        if (MODE_STACK.read(state) && !modeStack.isEmpty()) {
+        if (state[MODE_STACK] && !modeStack.isEmpty()) {
             // actually, return to the previous mode
             val previousMode = modeStack.removeAt(modeStack.lastIndex)
             activateMode(previousMode)

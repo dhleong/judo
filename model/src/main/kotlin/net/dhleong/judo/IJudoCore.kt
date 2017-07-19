@@ -45,6 +45,9 @@ class StateMap() {
     operator fun <E : Any> get(key: StateKind<E>): E? =
         map[key] as E?
 
+    operator fun <E : Any> get(key: Setting<E>): E =
+        map[key] as? E ?: key.default
+
     operator fun <E : Any> contains(key: StateKind<E>): Boolean =
         key in map
 
