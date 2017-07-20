@@ -11,6 +11,8 @@ import java.io.PrintWriter
  */
 class TintinMapFormat(utf8: Boolean = true) : MapFormat {
 
+    override val name = "tintin"
+
     private val BASE_MAP_CAPACITY = 50000
 
     // FIXME TODO easier way to specify colors

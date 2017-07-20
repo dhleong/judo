@@ -3,6 +3,7 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
+import net.dhleong.judo.mapping.IMapManager
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
@@ -65,6 +66,7 @@ interface IJudoCore {
     val connection: Closeable?
     val events: IEventManager
     val logging: ILogManager
+    val mapper: IMapManager
     val prompts: IPromptManager
     val registers: IRegisterManager
     val triggers: ITriggerManager

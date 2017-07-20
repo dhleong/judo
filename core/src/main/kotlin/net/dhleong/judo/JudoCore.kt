@@ -12,6 +12,7 @@ import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.logging.LogManager
+import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.modes.BaseCmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -70,6 +71,7 @@ class JudoCore(
     override val aliases = AliasManager()
     override val events = EventManager()
     override val logging = LogManager()
+    override val mapper = MapManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val registers = RegisterManager(settings)
