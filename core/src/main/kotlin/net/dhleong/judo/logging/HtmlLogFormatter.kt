@@ -63,10 +63,14 @@ class HtmlLogFormatter : ILogFormatter {
     private val FOOTER =
         """
               </span>
-            </pre>
-          </body>
-        </html>
         """
+    // NOTE: if we print these in the footer, it breaks append mode;
+    // omitting them makes it not quite proper HTML, but I don't think
+    // any modern browsers care
+//            </pre>
+//          </body>
+//        </html>
+//        """
 
     private val COLOR_256_BLOCKS = charArrayOf('0', '5', '8', 'B', 'D', 'F')
 
