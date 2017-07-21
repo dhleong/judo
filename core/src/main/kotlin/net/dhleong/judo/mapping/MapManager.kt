@@ -1,11 +1,17 @@
 package net.dhleong.judo.mapping
 
+import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.MAP_AUTOROOM
+import net.dhleong.judo.StateMap
 import java.io.File
 
 /**
  * @author dhleong
  */
-class MapManager : IMapManager {
+class MapManager(
+    private val judo: IJudoCore,
+    private val settings: StateMap
+) : IMapManager {
 
     override var current: IJudoMap? = null
 
@@ -57,4 +63,27 @@ class MapManager : IMapManager {
         }
     }
 
+
+    override fun command(text: String) {
+        val map = current ?: return
+        val room = map.currentRoom ?: return
+
+        room.exits[text]?.let {
+            map.inRoom = it.room.id
+            return
+        }
+
+        if (settings[MAP_AUTOROOM]) {
+            val newRoom = JudoRoom(map.lastRoom + 1, text)
+            map.dig(room, text, newRoom)
+            map.inRoom = newRoom.id
+        }
+    }
+
+    override fun maybeCommand(text: String) {
+        // TODO support user-provided reverseCmds
+        if (text in JudoMap.reverseCmds) {
+             command(text)
+        }
+    }
 }

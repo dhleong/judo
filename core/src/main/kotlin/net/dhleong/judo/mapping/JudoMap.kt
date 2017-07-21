@@ -4,21 +4,23 @@ package net.dhleong.judo.mapping
  * @author dhleong
  */
 class JudoMap : IJudoMap {
+    companion object {
+        val reverseCmds = mutableMapOf(
+            "n" to "s",
+            "s" to "n",
+            "w" to "e",
+            "e" to "w",
+            "nw" to "se",
+            "se" to "nw",
+            "ne" to "sw",
+            "sw" to "ne",
+            "u" to "d",
+            "d" to "u"
+        )
+
+    }
 
     private val rooms = HashMap<Int, IJudoRoom>()
-
-    private val reverseCmds = mutableMapOf(
-        "n" to "s",
-        "s" to "n",
-        "w" to "e",
-        "e" to "w",
-        "nw" to "se",
-        "se" to "nw",
-        "ne" to "sw",
-        "sw" to "ne",
-        "u" to "d",
-        "d" to "u"
-    )
 
     override val size: Int
         get() = rooms.size
@@ -44,7 +46,7 @@ class JudoMap : IJudoMap {
 
     override fun iterator(): Iterator<IJudoRoom> = rooms.values.iterator()
 
-    fun dig(from: IJudoRoom, cmd: String, newRoom: IJudoRoom) {
+    override fun dig(from: IJudoRoom, cmd: String, newRoom: IJudoRoom) {
         add(newRoom)
         from.exits[cmd] = JudoExit(newRoom, cmd, cmd)
         reverseCmds[cmd]?.let {
@@ -59,7 +61,6 @@ class JudoMap : IJudoMap {
         other as JudoMap
 
         if (rooms != other.rooms) return false
-        if (reverseCmds != other.reverseCmds) return false
         if (inRoom != other.inRoom) return false
         if (lastRoom != other.lastRoom) return false
 
@@ -68,7 +69,6 @@ class JudoMap : IJudoMap {
 
     override fun hashCode(): Int {
         var result = rooms.hashCode()
-        result = 31 * result + reverseCmds.hashCode()
         result = 31 * result + (inRoom ?: 0)
         result = 31 * result + lastRoom
         return result

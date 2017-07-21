@@ -3,9 +3,12 @@ package net.dhleong.judo.mapping
 import java.io.File
 
 /**
+ * Public interface of IMapManager; if a MapManager is to be
+ * exposed to scripting, only these methods should be exposed
+ *
  * @author dhleong
  */
-interface IMapManager {
+interface IMapManagerPublic {
     companion object {
         private val DEFAULT_MAP_CAPACITY = 50000
     }
@@ -62,12 +65,19 @@ interface IMapManager {
     @Suppress("unused") fun saveAs(file: String) = saveAs(File(file))
     @Suppress("unused") fun saveAs(file: String, format: String) = saveAs(File(file), format)
 
+    /**
+     * Process the given text like a movement command,
+     *  updating the map to follow the exit, creating
+     *  the room if appropriate and desired.
+     * This could be useful when following someone to
+     *  keep the map updated
+     */
+    @Suppress("unused") fun command(text: String)
 
     /**
      * Set the current room id
      */
-    @Suppress("unused")
-    fun goto(roomId: Int): Boolean {
+    @Suppress("unused") fun goto(roomId: Int): Boolean {
         val map = current
         if (map != null) {
             map.inRoom = roomId
@@ -75,4 +85,18 @@ interface IMapManager {
         }
         return false
     }
+}
+
+/**
+ * Full IMapManager interface, with extra members
+ *  that probably shouldn't be exposed to scripting,
+ *  but which implementations of IJudoCore might need
+ */
+interface IMapManager : IMapManagerPublic {
+    /**
+     * Attempt to handle the text as a command; if it appears to
+     * be a direction, we will update the map to follow the
+     * direction, creating a new room if appropriate and requested
+     */
+    fun maybeCommand(text: String)
 }

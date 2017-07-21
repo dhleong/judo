@@ -10,10 +10,14 @@ interface IJudoMap : Iterable<IJudoRoom> {
     var inRoom: Int?
     val lastRoom: Int
 
+    val currentRoom: IJudoRoom?
+        get() = inRoom?.let { this[it] }
+
     operator fun get(roomId: Int): IJudoRoom?
     operator fun plusAssign(room: IJudoRoom) = add(room)
     fun add(room: IJudoRoom)
     fun deleteRoom(roomId: Int)
+    fun dig(from: IJudoRoom, cmd: String, newRoom: IJudoRoom)
 }
 
 interface IJudoRoom {

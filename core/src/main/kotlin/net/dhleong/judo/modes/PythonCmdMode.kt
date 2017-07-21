@@ -13,7 +13,7 @@ import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
-import net.dhleong.judo.mapping.IMapManager
+import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
@@ -630,11 +630,10 @@ class InterfaceAdapter : PyObjectAdapter {
         internal val exposedInterfaces = arrayOf(
             IJudoCore::class.java,
 
-            IMapManager::class.java,
             IAliasManager::class.java,
             IEventManager::class.java,
             ILogManager::class.java,
-            IMapManager::class.java,
+            IMapManagerPublic::class.java,
             IPromptManager::class.java,
             ITriggerManager::class.java,
             StateMap::class.java,

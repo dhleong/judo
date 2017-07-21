@@ -22,12 +22,13 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()
 
+    override val state = StateMap()
+
     override val aliases = AliasManager()
     override val events = EventManager()
-    override val mapper = MapManager()
+    override val mapper = MapManager(this, state)
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-    override val state = StateMap()
 
     val ids = IdManager()
     override var tabpage: IJudoTabpage = JudoTabpage(

@@ -71,7 +71,7 @@ class JudoCore(
     override val aliases = AliasManager()
     override val events = EventManager()
     override val logging = LogManager()
-    override val mapper = MapManager()
+    override val mapper = MapManager(this, settings)
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val registers = RegisterManager(settings)
@@ -438,6 +438,8 @@ class JudoCore(
         }
 
         if (doSend) {
+            mapper.maybeCommand(toSend)
+
             connection?.let {
                 it.send(toSend)
                 return
