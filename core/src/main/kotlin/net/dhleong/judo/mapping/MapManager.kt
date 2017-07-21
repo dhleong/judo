@@ -18,6 +18,11 @@ class MapManager : IMapManager {
             map
         }
 
+    override fun createEmpty(capacity: Int) {
+        // NOTE: JudoMap doesn't currently use an explicit capacity
+        current = JudoMap()
+    }
+
     override fun load(file: File) {
         if (!file.exists()) throw IllegalArgumentException("No such file $file")
 

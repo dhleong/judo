@@ -35,6 +35,13 @@ class JudoMap : IJudoMap {
         lastRoom = room.id
     }
 
+    override fun deleteRoom(roomId: Int) {
+        rooms.remove(roomId)
+        this.forEach {
+            it.exits.removeExitTo(roomId)
+        }
+    }
+
     override fun iterator(): Iterator<IJudoRoom> = rooms.values.iterator()
 
     fun dig(from: IJudoRoom, cmd: String, newRoom: IJudoRoom) {
@@ -76,11 +83,21 @@ data class JudoRoom(
 ) : IJudoRoom
 
 class JudoExits : IJudoExits {
-
     private val exits = HashMap<String, IJudoExit>()
 
     override fun contains(exitCmd: String): Boolean = exitCmd in exits
     override fun get(cmd: String): IJudoExit? = exits[cmd.toLowerCase()]
+    override fun remove(cmd: String): IJudoExit? = exits.remove(cmd)
+    override fun removeExitTo(roomId: Int): IJudoExit? {
+        val exitsIter = exits.values.iterator()
+        for (exit in exitsIter) {
+            if (exit.room.id == roomId) {
+                exitsIter.remove()
+                return exit
+            }
+        }
+        return null
+    }
     override fun set(cmd: String, exit: IJudoExit) {
         exits[cmd.toLowerCase()] = exit
     }

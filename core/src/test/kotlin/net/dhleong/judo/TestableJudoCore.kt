@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
+import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
@@ -23,6 +24,7 @@ class TestableJudoCore : IJudoCore by createCoreProxy() {
 
     override val aliases = AliasManager()
     override val events = EventManager()
+    override val mapper = MapManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val state = StateMap()

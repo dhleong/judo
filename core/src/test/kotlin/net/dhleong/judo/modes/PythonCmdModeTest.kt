@@ -448,8 +448,6 @@ class PythonCmdModeTest {
         // ... but the other file is intact
         assertThat(judo.events.has("DISCONNECTED")).isTrue()
     }
-
-
 }
 
 private fun PythonCmdMode.readLikeFile(fileName: String, fileContents: String) =

@@ -13,6 +13,7 @@ interface IJudoMap : Iterable<IJudoRoom> {
     operator fun get(roomId: Int): IJudoRoom?
     operator fun plusAssign(room: IJudoRoom) = add(room)
     fun add(room: IJudoRoom)
+    fun deleteRoom(roomId: Int)
 }
 
 interface IJudoRoom {
@@ -28,6 +29,12 @@ interface IJudoExits : Iterable<IJudoExit> {
     operator fun contains(exitCmd: String): Boolean
     operator fun get(cmd: String): IJudoExit?
     operator fun set(cmd: String, exit: IJudoExit)
+
+    /** Delete the exit with the given cmd, if we have it */
+    fun remove(cmd: String): IJudoExit?
+
+    /** Delete the exit to the given roomId, if we have one */
+    fun removeExitTo(roomId: Int): IJudoExit?
 }
 
 interface IJudoExit {
