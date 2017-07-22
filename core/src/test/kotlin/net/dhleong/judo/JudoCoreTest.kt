@@ -151,6 +151,9 @@ class JudoCoreTest {
             override val output: OutputStream
                 get() = TODO("not implemented")
 
+            override val isMsdpEnabled: Boolean
+                get() = TODO("not implemented")
+
             override fun setWindowSize(width: Int, height: Int) {
                 TODO("not implemented")
             }
