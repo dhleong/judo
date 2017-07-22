@@ -57,6 +57,7 @@ class JLineRenderer(
 
     private var input = AttributedString.EMPTY
     private var cursor = 0
+    private var lastKeyTime: Long = -1
 
     private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> KeyStroke?>>(8)
 
@@ -195,6 +196,9 @@ class JLineRenderer(
             return null
         }
 
+        val lastKey = lastKeyTime
+        lastKeyTime = System.currentTimeMillis()
+
         return when (char) {
             KEY_ESCAPE -> {
                 readEscape()?.let {
@@ -208,6 +212,18 @@ class JLineRenderer(
             '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
 
             in 1..26 -> {
+                if (char == 10) {
+                    val delta = System.currentTimeMillis() - lastKey
+                    if (delta < 7L) {  // ignore the magic number, just see below:
+                        // NOTE: 10 means ctrl-j, but also means linefeed, especially
+                        // when pasting text. As a bit of a hack (even vim doesn't do this,
+                        // since with multiple lines makes since in a multi-line editor), when
+                        // the last-read keyStroke was super recent, we just treat it as an
+                        // ENTER in order to avoid accidentally triggering a ctrl-j mapping
+                        return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
+                    }
+                }
+
                 val actualChar = 'a' + char - 1
                 return KeyStroke.getKeyStroke(actualChar, InputEvent.CTRL_DOWN_MASK)
             }
