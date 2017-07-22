@@ -28,9 +28,8 @@ class JudoMap : IJudoMap {
     override var inRoom: Int? = null
     override var lastRoom: Int = 0
 
-
-    override fun get(roomId: Int): IJudoRoom? =
-        rooms[roomId]
+    override fun contains(roomId: Int): Boolean = roomId in rooms
+    override fun get(roomId: Int): IJudoRoom? = rooms[roomId]
 
     override fun add(room: IJudoRoom) {
         rooms[room.id] = room

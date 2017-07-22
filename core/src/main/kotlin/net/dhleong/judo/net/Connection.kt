@@ -2,7 +2,6 @@ package net.dhleong.judo.net
 
 import java.io.BufferedReader
 import java.io.BufferedWriter
-import java.io.Closeable
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -19,7 +18,7 @@ val TELNET_IAC = 255.toByte()
 val TELNET_SB = 250.toByte()
 val TELNET_SE = 240.toByte()
 
-abstract class Connection : Closeable {
+abstract class Connection : JudoConnection {
     /** in ms */
     val DEFAULT_CONNECT_TIMEOUT = 20000
 

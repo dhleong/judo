@@ -614,6 +614,7 @@ class JudoCore(
             }
         }
 
+        mapper.clear()
         this.connection = null
 
         state[KEY_PERSIST_INPUT_HISTORY_PATH]?.let { path ->

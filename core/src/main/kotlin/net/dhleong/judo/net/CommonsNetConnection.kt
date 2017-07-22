@@ -22,6 +22,9 @@ class CommonsNetConnection(
     override val input: InputStream
     override val output: OutputStream
 
+    override val isMsdpEnabled: Boolean
+        get() = msdp.isMsdpEnabled
+
     // NOTE: it's a bit weird storing this value in the socketFactory,
     // but we need to update it somehow....
     var debug: Boolean
@@ -32,6 +35,8 @@ class CommonsNetConnection(
 
     private val client = TelnetClient()
     private val socketFactory = MccpHandlingSocketFactory(echo)
+
+    private val msdp: MsdpHandler
 
     private var echoStateChanges = 0
 
@@ -53,9 +58,10 @@ class CommonsNetConnection(
         }
 
         val mtts = MttsTermTypeHandler(judo.renderer, echoDebug)
+        msdp = MsdpHandler(judo, { debug }, echoDebug)
         client.addOptionHandler(mtts)
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
-        client.addOptionHandler(MsdpHandler(judo, { debug }, echoDebug))
+        client.addOptionHandler(msdp)
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
             echoDebug("## TELNET < ${stringify(negotiation_code)} ${stringifyOption(option_code)}")

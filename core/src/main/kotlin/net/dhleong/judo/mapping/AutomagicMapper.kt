@@ -1,0 +1,215 @@
+package net.dhleong.judo.mapping
+
+import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.event.EventHandler
+import net.dhleong.judo.net.MSDP_VAL
+import net.dhleong.judo.net.MSDP_VAR
+import net.dhleong.judo.net.TELNET_IAC
+import net.dhleong.judo.net.TELNET_SB
+import net.dhleong.judo.net.TELNET_SE
+import net.dhleong.judo.net.TELNET_TELOPT_MSDP
+
+/**
+ * @author dhleong
+ */
+class AutomagicMapper(
+    internal val judo: IJudoCore,
+    internal val mapper: MapManager
+) {
+
+    private var lastVnum: String? = null
+    private var lastExits: Map<String, Any>? = null
+    private var lastName: String? = null
+
+    private val msdpWorkspace = StringBuilder(256)
+    private val registered = HashMap<String, EventHandler>()
+    private var reportsName = false
+    private var mapStrategy: MapStrategy? = null
+
+    fun clear() {
+        registered.forEach { k, v ->
+            judo.events.unregister(k, v)
+        }
+        registered.clear()
+    }
+
+    fun onMsdpAvailable() {
+        registerEvent("MSDP:REPORTABLE_VARIABLES", this::onVarsList)
+        sendMsdp("LIST", "REPORTABLE_VARIABLES")
+    }
+
+    fun onVarsList(vars: List<String>) {
+        unregisterEvent("MSDP:REPORTABLE_VARIABLES")
+
+        if ("ROOM" in vars) {
+            registerEvent("MSDP:ROOM", this::onRoom)
+            sendMsdp("REPORT", "ROOM")
+        } else if ("ROOMVNUM" in vars && "ROOMEXITS" in vars) {
+            registerEvent("MSDP:ROOMVNUM", this::onRoomVnum)
+            registerEvent("MSDP:ROOMEXITS", this::onRoomExits)
+            sendMsdp("REPORT", "ROOMVNUM")
+            sendMsdp("REPORT", "ROOMEXITS")
+
+            if ("ROOMNAME" in vars) {
+                registerEvent("MSDP:ROOMNAME", this::onRoomName)
+                sendMsdp("REPORT", "ROOMNAME")
+                reportsName = true
+            }
+        } else {
+            judo.echoRaw("No way to automap using $vars")
+        }
+    }
+
+    /*
+     Room-based automapping
+     */
+
+    @Suppress("UNCHECKED_CAST")
+    fun onRoom(room: Map<String, Any>) {
+        val vnum = room["vnum"] as String? ?: return
+        val exits = room["exits"] as Map<String, Any>? ?: return
+        val name = room["name"] as String?
+            ?: if (reportsName) return
+               else lastVnum!!
+
+        onRoom(vnum.toInt(), name, exits)
+    }
+
+    fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
+        judo.echoRaw("onRoom: $vnum ($name) = $exits")
+
+        val strategy: MapStrategy
+        val existing = mapStrategy
+        if (existing == null) {
+            strategy = createStrategy(exits)
+            mapStrategy = strategy
+        } else {
+            strategy = existing
+        }
+
+        strategy.onRoom(vnum, name, exits)
+    }
+
+    /*
+     vnum + exits
+     */
+
+    fun onRoomVnum(vnum: String) {
+        lastVnum = vnum
+        checkRoom()
+    }
+
+    fun onRoomExits(exits: Map<String, Any>?) {
+        lastExits = exits
+        checkRoom()
+    }
+
+    fun onRoomName(name: String?) {
+        lastName = name
+        checkRoom()
+    }
+
+
+    private fun checkRoom() {
+        val exits = lastExits ?: return
+        val name = lastName
+            ?: if (reportsName) return
+               else lastVnum!!
+        val vnum = lastVnum?.toInt() ?: return
+
+        onRoom(vnum, name, exits)
+
+        lastVnum = null
+        lastExits = null
+        lastName = null
+    }
+
+    private fun createStrategy(exits: Map<String, Any>): MapStrategy {
+        if (exits.any { (it.value as String).toIntOrNull() != null }) {
+            // if the exit maps to an int vnum, that means we can
+            // use the "easy" map strategy
+            return EasyMapStrategy(this)
+        } else {
+            // if not an int, we don't know the exit target vnums,
+            // so we have to intuit the links
+            return DirectionalMapStrategy(this)
+        }
+    }
+
+
+    private fun <T> registerEvent(event: String, handler: (T) -> Unit) {
+        val realHandler = coerce(handler)
+        judo.events.register(event, realHandler)
+        registered[event] = realHandler
+    }
+
+    private fun unregisterEvent(event: String) {
+        val oldHandler = registered.remove(event)
+        oldHandler?.let {
+            judo.events.unregister(event, oldHandler)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private inline fun <T> coerce(crossinline fn: (T) -> Unit): EventHandler = { arg ->
+        fn(arg as T)
+    }
+
+
+    private fun sendMsdp(key: String, value: String) =
+        judo.send(buildMsdp(key, value), true)
+
+    private fun buildMsdp(key: String, value: String): String {
+        return with(msdpWorkspace) {
+            setLength(0)
+
+            append(TELNET_IAC.toChar())
+            append(TELNET_SB.toChar())
+
+            append(TELNET_TELOPT_MSDP.toChar())
+            append(MSDP_VAR.toChar())
+            append(key)
+            append(MSDP_VAL.toChar())
+            append(value)
+
+            append(TELNET_IAC.toChar())
+            append(TELNET_SE.toChar())
+        }.toString()
+    }
+}
+
+interface MapStrategy {
+    fun onRoom(vnum: Int, name: String, exits: Map<String, Any>)
+}
+
+internal class EasyMapStrategy(private val mapper: AutomagicMapper) : MapStrategy {
+    override fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
+        val map = mapper.mapper.current!!
+        if (vnum !in map) {
+            val actualExits = JudoExits()
+            exits.forEach { exit, exitVnumStr ->
+                val exitVnum = (exitVnumStr as String).toInt()
+                if (exitVnum in map) {
+                    actualExits[exit] = map[exitVnum]!!
+                } else {
+                    val newRoom = JudoRoom(exitVnum, exitVnumStr)
+                    map.add(newRoom)
+                    actualExits[exit] = newRoom
+                }
+            }
+
+            map.add(JudoRoom(vnum, name, actualExits))
+        }
+
+        map.inRoom = vnum
+        map.currentRoom!!.name = name
+    }
+}
+
+internal class DirectionalMapStrategy(private val mapper: AutomagicMapper) : MapStrategy {
+    override fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
+        // TODO this is a bit trickier since we aren't provided the vnums
+        // for the exits, so we have to intuit the links
+        mapper.judo.echoRaw("TODO: directional map($vnum, $name) $exits")
+    }
+}

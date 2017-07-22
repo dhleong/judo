@@ -13,6 +13,7 @@ interface IJudoMap : Iterable<IJudoRoom> {
     val currentRoom: IJudoRoom?
         get() = inRoom?.let { this[it] }
 
+    operator fun contains(roomId: Int): Boolean
     operator fun get(roomId: Int): IJudoRoom?
     operator fun plusAssign(room: IJudoRoom) = add(room)
     fun add(room: IJudoRoom)
@@ -22,7 +23,7 @@ interface IJudoMap : Iterable<IJudoRoom> {
 
 interface IJudoRoom {
     val id: Int
-    val name: String
+    var name: String
     val exits: IJudoExits
 
     /** Used for grid generation */

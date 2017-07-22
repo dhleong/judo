@@ -4,11 +4,11 @@ import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IMapManager
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.trigger.ITriggerManager
-import java.io.Closeable
 import java.io.File
 import javax.swing.KeyStroke
 
@@ -63,7 +63,7 @@ class StateMap() {
 interface IJudoCore {
 
     val aliases: IAliasManager
-    val connection: Closeable?
+    val connection: JudoConnection?
     val events: IEventManager
     val logging: ILogManager
     val mapper: IMapManager

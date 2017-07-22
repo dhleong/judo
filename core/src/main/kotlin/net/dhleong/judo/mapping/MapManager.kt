@@ -1,8 +1,10 @@
 package net.dhleong.judo.mapping
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.MAP_AUTOMAGIC
 import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.event.EVENT_MSDP_ENABLED
 import java.io.File
 
 /**
@@ -24,9 +26,22 @@ class MapManager(
             map
         }
 
+    private var magicMapper: AutomagicMapper? = null
+
+    override fun clear() {
+        current = null
+        currentFormat = null
+        currentFile = null
+        magicMapper?.let {
+            it.clear()
+            magicMapper = null
+        }
+    }
+
     override fun createEmpty(capacity: Int) {
         // NOTE: JudoMap doesn't currently use an explicit capacity
         current = JudoMap()
+        init()
     }
 
     override fun load(file: File) {
@@ -42,6 +57,7 @@ class MapManager(
         }
 
         current = map
+        init()
     }
 
     override fun save() {
@@ -83,7 +99,21 @@ class MapManager(
     override fun maybeCommand(text: String) {
         // TODO support user-provided reverseCmds
         if (text in JudoMap.reverseCmds) {
-             command(text)
+            command(text)
+        }
+    }
+
+    private fun init() {
+        if (!settings[MAP_AUTOMAGIC]) return
+
+        val mapper = AutomagicMapper(judo, this)
+        magicMapper = mapper
+
+        if (judo.connection?.isMsdpEnabled ?: false) {
+            mapper.onMsdpAvailable()
+        } else {
+            judo.events.register(EVENT_MSDP_ENABLED) { _ -> mapper.onMsdpAvailable() }
         }
     }
 }
+

@@ -94,6 +94,11 @@ interface IMapManagerPublic {
  */
 interface IMapManager : IMapManagerPublic {
     /**
+     * Reset the IMapManager state
+     */
+    fun clear()
+
+    /**
      * Attempt to handle the text as a command; if it appears to
      * be a direction, we will update the map to follow the
      * direction, creating a new room if appropriate and requested
