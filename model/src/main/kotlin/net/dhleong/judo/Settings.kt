@@ -12,6 +12,9 @@ val ALL_SETTINGS = mutableMapOf<String, Setting<*>>()
  * Settings declarations
  */
 
+val CLIPBOARD = declareSetting("clipboard", "",
+    "If set to 'unnamed', cuts and pastes will default to the * register")
+
 val WORD_WRAP = declareSetting("wordwrap", true)
 
 val MODE_STACK = declareSetting("modestack", true,

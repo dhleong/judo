@@ -72,7 +72,7 @@ class JudoCore(
     override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
-    override val registers = RegisterManager()
+    override val registers = RegisterManager(settings)
     override val state = settings
 
     private val parsedPrompts = ArrayList<IStringBuilder>(2)

@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.StateMap
 import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.util.key
 import org.assertj.core.api.Assertions.assertThat
@@ -13,7 +14,7 @@ import javax.swing.KeyStroke
  */
 class InputBufferTest {
 
-    val registers = RegisterManager()
+    val registers = RegisterManager(StateMap())
     val buffer = InputBuffer(registers)
 
     @Before fun setUp() {
