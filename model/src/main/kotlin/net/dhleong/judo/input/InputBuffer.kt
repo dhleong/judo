@@ -83,11 +83,14 @@ class InputBuffer(private val registers: IRegisterManager? = null) {
     }
 
     fun delete(range: IntRange) {
-        registers?.current?.copyFrom(
-            buffer,
-            range.start,
-            minOf(buffer.length, range.endInclusive + 1)
-        )
+        registers?.let {
+            it.current.copyFrom(
+                buffer,
+                range.start,
+                minOf(buffer.length, range.endInclusive + 1)
+            )
+            it.resetCurrent()
+        }
 
         buffer.delete(range.start, range.endInclusive + 1)
     }

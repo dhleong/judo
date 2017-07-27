@@ -16,6 +16,14 @@ interface IRegisterManager {
     var current: IRegister
 
     operator fun get(register: Char): IRegister
+
+    /**
+     * Reset the current register to the default, usually
+     * after having used it somehow
+     */
+    fun resetCurrent() {
+        current = unnamed
+    }
 }
 
 interface IRegister {

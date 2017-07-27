@@ -103,21 +103,13 @@ class NormalMode(
         keys("n") to withCount { count -> continueSearch(count) },
         keys("N") to withCount { count -> continueSearch(-count) },
 
-        keys("p") to withCount { count ->
-            val value = judo.registers.current.value.repeat(count)
-            buffer.insert(minOf(buffer.size, buffer.cursor + 1), value)
-            buffer.cursor += value.length
-        },
-        keys("P") to withCount { count ->
-            val value = judo.registers.current.value.repeat(count)
-            buffer.insert(buffer.cursor, value)
-            buffer.cursor += value.length
-        },
+        keys("p") to pasteWithOffset(1),
+        keys("P") to pasteWithOffset(0),
 
         keys("r") to actionOnCount(::xCharMotion, 1) { _, range ->
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
-                    || replacement.keyCode == KeyEvent.VK_ESCAPE) {
+                || replacement.keyCode == KeyEvent.VK_ESCAPE) {
                 // TODO beep?
             } else {
                 val char = replacement.keyChar.toString()
@@ -142,6 +134,16 @@ class NormalMode(
         keys("g~") to { _ ->
             withOperator('~') { range ->
                 buffer.switchCaseWithCursor(range)
+            }
+        },
+
+        keys("\"") to { core ->
+            val register = core.readKey()
+            if (register.hasCtrl()
+                || register.keyCode == KeyEvent.VK_ESCAPE) {
+                // TODO beep?
+            } else {
+                core.registers.current = core.registers[register.keyChar]
             }
         },
 
@@ -257,6 +259,14 @@ class NormalMode(
 
     private fun withCount(action: (Int) -> Unit): KeyAction =
         { _ -> action.invoke(count.toRepeatCount()) }
+
+    private fun pasteWithOffset(offset: Int): KeyAction = withCount { count ->
+        val value = judo.registers.current.value.repeat(count)
+        judo.registers.resetCurrent()
+
+        buffer.insert(minOf(buffer.size, buffer.cursor + offset), value)
+        buffer.cursor += value.length
+    }
 }
 
 

@@ -449,6 +449,10 @@ class JudoCore(
 //        echo("## feedKey($stroke)")
         when (stroke.keyCode) {
             KeyEvent.VK_ESCAPE -> {
+                // reset the current register
+                registers.resetCurrent()
+
+                // leave the current mode
                 if (currentMode != normalMode) {
                     modeStack.clear()
                     activateMode(normalMode)
