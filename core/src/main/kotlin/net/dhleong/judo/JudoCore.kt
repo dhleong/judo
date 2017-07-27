@@ -27,6 +27,7 @@ import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
@@ -71,11 +72,12 @@ class JudoCore(
     override val logging = LogManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
+    override val registers = RegisterManager(settings)
     override val state = settings
 
     private val parsedPrompts = ArrayList<IStringBuilder>(2)
 
-    internal val buffer = InputBuffer()
+    internal val buffer = InputBuffer(registers)
     internal val cmdBuffer = InputBuffer()
 
     private val sendHistory = InputHistory(buffer)
@@ -447,6 +449,10 @@ class JudoCore(
 //        echo("## feedKey($stroke)")
         when (stroke.keyCode) {
             KeyEvent.VK_ESCAPE -> {
+                // reset the current register
+                registers.resetCurrent()
+
+                // leave the current mode
                 if (currentMode != normalMode) {
                     modeStack.clear()
                     activateMode(normalMode)

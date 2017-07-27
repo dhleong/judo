@@ -78,6 +78,17 @@ fun main(args: Array<String>) {
         }
     }
 
+    // if they want to use the clipboard as the unnamed register, warm it up;
+    //  without this, the first time accessing the clipboard is super slow.
+    // We do this now since (at least on macOS) it causes a bit of a visual flash;
+    //  doing it while the world is connecting makes it a bit less noticeable. Also,
+    //  doing it *before* the world connect stuff starts scrolling in means that lag
+    //  to warm up the clipboard delays the initial connection, making everything
+    //  feel slower; we're already slow enough thanks to having to warm up Jython
+    if ("unnamed" in settings[CLIPBOARD]) {
+        judo.registers['*'].value
+    }
+
     // finally, start handling user input
     judo.readKeys(renderer)
 }

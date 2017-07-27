@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.register.IRegisterManager
 import java.awt.event.KeyEvent.VK_BACK_SPACE
 import javax.swing.KeyStroke
 import kotlin.properties.Delegates
@@ -9,7 +10,7 @@ import kotlin.properties.Delegates
  *
  * @author dhleong
  */
-class InputBuffer {
+class InputBuffer(private val registers: IRegisterManager? = null) {
     var cursor: Int by Delegates.observable(0) { _, _, newValue ->
         if (newValue < 0 || newValue > size) {
             throw IllegalArgumentException(
@@ -82,6 +83,15 @@ class InputBuffer {
     }
 
     fun delete(range: IntRange) {
+        registers?.let {
+            it.current.copyFrom(
+                buffer,
+                range.start,
+                minOf(buffer.length, range.endInclusive + 1)
+            )
+            it.resetCurrent()
+        }
+
         buffer.delete(range.start, range.endInclusive + 1)
     }
 
@@ -100,6 +110,10 @@ class InputBuffer {
         }
 
         return false
+    }
+
+    fun insert(index: Int, value: CharSequence) {
+        buffer.insert(index, value)
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {
