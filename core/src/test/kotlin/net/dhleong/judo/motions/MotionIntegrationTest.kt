@@ -471,6 +471,46 @@ class MotionIntegrationTest {
             .isEqualTo("word3" to 0)
     }
 
+    @Test fun deleteAndPasteForward() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("dwwp"))
+        assertThat(judo.registers.unnamed.value.toString())
+            .isEqualTo("word ")
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 wword ord3" to 11)
+    }
+
+    @Test fun deleteAndPasteBack() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("dwwP"))
+        assertThat(judo.registers.unnamed.value.toString())
+            .isEqualTo("word ")
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word word3" to 11)
+    }
+
+    @Test fun deleteAndPasteEmpty() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("ddp"))
+        assertThat(judo.registers.unnamed.value.toString())
+            .isEqualTo("word word2 word3")
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 16)
+    }
+
+    @Test fun deleteAndPasteEmpty_back() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("ddP"))
+        assertThat(judo.registers.unnamed.value.toString())
+            .isEqualTo("word word2 word3")
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 16)
+    }
+
     @Test fun replaceChar() {
         judo.setInput("word word2 word3", 5)
 

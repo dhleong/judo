@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.util.key
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -12,7 +13,8 @@ import javax.swing.KeyStroke
  */
 class InputBufferTest {
 
-    val buffer = InputBuffer()
+    val registers = RegisterManager()
+    val buffer = InputBuffer(registers)
 
     @Before fun setUp() {
         buffer.clear()
@@ -71,6 +73,15 @@ class InputBufferTest {
         assertThat(buffer.toString())
             .isEqualTo("0123 101112")
         assertThat(buffer.cursor).isEqualTo(5)
+    }
+
+    @Test fun deleteIntoRegister() {
+        buffer.set("0123 5678 101112")
+        buffer.cursor = 5
+
+        buffer.deleteWithCursor(5..10)
+        assertThat(registers.unnamed.value.toString())
+            .isEqualTo("5678 ")
     }
 }
 

@@ -103,6 +103,17 @@ class NormalMode(
         keys("n") to withCount { count -> continueSearch(count) },
         keys("N") to withCount { count -> continueSearch(-count) },
 
+        keys("p") to withCount { count ->
+            val value = judo.registers.current.value.repeat(count)
+            buffer.insert(minOf(buffer.size, buffer.cursor + 1), value)
+            buffer.cursor += value.length
+        },
+        keys("P") to withCount { count ->
+            val value = judo.registers.current.value.repeat(count)
+            buffer.insert(buffer.cursor, value)
+            buffer.cursor += value.length
+        },
+
         keys("r") to actionOnCount(::xCharMotion, 1) { _, range ->
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
