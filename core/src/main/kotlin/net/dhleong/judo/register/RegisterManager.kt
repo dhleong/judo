@@ -4,8 +4,13 @@ package net.dhleong.judo.register
  * @author dhleong
  */
 class RegisterManager : IRegisterManager {
-    private val registers = mutableMapOf<Char, IRegister>(
-        // this is not strictly correct, but good enough for now
+
+    private val registers = mutableMapOf(
+        '"' to SimpleRegister(), // the unnamed register is just a Simple one
+        '_' to BlackHoleRegister(),
+
+        // NOTE: this is not strictly correct; I think * is supposed to be
+        // the "selection" register on X11 systems....
         '*' to ClipboardRegister(),
         '+' to ClipboardRegister()
     )
@@ -18,6 +23,5 @@ class RegisterManager : IRegisterManager {
             it
         }
     }
-
 }
 

@@ -7,6 +7,27 @@ import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
 
 /**
+ * The black hole register `_` ignores any set attempts,
+ *  and always contains only the empty string
+ *
+ * @author dhleong
+ */
+class BlackHoleRegister : IRegister {
+    override var value: CharSequence
+        get() = ""
+        set(value) {}
+
+    override fun copyFrom(sequence: CharSequence, start: Int, end: Int) {
+        // nop
+    }
+}
+
+/**
+ * Reads to and writes from the system clipboard.
+ * Unfortunately, reads from the clipboard seem to be
+ * unreasonably slow, which makes the idea of using
+ * `clipboard=unnamed` somewhat unappealing....
+ *
  * @author dhleong
  */
 class ClipboardRegister : IRegister {
