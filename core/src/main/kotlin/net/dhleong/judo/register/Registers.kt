@@ -1,6 +1,7 @@
 package net.dhleong.judo.register
 
 import java.awt.Toolkit
+import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.datatransfer.UnsupportedFlavorException
@@ -53,7 +54,7 @@ class ClipboardRegister : IRegister {
             clipboard.setContents(selection, selection)
         }
 
-    private val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+    private val clipboard: Clipboard by lazy { Toolkit.getDefaultToolkit().systemClipboard }
 
     // strip out newlines
     private fun cleanClipboardContents(text: String): String =
