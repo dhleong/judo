@@ -1,6 +1,7 @@
 package net.dhleong.judo.mapping
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.MAP_AUTORENDER
 import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.net.MSDP_VAL
 import net.dhleong.judo.net.MSDP_VAR
@@ -31,6 +32,13 @@ class AutomagicMapper(
             judo.events.unregister(k, v)
         }
         registered.clear()
+    }
+
+    /**
+     * We received a command to move in a direction
+     */
+    fun onMove(cmd: String) {
+        mapStrategy?.onMove(cmd)
     }
 
     fun onMsdpAvailable() {
@@ -76,18 +84,14 @@ class AutomagicMapper(
     }
 
     fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
-        judo.echoRaw("onRoom: $vnum ($name) = $exits")
-
-        val strategy: MapStrategy
-        val existing = mapStrategy
-        if (existing == null) {
-            strategy = createStrategy(exits)
-            mapStrategy = strategy
-        } else {
-            strategy = existing
-        }
+        val strategy = mapStrategy
+            ?: createStrategy(exits).also { mapStrategy = it }
 
         strategy.onRoom(vnum, name, exits)
+
+        if (judo.state[MAP_AUTORENDER]) {
+            mapper.render()
+        }
     }
 
     /*
@@ -180,6 +184,9 @@ class AutomagicMapper(
 
 interface MapStrategy {
     fun onRoom(vnum: Int, name: String, exits: Map<String, Any>)
+    fun onMove(cmd: String) {
+        // ignore by default
+    }
 }
 
 internal class EasyMapStrategy(private val mapper: AutomagicMapper) : MapStrategy {
@@ -198,7 +205,7 @@ internal class EasyMapStrategy(private val mapper: AutomagicMapper) : MapStrateg
                 }
             }
 
-            map.add(JudoRoom(vnum, name, actualExits))
+            map += JudoRoom(vnum, name, actualExits)
         }
 
         map.inRoom = vnum
@@ -207,9 +214,45 @@ internal class EasyMapStrategy(private val mapper: AutomagicMapper) : MapStrateg
 }
 
 internal class DirectionalMapStrategy(private val mapper: AutomagicMapper) : MapStrategy {
+
+    var pendingMoves = mutableListOf<String>()
+
     override fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
-        // TODO this is a bit trickier since we aren't provided the vnums
+        // NOTE: this is a bit trickier since we aren't provided the vnums
         // for the exits, so we have to intuit the links
-        mapper.judo.echoRaw("TODO: directional map($vnum, $name) $exits")
+        val map = mapper.mapper.current!!
+        val room = map.currentRoom
+
+        if (pendingMoves.isEmpty() || pendingMoves.size > 1 || room == null) {
+            // easy case: no moves yet; either initial room, or some sort of teleport
+            // just go to there
+            if (vnum !in map) {
+                map += JudoRoom(vnum, name)
+            }
+
+            if (pendingMoves.size > 1) {
+                // we had multiple move commands, so don't bother trying
+                // to create exits; we might have hit a wall, for example
+            }
+        } else if (room.id != vnum) {
+            // normal case. one move, one room
+            val pendingMove = normalizeMoveCmd(pendingMoves[0])
+            val newRoom = map[vnum] ?: JudoRoom(vnum, name).also {
+                map += it
+            }
+            room.exits[pendingMove] = newRoom
+
+            val reverse = map.reverseCmds[pendingMove]
+            if (reverse != null && reverse in exits.keys.map { normalizeMoveCmd(it) }) {
+                newRoom.exits[reverse] = room
+            }
+        }
+
+        map.inRoom = vnum
+        pendingMoves.clear()
+    }
+
+    override fun onMove(cmd: String) {
+        pendingMoves.add(cmd)
     }
 }

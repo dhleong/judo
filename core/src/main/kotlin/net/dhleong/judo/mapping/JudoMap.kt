@@ -4,21 +4,18 @@ package net.dhleong.judo.mapping
  * @author dhleong
  */
 class JudoMap : IJudoMap {
-    companion object {
-        val reverseCmds = mutableMapOf(
-            "n" to "s",
-            "s" to "n",
-            "w" to "e",
-            "e" to "w",
-            "nw" to "se",
-            "se" to "nw",
-            "ne" to "sw",
-            "sw" to "ne",
-            "u" to "d",
-            "d" to "u"
-        )
-
-    }
+    override val reverseCmds = mutableMapOf(
+        "n" to "s",
+        "s" to "n",
+        "w" to "e",
+        "e" to "w",
+        "nw" to "se",
+        "se" to "nw",
+        "ne" to "sw",
+        "sw" to "ne",
+        "u" to "d",
+        "d" to "u"
+    )
 
     private val rooms = HashMap<Int, IJudoRoom>()
 
@@ -82,6 +79,10 @@ data class JudoRoom(
 ) : IJudoRoom
 
 class JudoExits : IJudoExits {
+
+    override val size: Int
+        get() = exits.size
+
     private val exits = HashMap<String, IJudoExit>()
 
     override fun contains(exitCmd: String): Boolean = exitCmd in exits
@@ -97,11 +98,13 @@ class JudoExits : IJudoExits {
         }
         return null
     }
+
     override fun set(cmd: String, exit: IJudoExit) {
-        exits[cmd.toLowerCase()] = exit
+        exits[normalizeMoveCmd(cmd)] = exit
     }
-    operator fun set(exitCmd: String, room: IJudoRoom) {
-        this[exitCmd] = JudoExit(room, exitCmd, exitCmd)
+
+    override operator fun set(cmd: String, exitRoom: IJudoRoom) {
+        this[cmd] = JudoExit(exitRoom, cmd, cmd)
     }
 
     override fun iterator(): Iterator<IJudoExit> = exits.values.iterator()
@@ -128,5 +131,22 @@ data class JudoExit(
             }
         }
         return dirs
+    }
+}
+
+fun normalizeMoveCmd(cmd: String): String = cmd.toLowerCase().let {
+    when(it) {
+        "north" -> "n"
+        "east" -> "e"
+        "south" -> "s"
+        "west" -> "w"
+        "northwest" -> "nw"
+        "northeast" -> "ne"
+        "southeast" -> "se"
+        "southwest" -> "sw"
+        "up" -> "u"
+        "down" -> "d"
+
+        else -> it
     }
 }

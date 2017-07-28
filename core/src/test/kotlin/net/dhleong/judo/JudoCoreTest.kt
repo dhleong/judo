@@ -22,7 +22,7 @@ class JudoCoreTest {
 
     @Before fun setUp() {
         renderer.output.clear()
-        judo = JudoCore(renderer, StateMap())
+        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
     }
 
     @Test fun appendOutput() {

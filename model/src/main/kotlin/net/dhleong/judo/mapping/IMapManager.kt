@@ -51,6 +51,13 @@ interface IMapManagerPublic {
     @Suppress("unused") fun load(file: String) = load(File(file))
 
     /**
+     * Render the current map
+     */
+    fun render()
+
+    fun resize(width: Int = -1, height: Int = -1)
+
+    /**
      * Write the current map to disk, overwriting the
      * one we previously loaded in
      */

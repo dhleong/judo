@@ -18,7 +18,7 @@ class SimpleJLineMapRendererTest {
     val ids = IdManager()
     val buffer = JudoBuffer(ids)
     val outputWindow = JudoWindow(
-        ids, StateMap(), 24, 24,
+        ids, StateMap(), 30, 24,
         buffer
     )
 
@@ -30,9 +30,11 @@ class SimpleJLineMapRendererTest {
     var noColor = ansi(0)
 
     @Before fun setUp() {
-        renderer = SimpleJLineMapRenderer()
+        renderer = SimpleJLineMapRenderer(
+            JLineRenderer(StateMap())
+        )
         outputWindow.currentBuffer.clear()
-        outputWindow.resize(24, 24)
+        outputWindow.resize(30, 24)
 
         roadColor = renderer.roadColor
         stairColor = renderer.stairColor
@@ -57,29 +59,29 @@ class SimpleJLineMapRendererTest {
         map.dig(center, "u", up)
         map.dig(left, "w", veryLeft)
 
-        val grid = MapGrid(4, 4)
+        val grid = MapGrid(6, 4)
         grid.buildAround(map, center)
 
         // render and verify
         renderer.appendGridInto(map, grid, outputWindow)
         assertThat(buffer.getStringContents())
             .containsSequence(
-                "           [ ]      ",
-                "            |       ",
-                "            |+      ",
-                " [#]--[ ]--[ ]--[ ] "
+                "                [ ]           ",
+                "                 |            ",
+                "                 |+           ",
+                "      [#]--[ ]--[ ]--[ ]      "
             )
 
         // after verifying the shape, verify the colors
         val ansi = buffer.getRawContents()
-        assertThat(ansi[4]).isEqualTo("           $wallColor[ ] $noColor     ")
-        assertThat(ansi[6]).isEqualTo("            $roadColor|$stairColor+ $noColor     ")
+        assertThat(ansi[4]).isEqualTo("                $wallColor[ ] $noColor          ")
+        assertThat(ansi[6]).isEqualTo("                 $roadColor|$stairColor+ $noColor          ")
         assertThat(ansi)
             .containsSequence(
-                "           $wallColor[ ] $noColor     ",
-                "            $roadColor|  $noColor     ",
-                "            $roadColor|$stairColor+ $noColor     ",
-                " $wallColor[$hereColor#$wallColor]$roadColor-$noColor$roadColor-$wallColor[ ]$roadColor-$noColor$roadColor-$wallColor[ ]$roadColor-$noColor$roadColor-$wallColor[ ] $noColor"
+                "                $wallColor[ ] $noColor          ",
+                "                 $roadColor|  $noColor          ",
+                "                 $roadColor|$stairColor+ $noColor          ",
+                "      $wallColor[$hereColor#$wallColor]$roadColor-$noColor$roadColor-$wallColor[ ]$roadColor-$noColor$roadColor-$wallColor[ ]$roadColor-$noColor$roadColor-$wallColor[ ] $noColor     "
             )
     }
 

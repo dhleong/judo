@@ -31,8 +31,8 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
     }
 
     /**
-     * Scroll the history by [dir], where positive numbers move to more recent
-     * items and negative numbers move to older, updating the attached InputBuffer
+     * Scroll the history by [dir], where positive numbers onMove to more recent
+     * items and negative numbers onMove to older, updating the attached InputBuffer
      */
     override fun scroll(dir: Int, clampCursor: Boolean) {
         if (lastBufferValue == null && dir < 0) {

@@ -4,6 +4,9 @@ import java.util.ArrayDeque
 
 private val FLAG_VISITED = 32
 
+val DEFAULT_MIN_MAP_HEIGHT = 9
+val DEFAULT_MIN_MAP_WIDTH = 6
+
 /**
  * @author dhleong
  */
@@ -20,7 +23,7 @@ class MapGrid(
     operator fun get(x: Int, y: Int): IJudoRoom? {
         if (x < 0 || x >= width) throw IndexOutOfBoundsException("x: $x (width=$width)")
         if (y < 0 || y >= height) throw IndexOutOfBoundsException("y: $y (height=$height)")
-        return grid[x + y * height]
+        return grid[x + y * width]
     }
 
     fun buildAround(map: IJudoMap, centerRoom: IJudoRoom) {
@@ -84,7 +87,7 @@ class MapGrid(
 
     private operator fun get(node: BuildNode): IJudoRoom? = this[node.x, node.y]
     internal operator fun set(x: Int, y: Int, room: IJudoRoom) {
-        grid[x + y * height] = room
+        grid[x + y * width] = room
     }
     private operator fun set(node: BuildNode, room: IJudoRoom) {
         this[node.x, node.y] = room

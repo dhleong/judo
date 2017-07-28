@@ -133,7 +133,7 @@ internal fun CharSequence.splitArgsInBraces(): Sequence<String> {
             val end = indexOf('}', startIndex = start)
             val arg = substring(start + 1, end)
 
-            // move along
+            // onMove along
             start = indexOf('{', startIndex = end)
 
             // return the arg

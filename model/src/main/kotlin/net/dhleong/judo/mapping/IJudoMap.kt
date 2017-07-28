@@ -5,6 +5,11 @@ package net.dhleong.judo.mapping
  */
 
 interface IJudoMap : Iterable<IJudoRoom> {
+    /**
+     * Map of a direction command to its reverse
+     */
+    val reverseCmds: Map<String, String>
+
     val size: Int
 
     var inRoom: Int?
@@ -31,9 +36,12 @@ interface IJudoRoom {
 }
 
 interface IJudoExits : Iterable<IJudoExit> {
+    val size: Int
+
     operator fun contains(exitCmd: String): Boolean
     operator fun get(cmd: String): IJudoExit?
     operator fun set(cmd: String, exit: IJudoExit)
+    operator fun set(cmd: String, exitRoom: IJudoRoom)
 
     /** Delete the exit with the given cmd, if we have it */
     fun remove(cmd: String): IJudoExit?

@@ -15,7 +15,7 @@ can be bound to do many different things, which very based on the current "mode.
 
 ### Normal Mode
 
-Normal Mode is largely identical to Vim's, where keys used to move around the input
+Normal Mode is largely identical to Vim's, where keys used to onMove around the input
 buffer and perform large editing *verbs*, or *actions*. A *verb* takes an *object*
 (more commonly referred to as *motions*), just like in most languages. For example,
 you use the `delete` verb (bound to the `d` key) with the `word` object (bound to

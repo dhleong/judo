@@ -25,6 +25,8 @@ val MAX_INPUT_LINES = declareSetting("inputlines", 1,
     "Maximum number of lines the input field can expand to before the text gets scrolled.")
 
 // map settings
+val MAP_AUTORENDER = declareSetting("map:autorender", false,
+    "Automatically render maps on move")
 val MAP_AUTOROOM = declareSetting("map:autoroom", false,
     "Auto create rooms in a map when moving in a direction.")
 val MAP_AUTOMAGIC = declareSetting("map:automagic", false,

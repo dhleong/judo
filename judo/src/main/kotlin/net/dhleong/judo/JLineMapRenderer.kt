@@ -1,29 +1,91 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_HEIGHT
+import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IJudoRoom
 import net.dhleong.judo.mapping.MapGrid
+import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.ansi
 
 /**
  *
  * @author dhleong
  */
-interface JLineMapRenderer {
+abstract class JLineMapRenderer(
+    protected val renderer: JLineRenderer,
+    protected var mapGrid: MapGrid
+) : MapRenderer {
 
-    val name: String
+    abstract val name: String
+    abstract val charsPerX: Int
+    abstract val charsPerY: Int
 
     /**
      * Append a text representation of the map grid
      * to the window
      */
-    fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoWindow)
+    abstract fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoWindow)
+
+    override fun renderMap(map: IJudoMap) {
+        renderer.inTransaction {
+            map.currentRoom?.let {
+                mapGrid.buildAround(map, it)
+                renderer.currentTabpage?.let {
+                    appendGridInto(map, mapGrid, it.currentWindow)
+                }
+            }
+        }
+    }
+
+    override fun resize(width: Int, height: Int) {
+        val newWidth = maxOf(DEFAULT_MIN_MAP_WIDTH,
+            if (width == -1) mapGrid.width
+            else width
+        )
+        val newHeight = maxOf(DEFAULT_MIN_MAP_HEIGHT,
+            if (height == -1) mapGrid.height
+            else height
+        )
+        mapGrid = MapGrid(newWidth / charsPerX, newHeight / charsPerY)
+    }
 }
 
-class SimpleJLineMapRenderer : JLineMapRenderer {
+class DelegateJLineMapRenderer(
+    renderer: JLineRenderer
+) : JLineMapRenderer(renderer, MapGrid(0, 0)) {
+
+    private var delegate: JLineMapRenderer = SimpleJLineMapRenderer(renderer, mapGrid)
+
+    init {
+        // pick a sane default size
+        resize(renderer.windowWidth, DEFAULT_MIN_MAP_HEIGHT)
+    }
+
+    override val name: String
+        get() = delegate.name
+    override val charsPerX: Int
+        get() = delegate.charsPerX
+    override val charsPerY: Int
+        get() = delegate.charsPerY
+
+    override fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoWindow) {
+        // TODO with multiple renderers, ensure we're using the one in the settings
+
+        delegate.appendGridInto(map, grid, window)
+    }
+}
+
+class SimpleJLineMapRenderer(
+    renderer: JLineRenderer,
+    mapGrid: MapGrid = MapGrid(DEFAULT_MIN_MAP_WIDTH, DEFAULT_MIN_MAP_HEIGHT)
+) : JLineMapRenderer(renderer, mapGrid) {
 
     override val name: String = "simple"
+    override val charsPerX = 5
+    override val charsPerY = 3
 
     internal val roadColor = ansi(0, fg = 7)
     internal val stairColor = ansi(1, fg = 7)
@@ -125,7 +187,7 @@ class SimpleJLineMapRenderer : JLineMapRenderer {
     private inline fun withBuffer(block: StringBuilder.() -> Unit): CharSequence {
         buffer.setLength(0)
         block(buffer)
-        return buffer
+        return OutputLine(buffer)
     }
 
 }

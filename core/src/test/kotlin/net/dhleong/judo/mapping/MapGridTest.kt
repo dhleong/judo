@@ -23,28 +23,38 @@ class MapGridTest {
         map.dig(center, "u", up)
         map.dig(left, "w", veryLeft)
 
-        val grid = MapGrid(4, 4)
+        val grid = MapGrid(6, 4)
         grid.buildAround(map, center)
 
         assertThat(grid[0, 0]).isNull()
         assertThat(grid[0, 1]).isNull()
-        assertThat(grid[0, 2]).isSameAs(veryLeft)
+        assertThat(grid[0, 2]).isNull()
         assertThat(grid[0, 3]).isNull()
 
         assertThat(grid[1, 0]).isNull()
         assertThat(grid[1, 1]).isNull()
-        assertThat(grid[1, 2]).isSameAs(left)
+        assertThat(grid[1, 2]).isSameAs(veryLeft)
         assertThat(grid[1, 3]).isNull()
 
         assertThat(grid[2, 0]).isNull()
-        assertThat(grid[2, 1]).isSameAs(top)
-        assertThat(grid[2, 2]).isSameAs(center)
+        assertThat(grid[2, 1]).isNull()
+        assertThat(grid[2, 2]).isSameAs(left)
         assertThat(grid[2, 3]).isNull()
 
         assertThat(grid[3, 0]).isNull()
-        assertThat(grid[3, 1]).isNull()
-        assertThat(grid[3, 2]).isSameAs(right)
+        assertThat(grid[3, 1]).isSameAs(top)
+        assertThat(grid[3, 2]).isSameAs(center)
         assertThat(grid[3, 3]).isNull()
+
+        assertThat(grid[4, 0]).isNull()
+        assertThat(grid[4, 1]).isNull()
+        assertThat(grid[4, 2]).isSameAs(right)
+        assertThat(grid[4, 3]).isNull()
+
+        assertThat(grid[5, 0]).isNull()
+        assertThat(grid[5, 1]).isNull()
+        assertThat(grid[5, 2]).isNull()
+        assertThat(grid[5, 3]).isNull()
     }
 
     @Test fun tunnel() {

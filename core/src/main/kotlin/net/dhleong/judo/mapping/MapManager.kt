@@ -2,6 +2,7 @@ package net.dhleong.judo.mapping
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.MAP_AUTOMAGIC
+import net.dhleong.judo.MAP_AUTORENDER
 import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.event.EVENT_MSDP_ENABLED
@@ -12,7 +13,8 @@ import java.io.File
  */
 class MapManager(
     private val judo: IJudoCore,
-    private val settings: StateMap
+    private val settings: StateMap,
+    private val mapRenderer: MapRenderer
 ) : IMapManager {
 
     override var current: IJudoMap? = null
@@ -60,6 +62,16 @@ class MapManager(
         init()
     }
 
+    override fun render() {
+        current?.let {
+            mapRenderer.renderMap(it)
+        }
+    }
+
+    override fun resize(width: Int, height: Int) {
+        mapRenderer.resize(width, height)
+    }
+
     override fun save() {
         val file = currentFile
         val format = currentFormat
@@ -79,26 +91,34 @@ class MapManager(
         }
     }
 
-
     override fun command(text: String) {
         val map = current ?: return
         val room = map.currentRoom ?: return
 
-        room.exits[text]?.let {
-            map.inRoom = it.room.id
-            return
-        }
-
-        if (settings[MAP_AUTOROOM]) {
+        val exit = room.exits[text]
+        if (exit != null) {
+            map.inRoom = exit.room.id
+        } else if (settings[MAP_AUTOROOM]) {
             val newRoom = JudoRoom(map.lastRoom + 1, text)
             map.dig(room, text, newRoom)
             map.inRoom = newRoom.id
+        }
+
+        magicMapper?.let {
+            if (text in map.reverseCmds) {
+                it.onMove(text)
+            }
+        }
+
+        if (settings[MAP_AUTORENDER]) {
+            render()
         }
     }
 
     override fun maybeCommand(text: String) {
         // TODO support user-provided reverseCmds
-        if (text in JudoMap.reverseCmds) {
+        val map = current ?: return
+        if (text in map.reverseCmds) {
             command(text)
         }
     }

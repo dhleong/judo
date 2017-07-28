@@ -49,8 +49,14 @@ class PythonCmdModeObjectTest {
             judo.mapper.createEmpty()
             judo.mapper.saveAs("${file.absolutePath}")
             """.trimIndent())
-
         assertThat(file).exists()
+
+        mode.execute("""
+            echo(judo.mapper.current is not None)
+            """.trimIndent())
+
+        assertThat(judo.echos).containsExactly(true)
+
         file.delete()
     }
 
