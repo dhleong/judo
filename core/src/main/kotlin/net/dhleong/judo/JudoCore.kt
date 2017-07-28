@@ -611,6 +611,7 @@ class JudoCore(
 
             onMainThread {
                 events.raise("DISCONNECTED")
+                events.clear()
             }
         }
 
