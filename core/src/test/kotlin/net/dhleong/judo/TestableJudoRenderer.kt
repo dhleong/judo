@@ -23,12 +23,7 @@ class TestableJudoRenderer(
     val inputLine: Pair<String, Int>
         get() = state.inputLine
 
-    val mapRenderer: MapRenderer =
-        Proxy.newProxyInstance(
-            ClassLoader.getSystemClassLoader(),
-            arrayOf(MapRenderer::class.java)
-        ) { _, _, _ -> } as MapRenderer
-
+    val mapRenderer: MapRenderer = Proxy { _, _ -> }
 
     val output: JudoBuffer
         get() = state.output
@@ -47,10 +42,7 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
 }
 
 private fun createRendererProxy(state: RendererState): JudoRenderer {
-    return Proxy.newProxyInstance(
-        ClassLoader.getSystemClassLoader(),
-        arrayOf(JudoRenderer::class.java)
-    ) { _, method, args ->
+    return Proxy { method, args ->
         when (method.name) {
 
             "getWindowWidth" -> state.windowWidth
@@ -70,5 +62,5 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
 
             else -> null // ignore
         }
-    } as JudoRenderer
+    }
 }

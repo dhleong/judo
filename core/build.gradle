@@ -19,6 +19,7 @@ dependencies {
     compile deps.guava
     compile deps.jline
     compile deps.jython
+    compile deps.moshi
     compile deps.commonsNet
 
     testCompile deps.test.junit
