@@ -6,6 +6,7 @@ import net.dhleong.judo.MAP_AUTORENDER
 import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.event.EVENT_MSDP_ENABLED
+import net.dhleong.judo.render.IJudoWindow
 import java.io.File
 
 /**
@@ -62,9 +63,9 @@ class MapManager(
         init()
     }
 
-    override fun render() {
+    override fun render(intoWindow: IJudoWindow?) {
         current?.let {
-            mapRenderer.renderMap(it)
+            mapRenderer.renderMap(it, intoWindow)
         }
     }
 
