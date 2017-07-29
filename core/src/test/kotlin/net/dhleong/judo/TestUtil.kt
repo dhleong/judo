@@ -17,6 +17,6 @@ inline fun <reified T> Proxy(crossinline methodHandler: (method: Method, args: A
         ClassLoader.getSystemClassLoader(),
         arrayOf(T::class.java),
         { _, method, args ->
-            methodHandler(method, args)
+            methodHandler(method, args ?: emptyArray())
         }
     ) as T

@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.alias.AliasManager
+import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
@@ -18,6 +19,14 @@ import net.dhleong.judo.trigger.TriggerManager
 
 class TestableJudoCore : IJudoCore by Proxy<IJudoCore>() {
 
+    private val actualEvents = EventManager()
+    inner class TestableEventManager : IEventManager by actualEvents {
+        override fun raise(eventName: String, data: Any?) {
+            raised.add(eventName to data)
+            actualEvents.raise(eventName, data)
+        }
+    }
+
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<Array<Any>>()
@@ -28,11 +37,7 @@ class TestableJudoCore : IJudoCore by Proxy<IJudoCore>() {
     override val state = StateMap()
 
     override val aliases = AliasManager()
-    override val events = Proxy<IEventManager> { method, args ->
-        if (method.name == "raise") {
-            raised.add(args[0] as String to args[1])
-        }
-    }
+    override val events = TestableEventManager()
     override val mapper = MapManager(this, state, mapRenderer)
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
@@ -54,7 +59,7 @@ class TestableJudoCore : IJudoCore by Proxy<IJudoCore>() {
         maps.removeIf { it[0] == mode && it[1] == from }
     }
 
-    // just execute directly for testing
+
     override fun onMainThread(runnable: () -> Unit) = runnable()
 
     override fun send(text: String, fromMap: Boolean) {
