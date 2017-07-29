@@ -1,5 +1,6 @@
 package net.dhleong.judo.mapping
 
+import net.dhleong.judo.DEBUG_AUTOMAGIC
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.MAP_AUTORENDER
 import net.dhleong.judo.event.EventHandler
@@ -84,6 +85,10 @@ class AutomagicMapper(
     }
 
     fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
+        if (judo.state[DEBUG_AUTOMAGIC]) {
+            judo.echoRaw("onRoom($vnum, $name) $exits")
+        }
+
         val strategy = mapStrategy
             ?: createStrategy(exits).also { mapStrategy = it }
 
@@ -253,6 +258,16 @@ internal class DirectionalMapStrategy(private val mapper: AutomagicMapper) : Map
     }
 
     override fun onMove(cmd: String) {
+        val map = mapper.mapper.current!!
+        map.currentRoom?.let { room ->
+            val dir = normalizeMoveCmd(cmd)
+            room.exits[dir]?.let {
+                // just follow a known link
+                map.inRoom = it.room.id
+                return
+            }
+        }
+
         pendingMoves.add(cmd)
     }
 }

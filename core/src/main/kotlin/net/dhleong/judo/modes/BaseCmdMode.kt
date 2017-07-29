@@ -503,7 +503,11 @@ abstract class BaseCmdMode(
             else -> {
                 judo.echo("Settings")
                 judo.echo("========")
-                ALL_SETTINGS.keys.forEach(this::echoSettingValue)
+
+                ALL_SETTINGS
+                    .filter { it.value.description.isNotEmpty() }
+                    .map { it.key }
+                    .forEach(this::echoSettingValue)
             }
         }
 

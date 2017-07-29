@@ -32,6 +32,9 @@ val MAP_AUTOROOM = declareSetting("map:autoroom", false,
 val MAP_AUTOMAGIC = declareSetting("map:automagic", false,
     "If enabled, attempt to automagically create maps using MSDP. MUST be set BEFORE creating or loading a map.")
 
+// debug flags
+val DEBUG_AUTOMAGIC = declareSetting("debug:automagic", false)
+
 /**
  * @param userName User-facing setting name; used as `set([userName], value)`
  */
