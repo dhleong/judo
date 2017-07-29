@@ -12,6 +12,8 @@ class EventManager : IEventManager {
     private val events = HashMultimap.create<String, EventHandler>()
     private val eventThreadId = Thread.currentThread().id
 
+    private val raiseEventsWorkspace = ArrayList<EventHandler>()
+
     override fun clear() {
         events.clear()
     }
@@ -32,7 +34,15 @@ class EventManager : IEventManager {
         }
 
         events[eventName]?.let { handlers ->
-            handlers.forEach { it(data) }
+            // NOTE since we enforce use from a single thread, we can safely
+            // reuse the same collection for all raise() calls. We copy to this
+            // collection so handlers can register/deregister event handlers without
+            // triggering a concurrent modification exception
+            raiseEventsWorkspace.let { workspace ->
+                workspace.addAll(handlers)
+                workspace.forEach { it(data) }
+                workspace.clear()
+            }
         }
     }
 

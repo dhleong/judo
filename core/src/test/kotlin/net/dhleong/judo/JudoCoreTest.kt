@@ -22,7 +22,7 @@ class JudoCoreTest {
 
     @Before fun setUp() {
         renderer.output.clear()
-        judo = JudoCore(renderer, StateMap())
+        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
     }
 
     @Test fun appendOutput() {
@@ -149,6 +149,9 @@ class JudoCoreTest {
             override val input: InputStream
                 get() = TODO("not implemented")
             override val output: OutputStream
+                get() = TODO("not implemented")
+
+            override val isMsdpEnabled: Boolean
                 get() = TODO("not implemented")
 
             override fun setWindowSize(width: Int, height: Int) {

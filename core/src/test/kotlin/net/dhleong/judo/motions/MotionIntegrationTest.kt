@@ -23,7 +23,7 @@ class MotionIntegrationTest {
     lateinit var judo: JudoCore
 
     @Before fun setUp() {
-        judo = JudoCore(renderer, StateMap())
+        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
     }
 
     @After fun tearDown() {

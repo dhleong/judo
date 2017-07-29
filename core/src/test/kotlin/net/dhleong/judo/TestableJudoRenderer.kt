@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
@@ -21,6 +22,13 @@ class TestableJudoRenderer(
 
     val inputLine: Pair<String, Int>
         get() = state.inputLine
+
+    val mapRenderer: MapRenderer =
+        Proxy.newProxyInstance(
+            ClassLoader.getSystemClassLoader(),
+            arrayOf(MapRenderer::class.java)
+        ) { _, _, _ -> } as MapRenderer
+
 
     val output: JudoBuffer
         get() = state.output

@@ -74,6 +74,9 @@ class MsdpHandler(
         }
     }
 
+    val isMsdpEnabled: Boolean
+        get() = commands != null
+
     private val varReader = MsdpReader()
     private var commands: List<String>? = null
 
@@ -125,7 +128,7 @@ class MsdpHandler(
     }
 }
 
-internal fun buildMsdpRequest(key: String, value: String) =
+fun buildMsdpRequest(key: String, value: String) =
     with(ArrayList<Int>(3 + key.length + value.length)) {
         add(TELNET_TELOPT_MSDP.toInt())
         add(MSDP_VAR)

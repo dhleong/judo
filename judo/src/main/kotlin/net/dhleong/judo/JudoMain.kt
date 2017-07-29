@@ -21,6 +21,8 @@ fun main(args: Array<String>) {
     val renderer = JLineRenderer(settings)
     renderer.validate()
 
+    val mapRenderer = DelegateJLineMapRenderer(renderer)
+
     // clean up after ourselves
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
@@ -40,7 +42,12 @@ fun main(args: Array<String>) {
     }
 
     // the main thing
-    val judo = JudoCore(renderer, settings, debug = debugLevel)
+    val judo = JudoCore(
+        renderer,
+        mapRenderer,
+        settings,
+        debug = debugLevel
+    )
 
     // if they have a global init.py, read it
     if (USER_CONFIG_FILE.exists()) {

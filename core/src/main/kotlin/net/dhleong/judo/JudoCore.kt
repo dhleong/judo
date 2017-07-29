@@ -12,6 +12,8 @@ import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.logging.LogManager
+import net.dhleong.judo.mapping.MapManager
+import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.BaseCmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -63,6 +65,7 @@ enum class DebugLevel {
 
 class JudoCore(
     override val renderer: JudoRenderer,
+    mapRenderer: MapRenderer,
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
@@ -70,6 +73,7 @@ class JudoCore(
     override val aliases = AliasManager()
     override val events = EventManager()
     override val logging = LogManager()
+    override val mapper = MapManager(this, settings, mapRenderer)
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
     override val registers = RegisterManager(settings)
@@ -184,6 +188,10 @@ class JudoCore(
             renderer.inTransaction {
                 updateStatusLine(currentMode)
                 updateInputLine()
+
+                rendererTabpage?.currentWindow?.let {
+                    mapper.resize(width = it.width)
+                }
             }
         }
 
@@ -436,6 +444,8 @@ class JudoCore(
         }
 
         if (doSend) {
+            mapper.maybeCommand(toSend)
+
             connection?.let {
                 it.send(toSend)
                 return
@@ -585,7 +595,8 @@ class JudoCore(
             return
         }
 
-        throw IllegalArgumentException("No such mode $mode")    }
+        throw IllegalArgumentException("No such mode $mode")
+    }
 
     @Synchronized internal fun onDisconnect(connection: Connection) {
         doEcho = true
@@ -607,6 +618,11 @@ class JudoCore(
 
             onMainThread {
                 events.raise("DISCONNECTED")
+                events.clear()
+
+                // don't clear mapper until after we've fired
+                // any disconnect events
+                mapper.clear()
             }
         }
 

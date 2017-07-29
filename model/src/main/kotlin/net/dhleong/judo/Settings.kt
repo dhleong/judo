@@ -15,13 +15,25 @@ val ALL_SETTINGS = mutableMapOf<String, Setting<*>>()
 val CLIPBOARD = declareSetting("clipboard", "",
     "If set to 'unnamed', cuts and pastes will default to the * register")
 
-val WORD_WRAP = declareSetting("wordwrap", true)
+val WORD_WRAP = declareSetting("wordwrap", true,
+    "If false, output will go up to the edge of the window and words will be split.")
 
 val MODE_STACK = declareSetting("modestack", true,
     "If True, exitMode() returns to the previous mode; if False, always returns to Normal mode.")
 
 val MAX_INPUT_LINES = declareSetting("inputlines", 1,
     "Maximum number of lines the input field can expand to before the text gets scrolled.")
+
+// map settings
+val MAP_AUTORENDER = declareSetting("map:autorender", false,
+    "Automatically render maps on move")
+val MAP_AUTOROOM = declareSetting("map:autoroom", false,
+    "Auto create rooms in a map when moving in a direction.")
+val MAP_AUTOMAGIC = declareSetting("map:automagic", false,
+    "If enabled, attempt to automagically create maps using MSDP. MUST be set BEFORE creating or loading a map.")
+
+// debug flags
+val DEBUG_AUTOMAGIC = declareSetting("debug:automagic", false)
 
 /**
  * @param userName User-facing setting name; used as `set([userName], value)`
