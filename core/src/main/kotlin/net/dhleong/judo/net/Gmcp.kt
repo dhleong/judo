@@ -6,18 +6,18 @@ import okio.Okio
 import org.apache.commons.net.telnet.TelnetOptionHandler
 import java.io.ByteArrayInputStream
 
-val TELNET_TELOPT_GCMP = 201.toByte()
+val TELNET_TELOPT_GMCP = 201.toByte()
 
-class GcmpHandler(
+class GmcpHandler(
     private val judo: IJudoCore,
     private val isDebug: () -> Boolean,
     private val echoDebug: (String) -> Unit
 ) : TelnetOptionHandler(
-    TELNET_TELOPT_GCMP.toInt(),
+    TELNET_TELOPT_GMCP.toInt(),
     false,
     false,
     false,
-    true // accept WILL GCMP
+    true // accept WILL GMCP
 ) {
 
     val moshi = Moshi.Builder().build()
@@ -57,11 +57,11 @@ class GcmpHandler(
 
         judo.onMainThread {
             if (isDebug()) {
-                echoDebug("# GCMP: $packageName = $data")
+                echoDebug("# GMCP: $packageName = $data")
             }
 
-            judo.events.raise("GCMP", arrayOf(packageName, data))
-            judo.events.raise("GCMP:$packageName", data)
+            judo.events.raise("GMCP", arrayOf(packageName, data))
+            judo.events.raise("GMCP:$packageName", data)
         }
 
         return null

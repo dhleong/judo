@@ -155,7 +155,7 @@ class CommonsNetConnection(
             90 -> "MSP" // mud sound
             91 -> "MXP" // mud extension
             93 -> "ZMP" // zenith mud
-            201 -> "GCMP"
+            TELNET_TELOPT_GMCP.toInt() -> "GMCP"
             239 -> "EOR" // used for prompt marking
             249 -> "GA" // used for prompt marking
             else -> {

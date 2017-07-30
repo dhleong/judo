@@ -10,14 +10,14 @@ import org.junit.Test
  * @author dhleong
  */
 @Suppress("UNCHECKED_CAST")
-class GcmpHandlerTest {
+class GmcpHandlerTest {
 
     lateinit var judo: TestableJudoCore
-    lateinit var gcmp: GcmpHandler
+    lateinit var gmcp: GmcpHandler
 
     @Before fun setUp() {
         judo = TestableJudoCore()
-        gcmp = GcmpHandler(
+        gmcp = GmcpHandler(
             judo,
             { false },
             { _ -> }
@@ -25,53 +25,53 @@ class GcmpHandlerTest {
     }
 
     @Test fun packageOnly() {
-        gcmp.subnegotiate("net.dhleong.judo")
+        gmcp.subnegotiate("net.dhleong.judo")
 
         val catchall = judo.raised.removeAt(0)
-        assertThat(catchall.first).isEqualTo("GCMP")
+        assertThat(catchall.first).isEqualTo("GMCP")
         assertThat(catchall.second as Array<Any?>)
             .containsExactly("net.dhleong.judo", null)
 
         assertThat(judo.raised)
             .containsExactly(
-                "GCMP:net.dhleong.judo" to null)
+                "GMCP:net.dhleong.judo" to null)
     }
 
     @Test fun packageWithPrimitiveData() {
-        gcmp.subnegotiate("""net.dhleong.judo true""")
+        gmcp.subnegotiate("""net.dhleong.judo true""")
 
         val catchall = judo.raised.removeAt(0)
-        assertThat(catchall.first).isEqualTo("GCMP")
+        assertThat(catchall.first).isEqualTo("GMCP")
         assertThat(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", true)
 
         assertThat(judo.raised)
             .containsExactly(
-                "GCMP:net.dhleong.judo" to true)
+                "GMCP:net.dhleong.judo" to true)
     }
 
     @Test fun packageWithPrimitiveData_string() {
-        gcmp.subnegotiate("""net.dhleong.judo "string"""")
+        gmcp.subnegotiate("""net.dhleong.judo "string"""")
 
         val catchall = judo.raised.removeAt(0)
-        assertThat(catchall.first).isEqualTo("GCMP")
+        assertThat(catchall.first).isEqualTo("GMCP")
         assertThat(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", "string")
 
         assertThat(judo.raised)
             .containsExactly(
-                "GCMP:net.dhleong.judo" to "string")
+                "GMCP:net.dhleong.judo" to "string")
     }
 
     @Test fun packageWithMapData() {
-        gcmp.subnegotiate("""net.dhleong.judo {"foo": "bar"}""")
+        gmcp.subnegotiate("""net.dhleong.judo {"foo": "bar"}""")
 
         val catchall = judo.raised.removeAt(0)
-        assertThat(catchall.first).isEqualTo("GCMP")
+        assertThat(catchall.first).isEqualTo("GMCP")
         assertThat(catchall.second as Array<Any?>)
             .containsExactly("net.dhleong.judo", mapOf("foo" to "bar"))
 
         assertThat(judo.raised)
             .containsExactly(
-                "GCMP:net.dhleong.judo" to mapOf("foo" to "bar"))
+                "GMCP:net.dhleong.judo" to mapOf("foo" to "bar"))
     }
 
     fun TelnetOptionHandler.subnegotiate(string: String) {
