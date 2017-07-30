@@ -22,6 +22,7 @@ ext.vs = [
     guava: '22.0',
     jline: '3.3.0',
     jython: '2.7.1b3',
+    moshi: '1.5.0',
 ]
 
 ext.deps = [
@@ -33,6 +34,8 @@ ext.deps = [
 
     jline: "org.jline:jline:${vs.jline}",
     jython: "org.python:jython-standalone:${vs.jython}",
+
+    moshi: "com.squareup.moshi:moshi:${vs.moshi}",
 
     test: [
         assertj: 'org.assertj:assertj-core:2.4.1',

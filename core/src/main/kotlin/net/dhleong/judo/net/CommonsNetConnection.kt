@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoCore
 import net.dhleong.judo.JudoRendererInfo
 import org.apache.commons.net.telnet.EchoOptionHandler
 import org.apache.commons.net.telnet.SimpleOptionHandler
@@ -14,7 +15,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class CommonsNetConnection(
-    private val judo: IJudoCore,
+    judo: IJudoCore,
     private val address: String, private val port: Int,
     private val echo: (String) -> Unit
 ) : Connection() {
@@ -24,6 +25,8 @@ class CommonsNetConnection(
 
     override val isMsdpEnabled: Boolean
         get() = msdp.isMsdpEnabled
+    override val isGmcpEnabled: Boolean
+        get() = gmcp.isGmcpEnabled
 
     // NOTE: it's a bit weird storing this value in the socketFactory,
     // but we need to update it somehow....
@@ -36,6 +39,7 @@ class CommonsNetConnection(
     private val client = TelnetClient()
     private val socketFactory = MccpHandlingSocketFactory(echo)
 
+    private val gmcp: GmcpHandler
     private val msdp: MsdpHandler
 
     private var echoStateChanges = 0
@@ -59,8 +63,10 @@ class CommonsNetConnection(
 
         val mtts = MttsTermTypeHandler(judo.renderer, echoDebug)
         msdp = MsdpHandler(judo, { debug }, echoDebug)
+        gmcp = GmcpHandler(judo, { debug }, echoDebug)
         client.addOptionHandler(mtts)
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
+        client.addOptionHandler(gmcp)
         client.addOptionHandler(msdp)
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
@@ -155,7 +161,7 @@ class CommonsNetConnection(
             90 -> "MSP" // mud sound
             91 -> "MXP" // mud extension
             93 -> "ZMP" // zenith mud
-            201 -> "GCMP"
+            TELNET_TELOPT_GMCP -> "GMCP"
             239 -> "EOR" // used for prompt marking
             249 -> "GA" // used for prompt marking
             else -> {
@@ -214,7 +220,7 @@ class MttsTermTypeHandler(
 
     private fun getNameForCurrentState(): String =
         when (state) {
-            State.CLIENT_NAME -> "JUDO"
+            State.CLIENT_NAME -> JudoCore.CLIENT_NAME.toUpperCase()
             State.TERM_TYPE -> info.terminalType
             State.MTTS_BITVECTOR -> "MTTS ${buildBitVector()}"
         }

@@ -28,6 +28,7 @@ import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.IJudoBuffer
@@ -69,6 +70,10 @@ class JudoCore(
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
+    companion object {
+        val CLIENT_NAME = "Judo"
+        val CLIENT_VERSION = "0.1.0"
+    }
 
     override val aliases = AliasManager()
     override val events = EventManager()
@@ -598,7 +603,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    @Synchronized internal fun onDisconnect(connection: Connection) {
+    @Synchronized internal fun onDisconnect(connection: JudoConnection) {
         doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect

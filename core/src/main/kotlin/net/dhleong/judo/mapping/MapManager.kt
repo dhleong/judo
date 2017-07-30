@@ -5,6 +5,7 @@ import net.dhleong.judo.MAP_AUTOMAGIC
 import net.dhleong.judo.MAP_AUTORENDER
 import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.event.EVENT_GMCP_ENABLED
 import net.dhleong.judo.event.EVENT_MSDP_ENABLED
 import net.dhleong.judo.render.IJudoWindow
 import java.io.File
@@ -130,9 +131,12 @@ class MapManager(
         val mapper = AutomagicMapper(judo, this)
         magicMapper = mapper
 
-        if (judo.connection?.isMsdpEnabled ?: false) {
+        if (judo.connection?.isGmcpEnabled ?: false) {
+            mapper.onGmcpAvailable()
+        } else if (judo.connection?.isMsdpEnabled ?: false) {
             mapper.onMsdpAvailable()
         } else {
+            judo.events.register(EVENT_GMCP_ENABLED) { _ -> mapper.onGmcpAvailable() }
             judo.events.register(EVENT_MSDP_ENABLED) { _ -> mapper.onMsdpAvailable() }
         }
     }
