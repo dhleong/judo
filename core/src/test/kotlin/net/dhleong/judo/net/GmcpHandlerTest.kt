@@ -37,6 +37,19 @@ class GmcpHandlerTest {
                 "GMCP:net.dhleong.judo" to null)
     }
 
+    @Test fun packageOnlyWithSpaces() {
+        gmcp.subnegotiate(" net.dhleong.judo ")
+
+        val catchall = judo.raised.removeAt(0)
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>)
+            .containsExactly("net.dhleong.judo", null)
+
+        assertThat(judo.raised)
+            .containsExactly(
+                "GMCP:net.dhleong.judo" to null)
+    }
+
     @Test fun packageWithPrimitiveData() {
         gmcp.subnegotiate("""net.dhleong.judo true""")
 
@@ -75,7 +88,7 @@ class GmcpHandlerTest {
     }
 
     fun TelnetOptionHandler.subnegotiate(string: String) {
-        val intArray = string.map { it.toInt() }.toIntArray()
+        val intArray = (arrayOf(TELNET_TELOPT_GMCP) + string.map { it.toInt() }).toIntArray()
         answerSubnegotiation(intArray, intArray.size)
     }
 }

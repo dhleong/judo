@@ -1,29 +1,40 @@
 package net.dhleong.judo.net
 
-import com.squareup.moshi.Moshi
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoCore
+import net.dhleong.judo.event.EVENT_GMCP_ENABLED
+import net.dhleong.judo.util.Moshi
 import okio.Okio
 import org.apache.commons.net.telnet.TelnetOptionHandler
 import java.io.ByteArrayInputStream
+import java.io.EOFException
 
-val TELNET_TELOPT_GMCP = 201.toByte()
+val TELNET_TELOPT_GMCP = 201
 
 class GmcpHandler(
     private val judo: IJudoCore,
     private val isDebug: () -> Boolean,
     private val echoDebug: (String) -> Unit
 ) : TelnetOptionHandler(
-    TELNET_TELOPT_GMCP.toInt(),
+    TELNET_TELOPT_GMCP,
     false,
     false,
     false,
     true // accept WILL GMCP
 ) {
 
-    val moshi = Moshi.Builder().build()
+    private val GMCP_HELLO = buildGmcpRequest(
+        "Core.Hello",
+        mapOf(
+            "client" to JudoCore.CLIENT_NAME,
+            "version" to JudoCore.CLIENT_VERSION
+        )
+    )
 
     override fun answerSubnegotiation(suboptionData: IntArray, suboptionLength: Int): IntArray? {
-        val spaceSeparator = suboptionData.indexOf(' '.toInt())
+        // NOTE suboptionData[0] == MSDP *always*
+        val packageStart: Int = suboptionData.indexOfFirst(startIndex = 1) { it != ' '.toInt() }
+        val spaceSeparator = suboptionData.indexOf(' '.toInt(), startIndex = packageStart)
         val dataStart: Int
         val packageEnd: Int
         if (spaceSeparator < 0 || spaceSeparator >= suboptionLength) {
@@ -32,32 +43,40 @@ class GmcpHandler(
             dataStart = -1
         } else {
             packageEnd = spaceSeparator
-            dataStart = spaceSeparator + 1
+            dataStart = suboptionData.indexOfFirst(
+                startIndex = spaceSeparator
+            ) { it != ' '.toInt() }
         }
 
         val suboptionByteArray = suboptionData
             .map { it.toByte() }
             .toByteArray()
-        val packageName = String(suboptionByteArray, 0, packageEnd)
+        val packageName = String(
+            suboptionByteArray,
+            packageStart,
+            packageEnd - packageStart
+        )
 
         // parse data (if there is any)
         val data =
-            if (dataStart == -1) null
+            if (dataStart == -1 || dataStart >= suboptionLength) null
             else {
-                moshi.adapter(Any::class.java).fromJson(
-                    Okio.buffer(
+                try {
+                    Moshi.fromJson<Any>(
                         Okio.source(ByteArrayInputStream(
                             suboptionByteArray,
                             packageEnd + 1,
                             suboptionLength - packageEnd - 1
                         ))
                     )
-                )
+                } catch (e: EOFException) {
+                    null
+                }
             }
 
         judo.onMainThread {
             if (isDebug()) {
-                echoDebug("# GMCP: $packageName = $data")
+                echoDebug("# GMCP: `$packageName` = `$data`")
             }
 
             judo.events.raise("GMCP", arrayOf(packageName, data))
@@ -66,4 +85,47 @@ class GmcpHandler(
 
         return null
     }
+
+    override fun startSubnegotiationRemote(): IntArray? {
+        echoDebug("## TELNET > IAC SB GMCP Core.Hello ...")
+
+        judo.onMainThread {
+            judo.events.raise(EVENT_GMCP_ENABLED)
+        }
+
+        return GMCP_HELLO
+    }
+
+    fun buildGmcpRequest(packageName: String, value: Any?) =
+        with(ArrayList<Int>(packageName.length + 32)) {
+            add(TELNET_TELOPT_MSDP.toInt())
+            addAll(packageName.map { it.toInt() })
+            if (value != null) {
+                add(' '.toInt())
+                addAll(
+                    Moshi.toJson(value)
+                        .map { it.toInt() })
+            }
+            toIntArray()
+        }
+}
+
+fun IntArray.indexOf(element: Int, startIndex: Int = 0): Int {
+    @Suppress("LoopToCallChain")
+    for (index in startIndex..(size - 1)) {
+        if (element == this[index]) {
+            return index
+        }
+    }
+    return -1
+}
+
+inline fun IntArray.indexOfFirst(startIndex: Int = 0, predicate: (Int) -> Boolean): Int {
+    @Suppress("LoopToCallChain")
+    for (index in startIndex..(size - 1)) {
+        if (predicate(this[index])) {
+            return index
+        }
+    }
+    return -1
 }

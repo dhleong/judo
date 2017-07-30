@@ -81,6 +81,7 @@ class MsdpHandler(
     private var commands: List<String>? = null
 
     override fun answerSubnegotiation(suboptionData: IntArray, suboptionLength: Int): IntArray? {
+        // NOTE suboptionData[0] == MSDP *always*
         if (suboptionData[1] == MSDP_VAR) {
 
             varReader.reset(suboptionData, 2, suboptionLength)

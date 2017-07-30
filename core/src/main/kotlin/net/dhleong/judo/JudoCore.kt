@@ -69,6 +69,10 @@ class JudoCore(
     settings: StateMap,
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
+    companion object {
+        val CLIENT_NAME = "Judo"
+        val CLIENT_VERSION = "0.1.0"
+    }
 
     override val aliases = AliasManager()
     override val events = EventManager()
