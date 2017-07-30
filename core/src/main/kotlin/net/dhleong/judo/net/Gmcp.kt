@@ -3,7 +3,7 @@ package net.dhleong.judo.net
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.event.EVENT_GMCP_ENABLED
-import net.dhleong.judo.util.Moshi
+import net.dhleong.judo.util.Json
 import okio.Okio
 import org.apache.commons.net.telnet.TelnetOptionHandler
 import java.io.ByteArrayInputStream
@@ -22,6 +22,9 @@ class GmcpHandler(
     false,
     true // accept WILL GMCP
 ) {
+
+    var isGmcpEnabled = false
+        private set
 
     private val GMCP_HELLO = buildGmcpRequest(
         "Core.Hello",
@@ -62,7 +65,7 @@ class GmcpHandler(
             if (dataStart == -1 || dataStart >= suboptionLength) null
             else {
                 try {
-                    Moshi.fromJson<Any>(
+                    Json.read<Any>(
                         Okio.source(ByteArrayInputStream(
                             suboptionByteArray,
                             packageEnd + 1,
@@ -89,6 +92,8 @@ class GmcpHandler(
     override fun startSubnegotiationRemote(): IntArray? {
         echoDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 
+        isGmcpEnabled = true
+
         judo.onMainThread {
             judo.events.raise(EVENT_GMCP_ENABLED)
         }
@@ -103,7 +108,7 @@ class GmcpHandler(
             if (value != null) {
                 add(' '.toInt())
                 addAll(
-                    Moshi.toJson(value)
+                    Json.write(value)
                         .map { it.toInt() })
             }
             toIntArray()

@@ -28,6 +28,7 @@ import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.IJudoBuffer
@@ -602,7 +603,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    @Synchronized internal fun onDisconnect(connection: Connection) {
+    @Synchronized internal fun onDisconnect(connection: JudoConnection) {
         doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect

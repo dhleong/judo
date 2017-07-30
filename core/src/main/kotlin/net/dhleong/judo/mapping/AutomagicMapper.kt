@@ -9,7 +9,9 @@ import net.dhleong.judo.net.MSDP_VAR
 import net.dhleong.judo.net.TELNET_IAC
 import net.dhleong.judo.net.TELNET_SB
 import net.dhleong.judo.net.TELNET_SE
+import net.dhleong.judo.net.TELNET_TELOPT_GMCP
 import net.dhleong.judo.net.TELNET_TELOPT_MSDP
+import net.dhleong.judo.util.Json
 
 /**
  * @author dhleong
@@ -18,6 +20,14 @@ class AutomagicMapper(
     internal val judo: IJudoCore,
     internal val mapper: MapManager
 ) {
+    enum class State {
+        NONE,
+        GMCP,
+        MSDP_FETCH,
+        MSDP
+    }
+
+    private var state = State.NONE
 
     private var lastVnum: String? = null
     private var lastExits: Map<String, Any>? = null
@@ -42,7 +52,25 @@ class AutomagicMapper(
         mapStrategy?.onMove(cmd)
     }
 
+    fun onGmcpAvailable() {
+        if (state == State.MSDP || state == State.MSDP_FETCH) {
+            unregisterEvent("MSDP:REPORT_VARIABLES")
+
+            if (state == State.MSDP) {
+                sendMsdp("UNREPORT", "ROOM")
+            }
+        }
+
+        registerEvent("GMCP:room.info", this::onGmcpRoom)
+        sendGmcp("Core.Supports.Add", arrayOf("Room 1", "Room.Info 1"))
+    }
+
     fun onMsdpAvailable() {
+        if (state == State.GMCP) {
+            // if we have gmcp, we probably don't need msdp
+            return
+        }
+
         registerEvent("MSDP:REPORTABLE_VARIABLES", this::onVarsList)
         sendMsdp("LIST", "REPORTABLE_VARIABLES")
     }
@@ -65,6 +93,7 @@ class AutomagicMapper(
                 reportsName = true
             }
         } else {
+            state = State.NONE
             judo.echoRaw("No way to automap using $vars")
         }
     }
@@ -72,6 +101,23 @@ class AutomagicMapper(
     /*
      Room-based automapping
      */
+
+    @Suppress("UNCHECKED_CAST")
+    fun onGmcpRoom(room: Map<String, Any>) {
+        if ("num" !in room || "exits" !in room) {
+            state = State.NONE
+            judo.echoRaw("No way to automap using $room")
+            sendGmcp("Core.Supports.Remove",
+                arrayOf("Room", "Room.Info"))
+            return
+        }
+
+        val vnum = room["num"] as Int? ?: return
+        val exits = room["exits"] as Map<String, Any>? ?: return
+        val name = room["name"] as String? ?: return
+
+        onRoom(vnum, name, exits)
+    }
 
     @Suppress("UNCHECKED_CAST")
     fun onRoom(room: Map<String, Any>) {
@@ -164,6 +210,28 @@ class AutomagicMapper(
         fn(arg as T)
     }
 
+    private fun sendGmcp(packageName: String, value: Any? = null) =
+        judo.send(buildGmcp(packageName, value), true)
+
+    private fun buildGmcp(key: String, value: Any?): String {
+        return with(msdpWorkspace) {
+            setLength(0)
+
+            append(TELNET_IAC.toChar())
+            append(TELNET_SB.toChar())
+
+            append(TELNET_TELOPT_GMCP.toChar())
+            append(key)
+
+            if (value != null) {
+                append(' ')
+                append(Json.write(value))
+            }
+
+            append(TELNET_IAC.toChar())
+            append(TELNET_SE.toChar())
+        }.toString()
+    }
 
     private fun sendMsdp(key: String, value: String) =
         judo.send(buildMsdp(key, value), true)

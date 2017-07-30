@@ -7,8 +7,12 @@ import java.lang.reflect.Method
  */
 inline fun <reified T> Proxy(): T {
     return Proxy { method, _ ->
-        throw UnsupportedOperationException(
-            "${method.name} is not implemented")
+        if (method.name == "toString") {
+            "Proxy<${T::class.java}>()"
+        } else {
+            throw UnsupportedOperationException(
+                "${method.name} is not implemented")
+        }
     }
 }
 

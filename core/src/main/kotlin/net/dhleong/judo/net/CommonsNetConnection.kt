@@ -15,7 +15,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class CommonsNetConnection(
-    private val judo: IJudoCore,
+    judo: IJudoCore,
     private val address: String, private val port: Int,
     private val echo: (String) -> Unit
 ) : Connection() {
@@ -25,6 +25,8 @@ class CommonsNetConnection(
 
     override val isMsdpEnabled: Boolean
         get() = msdp.isMsdpEnabled
+    override val isGmcpEnabled: Boolean
+        get() = gmcp.isGmcpEnabled
 
     // NOTE: it's a bit weird storing this value in the socketFactory,
     // but we need to update it somehow....

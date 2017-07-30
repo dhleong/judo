@@ -1,6 +1,6 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.net.Connection
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
@@ -8,8 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
 import javax.swing.KeyStroke
 
 /**
@@ -145,23 +143,7 @@ class JudoCoreTest {
         judo.send("take land", fromMap = false)
         assertThat(history.size).isEqualTo(2)
 
-        judo.onDisconnect(object : Connection() {
-            override val input: InputStream
-                get() = TODO("not implemented")
-            override val output: OutputStream
-                get() = TODO("not implemented")
-
-            override val isMsdpEnabled: Boolean
-                get() = TODO("not implemented")
-
-            override fun setWindowSize(width: Int, height: Int) {
-                TODO("not implemented")
-            }
-
-            override fun close() {
-                TODO("not implemented")
-            }
-        })
+        judo.onDisconnect(Proxy<JudoConnection>())
 
         assertThat(tmpFile)
             .exists()

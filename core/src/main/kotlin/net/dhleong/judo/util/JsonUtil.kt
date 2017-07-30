@@ -10,8 +10,8 @@ import okio.Source
 /**
  * @author dhleong
  */
-object Moshi {
-    val instance: Moshi by lazy {
+object Json {
+    val moshi: Moshi by lazy {
         Moshi.Builder()
             .add(LinkedHashMap::class.java, object : JsonAdapter<LinkedHashMap<*, *>>() {
                 val delegate = Moshi.Builder().build().adapter(Map::class.java)
@@ -26,13 +26,13 @@ object Moshi {
             .build()
     }
 
-    inline fun <reified T> adapter() = instance.adapter<T>(T::class.java)!!
+    inline fun <reified T> adapter() = moshi.adapter<T>(T::class.java)!!
 
-    inline fun <reified T> fromJson(json: Source): T =
+    inline fun <reified T> read(json: Source): T =
         adapter<T>().fromJson(Okio.buffer(json))!!
 
-    fun toJson(value: Any) =
-        instance.adapter(value.javaClass)
+    fun write(value: Any) =
+        moshi.adapter(value.javaClass)
             .toJson(value)!!
 }
 

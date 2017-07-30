@@ -7,4 +7,5 @@ import java.io.Closeable
  */
 interface JudoConnection : Closeable {
     val isMsdpEnabled: Boolean
+    val isGmcpEnabled: Boolean
 }
