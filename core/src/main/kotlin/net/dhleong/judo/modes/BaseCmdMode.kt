@@ -253,11 +253,11 @@ private val COMMAND_HELP = mutableMapOf(
         "Send some text to the connected server."
     ),
 
-    "set" to buildHelp(
+    "config" to buildHelp(
         listOf(
-            "set(setting: String, value)",
-            "set(setting: String)",
-            "set"
+            "config(setting: String, value)",
+            "config(setting: String)",
+            "config"
         ),
         "Set or get the value of a setting, or list all settings"
     ),
@@ -491,12 +491,12 @@ abstract class BaseCmdMode(
         judo.echo("No files read; nothing to reload")
     }
 
-    protected fun set(args: Array<Any>) =
+    protected fun config(args: Array<Any>) =
         when (args.size) {
             1 -> echoSettingValue(args[0] as String)
             2 -> {
                 val settingName = args[0] as String
-                set(settingName, args[1])
+                config(settingName, args[1])
                 echoSettingValue(settingName)
             }
 
@@ -525,7 +525,7 @@ abstract class BaseCmdMode(
             judo.echo("${setting.userName} = $valueDisp$isDefaultFlag")
         }
 
-    fun set(settingName: String, value: Any) {
+    fun config(settingName: String, value: Any) {
         withSetting(settingName) {
             if (!it.type.isAssignableFrom(value.javaClass)) {
                 throw ScriptExecutionException(

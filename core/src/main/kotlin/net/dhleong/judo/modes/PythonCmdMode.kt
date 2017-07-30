@@ -131,6 +131,7 @@ class PythonCmdMode(
             judo.unmap(it[0], it[1])
         }
 
+        globals["config"] = asUnitPyFn<Any>(2, minArgs = 0) { config(it) }
         globals["connect"] = asUnitPyFn<Any>(2) { judo.connect(it[0] as String, it[1] as Int) }
         globals["complete"] = asUnitPyFn<String>(1) { judo.seedCompletion(it[0]) }
         globals["createUserMode"] = asUnitPyFn<String>(1) { judo.createUserMode(it[0]) }
@@ -170,7 +171,6 @@ class PythonCmdMode(
         globals["reconnect"] = asUnitPyFn<Any> { judo.reconnect() }
         globals["reload"] = asUnitPyFn<Any> { reload() }
         globals["send"] = asUnitPyFn<String>(1) { judo.send(it[0], true) }
-        globals["set"] = asUnitPyFn<Any>(2, minArgs = 0) { set(it) }
         globals["startInsert"] = asUnitPyFn<Any> { judo.enterMode("insert") }
         globals["stopInsert"] = asUnitPyFn<Any> { judo.exitMode() }
         globals["unalias"] = asUnitPyFn<String>(1) { judo.aliases.undefine(it[0]) }

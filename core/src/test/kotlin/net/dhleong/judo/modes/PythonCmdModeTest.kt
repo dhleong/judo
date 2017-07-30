@@ -319,14 +319,14 @@ class PythonCmdModeTest {
         assertThat(WORD_WRAP !in judo.state).isTrue()
 
         assertThatThrownBy {
-            mode.execute("set('nonsense', True)")
+            mode.execute("config('nonsense', True)")
         }.hasMessageContaining("No such setting")
 
         assertThatThrownBy {
-            mode.execute("set('wordwrap', 'string?')")
+            mode.execute("config('wordwrap', 'string?')")
         }.hasMessageContaining("is invalid for")
 
-        mode.execute("set('wordwrap', True)")
+        mode.execute("config('wordwrap', True)")
 
         assertThat(judo.state[WORD_WRAP]).isEqualTo(true)
     }
@@ -334,11 +334,11 @@ class PythonCmdModeTest {
     @Test fun echoSettings() {
         assertThat(WORD_WRAP !in judo.state).isTrue()
 
-        mode.execute("set('wordwrap')")
+        mode.execute("config('wordwrap')")
         assertThat(judo.echos).containsExactly("wordwrap = true (default)")
         judo.echos.clear()
 
-        mode.execute("set('wordwrap', False)")
+        mode.execute("config('wordwrap', False)")
         assertThat(judo.echos).containsExactly("wordwrap = false")
     }
 
