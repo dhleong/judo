@@ -74,6 +74,10 @@ private val COMMAND_HELP = mutableMapOf(
          --------------------------
          "CONNECTED"      ():            Connected to the server
          "DISCONNECTED"   ():            Disconnected to the server
+         "GMCP ENABLED    ():            The server declared support for GMCP
+         "GMCP            (name, value): A GMCP event was sent by the server
+         "GMCP:{pkgName}" (value):       The server sent the value of the GMCP
+                                         package {pkgName} (ex: "GMCP:room.info")
          "MSDP ENABLED"   ():            The server declared support for MSDP
          "MSDP"           (name, value): An MSDP variable was sent by the server.
          "MSDP:{varName}" (value):       The server sent the value of the MSDP
