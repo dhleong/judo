@@ -119,4 +119,4 @@ keys to the cardinal directions and keep my hands comfortably on the home row.
 [7]: http://vimcasts.org/
 [8]: https://kotlinlang.org/
 [9]: https://www.python.org/
-[10]: ./docs/Scripting.md
+[10]: ./docs/Scripting.md#custom-modes

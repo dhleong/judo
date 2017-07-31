@@ -21,8 +21,8 @@ Here's a list of features we definitely support:
     * This searches through the output window
 * Registers, including `"*` and `"+` for the clipboard
     * Note that both are identical on all platforms; we do not support X11 selections
-* Key Mappings (See [Scripting.md](Scripting.md))
-* Split Windows
+* Key Mappings (See [Scripting/Mappings](Scripting.md#mappings))
+* Split Windows (See [Scripting/Windows](Scripting.md#windows))
 
 ## Differences from Vim
 
