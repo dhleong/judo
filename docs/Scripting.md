@@ -201,6 +201,47 @@ id                     | `Int`         | The buffer's unique, numeric ID
 lines of text it contains.
 
 
+## Custom Modes
+
+Judo supports creating custom Modes, where the only pre-determined mapping
+is `<esc>` to get back to Normal Mode. You can create a simple "navigation
+mode" like so:
+
+```python
+createUserMode('nav')
+nnoremap('q', lambda: enterMode('nav'))  # use q to enter nav mode
+
+# all the direction mappings
+dirs = {'j': 's',
+        'k': 'n',
+        'h': 'w',
+        'l': 'e',
+        'u': 'nw',
+        'o': 'ne',
+        'n': 'sw',
+        ',': 'se',
+        's': 'down',
+        'w': 'up'}
+
+for key, dir in dirs.iteritems():
+    # create a function to send(); we could
+    # create a regular map that goes into insert mode,
+    # types the direction, hits enter, then returns to
+    # nav mode, but this is simpler:
+    def sendDir(d=dir): send(d)
+
+    # create the map
+    createMap('nav', key, sendDir)
+
+    # for fun, create an extra map so that, if we hold "shift"
+    # when pressing the direction, we try to open a door there.
+    if key == ',':
+        createMap('nav', '<', lambda d=dir: send('open ' + d))
+    else:
+        createMap('nav', key.upper(), lambda d=dir: send('open ' + d))
+```
+
+
 [1]: https://www.python.org
 [2]: http://tintin.sourceforge.net/msdp
 [3]: https://www.gammon.com.au/gmcp
