@@ -187,14 +187,6 @@ private fun JudoCore.appendOutput(buffer: String) =
     appendOutput(OutputLine(buffer))
 
 private fun fakeMode(name: String): Mode =
-    object : Mode {
+    object : Mode by Proxy() {
         override val name = name
-
-        override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
-            TODO("not implemented")
-        }
-
-        override fun onEnter() {
-            TODO("not implemented")
-        }
     }

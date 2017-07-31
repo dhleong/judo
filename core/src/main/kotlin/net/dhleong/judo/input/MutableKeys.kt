@@ -27,7 +27,7 @@ interface Keys : Collection<KeyStroke> {
 
             var inSpecial = false
             for (i in 0 until rawKeys.length) {
-                if (rawKeys[i] == '<' && !inSpecial) {
+                if (!inSpecial && startSpecial(rawKeys, i)) {
                     inSpecial = true
                 } else if (inSpecial && rawKeys[i] == '>' && buffer[buffer.length-1] != '\\') {
                     // parse special character in `buffer`
@@ -52,6 +52,28 @@ interface Keys : Collection<KeyStroke> {
             }
 
             return of(parsed)
+        }
+
+        private fun startSpecial(rawKeys: String, i: Int): Boolean {
+            // special char only starts on `<`
+            if (rawKeys[i] != '<') return false
+
+            // `<` must not have been escaped
+            if (i > 0 && rawKeys[i - 1] == '\\') return false
+
+            // look for a matching `>`; we start from 2 chars after
+            // the `<` to handle special case `<>`, which is probably
+            // not intended to be a special char sequence
+            @Suppress("LoopToCallChain")
+            for (j in (i + 2)..rawKeys.lastIndex) {
+                if (rawKeys[j] == '>' && rawKeys[j - 1] != '\\') {
+                    // we found a matching, non-escaped `>`;
+                    // this is a legit special char sequence
+                    return true
+                }
+            }
+
+            return false
         }
     }
 

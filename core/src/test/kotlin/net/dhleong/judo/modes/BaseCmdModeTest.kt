@@ -28,11 +28,11 @@ class BaseCmdModeTest {
             InputHistory(input)
         ) {
             override fun execute(code: String) {
-                TODO("not implemented")
+                throw UnsupportedOperationException()
             }
 
             override fun readFile(fileName: String, stream: InputStream) {
-                TODO("not implemented")
+                throw UnsupportedOperationException()
             }
         }
     }

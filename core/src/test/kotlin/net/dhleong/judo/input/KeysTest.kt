@@ -1,7 +1,6 @@
 package net.dhleong.judo.input
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -12,6 +11,10 @@ class KeysTest {
         assertThat(keys("<space>ps"))
             .isEqualTo(keys("<space>ps"))
             .isNotEqualTo(keys("<space>sp"))
+
+        assertThat(keys("<space>ps"))
+            .extracting { it.keyChar }
+            .containsExactly(' ', 'p', 's')
     }
 
     @Test fun parseSpecialKeys() {
@@ -26,7 +29,6 @@ class KeysTest {
             .containsExactly('>')
     }
 
-    @Ignore("TODO: keys(\"<<\")")
     @Test fun parseSequentialSpecial() {
         assertThat(keys("<<"))
             .extracting { it.keyChar }
