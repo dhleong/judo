@@ -97,8 +97,8 @@ great place to put common mappings, etc.
 
 ### Scripting
 
-Judo uses [Python][9] for configuration and scripting. More to come on this soon, but
-for now running `help` in Command Mode will get you started.
+Judo uses [Python][9] for configuration and scripting. See [Scripting.md][11] for more
+details, or run `help` in Command Mode to get started.
 
 
 ## Why
@@ -120,3 +120,4 @@ keys to the cardinal directions and keep my hands comfortably on the home row.
 [8]: https://kotlinlang.org/
 [9]: https://www.python.org/
 [10]: ./docs/Scripting.md#custom-modes
+[11]: ./docs/Scripting.md
