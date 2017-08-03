@@ -11,6 +11,7 @@ import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
+import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
@@ -84,9 +85,11 @@ class JudoCore(
     override val registers = RegisterManager(settings)
     override val state = settings
 
+    internal val undo = UndoManager()
+
     private val parsedPrompts = ArrayList<IStringBuilder>(2)
 
-    internal val buffer = InputBuffer(registers)
+    internal val buffer = InputBuffer(registers, undo)
     internal val cmdBuffer = InputBuffer()
 
     private val sendHistory = InputHistory(buffer)
@@ -509,17 +512,24 @@ class JudoCore(
             currentMode = newMode
         }
 
-        val keysIter = Keys.parse(keys).iterator()
-        readKeys(object : BlockingKeySource {
-            override fun readKey(): KeyStroke = keysIter.next()
-        }, remap = remap, fromMap = true) {
-            keysIter.hasNext()
-        }
+        feedKeys(
+            Keys.parse(keys).iterator(),
+            remap = remap,
+            fromMap = true
+        )
 
         if (mode != "") {
             // restore the old mode (but without calling onEnter and making it
             // reset its state)
             currentMode = oldMode
+        }
+    }
+
+    fun feedKeys(keys: Iterator<KeyStroke>, remap: Boolean, fromMap: Boolean) {
+        readKeys(object : BlockingKeySource {
+            override fun readKey(): KeyStroke = keys.next()
+        }, remap = remap, fromMap = fromMap) {
+            keys.hasNext()
         }
     }
 

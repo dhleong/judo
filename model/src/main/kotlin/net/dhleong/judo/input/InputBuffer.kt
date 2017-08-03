@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.register.IRegisterManager
 import java.awt.event.KeyEvent.VK_BACK_SPACE
 import javax.swing.KeyStroke
@@ -10,7 +11,10 @@ import kotlin.properties.Delegates
  *
  * @author dhleong
  */
-class InputBuffer(private val registers: IRegisterManager? = null) {
+class InputBuffer(
+    private val registers: IRegisterManager? = null,
+    val undoMan: UndoManager = UndoManager()
+) {
     var cursor: Int by Delegates.observable(0) { _, _, newValue ->
         if (newValue < 0 || newValue > size) {
             throw IllegalArgumentException(
@@ -89,6 +93,15 @@ class InputBuffer(private val registers: IRegisterManager? = null) {
                 range.start,
                 minOf(buffer.length, range.endInclusive + 1)
             )
+
+            undoMan.inChangeSet {
+                val insertValue = it.current.value.toString()
+                undoMan.current.addUndoAction {
+                    it.insert(range.start, insertValue)
+                    it.cursor = range.start
+                }
+            }
+
             it.resetCurrent()
         }
 

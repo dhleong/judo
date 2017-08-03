@@ -84,5 +84,28 @@ class InputBufferTest {
         assertThat(registers.unnamed.value.toString())
             .isEqualTo("5678 ")
     }
+
+    @Test fun undoDeletes() {
+        buffer.set("0123 5678 101112")
+        buffer.cursor = 0
+
+        buffer.deleteWithCursor(0..5)
+        buffer.deleteWithCursor(5..7)
+        assertThat(buffer.undoMan.size).isEqualTo(2)
+        assertThat(buffer.toString()).isEqualTo("5678 1112")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("5678 101112")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("0123 5678 101112")
+        assertThat(buffer.cursor).isEqualTo(0)
+
+        // just ensure further undo doesn't throw
+        assertThat(buffer.undoMan.size).isEqualTo(0)
+        buffer.undoMan.undo(buffer)
+    }
 }
 

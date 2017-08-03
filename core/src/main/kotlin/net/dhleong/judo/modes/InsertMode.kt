@@ -57,6 +57,10 @@ class InsertMode(
         suggester.reset()
     }
 
+    override fun onExit() {
+        buffer.undoMan.finishChange()
+    }
+
     override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {

@@ -26,10 +26,10 @@ import javax.swing.KeyStroke
  */
 
 class NormalMode(
-        judo: IJudoCore,
-        buffer: InputBuffer,
-        val history: InputHistory,
-        val opMode: OperatorPendingMode
+    judo: IJudoCore,
+    buffer: InputBuffer,
+    val history: InputHistory,
+    val opMode: OperatorPendingMode
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {
@@ -43,24 +43,29 @@ class NormalMode(
 
         keys("a") to { core ->
             applyMotion(charMotion(1), clampCursor = false)
+            buffer.undoMan.beginChangeSet()
             core.enterMode("insert")
         },
         keys("A") to { core ->
             // it's like $a
             applyMotion(toEndMotion())
             applyMotion(charMotion(1), clampCursor = false)
+            buffer.undoMan.beginChangeSet()
             core.enterMode("insert")
         },
 
         keys("c") to { core ->
             withOperator('c') { range ->
+                buffer.undoMan.beginChangeSet()
                 if (!buffer.deleteWithCursor(range, clampCursor = false)) {
+                    buffer.undoMan.cancelChange()
                     // TODO bell?
                 }
                 core.enterMode("insert")
             }
         },
         keys("C") to { core ->
+            buffer.undoMan.beginChangeSet()
             buffer.delete(rangeOf(toEndMotion()))
             core.enterMode("insert")
         },
@@ -90,9 +95,13 @@ class NormalMode(
 
         keys("G") to { core -> core.scrollToBottom() },
 
-        keys("i") to { core -> core.enterMode("insert") },
+        keys("i") to { core ->
+            buffer.undoMan.beginChangeSet()
+            core.enterMode("insert")
+        },
         keys("I") to { core ->
             applyMotion(toStartMotion())
+            buffer.undoMan.beginChangeSet()
             core.enterMode("insert")
         },
 
@@ -116,6 +125,8 @@ class NormalMode(
                 buffer.replace(range, char.repeat(range.endInclusive - range.start + 1))
             }
         },
+
+        keys("u") to asRepeatable { _ -> buffer.undoMan.undo(buffer) },
 
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
             buffer.delete(range)
@@ -256,6 +267,14 @@ class NormalMode(
             actionOn(motionWithCount, action).invoke(core)
         }
     }
+
+    private fun asRepeatable(action: KeyAction): KeyAction =
+        { judo ->
+            val repeats = count.toRepeatCount()
+            for (i in 1..repeats) {
+                action(judo)
+            }
+        }
 
     private fun withCount(action: (Int) -> Unit): KeyAction =
         { _ -> action.invoke(count.toRepeatCount()) }
