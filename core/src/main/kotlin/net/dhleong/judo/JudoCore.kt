@@ -65,6 +65,12 @@ enum class DebugLevel {
         get() = this != OFF
 }
 
+internal val UNRECORDED_KEY_CODES = arrayOf(
+    KeyEvent.VK_ESCAPE,
+    KeyEvent.VK_PAGE_UP,
+    KeyEvent.VK_PAGE_DOWN
+)
+
 class JudoCore(
     override val renderer: JudoRenderer,
     mapRenderer: MapRenderer,
@@ -488,7 +494,6 @@ class JudoCore(
             }
         }
 
-        undo.current += stroke
         currentMode.feedKey(stroke, remap, fromMap)
 
         // NOTE: currentMode might have changed as a result of feedKey
@@ -580,6 +585,9 @@ class JudoCore(
                     else break
                 }
             } else {
+                if (key.keyCode !in UNRECORDED_KEY_CODES) {
+                    undo.current += key
+                }
                 return key
             }
         }

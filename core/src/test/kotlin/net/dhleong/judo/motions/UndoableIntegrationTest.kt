@@ -4,7 +4,6 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.setInput
 import net.dhleong.judo.type
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -12,7 +11,6 @@ import org.junit.Test
  */
 class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
 
-    @Ignore("FIXME")
     @Test fun repeatChange() {
         judo.setInput("word word2 word3", 0)
 
@@ -23,7 +21,7 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         judo.type(keys("w.w."))
         assertThat(renderer.outputLines).isEmpty() // no errors
         assertThat(renderer.inputLine)
-            .isEqualTo("fun fun2 fun3" to 12)
+            .isEqualTo("fun fun2 fun3" to 11)
     }
 
     @Test fun repeatDeleteWord() {
