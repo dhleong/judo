@@ -41,8 +41,11 @@ class UndoManager {
 
     inline fun inChangeSet(block: () -> Unit) {
         beginChangeSet()
-        block()
-        finishChange()
+        try {
+            block()
+        } finally {
+            finishChange()
+        }
     }
 
     fun beginChangeSet() {
@@ -55,6 +58,11 @@ class UndoManager {
             return
         } else if (changeSetNesting < 0) {
             throw IllegalStateException("Unbalanced change!")
+        }
+
+        if (currentChange.isEmpty()) {
+            // actually, no change; don't bother
+            return
         }
 
         lastChange = currentChange
@@ -75,15 +83,14 @@ class UndoManager {
         undone.undo(input)
     }
 
-    // TODO
-//    fun repeat() {
-//        lastChange?.let {
-//            judo.feedKeys(
-//                it.keys.iterator(),
-//                remap = true,
-//                fromMap = true
-//            )
-//        }
-//    }
+    fun undoTransparently(block: () -> Unit) {
+        inChangeSet {
+            try {
+                block()
+            } finally {
+                cancelChange()
+            }
+        }
+    }
 }
 

@@ -1,15 +1,9 @@
 package net.dhleong.judo.motions
 
-import net.dhleong.judo.JudoCore
-import net.dhleong.judo.StateMap
-import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.input.keys
-import net.dhleong.judo.render.getAnsiContents
 import net.dhleong.judo.setInput
 import net.dhleong.judo.type
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 /**
@@ -17,19 +11,7 @@ import org.junit.Test
  *
  * @author dhleong
  */
-class MotionIntegrationTest {
-
-    val renderer = TestableJudoRenderer()
-    lateinit var judo: JudoCore
-
-    @Before fun setUp() {
-        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
-    }
-
-    @After fun tearDown() {
-        // if not empty, it contained errors
-        assertThat(renderer.output.getAnsiContents()).isEmpty()
-    }
+class MotionIntegrationTest : AbstractMotionIntegrationTest() {
 
     @Test fun altBackSpace() {
         judo.setInput("word word2 word3 word4", 22)

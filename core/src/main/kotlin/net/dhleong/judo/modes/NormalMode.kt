@@ -126,7 +126,7 @@ class NormalMode(
             }
         },
 
-        keys("u") to asRepeatable { _ -> buffer.undoMan.undo(buffer) },
+        keys("u") to countRepeatable { _ -> buffer.undoMan.undo(buffer) },
 
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
             buffer.delete(range)
@@ -134,6 +134,19 @@ class NormalMode(
         keys("X") to actionOnCount(::xCharMotion, -1) { _, range ->
             buffer.delete(range)
             buffer.cursor = range.endInclusive
+        },
+
+        keys(".") to countRepeatable { _ ->
+            buffer.undoMan.lastChange?.let {
+
+                // perform the previous change without tracking undo
+                buffer.undoMan.undoTransparently {
+                    judo.feedKeys(it.keys.asSequence(), remap = true)
+
+                    // NOTE: the `.` keystroke will be cleared
+                    // as part of cleanup from undoTransparently
+                }
+            }
         },
 
         keys("~") to actionOnCount(::charMotion, 1) { _, range ->
@@ -268,7 +281,11 @@ class NormalMode(
         }
     }
 
-    private fun asRepeatable(action: KeyAction): KeyAction =
+    /**
+     * Given a singular action, return an action which can repeat
+     * that action multiple times based on typed count
+     */
+    private fun countRepeatable(action: KeyAction): KeyAction =
         { judo ->
             val repeats = count.toRepeatCount()
             for (i in 1..repeats) {

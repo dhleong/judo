@@ -488,8 +488,8 @@ class JudoCore(
             }
         }
 
-        currentMode.feedKey(stroke, remap, fromMap)
         undo.current += stroke
+        currentMode.feedKey(stroke, remap, fromMap)
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
@@ -504,6 +504,14 @@ class JudoCore(
     }
 
     override fun feedKeys(keys: String, remap: Boolean, mode: String) {
+        feedKeys(
+            Keys.parse(keys).asSequence(),
+            remap = remap,
+            mode = mode
+        )
+    }
+
+    override fun feedKeys(keys: Sequence<KeyStroke>, remap: Boolean, mode: String) {
         val oldMode = currentMode
 
         if (mode != "") {
@@ -514,7 +522,7 @@ class JudoCore(
         }
 
         feedKeys(
-            Keys.parse(keys).iterator(),
+            keys.iterator(),
             remap = remap,
             fromMap = true
         )

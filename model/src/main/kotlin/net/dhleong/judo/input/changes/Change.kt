@@ -15,16 +15,19 @@ interface AmendableUndoable : Undoable
  * @author dhleong
  */
 class Change {
-    internal val keys = ArrayList<KeyStroke>()
+    internal val myKeys = ArrayList<KeyStroke>()
+
+    val keys: List<KeyStroke> = myKeys
 
     val undoables = ArrayList<Undoable>()
 
     fun clear() {
-        keys.clear()
+        myKeys.clear()
+        undoables.clear()
     }
 
     operator fun plusAssign(key: KeyStroke) {
-        keys += key
+        myKeys += key
     }
 
     /**
@@ -39,6 +42,8 @@ class Change {
     fun addUndoAction(undoable: Undoable) {
         undoables += undoable
     }
+
+    fun isEmpty() = undoables.isEmpty() && myKeys.isEmpty()
 
     fun undo(buffer: InputBuffer) {
         undoables.forEach { it.apply(buffer) }
