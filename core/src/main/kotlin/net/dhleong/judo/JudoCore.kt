@@ -489,6 +489,7 @@ class JudoCore(
         }
 
         currentMode.feedKey(stroke, remap, fromMap)
+        undo.current += stroke
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode

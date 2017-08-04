@@ -1,5 +1,6 @@
 package net.dhleong.judo.input
 
+import net.dhleong.judo.input.changes.AmendableUndoable
 import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.register.IRegisterManager
 import java.awt.event.KeyEvent.VK_BACK_SPACE
@@ -51,6 +52,7 @@ class InputBuffer(
                     buffer.setLength(--cursor)
                     buffer.append(after)
                 }
+                // TODO amend deletion undo
                 return
             }
         }
@@ -60,6 +62,7 @@ class InputBuffer(
         } else {
             buffer.insert(cursor, key.keyChar)
         }
+        amendInsertUndo(cursor, 1)
 
         ++cursor
     }
@@ -97,7 +100,7 @@ class InputBuffer(
             undoMan.inChangeSet {
                 val insertValue = it.current.value.toString()
                 undoMan.current.addUndoAction {
-                    it.insert(range.start, insertValue)
+                    it.buffer.insert(range.start, insertValue)
                     it.cursor = range.start
                 }
             }
@@ -126,17 +129,27 @@ class InputBuffer(
     }
 
     fun insert(index: Int, value: CharSequence) {
+        amendInsertUndo(index, value.length)
+
         buffer.insert(index, value)
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {
-        buffer.replace(range.start, range.endInclusive + 1, replacement.toString())
+        undoMan.inChangeSet {
+            val old = buffer.substring(range.start, range.endInclusive + 1)
+            undoMan.current.addUndoAction {
+                it.buffer.replace(range, old)
+                it.cursor = range.start
+            }
+        }
+
+        buffer.replace(range, replacement.toString())
     }
 
     fun replace(range: IntRange, transformer: (CharSequence) -> CharSequence) {
         val old = buffer.subSequence(range.start, range.endInclusive + 1)
         val new = transformer(old).toString()
-        buffer.replace(range.start, range.endInclusive + 1, new)
+        replace(range, new)
     }
 
     fun replaceWithCursor(range: IntRange, transformer: (CharSequence) -> CharSequence) {
@@ -160,6 +173,21 @@ class InputBuffer(
         }
     }
 
+    private fun amendInsertUndo(index: Int, length: Int) {
+        undoMan.inChangeSet {
+            undoMan.current.amendUndo<InsertUndoable> {
+                if (it.start == -1) {
+                    it.start = index
+                    it.length = length
+                } else if (index in it) {
+                    it.length += length
+                } else {
+                    undoMan.current.addUndoAction(InsertUndoable(index, length))
+                }
+            }
+        }
+    }
+
     private fun normalizeRange(range: IntRange): Pair<IntRange, Int>? {
         val bufferEnd = maxOf(0, buffer.lastIndex)
         if (range.start < range.endInclusive) {
@@ -175,4 +203,25 @@ class InputBuffer(
             return (range.endInclusive..end) to minOf(bufferEnd, range.endInclusive)
         }
     }
+
+    /**
+     * Undoes an insert action by deleting
+     */
+    internal class InsertUndoable(
+        var start: Int = -1,
+        var length: Int = 0
+    ) : AmendableUndoable {
+
+        operator fun contains(index: Int) =
+            index >= start && index <= start + length
+
+        override fun apply(buffer: InputBuffer) {
+            buffer.buffer.delete(start, start + length)
+            buffer.cursor = start
+        }
+    }
+}
+
+fun StringBuilder.replace(range: IntRange, replacement: String) {
+    replace(range.start, range.endInclusive + 1, replacement)
 }

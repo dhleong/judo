@@ -89,6 +89,9 @@ class InsertMode(
 
         // handle key mappings
         if (tryMappings(key, remap, input, mapping, userMappings)) {
+            // user mappings end the current change set
+            buffer.undoMan.finishChange()
+            buffer.undoMan.beginChangeSet()
             return
         }
 
@@ -108,6 +111,7 @@ class InsertMode(
         input.clear()
         buffer.clear()
         history.resetHistoryOffset()
+        buffer.undoMan.clear()
     }
 }
 

@@ -19,7 +19,8 @@ class UndoManager {
     private val redoStack = ArrayDeque<Change>()
 
     private var currentChange = Change()
-    private var lastChange: Change? = null
+    var lastChange: Change? = null
+        private set
 
     /**
      * Each time we beginChangeSet, we're creating
@@ -67,7 +68,7 @@ class UndoManager {
             // nothing to undo
             return
         }
-        
+
         val undone = changeHistory.pop()
         redoStack.push(undone)
 
