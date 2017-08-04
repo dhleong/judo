@@ -83,7 +83,11 @@ class UndoManager {
         undone.undo(input)
     }
 
-    fun undoTransparently(block: () -> Unit) {
+    /**
+     * Perform block() without tracking changes (IE the
+     * undo history will not be affected)
+     */
+    fun withoutTrackingChanges(block: () -> Unit) {
         inChangeSet {
             try {
                 block()

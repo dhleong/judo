@@ -1,5 +1,6 @@
 package net.dhleong.judo.input.changes
 
+import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import javax.swing.KeyStroke
 
@@ -15,19 +16,22 @@ interface AmendableUndoable : Undoable
  * @author dhleong
  */
 class Change {
-    internal val myKeys = ArrayList<KeyStroke>()
-
-    val keys: List<KeyStroke> = myKeys
+    internal val keys = ArrayList<KeyStroke>()
 
     val undoables = ArrayList<Undoable>()
 
     fun clear() {
-        myKeys.clear()
+        keys.clear()
         undoables.clear()
     }
 
+    fun apply(judo: IJudoCore) {
+        judo.feedKeys(keys.asSequence(), remap = true)
+        judo.exitMode() // changes should always end in normal mode
+    }
+
     operator fun plusAssign(key: KeyStroke) {
-        myKeys += key
+        keys += key
     }
 
     /**
@@ -43,7 +47,7 @@ class Change {
         undoables += undoable
     }
 
-    fun isEmpty() = undoables.isEmpty() && myKeys.isEmpty()
+    fun isEmpty() = undoables.isEmpty() && keys.isEmpty()
 
     fun undo(buffer: InputBuffer) {
         undoables.forEach { it.apply(buffer) }

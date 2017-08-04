@@ -137,15 +137,11 @@ class NormalMode(
         },
 
         keys(".") to countRepeatable { _ ->
-            buffer.undoMan.lastChange?.let {
-
+            // NOTE: the `.` keystroke will be cleared
+            // as part of cleanup from withoutTrackingChanges
+            buffer.undoMan.withoutTrackingChanges {
                 // perform the previous change without tracking undo
-                buffer.undoMan.undoTransparently {
-                    judo.feedKeys(it.keys.asSequence(), remap = true)
-
-                    // NOTE: the `.` keystroke will be cleared
-                    // as part of cleanup from undoTransparently
-                }
+                buffer.undoMan.lastChange?.apply(judo)
             }
         },
 
