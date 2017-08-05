@@ -91,7 +91,7 @@ class InsertMode(
         if (tryMappings(key, remap, input, mapping, userMappings)) {
             // user mappings end the current change set
             buffer.undoMan.finishChange()
-            buffer.undoMan.beginChangeSet()
+            buffer.beginChangeSet()
             return
         }
 

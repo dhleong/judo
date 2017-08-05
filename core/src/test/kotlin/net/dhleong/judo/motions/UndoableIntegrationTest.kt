@@ -11,6 +11,51 @@ import org.junit.Test
  */
 class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
 
+    @Test fun redoDelete() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("df <esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word3" to 0)
+
+        judo.type(keys("u\$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 15)
+
+        judo.type(keys("U")) // redo
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word3" to 0)
+    }
+
+    @Test fun redoChange() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("cfdnew<esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("new word2 word3" to 2)
+
+        judo.type(keys("u\$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 15)
+
+        judo.type(keys("U")) // redo
+        assertThat(renderer.inputLine)
+            .isEqualTo("new word2 word3" to 2)
+    }
+
+    @Test fun redoInsert() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("Iword0 <esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word0 word word2 word3" to 5)
+
+        judo.type(keys("u\$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 15)
+
+        judo.type(keys("U")) // redo
+        assertThat(renderer.inputLine)
+            .isEqualTo("word0 word word2 word3" to 5)
+    }
+
     @Test fun repeatChange() {
         judo.setInput("word word2 word3", 0)
 

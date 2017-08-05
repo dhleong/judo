@@ -25,6 +25,11 @@ class InputBuffer(
 
     private val buffer = StringBuilder(128)
 
+    fun beginChangeSet() = undoMan.beginChangeSet(this)
+    fun inChangeSet(block: () -> Unit) = undoMan.inChangeSet(this, block)
+    fun withoutTrackingChanges(block: () -> Unit) =
+        undoMan.withoutTrackingChanges(this, block)
+
     fun clear() {
         buffer.setLength(0)
         cursor = 0
@@ -97,7 +102,7 @@ class InputBuffer(
                 minOf(buffer.length, range.endInclusive + 1)
             )
 
-            undoMan.inChangeSet {
+            inChangeSet {
                 val insertValue = it.current.value.toString()
                 undoMan.current.addUndoAction {
                     it.buffer.insert(range.start, insertValue)
@@ -135,7 +140,7 @@ class InputBuffer(
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {
-        undoMan.inChangeSet {
+        inChangeSet {
             val old = buffer.substring(range.start, range.endInclusive + 1)
             undoMan.current.addUndoAction {
                 it.buffer.replace(range, old)
@@ -174,7 +179,7 @@ class InputBuffer(
     }
 
     private fun amendInsertUndo(index: Int, length: Int) {
-        undoMan.inChangeSet {
+        inChangeSet {
             undoMan.current.amendUndo<InsertUndoable> {
                 if (it.start == -1) {
                     it.start = index

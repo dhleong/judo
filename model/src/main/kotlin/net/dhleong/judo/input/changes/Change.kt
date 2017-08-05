@@ -16,6 +16,7 @@ interface AmendableUndoable : Undoable
  * @author dhleong
  */
 class Change {
+    var cursor: Int = 0
     internal val keys = ArrayList<KeyStroke>()
 
     val undoables = ArrayList<Undoable>()
@@ -50,7 +51,10 @@ class Change {
     fun isEmpty() = undoables.isEmpty() && keys.isEmpty()
 
     fun undo(buffer: InputBuffer) {
-        undoables.forEach { it.apply(buffer) }
+        // apply the undoables in reverse order
+        for (i in undoables.lastIndex downTo 0) {
+            undoables[i].apply(buffer)
+        }
     }
 
     inline fun <reified T : AmendableUndoable> amendUndo(block: (T) -> Unit) {

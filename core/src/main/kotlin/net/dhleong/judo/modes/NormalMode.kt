@@ -43,20 +43,17 @@ class NormalMode(
 
         keys("a") to { core ->
             applyMotion(charMotion(1), clampCursor = false)
-            buffer.undoMan.beginChangeSet()
+            buffer.beginChangeSet()
             core.enterMode("insert")
         },
         keys("A") to { core ->
-            // it's like $a
-            applyMotion(toEndMotion())
-            applyMotion(charMotion(1), clampCursor = false)
-            buffer.undoMan.beginChangeSet()
-            core.enterMode("insert")
+            // it's just $a
+            core.feedKeys("\$a")
         },
 
         keys("c") to { core ->
             withOperator('c') { range ->
-                buffer.undoMan.beginChangeSet()
+                buffer.beginChangeSet()
                 if (!buffer.deleteWithCursor(range, clampCursor = false)) {
                     buffer.undoMan.cancelChange()
                     // TODO bell?
@@ -65,7 +62,7 @@ class NormalMode(
             }
         },
         keys("C") to { core ->
-            buffer.undoMan.beginChangeSet()
+            buffer.beginChangeSet()
             buffer.delete(rangeOf(toEndMotion()))
             core.enterMode("insert")
         },
@@ -96,12 +93,12 @@ class NormalMode(
         keys("G") to { core -> core.scrollToBottom() },
 
         keys("i") to { core ->
-            buffer.undoMan.beginChangeSet()
+            buffer.beginChangeSet()
             core.enterMode("insert")
         },
         keys("I") to { core ->
             applyMotion(toStartMotion())
-            buffer.undoMan.beginChangeSet()
+            buffer.beginChangeSet()
             core.enterMode("insert")
         },
 
@@ -128,6 +125,10 @@ class NormalMode(
 
         keys("u") to countRepeatable { _ -> buffer.undoMan.undo(buffer) },
 
+        // NOTE: <ctrl r> is the "correct" mapping for this, but that's currently mapped
+        // to reverse-history search....
+        keys("U") to countRepeatable { _ -> buffer.undoMan.redo(judo, buffer) },
+
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
             buffer.delete(range)
         },
@@ -139,7 +140,7 @@ class NormalMode(
         keys(".") to countRepeatable { _ ->
             // NOTE: the `.` keystroke will be cleared
             // as part of cleanup from withoutTrackingChanges
-            buffer.undoMan.withoutTrackingChanges {
+            buffer.withoutTrackingChanges {
                 // perform the previous change without tracking undo
                 buffer.undoMan.lastChange?.apply(judo)
             }

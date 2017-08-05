@@ -1,5 +1,6 @@
 package net.dhleong.judo.input.changes
 
+import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import java.util.ArrayDeque
 
@@ -39,8 +40,8 @@ class UndoManager {
         redoStack.clear()
     }
 
-    inline fun inChangeSet(block: () -> Unit) {
-        beginChangeSet()
+    inline fun inChangeSet(buffer: InputBuffer, block: () -> Unit) {
+        beginChangeSet(buffer)
         try {
             block()
         } finally {
@@ -48,7 +49,11 @@ class UndoManager {
         }
     }
 
-    fun beginChangeSet() {
+    fun beginChangeSet(buffer: InputBuffer) {
+        if (changeSetNesting == 0) {
+            // save initial buffer.cursor
+            currentChange.cursor = buffer.cursor
+        }
         ++changeSetNesting
     }
 
@@ -83,12 +88,25 @@ class UndoManager {
         undone.undo(input)
     }
 
+    fun redo(judo: IJudoCore, input: InputBuffer) {
+        if (redoStack.isEmpty()) {
+            // nothing to redo
+            return
+        }
+
+        val redone = redoStack.pop()
+        changeHistory.push(redone)
+
+        input.cursor = redone.cursor
+        redone.apply(judo)
+    }
+
     /**
      * Perform block() without tracking changes (IE the
      * undo history will not be affected)
      */
-    fun withoutTrackingChanges(block: () -> Unit) {
-        inChangeSet {
+    fun withoutTrackingChanges(buffer: InputBuffer, block: () -> Unit) {
+        inChangeSet(buffer) {
             try {
                 block()
             } finally {

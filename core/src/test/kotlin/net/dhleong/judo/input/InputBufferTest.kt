@@ -137,20 +137,20 @@ class InputBufferTest {
         // NOTE: moving the cursor should create a new change set,
         // but otherwise everything in insert mode is within a single
         // change set
-        buffer.undoMan.inChangeSet {
+        buffer.inChangeSet {
             buffer.cursor = 0
             buffer.type(key("a"))
             buffer.type(key("b"))
         }
 
-        buffer.undoMan.inChangeSet {
+        buffer.inChangeSet {
             buffer.cursor = 7
             buffer.type(key("c"))
             buffer.type(key("d"))
             buffer.type(key("e"))
         }
 
-        buffer.undoMan.inChangeSet {
+        buffer.inChangeSet {
             buffer.cursor = 15
             buffer.type(key("f"))
         }
