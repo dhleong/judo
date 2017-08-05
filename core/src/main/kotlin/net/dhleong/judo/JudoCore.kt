@@ -11,6 +11,7 @@ import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Keys
+import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
@@ -64,6 +65,12 @@ enum class DebugLevel {
         get() = this != OFF
 }
 
+internal val UNRECORDED_KEY_CODES = arrayOf(
+    KeyEvent.VK_ESCAPE,
+    KeyEvent.VK_PAGE_UP,
+    KeyEvent.VK_PAGE_DOWN
+)
+
 class JudoCore(
     override val renderer: JudoRenderer,
     mapRenderer: MapRenderer,
@@ -84,9 +91,11 @@ class JudoCore(
     override val registers = RegisterManager(settings)
     override val state = settings
 
+    internal val undo = UndoManager()
+
     private val parsedPrompts = ArrayList<IStringBuilder>(2)
 
-    internal val buffer = InputBuffer(registers)
+    internal val buffer = InputBuffer(registers, undo)
     internal val cmdBuffer = InputBuffer()
 
     private val sendHistory = InputHistory(buffer)
@@ -309,6 +318,8 @@ class JudoCore(
     }
 
     override fun exitMode() {
+        if (currentMode == normalMode) return
+
         if (state[MODE_STACK] && !modeStack.isEmpty()) {
             // actually, return to the previous mode
             val previousMode = modeStack.removeAt(modeStack.lastIndex)
@@ -500,6 +511,14 @@ class JudoCore(
     }
 
     override fun feedKeys(keys: String, remap: Boolean, mode: String) {
+        feedKeys(
+            Keys.parse(keys).asSequence(),
+            remap = remap,
+            mode = mode
+        )
+    }
+
+    override fun feedKeys(keys: Sequence<KeyStroke>, remap: Boolean, mode: String) {
         val oldMode = currentMode
 
         if (mode != "") {
@@ -509,17 +528,24 @@ class JudoCore(
             currentMode = newMode
         }
 
-        val keysIter = Keys.parse(keys).iterator()
-        readKeys(object : BlockingKeySource {
-            override fun readKey(): KeyStroke = keysIter.next()
-        }, remap = remap, fromMap = true) {
-            keysIter.hasNext()
-        }
+        feedKeys(
+            keys.iterator(),
+            remap = remap,
+            fromMap = true
+        )
 
         if (mode != "") {
             // restore the old mode (but without calling onEnter and making it
             // reset its state)
             currentMode = oldMode
+        }
+    }
+
+    fun feedKeys(keys: Iterator<KeyStroke>, remap: Boolean, fromMap: Boolean) {
+        readKeys(object : BlockingKeySource {
+            override fun readKey(): KeyStroke = keys.next()
+        }, remap = remap, fromMap = fromMap) {
+            keys.hasNext()
         }
     }
 
@@ -561,6 +587,9 @@ class JudoCore(
                     else break
                 }
             } else {
+                if (key.keyCode !in UNRECORDED_KEY_CODES) {
+                    undo.onKeyStroke(key)
+                }
                 return key
             }
         }

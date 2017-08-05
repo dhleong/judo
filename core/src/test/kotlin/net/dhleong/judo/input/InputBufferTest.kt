@@ -84,5 +84,92 @@ class InputBufferTest {
         assertThat(registers.unnamed.value.toString())
             .isEqualTo("5678 ")
     }
+
+    @Test fun undoDeletes() {
+        buffer.set("0123 5678 101112")
+        buffer.cursor = 0
+
+        buffer.deleteWithCursor(0..5)
+        buffer.deleteWithCursor(5..7)
+        assertThat(buffer.undoMan.size).isEqualTo(2)
+        assertThat(buffer.toString()).isEqualTo("5678 1112")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("5678 101112")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("0123 5678 101112")
+        assertThat(buffer.cursor).isEqualTo(0)
+
+        // just ensure further undo doesn't throw
+        assertThat(buffer.undoMan.size).isEqualTo(0)
+        buffer.undoMan.undo(buffer)
+    }
+
+    @Test fun undoReplacements() {
+        buffer.set("Abcd eFgH JkLMno")
+        buffer.cursor = 0
+
+        buffer.replaceWithCursor(0..5) { it -> it.toString().toUpperCase() }
+        buffer.switchCaseWithCursor(5..9)
+        assertThat(buffer.undoMan.size).isEqualTo(2)
+        assertThat(buffer.toString()).isEqualTo("ABCD EfGh JkLMno")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("ABCD eFgH JkLMno")
+        assertThat(buffer.cursor).isEqualTo(5)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("Abcd eFgH JkLMno")
+        assertThat(buffer.cursor).isEqualTo(0)
+
+        // just ensure further undo doesn't throw
+        assertThat(buffer.undoMan.size).isEqualTo(0)
+        buffer.undoMan.undo(buffer)
+    }
+
+    @Test fun undoInsertion() {
+        buffer.set("0123 5678 101112")
+
+        // NOTE: moving the cursor should create a new change set,
+        // but otherwise everything in insert mode is within a single
+        // change set
+        buffer.inChangeSet {
+            buffer.cursor = 0
+            buffer.type(key("a"))
+            buffer.type(key("b"))
+        }
+
+        buffer.inChangeSet {
+            buffer.cursor = 7
+            buffer.type(key("c"))
+            buffer.type(key("d"))
+            buffer.type(key("e"))
+        }
+
+        buffer.inChangeSet {
+            buffer.cursor = 15
+            buffer.type(key("f"))
+        }
+
+        assertThat(buffer.toString()).isEqualTo("ab0123 cde5678 f101112")
+        assertThat(buffer.undoMan.size).isEqualTo(3)
+        assertThat(buffer.cursor).isEqualTo(16)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("ab0123 cde5678 101112")
+        assertThat(buffer.cursor).isEqualTo(15)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("ab0123 5678 101112")
+        assertThat(buffer.cursor).isEqualTo(7)
+
+        buffer.undoMan.undo(buffer)
+        assertThat(buffer.toString()).isEqualTo("0123 5678 101112")
+        assertThat(buffer.cursor).isEqualTo(0)
+    }
 }
 

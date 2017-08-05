@@ -85,6 +85,7 @@ interface IJudoCore {
     fun disconnect()
     fun feedKey(stroke: KeyStroke, remap: Boolean = true, fromMap: Boolean = false)
     fun feedKeys(keys: String, remap: Boolean = true, mode: String = "")
+    fun feedKeys(keys: Sequence<KeyStroke>, remap: Boolean = true, mode: String = "")
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")

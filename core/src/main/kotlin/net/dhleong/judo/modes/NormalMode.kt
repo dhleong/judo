@@ -26,10 +26,10 @@ import javax.swing.KeyStroke
  */
 
 class NormalMode(
-        judo: IJudoCore,
-        buffer: InputBuffer,
-        val history: InputHistory,
-        val opMode: OperatorPendingMode
+    judo: IJudoCore,
+    buffer: InputBuffer,
+    val history: InputHistory,
+    val opMode: OperatorPendingMode
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {
@@ -43,24 +43,28 @@ class NormalMode(
 
         keys("a") to { core ->
             applyMotion(charMotion(1), clampCursor = false)
+            buffer.undoMan.initChange('a')
+            buffer.beginChangeSet()
             core.enterMode("insert")
         },
         keys("A") to { core ->
-            // it's like $a
-            applyMotion(toEndMotion())
-            applyMotion(charMotion(1), clampCursor = false)
-            core.enterMode("insert")
+            // it's just $a
+            core.feedKeys("\$a")
         },
 
         keys("c") to { core ->
             withOperator('c') { range ->
+                buffer.beginChangeSet()
                 if (!buffer.deleteWithCursor(range, clampCursor = false)) {
+                    buffer.undoMan.cancelChange()
                     // TODO bell?
                 }
                 core.enterMode("insert")
             }
         },
         keys("C") to { core ->
+            buffer.undoMan.initChange('C')
+            buffer.beginChangeSet()
             buffer.delete(rangeOf(toEndMotion()))
             core.enterMode("insert")
         },
@@ -70,6 +74,7 @@ class NormalMode(
             withOperator('d') { range -> buffer.deleteWithCursor(range) }
         },
         keys("D") to { _ ->
+            buffer.undoMan.initChange('D')
             buffer.deleteWithCursor(rangeOf(toEndMotion()))
         },
 
@@ -90,9 +95,15 @@ class NormalMode(
 
         keys("G") to { core -> core.scrollToBottom() },
 
-        keys("i") to { core -> core.enterMode("insert") },
+        keys("i") to { core ->
+            buffer.undoMan.initChange('i')
+            buffer.beginChangeSet()
+            core.enterMode("insert")
+        },
         keys("I") to { core ->
             applyMotion(toStartMotion())
+            buffer.undoMan.initChange('I')
+            buffer.beginChangeSet()
             core.enterMode("insert")
         },
 
@@ -103,10 +114,11 @@ class NormalMode(
         keys("n") to withCount { count -> continueSearch(count) },
         keys("N") to withCount { count -> continueSearch(-count) },
 
-        keys("p") to pasteWithOffset(1),
-        keys("P") to pasteWithOffset(0),
+        keys("p") to pasteWithOffset('p', 1),
+        keys("P") to pasteWithOffset('P', 0),
 
         keys("r") to actionOnCount(::xCharMotion, 1) { _, range ->
+            buffer.undoMan.initChange('r')
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
                 || replacement.keyCode == KeyEvent.VK_ESCAPE) {
@@ -117,15 +129,32 @@ class NormalMode(
             }
         },
 
+        keys("u") to countRepeatable { _ -> buffer.undoMan.undo(buffer) },
+        keys("<ctrl r>") to countRepeatable { _ ->
+            buffer.undoMan.redo(judo, buffer)
+        },
+
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
+            buffer.undoMan.initChange('x')
             buffer.delete(range)
         },
         keys("X") to actionOnCount(::xCharMotion, -1) { _, range ->
+            buffer.undoMan.initChange('X')
             buffer.delete(range)
             buffer.cursor = range.endInclusive
         },
 
+        keys(".") to countRepeatable { _ ->
+            // NOTE: the `.` keystroke will be cleared
+            // as part of cleanup from withoutTrackingChanges
+            buffer.withoutTrackingChanges {
+                // perform the previous change without tracking undo
+                buffer.undoMan.lastChange?.apply(judo)
+            }
+        },
+
         keys("~") to actionOnCount(::charMotion, 1) { _, range ->
+            buffer.undoMan.initChange('~')
             if (range.start <= buffer.lastIndex) { // TODO can we generalize this?
                 buffer.switchCaseWithCursor(range)
                 buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
@@ -138,6 +167,7 @@ class NormalMode(
         },
 
         keys("\"") to { core ->
+            buffer.undoMan.initChange('"')
             val register = core.readKey()
             if (register.hasCtrl()
                 || register.keyCode == KeyEvent.VK_ESCAPE) {
@@ -153,7 +183,7 @@ class NormalMode(
         keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
         keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
         keys("<ctrl c>") to { _ -> clearBuffer() },
-        keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
+        keys("<ctrl s>") to { core -> core.enterMode("rsearch") }
 
     ) + ALL_MOTIONS.filter { (_, motion) ->
         // text object motions can't be used as an action
@@ -199,6 +229,8 @@ class NormalMode(
     }
 
     private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {
+        buffer.undoMan.initChange(fullLineMotionKey)
+
         opMode.fullLineMotionKey = fullLineMotionKey
         withOperator(action)
     }
@@ -229,6 +261,7 @@ class NormalMode(
         // read in counts
         if (count.tryPush(key)) {
             // still reading...
+            buffer.undoMan.initChange(key.keyChar)
             return
         }
 
@@ -257,10 +290,24 @@ class NormalMode(
         }
     }
 
+    /**
+     * Given a singular action, return an action which can repeat
+     * that action multiple times based on typed count
+     */
+    private fun countRepeatable(action: KeyAction): KeyAction =
+        { judo ->
+            val repeats = count.toRepeatCount()
+            for (i in 1..repeats) {
+                action(judo)
+            }
+        }
+
     private fun withCount(action: (Int) -> Unit): KeyAction =
         { _ -> action.invoke(count.toRepeatCount()) }
 
-    private fun pasteWithOffset(offset: Int): KeyAction = withCount { count ->
+    private fun pasteWithOffset(keyChar: Char, offset: Int): KeyAction = withCount { count ->
+        buffer.undoMan.initChange(keyChar)
+
         val value = judo.registers.current.value.repeat(count)
         judo.registers.resetCurrent()
 

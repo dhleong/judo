@@ -57,6 +57,10 @@ class InsertMode(
         suggester.reset()
     }
 
+    override fun onExit() {
+        buffer.undoMan.finishChange()
+    }
+
     override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
         when {
             key.keyCode == KeyEvent.VK_ENTER -> {
@@ -85,6 +89,9 @@ class InsertMode(
 
         // handle key mappings
         if (tryMappings(key, remap, input, mapping, userMappings)) {
+            // user mappings end the current change set
+            buffer.undoMan.finishChange()
+            buffer.beginChangeSet()
             return
         }
 
@@ -104,6 +111,7 @@ class InsertMode(
         input.clear()
         buffer.clear()
         history.resetHistoryOffset()
+        buffer.undoMan.clear()
     }
 }
 

@@ -15,6 +15,8 @@ Here's a list of features we definitely support:
 * Actions (all with counts)
     * `a A D C i I p P r x X ~`
     * With motions: `d c gu gU g~`
+* Undo history:
+    * `u <ctrl r> .`
 * Scrolling
     * `<ctrl f>  <ctrl b>`
 * Searching with `/` and `n`, `N`
@@ -51,13 +53,14 @@ or
 
 This may change in the future.
 
-### `<ctrl r>` is for reverse input history search
+### `<ctrl s>` is for reverse input history search
 
-This one is taken from bash vim bindings: since `/` is used for searching
-output, we use `<ctrl r>` to search through previous input. In this mode,
-the text you type will be used to search backwards through history for
-a matching line. You can provide multi-word filtering by separating parts
-by a space. For example, if you know you sent, for example,
+This one is borrowed from bash, where it was originally `<ctrl r>`:
+since `/` is used for searching output, we use `<ctrl s>` to search
+through previous input. In this mode, the text you type will be used to
+search backwards through history for a matching line. As an added bonus,
+you can provide multi-word filtering by separating parts by a space.
+For example, if you know you previously  sent, for example,
 `tell kaylee I've got your part` and want to send it again, you could
 search for:
 
@@ -76,9 +79,13 @@ or
 
 or any variation thereof to try to match "part."
 
-Pressing `<ctrl r>` again while in this mode will continue searching back
+Pressing `<ctrl s>` again while in this mode will continue searching back
 through the history with the same text.
 
-Note that we don't yet support undo/redo, but if we do, redo will probably
-be put on `U` instead of `<ctrl r>`. Luckily, you can remap this if it's
-not to your liking!
+If you prefer the old `<ctrl r>` mapping, feel free to restore it yourself:
+
+```python
+nnoremap('<ctrl r>', '<ctrl s>')
+```
+
+But don't forget to create a new mapping for "redo"!
