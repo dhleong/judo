@@ -145,9 +145,16 @@ class NormalMode(
         },
 
         keys(".") to countRepeatable { _ ->
-            // NOTE: the `.` keystroke will be cleared
-            // as part of cleanup from withoutTrackingChanges
-            buffer.withoutTrackingChanges {
+            // clear out anything from the `.`; there shouldn't be
+            // anything yet, but this shouldn't hurt
+            buffer.undoMan.cancelChange()
+
+            // create a new change set and apply the keystrokes from
+            // the previous change. This should let us handle the case
+            // where we can't cleanly apply the last change in our
+            // current location (since the new change will be similar
+            // but maybe not identical; this seems to be what vim does)
+            buffer.inChangeSet {
                 // perform the previous change without tracking undo
                 buffer.undoMan.lastChange?.apply(judo)
             }

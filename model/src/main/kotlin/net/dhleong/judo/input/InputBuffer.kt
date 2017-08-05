@@ -49,15 +49,18 @@ class InputBuffer(
         when (key.keyCode) {
             VK_BACK_SPACE -> {
                 if (cursor > 0 && cursor == buffer.length) {
+                    amendBackspaceUndo(cursor - 1, buffer[cursor - 1])
+
                     --cursor
                     buffer.setLength(cursor)
                 } else if (cursor > 0) {
+                    amendBackspaceUndo(cursor - 1, buffer[cursor - 1])
+
                     // complicated mess
                     val after = buffer.subSequence(cursor, buffer.length)
                     buffer.setLength(--cursor)
                     buffer.append(after)
                 }
-                // TODO amend deletion undo
                 return
             }
         }
@@ -178,6 +181,22 @@ class InputBuffer(
         }
     }
 
+    private fun amendBackspaceUndo(index: Int, char: Char) {
+        inChangeSet {
+            undoMan.current.amendUndo<BackspaceUndoable> {
+                if (it.start == -1) {
+                    it.start = index
+                    it.deleted.append(char)
+                } else if (index == it.start - 1) {
+                    --it.start
+                    it.deleted.insert(0, char)
+                } else {
+                    undoMan.current.addUndoAction(BackspaceUndoable(index, char))
+                }
+            }
+        }
+    }
+
     private fun amendInsertUndo(index: Int, length: Int) {
         inChangeSet {
             undoMan.current.amendUndo<InsertUndoable> {
@@ -225,6 +244,26 @@ class InputBuffer(
             buffer.cursor = start
         }
     }
+
+    /**
+     * Undoes backspace actions by inserting
+     */
+    internal class BackspaceUndoable(
+        var start: Int = -1,
+        var deleted: StringBuffer = StringBuffer()
+    ) : AmendableUndoable {
+
+        constructor(start: Int, char: Char)
+                : this(start, StringBuffer()) {
+            deleted.append(char)
+        }
+
+        override fun apply(buffer: InputBuffer) {
+            buffer.buffer.insert(start, deleted)
+            buffer.cursor = start
+        }
+    }
+
 }
 
 fun StringBuilder.replace(range: IntRange, replacement: String) {

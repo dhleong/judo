@@ -11,6 +11,38 @@ import org.junit.Test
  */
 class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
 
+    @Test fun undoRepeatedBackspace() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("\$a<bs><bs><bs><bs><bs><bs><esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2" to 9)
+
+        // we can't actually perform every delete we're trying to repeat
+        judo.type(keys("0."))
+        assertThat(renderer.outputLines).isEmpty()
+        assertThat(renderer.inputLine)
+            .isEqualTo("ord word2" to 0)
+
+        judo.type(keys("u"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2" to 0)
+    }
+
+    @Test fun redoBackspace() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("A<bs><bs><bs><bs><bs><bs><esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2" to 9)
+
+        judo.type(keys("u0"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 0)
+
+        judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2" to 9)
+    }
+
     @Test fun redoDeleteWithCount() {
         judo.setInput("word word2 word3", 0)
         judo.type(keys("5x<esc>"))
