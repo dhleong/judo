@@ -31,7 +31,7 @@ class Change {
         judo.exitMode() // changes should always end in normal mode
     }
 
-    operator fun plusAssign(key: KeyStroke) {
+    internal operator fun plusAssign(key: KeyStroke) {
         keys += key
     }
 

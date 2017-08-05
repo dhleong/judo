@@ -11,6 +11,42 @@ import org.junit.Test
  */
 class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
 
+    @Test fun redoDeleteWithCount() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("5x<esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word3" to 0)
+
+        judo.type(keys("u\$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word word2 word3" to 15)
+
+        judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word3" to 0)
+    }
+
+    @Test fun redoDeleteWithRegister() {
+        judo.setInput("word word2 word3", 0)
+        judo.type(keys("\"xdwx\"xP"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word ord2 word3" to 5)
+        assertThat(judo.registers.unnamed.value.toString()).isEqualTo("w")
+        assertThat(judo.registers['x'].value.toString())
+            .isEqualTo("word ")
+
+        judo.type(keys("u\$"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("ord2 word3" to 9)
+
+        // NOTE: if we didn't include the register in the redo,
+        // it would be pasting `w`, the current contents of
+        // the unnamed register
+        judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word ord2 word3" to 5)
+    }
+
     @Test fun redoDelete() {
         judo.setInput("word word2 word3", 0)
         judo.type(keys("df <esc>"))

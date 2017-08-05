@@ -3,6 +3,7 @@ package net.dhleong.judo.input.changes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import java.util.ArrayDeque
+import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -11,6 +12,10 @@ class UndoManager {
 
     val current: Change
         get() = currentChange
+
+    /** Is [current] being actively modified? */
+    var isChangeActive = false
+        private set
 
     /** The current size of the undo history */
     val size: Int
@@ -33,6 +38,7 @@ class UndoManager {
 
     fun cancelChange() {
         currentChange.clear()
+        isChangeActive = false
     }
 
     fun clear() {
@@ -57,19 +63,17 @@ class UndoManager {
         ++changeSetNesting
     }
 
-    fun initChange() {
-        // NOTE: This is a bit of a hack. A more sane way would be for
-        // things that *can* create a change (d, c, etc) to init it in
-        // such a way that we only add keys if there is an active change;
-        // however, we would lose counts that way, and we also don't have
-        // an elegant way to clear the change when an pending op is
-        // cancelled (eg: da<esc>)
+    fun initChange(initialKey: Char) {
+        if (isChangeActive) {
+            // don't double-init
+            return
+        }
+
+        isChangeActive = true
         currentChange.let {
-            // remove all but the most recent keystroke
-            // TODO keep counts, registers
-            val mostRecentKey = it.keys.last()
+            // reset to just the initial key
             it.keys.clear()
-            it.keys.add(mostRecentKey)
+            it.keys.add(KeyStroke.getKeyStroke(initialKey))
         }
     }
 
@@ -81,6 +85,8 @@ class UndoManager {
             throw IllegalStateException("Unbalanced change!")
         }
 
+        isChangeActive = false
+
         if (currentChange.isEmpty()) {
             // actually, no change; don't bother
             return
@@ -90,6 +96,23 @@ class UndoManager {
         changeHistory.push(currentChange)
         redoStack.clear()
         currentChange = Change()
+    }
+
+    /**
+     * To be called BEFORE other key processing
+     */
+    fun onKeyStroke(key: KeyStroke) {
+        // NOTE: obviously it'd be nice if this were actually called *after*
+        //  normal key processing, so we don't have to manually provide the
+        //  initial key to [initChange], but due to the blocking nature of
+        //  [readKey()], and the fact that [readKey()] is the only place to
+        //  handle this and be able to include ALL keystrokes, we have
+        //  to settle for after.
+        if (isChangeActive) {
+            // only add the keystroke to the change if we've already
+            // initialized the change
+            currentChange += key
+        }
     }
 
     fun undo(input: InputBuffer) {

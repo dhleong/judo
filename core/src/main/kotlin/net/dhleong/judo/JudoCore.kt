@@ -588,7 +588,7 @@ class JudoCore(
                 }
             } else {
                 if (key.keyCode !in UNRECORDED_KEY_CODES) {
-                    undo.current += key
+                    undo.onKeyStroke(key)
                 }
                 return key
             }

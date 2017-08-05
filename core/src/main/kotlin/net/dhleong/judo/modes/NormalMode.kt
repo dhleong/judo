@@ -43,7 +43,7 @@ class NormalMode(
 
         keys("a") to { core ->
             applyMotion(charMotion(1), clampCursor = false)
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('a')
             buffer.beginChangeSet()
             core.enterMode("insert")
         },
@@ -63,7 +63,7 @@ class NormalMode(
             }
         },
         keys("C") to { core ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('C')
             buffer.beginChangeSet()
             buffer.delete(rangeOf(toEndMotion()))
             core.enterMode("insert")
@@ -74,7 +74,7 @@ class NormalMode(
             withOperator('d') { range -> buffer.deleteWithCursor(range) }
         },
         keys("D") to { _ ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('D')
             buffer.deleteWithCursor(rangeOf(toEndMotion()))
         },
 
@@ -96,13 +96,13 @@ class NormalMode(
         keys("G") to { core -> core.scrollToBottom() },
 
         keys("i") to { core ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('i')
             buffer.beginChangeSet()
             core.enterMode("insert")
         },
         keys("I") to { core ->
             applyMotion(toStartMotion())
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('I')
             buffer.beginChangeSet()
             core.enterMode("insert")
         },
@@ -114,11 +114,11 @@ class NormalMode(
         keys("n") to withCount { count -> continueSearch(count) },
         keys("N") to withCount { count -> continueSearch(-count) },
 
-        keys("p") to pasteWithOffset(1),
-        keys("P") to pasteWithOffset(0),
+        keys("p") to pasteWithOffset('p', 1),
+        keys("P") to pasteWithOffset('P', 0),
 
         keys("r") to actionOnCount(::xCharMotion, 1) { _, range ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('r')
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
                 || replacement.keyCode == KeyEvent.VK_ESCAPE) {
@@ -135,11 +135,11 @@ class NormalMode(
         },
 
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('x')
             buffer.delete(range)
         },
         keys("X") to actionOnCount(::xCharMotion, -1) { _, range ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('X')
             buffer.delete(range)
             buffer.cursor = range.endInclusive
         },
@@ -154,7 +154,7 @@ class NormalMode(
         },
 
         keys("~") to actionOnCount(::charMotion, 1) { _, range ->
-            buffer.undoMan.initChange()
+            buffer.undoMan.initChange('~')
             if (range.start <= buffer.lastIndex) { // TODO can we generalize this?
                 buffer.switchCaseWithCursor(range)
                 buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
@@ -167,6 +167,7 @@ class NormalMode(
         },
 
         keys("\"") to { core ->
+            buffer.undoMan.initChange('"')
             val register = core.readKey()
             if (register.hasCtrl()
                 || register.keyCode == KeyEvent.VK_ESCAPE) {
@@ -204,8 +205,6 @@ class NormalMode(
         { _ -> applyMotion(repeat(motion, count.toRepeatCount())) }
 
     private fun withOperator(action: OperatorFunc) {
-        buffer.undoMan.initChange()
-
         // save now before we clear when leaving normal mode
         val repeats = count.toRepeatCount()
 
@@ -230,6 +229,8 @@ class NormalMode(
     }
 
     private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {
+        buffer.undoMan.initChange(fullLineMotionKey)
+
         opMode.fullLineMotionKey = fullLineMotionKey
         withOperator(action)
     }
@@ -260,6 +261,7 @@ class NormalMode(
         // read in counts
         if (count.tryPush(key)) {
             // still reading...
+            buffer.undoMan.initChange(key.keyChar)
             return
         }
 
@@ -303,8 +305,8 @@ class NormalMode(
     private fun withCount(action: (Int) -> Unit): KeyAction =
         { _ -> action.invoke(count.toRepeatCount()) }
 
-    private fun pasteWithOffset(offset: Int): KeyAction = withCount { count ->
-        buffer.undoMan.initChange()
+    private fun pasteWithOffset(keyChar: Char, offset: Int): KeyAction = withCount { count ->
+        buffer.undoMan.initChange(keyChar)
 
         val value = judo.registers.current.value.repeat(count)
         judo.registers.resetCurrent()
