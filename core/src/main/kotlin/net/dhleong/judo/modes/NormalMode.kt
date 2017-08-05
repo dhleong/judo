@@ -124,10 +124,9 @@ class NormalMode(
         },
 
         keys("u") to countRepeatable { _ -> buffer.undoMan.undo(buffer) },
-
-        // NOTE: <ctrl r> is the "correct" mapping for this, but that's currently mapped
-        // to reverse-history search....
-        keys("U") to countRepeatable { _ -> buffer.undoMan.redo(judo, buffer) },
+        keys("<ctrl r>") to countRepeatable { _ ->
+            buffer.undoMan.redo(judo, buffer)
+        },
 
         keys("x") to actionOnCount(::xCharMotion, 1) { _, range ->
             buffer.delete(range)
@@ -174,7 +173,7 @@ class NormalMode(
         keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
         keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
         keys("<ctrl c>") to { _ -> clearBuffer() },
-        keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
+        keys("<ctrl s>") to { core -> core.enterMode("rsearch") }
 
     ) + ALL_MOTIONS.filter { (_, motion) ->
         // text object motions can't be used as an action

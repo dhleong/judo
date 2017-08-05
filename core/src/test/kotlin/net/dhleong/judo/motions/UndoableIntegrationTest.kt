@@ -21,7 +21,7 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 15)
 
-        judo.type(keys("U")) // redo
+        judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word2 word3" to 0)
     }
@@ -36,7 +36,7 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 15)
 
-        judo.type(keys("U")) // redo
+        judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("new word2 word3" to 2)
     }
@@ -51,7 +51,7 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 15)
 
-        judo.type(keys("U")) // redo
+        judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word0 word word2 word3" to 5)
     }
