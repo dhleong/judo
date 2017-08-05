@@ -17,6 +17,9 @@ class UndoManager {
     var isChangeActive = false
         private set
 
+    val isInChange: Boolean
+        get() = changeSetNesting > 0
+
     /** The current size of the undo history */
     val size: Int
         get() = changeHistory.size

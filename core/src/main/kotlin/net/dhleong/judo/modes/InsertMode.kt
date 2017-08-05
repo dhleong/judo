@@ -55,6 +55,11 @@ class InsertMode(
     override fun onEnter() {
         judo.setCursorType(CursorType.PIPE)
         suggester.reset()
+
+        if (!buffer.undoMan.isInChange) {
+            // eg: enterMode() or something
+            buffer.beginChangeSet()
+        }
     }
 
     override fun onExit() {
@@ -90,8 +95,11 @@ class InsertMode(
         // handle key mappings
         if (tryMappings(key, remap, input, mapping, userMappings)) {
             // user mappings end the current change set
-            buffer.undoMan.finishChange()
-            buffer.beginChangeSet()
+            if (buffer.undoMan.isInChange) {
+                // the mapping might have cancelled the change
+                buffer.undoMan.finishChange()
+                buffer.beginChangeSet()
+            }
             return
         }
 
