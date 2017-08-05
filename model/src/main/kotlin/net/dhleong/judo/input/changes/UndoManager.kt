@@ -77,28 +77,30 @@ class UndoManager {
     }
 
     fun undo(input: InputBuffer) {
-        if (changeHistory.isEmpty()) {
-            // nothing to undo
-            return
+        withoutTrackingChanges(input) {
+            if (changeHistory.isEmpty()) {
+                // nothing to undo
+            } else {
+                val undone = changeHistory.pop()
+                redoStack.push(undone)
+
+                undone.undo(input)
+            }
         }
-
-        val undone = changeHistory.pop()
-        redoStack.push(undone)
-
-        undone.undo(input)
     }
 
     fun redo(judo: IJudoCore, input: InputBuffer) {
-        if (redoStack.isEmpty()) {
-            // nothing to redo
-            return
+        withoutTrackingChanges(input) {
+            if (redoStack.isEmpty()) {
+                // nothing to redo
+            } else {
+                val redone = redoStack.pop()
+                changeHistory.push(redone)
+
+                input.cursor = redone.cursor
+                redone.apply(judo)
+            }
         }
-
-        val redone = redoStack.pop()
-        changeHistory.push(redone)
-
-        input.cursor = redone.cursor
-        redone.apply(judo)
     }
 
     /**

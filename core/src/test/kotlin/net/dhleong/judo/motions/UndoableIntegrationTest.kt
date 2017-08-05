@@ -24,6 +24,12 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word2 word3" to 0)
+
+        // one more time to ensure we don't overflow the stack
+        judo.type(keys("u<ctrl r>"))
+        assertThat(renderer.outputLines).isEmpty()
+        assertThat(renderer.inputLine)
+            .isEqualTo("word2 word3" to 0)
     }
 
     @Test fun redoChange() {
@@ -39,6 +45,12 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("new word2 word3" to 2)
+
+        // one more time to ensure we don't overflow the stack
+        judo.type(keys("u<ctrl r>"))
+        assertThat(renderer.outputLines).isEmpty()
+        assertThat(renderer.inputLine)
+            .isEqualTo("new word2 word3" to 2)
     }
 
     @Test fun redoInsert() {
@@ -52,6 +64,12 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
             .isEqualTo("word word2 word3" to 15)
 
         judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("word0 word word2 word3" to 5)
+
+        // one more time to ensure we don't overflow the stack
+        judo.type(keys("u<ctrl r>"))
+        assertThat(renderer.outputLines).isEmpty()
         assertThat(renderer.inputLine)
             .isEqualTo("word0 word word2 word3" to 5)
     }
