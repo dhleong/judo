@@ -51,10 +51,26 @@ class UndoManager {
 
     fun beginChangeSet(buffer: InputBuffer) {
         if (changeSetNesting == 0) {
-            // save initial buffer.cursor
             currentChange.cursor = buffer.cursor
         }
+
         ++changeSetNesting
+    }
+
+    fun initChange() {
+        // NOTE: This is a bit of a hack. A more sane way would be for
+        // things that *can* create a change (d, c, etc) to init it in
+        // such a way that we only add keys if there is an active change;
+        // however, we would lose counts that way, and we also don't have
+        // an elegant way to clear the change when an pending op is
+        // cancelled (eg: da<esc>)
+        currentChange.let {
+            // remove all but the most recent keystroke
+            // TODO keep counts, registers
+            val mostRecentKey = it.keys.last()
+            it.keys.clear()
+            it.keys.add(mostRecentKey)
+        }
     }
 
     fun finishChange() {

@@ -318,6 +318,8 @@ class JudoCore(
     }
 
     override fun exitMode() {
+        if (currentMode == normalMode) return
+
         if (state[MODE_STACK] && !modeStack.isEmpty()) {
             // actually, return to the previous mode
             val previousMode = modeStack.removeAt(modeStack.lastIndex)

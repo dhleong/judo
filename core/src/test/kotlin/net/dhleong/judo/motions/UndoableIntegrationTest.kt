@@ -32,6 +32,29 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
             .isEqualTo("word2 word3" to 0)
     }
 
+    @Test fun redoDeleteWord() {
+        judo.setInput("The quick red fox", 17)
+        judo.type(keys("bbdaw"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("The quick fox" to 10)
+
+        judo.type(keys("u0"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("The quick red fox" to 0)
+
+        judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("The quick fox" to 10)
+
+        judo.type(keys("u"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("The quick red fox" to 10)
+
+        judo.type(keys("<ctrl r>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("The quick fox" to 10)
+    }
+
     @Test fun redoChange() {
         judo.setInput("word word2 word3", 0)
         judo.type(keys("cfdnew<esc>"))
