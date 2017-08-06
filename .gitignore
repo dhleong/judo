@@ -3,3 +3,4 @@
 build/
 debug-log.txt
 out/
+.last-release-notes
