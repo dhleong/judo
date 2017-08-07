@@ -59,22 +59,38 @@ but it was time to really get my hands dirty. Also, the JVM is pretty ubiquitous
 and I didn't want to have to deal with compiling stuff (although it does mean Judo
 uses a good deal more memory than Vim which inspired it).
 
-Builds will eventually be put on the releases page, but for now you can build your
-own using the included Gradle script:
+### Installing on macOS
+
+You can easily install a build on macOS using [Homebrew][12]:
+
+    brew tap dhleong/judo
+    brew install judo
+
+Then, simply use the installed `judo` binary as described below.
+
+### Installing on others
+
+Builds can be found on the [releases page][13], or you can build your own
+using the included Gradle script:
 
     ./gradlew jar
 
 Then, to run:
 
-    java -jar judo/build/libs/judo-1.0-SNAPSHOT.jar
+    java -jar judo/build/libs/judo-{version}.jar
 
 Since Judo needs tight control over the terminal, you unfortunately cannot simply
 do `./gradle run`, which also means running a debug build from IntelliJ won't work
 as expected. Instead, you can run like this:
 
-    java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar judo/build/libs/judo-1.0-SNAPSHOT.jar
+    java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005 -jar judo/build/libs/judo-{version}.jar
 
 and connect IntelliJ's debugger to it by creating a "Remote" debug run configuration.
+
+However you invoke the jar, you can save that as a script and use it in place of `judo`
+in the examples below.
+
+Note that you may also need to install [Java 8][14] if it isn't already available.
 
 ### Connecting to a Server
 
@@ -82,13 +98,13 @@ You have a couple options here:
 
 1. Pass host and port to the CLI:
 
-        java -jar judo/build/libs/judo-1.0-SNAPSHOT.jar myawesomeserver.com 5656
+        judo myawesomeserver.com 5656
 
-2. Use the `connect(host, port)` command
+2. Use the `:connect(host, port)` command while `judo` is running
 
 3. Create a world script containing `connect(host, port)` and pass *that* to the CLI:
 
-        java -jar judo/build/libs/judo-1.0-SNAPSHOT.jar myawesomescript.py
+        judo myawesomescript.py
 
 ### Configuring
 
@@ -121,3 +137,6 @@ keys to the cardinal directions and keep my hands comfortably on the home row.
 [9]: https://www.python.org/
 [10]: ./docs/Scripting.md#custom-modes
 [11]: ./docs/Scripting.md
+[12]: https://brew.sh/
+[13]: https://github.com/dhleong/judo/releases
+[14]: http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html

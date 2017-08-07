@@ -3,6 +3,8 @@
 # Release script for Judo
 #
 
+import re
+import hashlib
 from collections import OrderedDict
 
 try:
@@ -21,6 +23,14 @@ except ImportError:
 
 notes = File(".last-release-notes")
 latestTag = git.Tag.latest()
+
+def sha256(filePath, blockSize=65536):
+    # borrowed from: https://gist.github.com/rji/b38c7238128edf53a181
+    sha256 = hashlib.sha256()
+    with open(filePath, 'rb') as f:
+        for block in iter(lambda: f.read(blockSize), b''):
+            sha256.update(block)
+    return sha256.hexdigest()
 
 def formatIssue(issue):
     return "- {title} (#{number})\n".format(
@@ -139,6 +149,28 @@ verify(gitRelease).create(body=releaseNotes)
 
 print "Uploading", jarFile.path
 verify(gitRelease).uploadFile(jarFile.path, 'application/octet-stream')
+
+#
+# Update homebrew repo
+#
+
+print "Updating homebrew..."
+
+jarUrl = 'https://github.com/dhleong/judo/releases/download/%s/judo-%s.jar' % (version, version)
+jarSha = sha256(jarFile.path)
+
+homebrewConfig = github.Config("dhleong/homebrew-judo")
+formulaFile = github.RepoFile("/Formula/judo.rb", config=homebrewConfig)
+oldContents = formulaFile.read()
+
+newContents = oldContents
+newContents = re.sub('url "[^"]+"', 'url "%s"' % jarUrl, newContents)
+newContents = re.sub('sha256 "[^"]+"', 'sha256 "%s"' % jarSha, newContents)
+
+print "     url <-", jarUrl
+print "  sha256 <-", jarSha
+commit = 'Update for v%s' % version
+verify(formulaFile).write(newContents, commitMessage=commit)
 
 #
 # Success! Now, just cleanup and we're done!
