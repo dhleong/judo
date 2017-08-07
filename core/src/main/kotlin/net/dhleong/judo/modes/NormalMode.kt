@@ -123,7 +123,7 @@ class NormalMode(
             if (replacement.hasCtrl()
                 || replacement.keyCode == KeyEvent.VK_ESCAPE) {
                 // TODO beep?
-            } else {
+            } else if (!buffer.isEmpty()) {
                 val char = replacement.keyChar.toString()
                 buffer.replace(range, char.repeat(range.endInclusive - range.start + 1))
             }

@@ -143,15 +143,17 @@ class InputBuffer(
     }
 
     fun replace(range: IntRange, replacement: CharSequence) {
+        val normalRange = fitRange(range)
+
         inChangeSet {
-            val old = buffer.substring(range.start, range.endInclusive + 1)
+            val old = buffer.substring(normalRange)
             undoMan.current.addUndoAction {
-                it.buffer.replace(range, old)
-                it.cursor = range.start
+                it.buffer.replace(normalRange, old)
+                it.cursor = normalRange.start
             }
         }
 
-        buffer.replace(range, replacement.toString())
+        buffer.replace(normalRange, replacement.toString())
     }
 
     fun replace(range: IntRange, transformer: (CharSequence) -> CharSequence) {
@@ -212,6 +214,10 @@ class InputBuffer(
         }
     }
 
+    private fun fitRange(range: IntRange): IntRange =
+        if (range.first >= 0 && range.last < buffer.length) range
+        else maxOf(0, range.first)..minOf(buffer.lastIndex, range.last)
+
     private fun normalizeRange(range: IntRange): Pair<IntRange, Int>? {
         val bufferEnd = maxOf(0, buffer.lastIndex)
         if (range.start < range.endInclusive) {
@@ -267,5 +273,10 @@ class InputBuffer(
 }
 
 fun StringBuilder.replace(range: IntRange, replacement: String) {
-    replace(range.start, range.endInclusive + 1, replacement)
+    replace(range.first, range.last + 1, replacement)
 }
+
+fun StringBuilder.substring(range: IntRange): String =
+    if (range.isEmpty()) ""
+    else substring(range.first, range.last + 1)
+

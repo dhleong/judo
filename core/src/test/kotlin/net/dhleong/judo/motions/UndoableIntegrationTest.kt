@@ -208,6 +208,23 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
             .isEqualTo("newword newword2 newword3" to 19)
     }
 
+    @Test fun repeatReplace() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("3ry<esc>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("yyyd word2 word3" to 0)
+
+        judo.type(keys("w."))
+        assertThat(renderer.inputLine)
+            .isEqualTo("yyyd yyyd2 word3" to 5)
+
+        judo.type(keys("<ctrl c>."))
+        assertThat(renderer.outputLines).isEmpty() // no errors
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
+    }
+
     @Test fun startInsert() {
         judo.type(keys(":startInsert()<cr>"))
         judo.type(keys("serenity<esc>"))
