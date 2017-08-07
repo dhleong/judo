@@ -42,3 +42,8 @@ ext.deps = [
         junit: 'junit:junit:4.12',
     ],
 ]
+
+ext.config = [
+    name: 'Judo',
+    version: '1.0.2',
+]

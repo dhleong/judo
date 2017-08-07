@@ -89,8 +89,8 @@ def buildDefaultNotes(_):
 # Verify
 #
 
-version = verify(File("judo/build.gradle")
-        .filtersTo(RegexFilter("version '(.*)'"))
+version = verify(File("build.gradle")
+        .filtersTo(RegexFilter("version: '(.*)'"))
         ).valueElse(echoAndDie("No version!?"))
 versionTag = git.Tag(version)
 

@@ -1,5 +1,5 @@
 group 'net.dhleong'
-version '1.0.1'
+version config.version
 
 buildscript {
     dependencies {

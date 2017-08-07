@@ -78,8 +78,8 @@ class JudoCore(
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
     companion object {
-        val CLIENT_NAME = "Judo"
-        val CLIENT_VERSION = "0.1.0"
+        val CLIENT_NAME = BuildConfig.NAME
+        val CLIENT_VERSION = BuildConfig.VERSION
     }
 
     override val aliases = AliasManager()

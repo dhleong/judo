@@ -14,6 +14,11 @@ fun main(args: Array<String>) {
     // prevent OSX from showing the title bar and dock icon
     System.setProperty("apple.awt.UIElement", "true")
 
+    if ("--version" in args || "-v" in args) {
+        println("judo version ${JudoCore.CLIENT_VERSION}")
+        return
+    }
+
     // shared settings
     val settings = StateMap()
 
