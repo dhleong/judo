@@ -45,5 +45,5 @@ ext.deps = [
 
 ext.config = [
     name: 'Judo',
-    version: '1.0.2',
+    version: '1.0.3',
 ]
