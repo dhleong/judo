@@ -232,4 +232,21 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         assertThat(renderer.inputLine)
             .isEqualTo("serenity" to 7)
     }
+
+    @Test fun undoAfterBufferClear() {
+        judo.setInput("word word2 word3", 0)
+
+        judo.type(keys("wdaw<ctrl c>"))
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
+
+        judo.type(keys("u"))
+        assertThat(renderer.outputLines).isEmpty() // no errors
+
+        // NOTE: after clearing the buffer, "undo" no longer makes sense.
+        // We could treat <ctrl c> like dd and add it as an undoable,
+        // but I'm not convinced that's the correct behavior
+        assertThat(renderer.inputLine)
+            .isEqualTo("" to 0)
+    }
 }

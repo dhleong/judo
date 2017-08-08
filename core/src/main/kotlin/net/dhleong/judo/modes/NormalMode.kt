@@ -287,6 +287,7 @@ class NormalMode(
         count.clear()
         input.clear()
         buffer.clear()
+        buffer.undoMan.clear()
         history.resetHistoryOffset()
     }
 
