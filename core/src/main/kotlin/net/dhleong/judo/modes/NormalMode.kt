@@ -144,6 +144,17 @@ class NormalMode(
             buffer.cursor = range.endInclusive
         },
 
+        keys("y") to { _ ->
+            // TODO bell on error?
+            withOperator('y') { range ->
+                judo.registers.current.value =
+                    buffer.get(range).toString()
+            }
+        },
+        keys("Y") to { _ ->
+            judo.registers.current.value = buffer.toString()
+        },
+
         keys(".") to countRepeatable { _ ->
             // clear out anything from the `.`; there shouldn't be
             // anything yet, but this shouldn't hurt
@@ -236,7 +247,9 @@ class NormalMode(
     }
 
     private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {
-        buffer.undoMan.initChange(fullLineMotionKey)
+        if (fullLineMotionKey != 'y') {
+            buffer.undoMan.initChange(fullLineMotionKey)
+        }
 
         opMode.fullLineMotionKey = fullLineMotionKey
         withOperator(action)

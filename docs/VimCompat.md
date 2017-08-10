@@ -13,7 +13,7 @@ Here's a list of features we definitely support:
     * `b B w W e E ge gE f F h l t T 0 $ ; ,`
     * `iw iW aw aW i" i' i( i) ib a" a' a( a) ab`
 * Actions (all with counts)
-    * `a A D C i I p P r x X ~`
+    * `a A D C i I p P r x X y Y ~`
     * With motions: `d c gu gU g~`
 * Undo history:
     * `u <ctrl r> .`

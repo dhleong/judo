@@ -27,8 +27,6 @@ class InputBuffer(
 
     fun beginChangeSet() = undoMan.beginChangeSet(this)
     fun inChangeSet(block: () -> Unit) = undoMan.inChangeSet(this, block)
-    fun withoutTrackingChanges(block: () -> Unit) =
-        undoMan.withoutTrackingChanges(this, block)
 
     fun clear() {
         buffer.setLength(0)
@@ -36,6 +34,10 @@ class InputBuffer(
     }
 
     fun get(index: Int): Char = buffer[index]
+
+    fun get(range: IntRange): CharSequence =
+        normalizeRange(range)?.let { buffer.substring(it.first) }
+            ?: ""
 
     fun isEmpty() = buffer.isEmpty()
 
