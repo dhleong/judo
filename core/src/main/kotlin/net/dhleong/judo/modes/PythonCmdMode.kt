@@ -46,6 +46,8 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
+internal val PATTERN_MATCHING_FLAGS = setOf("color")
+
 /**
  * Python-based Command mode
  *
@@ -62,6 +64,9 @@ class PythonCmdMode(
 
     private val python = PythonInterpreter()
     private val keepModules = HashSet<String>()
+
+    private val isPatternMatchingFlag: (String) -> Boolean =
+        { maybeFlag -> maybeFlag.toLowerCase() in PATTERN_MATCHING_FLAGS }
 
     init {
         InterfaceAdapter.init()
@@ -82,12 +87,16 @@ class PythonCmdMode(
         }
 
         // prompts
-        globals["prompt"] = asMaybeDecorator<Any>(2) {
-            definePrompt(compilePatternSpec(it[0], ""), it[1])
+        globals["prompt"] = asMaybeDecorator<Any>(3, minArgs = 1, isFlag = isPatternMatchingFlag) {
+            if (it.size == 2) {
+                definePrompt(compilePatternSpec(it[0], ""), it[1])
+            } else {
+                definePrompt(compilePatternSpec(it[0], it[1] as String), it[2])
+            }
         }
 
-        // triggers: trigger('input', 'flags', fn)
-        globals["trigger"] = asMaybeDecorator<Any>(3, minArgs = 1) {
+        // triggers: trigger('input', <'flags',> fn)
+        globals["trigger"] = asMaybeDecorator<Any>(3, minArgs = 1, isFlag = isPatternMatchingFlag) {
             if (it.size == 2) {
                 defineTrigger(compilePatternSpec(it[0], ""), it[1] as PyFunction)
             } else {
@@ -411,6 +420,26 @@ internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
     }
 }
 
+inline private fun <reified T: Any> asMaybeDecorator(
+    takeArgs: Int,
+    minArgs: Int = takeArgs - 1,
+    crossinline fn: (Array<T>) -> Unit): PyObject =
+    asMaybeDecorator(takeArgs, minArgs,
+        acceptsFlag = false,
+        isFlag = { false },
+        fn = fn
+    )
+
+inline private fun <reified T: Any> asMaybeDecorator(
+    takeArgs: Int,
+    minArgs: Int = takeArgs - 1,
+    crossinline isFlag: (String) -> Boolean,
+    crossinline fn: (Array<T>) -> Unit): PyObject =
+    asMaybeDecorator(takeArgs, minArgs,
+        acceptsFlag = true,
+        isFlag = isFlag,
+        fn = fn
+    )
 
 /**
  * Create a Python function that can be used either as a normal
@@ -419,10 +448,11 @@ internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
 inline private fun <reified T: Any> asMaybeDecorator(
         takeArgs: Int,
         minArgs: Int = takeArgs - 1,
+        acceptsFlag: Boolean,
+        crossinline isFlag: (String) -> Boolean,
         crossinline fn: (Array<T>) -> Unit): PyObject {
     return asPyFn<T, PyObject?>(takeArgs, minArgs) { args ->
-        if (args.size in minArgs..(takeArgs - 1)
-                && args.last() !is PyFunction) {
+        if (isDecoratorCall(args, minArgs, takeArgs, acceptsFlag, isFlag)) {
             // decorator mode; we return a function that accepts
             // a function and finally calls `fn`
             asPyFn<PyObject, PyObject>(1) { wrappedArgs ->
@@ -436,6 +466,33 @@ inline private fun <reified T: Any> asMaybeDecorator(
             null
         }
     }
+}
+
+private inline fun <T : Any> isDecoratorCall(
+    args: Array<T>, minArgs: Int, takeArgs: Int,
+    acceptsFlag: Boolean, isFlag: (String) -> Boolean
+): Boolean {
+    if (args.size !in minArgs..(takeArgs - 1)) return false
+
+    val lastArg = args.last()
+    if (lastArg is PyFunction) return false
+
+    if (acceptsFlag) {
+        if (lastArg is String && isFlag(lastArg)) {
+            return true
+        }
+
+        if (args.size == takeArgs - 1
+                && lastArg is String
+                && !isFlag(lastArg)) {
+            // one less than takeArgs, but last arg is not a flag.
+            // This must be a regular function call
+            return false
+        }
+    }
+
+    // otherwise, it's a decorator!
+    return true
 }
 
 inline private fun <reified T: Any> asUnitPyFn(

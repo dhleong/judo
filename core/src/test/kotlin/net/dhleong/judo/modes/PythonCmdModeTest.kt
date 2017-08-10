@@ -292,13 +292,30 @@ class PythonCmdModeTest {
             |prompt('^Input($1)', 'prompt $1>')
             """.trimMargin())
 
+        assertThat(judo.echos).isEmpty()
         assertThat(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
         val result = judo.prompts.process("Input(42)", { _, prompt ->
             lastPrompt = prompt
         })
         assertThat(result).isEmpty()
-        assertThat(lastPrompt).isEqualToIgnoringCase("prompt 42>")
+        assertThat(lastPrompt).isEqualTo("prompt 42>")
+    }
+
+    @Test fun promptWithFlag() {
+
+        mode.execute("""
+            |prompt('^Input($1)', 'color', 'prompt $1>')
+            """.trimMargin())
+
+        assertThat(judo.echos).isEmpty()
+        assertThat(judo.prompts.size).isEqualTo(1)
+        var lastPrompt: String? = null
+        val result = judo.prompts.process("Input(${ansi(1,2)}42)", { _, prompt ->
+            lastPrompt = prompt
+        })
+        assertThat(result).isEmpty()
+        assertThat(lastPrompt).isEqualTo("prompt ${ansi(1,2)}42${ansi(0)}>")
     }
 
     @Test fun sharedVars() {

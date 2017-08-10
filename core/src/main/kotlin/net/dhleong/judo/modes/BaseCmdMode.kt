@@ -87,27 +87,26 @@ private val COMMAND_HELP = mutableMapOf(
 
     "prompt" to buildHelp(
         listOf(
-            "prompt(inputSpec: String/Pattern, outputSpec: String)",
-            "prompt(inputSpec: String/Pattern, handler: Fn)",
-            "@prompt(inputSpec: String/Pattern)"
+            "prompt(inputSpec: String/Pattern, [options: String,] outputSpec: String)",
+            "prompt(inputSpec: String/Pattern, [options: String,] handler: Fn)",
+            "@prompt(inputSpec: String/Pattern [, options: String])"
         ),
         """
         Prepare a prompt to be displayed in the status area.
-        See :help alias for more about inputSpec.
+        See :help alias for more about `inputSpec`, and :help trigger for more
+        about the optional `options`.
         """.trimIndent()
     ),
 
     "trigger" to buildHelp(
         listOf(
-            "trigger(inputSpec: String/Pattern, handler: Fn)",
-            "trigger(inputSpec: String/Pattern, options: String, handler: Fn)",
-            "@trigger(inputSpec: String/Pattern, options: String)",
-            "@trigger(inputSpec: String/Pattern)"
+            "trigger(inputSpec: String/Pattern, [options: String,] handler: Fn)",
+            "@trigger(inputSpec: String/Pattern [, options: String])"
         ),
         """
         Declare a trigger. See :help alias for more about inputSpec.
-        `options` is a space-separated string that may contain any of:
-         color - Keep color codes in the values passed to the handler
+        `options` is an optional, space-separated string that may contain any of:
+             color - Keep color codes in the values passed to the handler
         """.trimIndent()
     ),
 
