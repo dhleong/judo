@@ -3,10 +3,8 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.util.InputHistory
-import net.dhleong.judo.util.hasCtrl
-import java.awt.event.KeyEvent
-import javax.swing.KeyStroke
 
 class ReverseInputSearchMode(
     val judo: IJudoCore,
@@ -26,23 +24,23 @@ class ReverseInputSearchMode(
         sendHistory.resetHistoryOffset()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
-            key.keyCode == KeyEvent.VK_ENTER -> {
+            key == Key.ENTER -> {
                 judo.send(buffer.toString(), fromMap)
                 judo.exitMode()
                 clearBuffer()
                 return
             }
 
-            key.keyChar == 'r' -> {
+            key.char == 'r' -> {
                 if (key.hasCtrl()) {
                     trySearch(true)
                     return
                 }
             }
 
-            key.keyChar == 'c' -> {
+            key.char == 'c' -> {
                 if (key.hasCtrl()) {
                     clearBuffer()
                     judo.exitMode()

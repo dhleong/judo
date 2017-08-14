@@ -2,13 +2,11 @@ package net.dhleong.judo.motions
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
  */
 class SimpleMotionKtTest {
-    val readKey: () -> KeyStroke = { KeyStroke.getKeyStroke(' ') }
 
     @Test fun charMotionBack() {
         val motion = charMotion(-1)

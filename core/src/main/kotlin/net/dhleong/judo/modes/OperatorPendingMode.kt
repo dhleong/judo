@@ -5,6 +5,7 @@ import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.StateKind
 import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
@@ -12,7 +13,6 @@ import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.normalizeForMotion
 import net.dhleong.judo.motions.repeat
-import javax.swing.KeyStroke
 
 val KEY_OPFUNC = StateKind<OperatorFunc>("net.dhleong.judo.modes.op.opfunc")
 val KEY_LAST_OP = StateKind<Motion>("net.dhleong.judo.modes.op.lastOp")
@@ -54,10 +54,10 @@ class OperatorPendingMode(
         input.clear()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
 
         // special case for eg dd, cc, etc
-        if (key.keyChar == currentFullLineMotionKey) {
+        if (key.char == currentFullLineMotionKey) {
             judo.exitMode()
             opfunc(buffer.size..0)
             return

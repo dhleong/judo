@@ -1,7 +1,7 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -15,7 +15,7 @@ fun JudoCore.setInput(buffer: String, cursor: Int) {
 fun JudoCore.type(keys: Keys) {
     val keysIter = keys.iterator()
     readKeys(object : BlockingKeySource {
-        override fun readKey(): KeyStroke {
+        override fun readKey(): Key {
             val next = keysIter.next()
             if (!keysIter.hasNext()) {
                 running = false

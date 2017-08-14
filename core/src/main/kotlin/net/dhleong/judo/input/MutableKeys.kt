@@ -1,28 +1,24 @@
 package net.dhleong.judo.input
 
-import net.dhleong.judo.util.describeTo
-import net.dhleong.judo.util.key
-import javax.swing.KeyStroke
-
 /**
- * A sequence of KeyStrokes, useful for
+ * A sequence of Keys, useful for
  *  storing key mappings
  */
-interface Keys : Collection<KeyStroke> {
+interface Keys : Collection<Key> {
     companion object {
         /**
          * Create an Keys from the given sequence
          */
-        fun of(vararg strokes: KeyStroke): Keys = of(listOf(*strokes))
+        fun of(vararg strokes: Key): Keys = of(listOf(*strokes))
 
-        fun of(strokes: List<KeyStroke>): Keys {
+        fun of(strokes: List<Key>): Keys {
             val result = MutableKeys(strokes.size)
             strokes.forEach { result.push(it) }
             return result
         }
 
         fun parse(rawKeys: String): Keys {
-            val parsed = mutableListOf<KeyStroke>()
+            val parsed = mutableListOf<Key>()
             val buffer: StringBuilder by lazy { StringBuilder() }
 
             var inSpecial = false
@@ -77,7 +73,7 @@ interface Keys : Collection<KeyStroke> {
         }
     }
 
-    operator fun get(index: Int): KeyStroke
+    operator fun get(index: Int): Key
 
     /**
      * @return a subset of the Keys in this sequence
@@ -90,21 +86,21 @@ interface Keys : Collection<KeyStroke> {
 }
 
 /**
- * A mutable sequence of KeyStrokes. Useful for tracking input
+ * A mutable sequence of Keys. Useful for tracking input
  * @author dhleong
  */
 class MutableKeys(initialCapacity: Int = 64) : Keys {
 
-    private val strokes = ArrayList<KeyStroke>(initialCapacity)
+    private val strokes = ArrayList<Key>(initialCapacity)
     private var hash = 7
 
     override val size: Int
         get() = strokes.size
 
-    override fun contains(element: KeyStroke): Boolean = strokes.contains(element)
-    override fun containsAll(elements: Collection<KeyStroke>): Boolean = strokes.containsAll(elements)
-    override operator fun get(index: Int): KeyStroke = strokes[index]
-    override fun iterator(): Iterator<KeyStroke> = strokes.iterator()
+    override fun contains(element: Key): Boolean = strokes.contains(element)
+    override fun containsAll(elements: Collection<Key>): Boolean = strokes.containsAll(elements)
+    override operator fun get(index: Int): Key = strokes[index]
+    override fun iterator(): Iterator<Key> = strokes.iterator()
     override fun isEmpty(): Boolean = strokes.isEmpty()
 
     override fun equals(other: Any?): Boolean {
@@ -134,7 +130,7 @@ class MutableKeys(initialCapacity: Int = 64) : Keys {
     override fun describeTo(out: Appendable) =
         strokes.forEach { it.describeTo(out) }
 
-    fun push(stroke: KeyStroke) {
+    fun push(stroke: Key) {
         strokes.add(stroke)
         hash += 31 * stroke.hashCode()
     }

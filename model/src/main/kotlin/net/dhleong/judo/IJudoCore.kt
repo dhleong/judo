@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IMapManager
 import net.dhleong.judo.net.JudoConnection
@@ -10,7 +11,6 @@ import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
-import javax.swing.KeyStroke
 
 val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persistentInput")
 
@@ -83,9 +83,9 @@ interface IJudoCore {
     fun connect(address: String, port: Int)
     fun createUserMode(name: String)
     fun disconnect()
-    fun feedKey(stroke: KeyStroke, remap: Boolean = true, fromMap: Boolean = false)
+    fun feedKey(stroke: Key, remap: Boolean = true, fromMap: Boolean = false)
     fun feedKeys(keys: String, remap: Boolean = true, mode: String = "")
-    fun feedKeys(keys: Sequence<KeyStroke>, remap: Boolean = true, mode: String = "")
+    fun feedKeys(keys: Sequence<Key>, remap: Boolean = true, mode: String = "")
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
@@ -93,7 +93,7 @@ interface IJudoCore {
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()
-    fun readKey(): KeyStroke
+    fun readKey(): Key
     fun reconnect()
     fun scrollPages(count: Int)
     fun scrollToBottom()

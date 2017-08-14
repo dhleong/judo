@@ -31,8 +31,8 @@ class Key private constructor(
         val CODE_RIGHT = 130
         val CODE_DOWN = 131
 
-        val CODE_PAGEUP = 132
-        val CODE_PAGEDOWN = 133
+        val CODE_PAGE_UP = 132
+        val CODE_PAGE_DOWN = 133
 
         val BACKSPACE: Key by lazy { ofChar(CODE_BACKSPACE.toChar()) }
         val ESCAPE: Key by lazy { ofChar(CODE_ESCAPE.toChar()) }
@@ -65,10 +65,16 @@ class Key private constructor(
 
             charCache[char.toInt()]?.let { return it }
 
-            doParse(char).let { key ->
+            return Key(char).let { key ->
                 charCache[char.toInt()] = key
-                return key
+                key
             }
+        }
+
+        fun ofChar(char: Char, vararg modifiers: Modifier): Key {
+            val modifierSet = modifiers.toMutableSet()
+            // TODO cache?
+            return Key(char, modifierSet)
         }
 
         private fun doParse(string: String): Key {
@@ -138,23 +144,13 @@ class Key private constructor(
                 "right" -> CODE_RIGHT
                 "down" -> CODE_DOWN
 
-                "pageup" -> CODE_PAGEUP
-                "pagedown" -> CODE_PAGEDOWN
+                "pageup" -> CODE_PAGE_UP
+                "pagedown" -> CODE_PAGE_DOWN
 
                 else -> throw IllegalArgumentException(
                     "Unknown key `$key`"
                 )
             }.toChar()
-        }
-
-        private fun doParse(char: Char): Key {
-            val asInt = char.toInt()
-            if (asInt >= 'A'.toInt() && asInt <= 'Z'.toInt()) {
-                val lower = Character.toLowerCase(char)
-                return Key(lower, setOf(Modifier.SHIFT))
-            }
-
-            return Key(char)
         }
     }
 
@@ -166,6 +162,7 @@ class Key private constructor(
     )
 
     override fun equals(other: Any?): Boolean {
+        if (other === this) return true
         if (other !is Key) return false
         return other.keyCode == keyCode
             && other.modifiers == modifiers
@@ -195,13 +192,13 @@ class Key private constructor(
             Key.CODE_RIGHT -> "right"
             Key.CODE_DOWN -> "down"
 
-            Key.CODE_PAGEUP -> "PageUp"
-            Key.CODE_PAGEDOWN -> "PageDown"
+            Key.CODE_PAGE_UP -> "PageUp"
+            Key.CODE_PAGE_DOWN -> "PageDown"
 
             else -> null
         }
 
-        val inBrackets = specialKey != null || modifiers.isEmpty()
+        val inBrackets = specialKey != null || modifiers.isNotEmpty()
         if (inBrackets) out.append('<')
 
         if (hasAlt()) out.append("alt ")
@@ -220,4 +217,10 @@ class Key private constructor(
     fun hasAlt() = Modifier.ALT in modifiers
     fun hasCtrl() = Modifier.CTRL in modifiers
     fun hasShift() = Modifier.SHIFT in modifiers
+
+    /** @return True if this key functions as tab */
+    fun isTab() = keyCode == Key.CODE_TAB
+        || char == 'i' && hasCtrl() // NOTE: ctrl+i == tab
 }
+
+fun key(string: String): Key = Key.parse(string)

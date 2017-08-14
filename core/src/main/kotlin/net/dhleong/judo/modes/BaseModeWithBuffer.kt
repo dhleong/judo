@@ -4,13 +4,12 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.normalizeForMotion
-import net.dhleong.judo.util.hasShift
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -51,7 +50,7 @@ abstract class BaseModeWithBuffer(
 
     /** @return True if we handled it as a mapping (or might yet) */
     protected fun tryMappings(
-        key: KeyStroke, allowRemap: Boolean,
+        key: Key, allowRemap: Boolean,
         input: MutableKeys,
         originalMaps: KeyMapping, remaps: KeyMapping?
     ): Boolean {
@@ -84,7 +83,7 @@ abstract class BaseModeWithBuffer(
         return false
     }
 
-    protected fun performTabCompletionFrom(key: KeyStroke, suggester: CompletionSuggester) {
+    protected fun performTabCompletionFrom(key: Key, suggester: CompletionSuggester) {
         if (key.hasShift()) {
             rewindTabCompletion(suggester)
         } else {

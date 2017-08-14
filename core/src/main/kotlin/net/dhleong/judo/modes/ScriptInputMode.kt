@@ -5,15 +5,13 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
-import net.dhleong.judo.util.hasCtrl
-import java.awt.event.KeyEvent
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -50,21 +48,20 @@ class ScriptInputMode(
         exitted = true
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
-            key.keyCode == KeyEvent.VK_ENTER -> {
+            key == Key.ENTER -> {
                 submitted = true
                 judo.exitMode()
                 return
             }
 
-            key.keyChar == 'c' && key.hasCtrl() -> {
+            key.char == 'c' && key.hasCtrl() -> {
                 judo.exitMode()
                 return
             }
 
-            key.keyCode == KeyEvent.VK_TAB
-                || key.keyChar == 'i' && key.hasCtrl() -> {
+            key.isTab() -> {
                 performTabCompletionFrom(key, suggester)
                 return
             }

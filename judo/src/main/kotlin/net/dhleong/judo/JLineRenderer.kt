@@ -1,5 +1,7 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.Modifier
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.OutputLine
 import org.jline.terminal.Attributes
@@ -15,12 +17,9 @@ import org.jline.utils.Curses
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
 import org.jline.utils.NonBlockingReader
-import java.awt.event.InputEvent
-import java.awt.event.KeyEvent
 import java.io.IOException
 import java.io.StringWriter
 import java.util.EnumSet
-import javax.swing.KeyStroke
 
 // ascii codes:
 val KEY_ESCAPE = 27
@@ -59,7 +58,7 @@ class JLineRenderer(
     private var cursor = 0
     private var lastKeyTime: Long = -1
 
-    private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> KeyStroke?>>(8)
+    private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> Key?>>(8)
 
     private var cursorType: CursorType = CursorType.BLOCK
 
@@ -95,16 +94,16 @@ class JLineRenderer(
         // register handlers for keystrokes that are done via escape sequences
         registerEscapeHandler(InfoCmp.Capability.key_mouse, this::readMouseEvent)
         registerEscapeHandler(InfoCmp.Capability.key_btab) {
-            KeyStroke.getKeyStroke(KeyEvent.VK_TAB, KeyEvent.SHIFT_DOWN_MASK)
+            Key.parse("shift tab")
         }
         registerEscapeHandler(InfoCmp.Capability.key_down) {
-            KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0)
+            Key.parse("down")
         }
         registerEscapeHandler(InfoCmp.Capability.key_up) {
-            KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0)
+            Key.parse("up")
         }
         registerEscapeHandler(listOf(KEY_DELETE), {
-            KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, KeyEvent.ALT_DOWN_MASK)
+            Key.parse("alt bs")
         })
 
         // determine capabilities
@@ -186,7 +185,7 @@ class JLineRenderer(
         }
     }
 
-    override fun readKey(): KeyStroke? {
+    override fun readKey(): Key? {
         // NOTE: we wait an arbitrary amount of time, because on timeout
         // we just loop again. BUT! We don't use the version without a
         // timeout because if we wait for a *really long time* we occasionally
@@ -208,8 +207,8 @@ class JLineRenderer(
                 // not a known escape? ignore and try again
                 return null
             }
-            127 -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0)
-            '\r'.toInt() -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
+            127 -> Key.BACKSPACE
+            '\r'.toInt() -> Key.ENTER
 
             in 1..26 -> {
                 if (char == 10) {
@@ -220,15 +219,15 @@ class JLineRenderer(
                         // since with multiple lines makes since in a multi-line editor), when
                         // the last-read keyStroke was super recent, we just treat it as an
                         // ENTER in order to avoid accidentally triggering a ctrl-j mapping
-                        return KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0)
+                        return Key.ENTER
                     }
                 }
 
                 val actualChar = 'a' + char - 1
-                return KeyStroke.getKeyStroke(actualChar, InputEvent.CTRL_DOWN_MASK)
+                return Key.ofChar(actualChar, Modifier.CTRL)
             }
 
-            else -> KeyStroke.getKeyStroke(char.toChar())
+            else -> Key.ofChar(char.toChar())
         }
 
     }
@@ -237,7 +236,7 @@ class JLineRenderer(
      * Quickly attempt to read either an escape sequence,
      * or a simple <esc> key press
      */
-    private fun readEscape(): KeyStroke? {
+    private fun readEscape(): Key? {
         val reader = terminal.reader()
         val peek = reader.peek(1)
         escapeSequenceHandlers[peek]?.let { candidates ->
@@ -250,22 +249,15 @@ class JLineRenderer(
             }
         }
 
-        return KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0)
+        return Key.ESCAPE
     }
 
-    private fun readMouseEvent(): KeyStroke? {
+    private fun readMouseEvent(): Key? {
         val event = terminal.readMouseEvent()
         if (event.type == MouseEvent.Type.Wheel) {
             return when(event.button) {
-                MouseEvent.Button.WheelUp -> KeyStroke.getKeyStroke(
-                    KeyEvent.VK_PAGE_UP,
-                    0
-                )
-
-                MouseEvent.Button.WheelDown -> KeyStroke.getKeyStroke(
-                    KeyEvent.VK_PAGE_DOWN,
-                    0
-                )
+                MouseEvent.Button.WheelUp -> Key.parse("PageUp")
+                MouseEvent.Button.WheelDown -> Key.parse("PageDown")
 
                 else -> null
             }
@@ -274,7 +266,7 @@ class JLineRenderer(
         return null
     }
 
-    private fun registerEscapeHandler(key: InfoCmp.Capability, block: () -> KeyStroke?) {
+    private fun registerEscapeHandler(key: InfoCmp.Capability, block: () -> Key?) {
         val strokes = terminal.keystrokesFor(key) ?: return
 
         if (strokes.length != 3) throw IllegalStateException("Expected $key to be a 3-char esc sequence")
@@ -283,8 +275,8 @@ class JLineRenderer(
         registerEscapeHandler(strokes.toCharArray().drop(1).map { it.toInt() }, block)
     }
 
-    private fun registerEscapeHandler(strokes: List<Int>, block: () -> KeyStroke?) {
-        escapeSequenceHandlers.getOrPut(strokes[0], { HashMap<Int, () -> KeyStroke?>() }).let {
+    private fun registerEscapeHandler(strokes: List<Int>, block: () -> Key?) {
+        escapeSequenceHandlers.getOrPut(strokes[0], { HashMap<Int, () -> Key?>() }).let {
             if (strokes.size == 2) {
                 it[strokes[1]] = block
             } else {

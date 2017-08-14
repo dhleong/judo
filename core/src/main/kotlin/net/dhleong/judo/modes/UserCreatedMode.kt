@@ -1,9 +1,9 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -20,7 +20,7 @@ class UserCreatedMode(
         input.clear()
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         input.push(key)
 
         userMappings.match(input)?.let {
