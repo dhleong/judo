@@ -16,9 +16,9 @@ Here's a list of features we definitely support:
     * `a A D C i I p P r x X y Y ~`
     * With motions: `d c gu gU g~`
 * Undo history:
-    * `u <ctrl r> .`
+    * `u <ctrl-r> .`
 * Scrolling
-    * `<ctrl f>  <ctrl b>`
+    * `<ctrl-f>  <ctrl-b>`
 * Searching with `/` and `n`, `N`
     * This searches through the output window
 * Registers, including `"*` and `"+` for the clipboard
@@ -37,26 +37,10 @@ Judo editing is always single-line, much like the Vim bindings for bash
 shells, or similar. So, `j` and `k` scroll the input history rather than
 being vertical motions.
 
-### Mappings with modifier keys
+### `<ctrl-s>` is for reverse input history search
 
-Judo supports these, but currently requires you use the format:
-
-    <ctrl w>
-
-instead of
-
-    <ctrl-w>
-
-or
-
-    <c-w>
-
-This may change in the future.
-
-### `<ctrl s>` is for reverse input history search
-
-This one is borrowed from bash, where it was originally `<ctrl r>`:
-since `/` is used for searching output, we use `<ctrl s>` to search
+This one is borrowed from bash, where it was originally `<ctrl-r>`:
+since `/` is used for searching output, we use `<ctrl-s>` to search
 through previous input. In this mode, the text you type will be used to
 search backwards through history for a matching line. As an added bonus,
 you can provide multi-word filtering by separating parts by a space.
@@ -79,13 +63,13 @@ or
 
 or any variation thereof to try to match "part."
 
-Pressing `<ctrl s>` again while in this mode will continue searching back
+Pressing `<ctrl-s>` again while in this mode will continue searching back
 through the history with the same text.
 
-If you prefer the old `<ctrl r>` mapping, feel free to restore it yourself:
+If you prefer the old `<ctrl-r>` mapping, feel free to restore it yourself:
 
 ```python
-nnoremap('<ctrl r>', '<ctrl s>')
+nnoremap('<ctrl-r>', '<ctrl-s>')
 ```
 
 But don't forget to create a new mapping for "redo"!
