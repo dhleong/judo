@@ -1,7 +1,5 @@
 package net.dhleong.judo.input
 
-import javax.swing.KeyStroke
-
 /**
  * @author dhleong
  */
@@ -15,10 +13,10 @@ class CountReadingBuffer {
      */
     fun toRepeatCount(): Int = maxOf(1, runningCount)
 
-    fun tryPush(stroke: KeyStroke): Boolean {
-        if (stroke.keyChar !in '0'..'9') return false
+    fun tryPush(stroke: Key): Boolean {
+        if (stroke.char !in '0'..'9') return false
 
-        val keyNumericValue = (stroke.keyChar - '0')
+        val keyNumericValue = (stroke.char - '0')
         if (keyNumericValue == 0 && runningCount == 0) {
             // no previous counts read, and this is just 0;
             // let that be a regular keypress

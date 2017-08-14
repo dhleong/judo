@@ -8,7 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong

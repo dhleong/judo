@@ -1,6 +1,6 @@
 package net.dhleong.judo
 
-import javax.swing.KeyStroke
+import net.dhleong.judo.input.Key
 
 /**
  * @author dhleong
@@ -9,7 +9,7 @@ import javax.swing.KeyStroke
 interface Mode {
     val name: String
 
-    fun feedKey(key: KeyStroke, remap: Boolean = true, fromMap: Boolean = false)
+    fun feedKey(key: Key, remap: Boolean = true, fromMap: Boolean = false)
     fun onEnter()
 
     fun onExit() {

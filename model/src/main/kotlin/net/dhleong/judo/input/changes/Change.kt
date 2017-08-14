@@ -2,7 +2,7 @@ package net.dhleong.judo.input.changes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
-import javax.swing.KeyStroke
+import net.dhleong.judo.input.Key
 
 typealias UndoableAction = (InputBuffer) -> Unit
 
@@ -17,7 +17,7 @@ interface AmendableUndoable : Undoable
  */
 class Change {
     var cursor: Int = 0
-    internal val keys = ArrayList<KeyStroke>()
+    internal val keys = ArrayList<Key>()
 
     val undoables = ArrayList<Undoable>()
 
@@ -31,7 +31,7 @@ class Change {
         judo.exitMode() // changes should always end in normal mode
     }
 
-    internal operator fun plusAssign(key: KeyStroke) {
+    internal operator fun plusAssign(key: Key) {
         keys += key
     }
 

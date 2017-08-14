@@ -1,11 +1,11 @@
 package net.dhleong.judo
 
-import javax.swing.KeyStroke
+import net.dhleong.judo.input.Key
 
 /**
  * @author dhleong
  */
 
 interface BlockingKeySource {
-    fun readKey(): KeyStroke?
+    fun readKey(): Key?
 }

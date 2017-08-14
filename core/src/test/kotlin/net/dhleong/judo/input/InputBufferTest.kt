@@ -2,12 +2,9 @@ package net.dhleong.judo.input
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.register.RegisterManager
-import net.dhleong.judo.util.key
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.awt.event.KeyEvent.VK_BACK_SPACE
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -40,7 +37,7 @@ class InputBufferTest {
         assertThat(buffer.toString()).isEqualTo("malcolm reynolds")
         assertThat(buffer.cursor).isEqualTo(16)
 
-        buffer.type(KeyStroke.getKeyStroke(VK_BACK_SPACE, 0))
+        buffer.type(Key.BACKSPACE)
 
         assertThat(buffer.toString()).isEqualTo("malcolm reynold")
         assertThat(buffer.cursor).isEqualTo(15)
@@ -51,7 +48,7 @@ class InputBufferTest {
 
         buffer.type("malcolm reynolds")
         buffer.cursor = 8
-        buffer.type(KeyStroke.getKeyStroke(VK_BACK_SPACE, 0))
+        buffer.type(Key.BACKSPACE)
 
         assertThat(buffer.toString()).isEqualTo("malcolmreynolds")
         assertThat(buffer.cursor).isEqualTo(7)
@@ -60,7 +57,7 @@ class InputBufferTest {
     @Test fun backspace_empty() {
         assertThat(buffer.toString()).isEmpty()
 
-        buffer.type(KeyStroke.getKeyStroke(VK_BACK_SPACE, 0))
+        buffer.type(Key.BACKSPACE)
 
         assertThat(buffer.toString()).isEmpty()
         assertThat(buffer.cursor).isEqualTo(0)

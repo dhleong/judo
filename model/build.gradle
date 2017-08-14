@@ -16,5 +16,6 @@ dependencies {
     compile deps.kotlin
 
     testCompile deps.test.junit
+    testCompile deps.test.assertj
 }
 

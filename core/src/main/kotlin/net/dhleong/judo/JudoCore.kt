@@ -10,6 +10,7 @@ import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.logging.LogManager
@@ -43,14 +44,12 @@ import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
-import java.awt.event.KeyEvent
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.util.concurrent.ArrayBlockingQueue
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -66,9 +65,9 @@ enum class DebugLevel {
 }
 
 internal val UNRECORDED_KEY_CODES = arrayOf(
-    KeyEvent.VK_ESCAPE,
-    KeyEvent.VK_PAGE_UP,
-    KeyEvent.VK_PAGE_DOWN
+    Key.CODE_ESCAPE,
+    Key.CODE_PAGE_UP,
+    Key.CODE_PAGE_DOWN
 )
 
 class JudoCore(
@@ -471,10 +470,10 @@ class JudoCore(
         }
     }
 
-    override fun feedKey(stroke: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
 //        echo("## feedKey($stroke)")
         when (stroke.keyCode) {
-            KeyEvent.VK_ESCAPE -> {
+            Key.CODE_ESCAPE -> {
                 // reset the current register
                 registers.resetCurrent()
 
@@ -486,11 +485,11 @@ class JudoCore(
                 return
             }
 
-            KeyEvent.VK_PAGE_UP -> {
+            Key.CODE_PAGE_UP -> {
                 tabpage.currentWindow.scrollLines(1)
                 return
             }
-            KeyEvent.VK_PAGE_DOWN -> {
+            Key.CODE_PAGE_DOWN -> {
                 tabpage.currentWindow.scrollLines(-1)
                 return
             }
@@ -518,7 +517,7 @@ class JudoCore(
         )
     }
 
-    override fun feedKeys(keys: Sequence<KeyStroke>, remap: Boolean, mode: String) {
+    override fun feedKeys(keys: Sequence<Key>, remap: Boolean, mode: String) {
         val oldMode = currentMode
 
         if (mode != "") {
@@ -541,9 +540,9 @@ class JudoCore(
         }
     }
 
-    fun feedKeys(keys: Iterator<KeyStroke>, remap: Boolean, fromMap: Boolean) {
+    fun feedKeys(keys: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
         readKeys(object : BlockingKeySource {
-            override fun readKey(): KeyStroke = keys.next()
+            override fun readKey(): Key = keys.next()
         }, remap = remap, fromMap = fromMap) {
             keys.hasNext()
         }
@@ -570,7 +569,7 @@ class JudoCore(
         postToUiQueue.put(runnable)
     }
 
-    override fun readKey(): KeyStroke {
+    override fun readKey(): Key {
         val producer = keyStrokeProducer!!
         while (true) {
             val key = producer.readKey() // must be initialized by now

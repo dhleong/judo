@@ -37,7 +37,7 @@ fun findMotion(step: Int): Motion {
         if (step > 0) listOf(Motion.Flags.INCLUSIVE)
         else emptyList()
     return createMotion(flags) { core, buffer, start ->
-        val target = core.readKey().keyChar
+        val target = core.readKey().char
         core.state[KEY_LAST_FIND] = FindInfo(::calculateFind, step, target)
         calculateFind(step, target, buffer, start)
     } repeatWith(repeatFindMotion(step))
@@ -54,7 +54,7 @@ fun tilMotion(step: Int): Motion {
         if (step > 0) listOf(Motion.Flags.INCLUSIVE)
         else emptyList()
     return createMotion(flags) { core, buffer, cursor ->
-        val target = core.readKey().keyChar
+        val target = core.readKey().char
         core.state[KEY_LAST_FIND] = FindInfo(::calculateTil, step, target, offset = step)
         calculateTil(step, target, buffer, cursor)
     }

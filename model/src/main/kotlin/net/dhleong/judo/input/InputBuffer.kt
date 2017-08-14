@@ -3,8 +3,6 @@ package net.dhleong.judo.input
 import net.dhleong.judo.input.changes.AmendableUndoable
 import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.register.IRegisterManager
-import java.awt.event.KeyEvent.VK_BACK_SPACE
-import javax.swing.KeyStroke
 import kotlin.properties.Delegates
 
 /**
@@ -45,11 +43,11 @@ class InputBuffer(
         get() = buffer.lastIndex
 
     /**
-     * Type the given KeyStroke into the buffer at the current cursor
+     * Type the given Key into the buffer at the current cursor
      */
-    fun type(key: KeyStroke) {
+    fun type(key: Key) {
         when (key.keyCode) {
-            VK_BACK_SPACE -> {
+            Key.CODE_BACKSPACE -> {
                 if (cursor > 0 && cursor == buffer.length) {
                     amendBackspaceUndo(cursor - 1, buffer[cursor - 1])
 
@@ -68,9 +66,9 @@ class InputBuffer(
         }
 
         if (cursor == buffer.length) {
-            buffer.append(key.keyChar)
+            buffer.append(key.char)
         } else {
-            buffer.insert(cursor, key.keyChar)
+            buffer.insert(cursor, key.char)
         }
         amendInsertUndo(cursor, 1)
 

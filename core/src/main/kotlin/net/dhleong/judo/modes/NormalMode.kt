@@ -4,6 +4,7 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
@@ -17,9 +18,6 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.util.InputHistory
-import net.dhleong.judo.util.hasCtrl
-import java.awt.event.KeyEvent
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -121,10 +119,10 @@ class NormalMode(
             buffer.undoMan.initChange('r')
             val replacement = judo.readKey()
             if (replacement.hasCtrl()
-                || replacement.keyCode == KeyEvent.VK_ESCAPE) {
+                || replacement == Key.ESCAPE) {
                 // TODO beep?
             } else if (!buffer.isEmpty()) {
-                val char = replacement.keyChar.toString()
+                val char = replacement.char.toString()
                 buffer.replace(range, char.repeat(range.endInclusive - range.start + 1))
             }
         },
@@ -188,10 +186,10 @@ class NormalMode(
             buffer.undoMan.initChange('"')
             val register = core.readKey()
             if (register.hasCtrl()
-                || register.keyCode == KeyEvent.VK_ESCAPE) {
+                || register == Key.ESCAPE) {
                 // TODO beep?
             } else {
-                core.registers.current = core.registers[register.keyChar]
+                core.registers.current = core.registers[register.char]
             }
         },
 
@@ -271,8 +269,8 @@ class NormalMode(
         fromOpMode = false
     }
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
-        if (key.keyCode == KeyEvent.VK_ENTER) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+        if (key == Key.ENTER) {
             judo.send(buffer.toString(), fromMap)
             clearBuffer()
             return
@@ -281,7 +279,7 @@ class NormalMode(
         // read in counts
         if (count.tryPush(key)) {
             // still reading...
-            buffer.undoMan.initChange(key.keyChar)
+            buffer.undoMan.initChange(key.char)
             return
         }
 

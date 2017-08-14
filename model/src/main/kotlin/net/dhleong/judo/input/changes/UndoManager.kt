@@ -2,8 +2,8 @@ package net.dhleong.judo.input.changes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import java.util.ArrayDeque
-import javax.swing.KeyStroke
 
 /**
  * @author dhleong
@@ -76,7 +76,7 @@ class UndoManager {
         currentChange.let {
             // reset to just the initial key
             it.keys.clear()
-            it.keys.add(KeyStroke.getKeyStroke(initialKey))
+            it.keys.add(Key.ofChar(initialKey))
         }
     }
 
@@ -104,7 +104,7 @@ class UndoManager {
     /**
      * To be called BEFORE other key processing
      */
-    fun onKeyStroke(key: KeyStroke) {
+    fun onKeyStroke(key: Key) {
         // NOTE: obviously it'd be nice if this were actually called *after*
         //  normal key processing, so we don't have to manually provide the
         //  initial key to [initChange], but due to the blocking nature of

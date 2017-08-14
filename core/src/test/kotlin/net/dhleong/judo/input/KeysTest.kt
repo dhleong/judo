@@ -13,7 +13,7 @@ class KeysTest {
             .isNotEqualTo(keys("<space>sp"))
 
         assertThat(keys("<space>ps"))
-            .extracting { it.keyChar }
+            .extracting { it.char }
             .containsExactly(' ', 'p', 's')
     }
 
@@ -21,21 +21,21 @@ class KeysTest {
         // by special I mean we use it to input
         // keys like `<ctrl d>`
         assertThat(keys("<"))
-            .extracting { it.keyChar }
+            .extracting { it.char }
             .containsExactly('<')
 
         assertThat(keys(">"))
-            .extracting { it.keyChar }
+            .extracting { it.char }
             .containsExactly('>')
     }
 
     @Test fun parseSequentialSpecial() {
         assertThat(keys("<<"))
-            .extracting { it.keyChar }
+            .extracting { it.char }
             .containsExactly('<', '<')
 
         assertThat(keys("<>"))
-            .extracting { it.keyChar }
+            .extracting { it.char }
             .containsExactly('<', '>')
     }
 }

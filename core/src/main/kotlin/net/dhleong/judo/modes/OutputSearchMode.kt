@@ -5,14 +5,12 @@ import net.dhleong.judo.StateKind
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
-import net.dhleong.judo.util.hasCtrl
-import java.awt.event.KeyEvent
-import javax.swing.KeyStroke
 
 val KEY_LAST_SEARCH_STRING = StateKind<CharSequence>("net.dhleong.judo.modes.search.lastSearch")
 
@@ -39,9 +37,9 @@ class OutputSearchMode(
 
     private val suggester = CompletionSuggester(completions)
 
-    override fun feedKey(key: KeyStroke, remap: Boolean, fromMap: Boolean) {
+    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
-            key.keyCode == KeyEvent.VK_ENTER -> {
+            key == Key.ENTER -> {
                 val searchString = buffer.toString().trim()
 
                 clearBuffer()
@@ -52,15 +50,13 @@ class OutputSearchMode(
                 return
             }
 
-            key.keyChar == 'c' && key.hasCtrl() -> {
+            key.char == 'c' && key.hasCtrl() -> {
                 clearBuffer()
                 exitMode()
                 return
             }
 
-            // NOTE: ctrl+i == tab
-            key.keyCode == KeyEvent.VK_TAB
-                || key.keyChar == 'i' && key.hasCtrl() -> {
+            key.isTab() -> {
                 performTabCompletionFrom(key, suggester)
                 return
             }
@@ -102,7 +98,7 @@ class OutputSearchMode(
     /**
      * Insert a key stroke at the current cursor position
      */
-    private fun insertChar(key: KeyStroke) {
+    private fun insertChar(key: Key) {
         val wasEmpty = buffer.isEmpty()
         buffer.type(key)
         if (buffer.isEmpty() && wasEmpty) {
