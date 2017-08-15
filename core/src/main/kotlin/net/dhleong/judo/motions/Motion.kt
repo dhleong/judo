@@ -50,10 +50,10 @@ interface Motion {
 }
 
 fun IntRange.normalizeForMotion(motion: Motion): IntRange {
-    if (motion.isInclusive && start < endInclusive) {
-        return start..(endInclusive + 1)
-    } else if (motion.isInclusive && start > endInclusive) {
-        return start..(endInclusive + 1)
+    if (motion.isInclusive && first <= last) {
+        return first..(last + 1)
+    } else if (motion.isInclusive && first > last) {
+        return first..(last + 1)
     } else {
         return this
     }
