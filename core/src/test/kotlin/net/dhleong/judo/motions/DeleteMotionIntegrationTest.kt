@@ -108,54 +108,6 @@ class DeleteMotionIntegrationTest : AbstractMotionIntegrationTest() {
             .isEqualTo("word word3" to 5)
     }
 
-    @Test fun deleteInnerQuotes() {
-        judo.setInput("word \"word2\" word3", 8)
-
-        judo.type(keys("di\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word \"\" word3" to 6)
-    }
-
-    @Test fun deleteInnerQuotes_hanging() {
-        judo.setInput("word \"", 0)
-
-        judo.type(keys("di\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word \"" to 0)
-    }
-
-    @Test fun deleteInnerQuotes_nothing() {
-        judo.setInput("word word2 word3", 0)
-
-        judo.type(keys("di\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word word2 word3" to 0)
-    }
-
-    @Test fun deleteInnerQuotes_searchForPair() {
-        judo.setInput("word \"word2\" word3", 0)
-
-        judo.type(keys("di\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word \"\" word3" to 6)
-    }
-
-    @Test fun deleteInnerParens() {
-        judo.setInput("word (word2) word3", 5)
-
-        judo.type(keys("dib"))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word () word3" to 6)
-    }
-
-    @Test fun deleteInnerParens_searchForPair() {
-        judo.setInput("word (word2) word3", 0)
-
-        judo.type(keys("dib"))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word () word3" to 6)
-    }
-
     @Test fun deleteOuterWord() {
         judo.setInput("word word2 word3", 5)
 
@@ -196,45 +148,6 @@ class DeleteMotionIntegrationTest : AbstractMotionIntegrationTest() {
             .isEqualTo("word w@rd2" to 9)
     }
 
-    @Test fun deleteOuterQuotes() {
-        judo.setInput("word \"word2\" word3", 8)
-
-        judo.type(keys("da\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word  word3" to 5)
-    }
-
-    @Test fun deleteOuterQuotes_all() {
-        judo.setInput("\"word2\"", 0)
-
-        judo.type(keys("da\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("" to 0)
-    }
-
-    @Test fun deleteOuterQuotes_hanging() {
-        judo.setInput("word \"", 0)
-
-        judo.type(keys("da\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word \"" to 0)
-    }
-
-    @Test fun deleteOuterQuotes_nothing() {
-        judo.setInput("word word2 word3", 0)
-
-        judo.type(keys("da\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word word2 word3" to 0)
-    }
-
-    @Test fun deleteOuterQuotes_searchForPair() {
-        judo.setInput("word \"word2\" word3", 0)
-
-        judo.type(keys("da\""))
-        assertThat(renderer.inputLine)
-            .isEqualTo("word  word3" to 5)
-    }
 
     @Test fun deleteToEnd_last() {
         judo.setInput("word w@rd2 word3", 11)

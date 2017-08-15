@@ -24,7 +24,11 @@ internal fun calculateInnerPair(
     isRecursion: Boolean = false
 ): IntRange {
     val closeRange = calculateFind(1, close, buffer, cursor)
-    if (closeRange.last == cursor) {
+    val closeEnd = closeRange.last
+    if (closeEnd == cursor &&
+            // NOTE: if closeEnd is within the buffer, it could actually
+            // be the closing pair!
+            (closeEnd >= buffer.length || buffer[closeEnd] != close)) {
         // couldn't find close? just give up
         return closeRange
     }
