@@ -1,6 +1,5 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
@@ -14,8 +13,8 @@ import java.io.File
  */
 class JudoCoreTest {
 
-    var renderer = TestableJudoRenderer()
-    lateinit var judo: JudoCore
+    private var renderer = TestableJudoRenderer()
+    private lateinit var judo: JudoCore
 
     @Before fun setUp() {
         renderer.output.clear()
@@ -45,6 +44,16 @@ class JudoCoreTest {
                 "Take my land,",
                 "",
                 "Take me"
+            )
+    }
+
+    @Test fun `(appendOutput) no excessive newlines from CR`() {
+        judo.appendOutput("Take my love, \r${0x27}[1;40m\nTake my land,\r${0x27}[1;40m")
+
+        assertThat(renderer.outputLines)
+            .containsExactly(
+                "Take my love, \r${0x27}[1;40m",
+                "Take my land,\r${0x27}[1;40m"
             )
     }
 
@@ -142,7 +151,7 @@ class JudoCoreTest {
         judo.send("take land", fromMap = false)
         assertThat(history.size).isEqualTo(2)
 
-        judo.onDisconnect(Proxy<JudoConnection>())
+        judo.onDisconnect(Proxy())
 
         assertThat(tmpFile)
             .exists()

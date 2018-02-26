@@ -835,6 +835,13 @@ class JudoCore(
                         if (char == '\n') '\r'
                         else '\n'
 
+                    if (char == '\r' && (i + 1 >= count || buffer[i + 1] != opposite)) {
+                        // carriage return is apparently occasionally
+                        // sent by itself, but not intended to indicate
+                        // an actual new line (what?)
+                        continue;
+                    }
+
                     val actualLine = primaryWindow.appendLine(
                         buffer.subSequence(lastLineEnd, i),
                         isPartialLine = false
