@@ -21,7 +21,7 @@ ext.vs = [
     commonsNet: '3.6',
     guava: '22.0',
     jline: '3.3.0',
-    jython: '2.7.1b3',
+    jython: '2.7.1',
     moshi: '1.5.0',
 ]
 
