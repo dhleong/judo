@@ -16,11 +16,11 @@ task clean(type: Delete) {
 }
 
 ext.vs = [
-    kotlin: '1.1.4',
+    kotlin: '1.2.21',
 
     commonsNet: '3.6',
     guava: '22.0',
-    jline: '3.3.0',
+    jline: '3.5.1',
     jython: '2.7.1',
     moshi: '1.5.0',
 ]
