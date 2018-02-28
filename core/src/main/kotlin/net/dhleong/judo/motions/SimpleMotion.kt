@@ -22,12 +22,12 @@ fun xCharMotion(step: Int) =
         }
     }
 
-fun toEndMotion(): Motion =
+fun toEndMotion() =
     createMotion(Motion.Flags.INCLUSIVE) { buffer, cursor ->
-        cursor..buffer.lastIndex
+        cursor..buffer.length
     }
 
-fun toStartMotion(): Motion =
+fun toStartMotion() =
     createMotion { _, cursor ->
         cursor..0
     }

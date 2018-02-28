@@ -111,6 +111,12 @@ class InsertMode(
     override fun renderInputBuffer(): String = buffer.toString()
     override fun getCursor(): Int = buffer.cursor
 
+    override fun clampCursor(buffer: InputBuffer) {
+        if (buffer.cursor > buffer.size) {
+            buffer.cursor = maxOf(0, buffer.size)
+        }
+    }
+
     private fun clearBuffer() {
         input.clear()
         buffer.clear()

@@ -32,9 +32,15 @@ abstract class BaseModeWithBuffer(
 
     protected fun applyMotion(motion: Motion, clampCursor: Boolean = true) {
         motion.applyTo(judo, buffer)
-        if (clampCursor && buffer.cursor > buffer.lastIndex) {
-            buffer.cursor = maxOf(0, buffer.lastIndex)
+        if (clampCursor) {
+            clampCursor(buffer)
         }
+    }
+
+    protected open fun clampCursor(buffer: InputBuffer) {
+         if (buffer.cursor > buffer.lastIndex) {
+             buffer.cursor = maxOf(0, buffer.lastIndex)
+         }
     }
 
     /**

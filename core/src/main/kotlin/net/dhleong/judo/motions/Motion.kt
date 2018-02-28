@@ -21,7 +21,7 @@ interface Motion {
     val flags: EnumSet<Flags>
 
     val isInclusive: Boolean
-        get() = flags.contains(Motion.Flags.INCLUSIVE)
+        get() = flags.contains(Flags.INCLUSIVE)
 
     val isTextObject: Boolean
         get() = flags.contains(Flags.TEXT_OBJECT)
@@ -49,15 +49,14 @@ interface Motion {
     fun toRepeatable(): Motion = this
 }
 
-fun IntRange.normalizeForMotion(motion: Motion): IntRange {
+fun IntRange.normalizeForMotion(motion: Motion): IntRange =
     if (motion.isInclusive && first <= last) {
-        return first..(last + 1)
+        first..(last + 1)
     } else if (motion.isInclusive && first > last) {
-        return first..(last + 1)
+        first..(last + 1)
     } else {
-        return this
+        this
     }
-}
 
 internal fun createMotion(
         flag: Motion.Flags,
@@ -69,10 +68,6 @@ internal fun createMotion(
     createMotion(flags) { _, buffer, cursor ->
         calculate(buffer, cursor)
     }
-internal fun createMotion(
-        flag: Motion.Flags,
-        calculate: MotionCalculator): Motion =
-    createMotion(listOf(flag), calculate)
 internal fun createMotion(
     flags: List<Motion.Flags> = emptyList(),
     calculate: MotionCalculator): Motion {
@@ -95,6 +90,7 @@ internal infix fun Motion.repeatWith(repeatable: Motion): Motion {
     }
 }
 
+@Suppress("FunctionName")
 inline fun <reified T : Enum<T>> EnumSet(items: List<T>): EnumSet<T> =
     when (items.size) {
         0 -> EnumSet.noneOf(T::class.java)
