@@ -15,10 +15,10 @@ can be bound to do many different things, which very based on the current "mode.
 
 ### Normal Mode
 
-Normal Mode is largely identical to Vim's, where keys used to move around the input
+Normal Mode is largely identical to Vim's, where keys are used to move around the input
 buffer and perform large editing *verbs*, or *actions*. A *verb* takes an *object*
 (more commonly referred to as *motions*), just like in most languages. For example,
-you use the `delete` verb (bound to the `d` key) with the `word` object (bound to
+if you use the `delete` verb (bound to the `d` key) with the `word` object (bound to
 the `w` key), you will *delete* until the start of the next "word." This is done by
 simply typing `dw` in Normal Mode. There's also an `end of line` object, `$`, so
 typing `d$` will delete from the current position all the way to the end of the line.
@@ -30,9 +30,10 @@ Note that not all verbs and motions from Vim are implemented in Judo—yet!
 
 ### Insert Mode
 
-Insert Mode is also a largely identical to Vim's, and is equivalent in function to
-most other editors. When you type in Insert Mode, the text gets *inserted* into the
-input buffer.
+Insert Mode is also largely identical to Vim's, and is equivalent in function to the
+*only* mode in most other editors. When you type in Insert Mode, the text gets
+*inserted* into the input buffer. Pressing the escape key, or hitting `ctrl+[`,
+in Insert Mode—or any other mode—will send you back to Normal Mode.
 
 ### Command Mode
 
