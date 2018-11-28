@@ -16,9 +16,11 @@ class SimpleMotionKtTest {
         assertThat(motion.calculate("0123", 0))
             .isEqualTo(0..0)
 
+        @Suppress("EmptyRange")
         assertThat(motion.calculate("0123", 1))
             .isEqualTo(1..0)
 
+        @Suppress("EmptyRange")
         assertThat(motion.calculate("0123", 2))
             .isEqualTo(2..1)
     }

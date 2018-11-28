@@ -3,9 +3,9 @@ package net.dhleong.judo.alias
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.PatternSpec
 
-class AliasManager : IAliasManager {
+private const val MAX_ITERATIONS = 50
 
-    private val MAX_ITERATIONS = 50
+class AliasManager : IAliasManager {
 
     internal val aliases = mutableListOf<Alias>()
 
@@ -75,7 +75,7 @@ class AliasManager : IAliasManager {
     fun process(input: CharSequence, postProcess: (Int, String) -> String): CharSequence {
         val builder = IStringBuilder.from(input)
         aliases.forEachIndexed { index, alias ->
-            alias.parse(builder, { postProcess(index, it) })
+            alias.parse(builder) { postProcess(index, it) }
         }
         return builder
     }
@@ -99,7 +99,7 @@ class AliasManager : IAliasManager {
 
 class VariableOutputProcessor(outputSpec: String) {
 
-    val processors = mutableListOf<AliasProcesser>()
+    private val processors = mutableListOf<AliasProcesser>()
 
     init {
         var lastEnd = 0

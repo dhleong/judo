@@ -21,7 +21,7 @@ class CircularArrayList<E> : Collection<E> {
         initialCapacity: Int = minOf(maxCapacity, 2048)
     ) {
         this.maxCapacity = maxCapacity
-        array = arrayOfNulls<Any>(initialCapacity)
+        array = arrayOfNulls(initialCapacity)
     }
 
     internal constructor(inArray: Array<Any?>, start: Int, end: Int, size: Int) {
@@ -127,11 +127,10 @@ class CircularArrayList<E> : Collection<E> {
         if (virtualIndex >= size) throw IndexOutOfBoundsException("$virtualIndex >= $size")
 
         val expectedIndex = start + virtualIndex
-        if (start < end || expectedIndex <= array.lastIndex) {
-            return expectedIndex
+        return if (start < end || expectedIndex <= array.lastIndex) {
+            expectedIndex
         } else {
-            val actual = virtualIndex - (array.size - start)
-            return actual
+            virtualIndex - (array.size - start)
         }
     }
 

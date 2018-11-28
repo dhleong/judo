@@ -4,6 +4,10 @@ import net.dhleong.judo.util.Clearable
 
 typealias EventHandler = (Any?) -> Unit
 
+inline fun handler(crossinline block: () -> Unit): EventHandler = {
+    block()
+}
+
 /**
  * @author dhleong
  */

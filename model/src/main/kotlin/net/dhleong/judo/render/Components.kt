@@ -21,10 +21,6 @@ interface IJudoBuffer {
     fun set(newContents: List<CharSequence>)
 }
 
-interface InputReceivingBuffer : IJudoBuffer {
-    fun send(line: CharSequence)
-}
-
 interface IJudoWindow {
     val id: Int
     val width: Int

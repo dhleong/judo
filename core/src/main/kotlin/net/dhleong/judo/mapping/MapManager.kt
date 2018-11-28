@@ -131,13 +131,15 @@ class MapManager(
         val mapper = AutomagicMapper(judo, this)
         magicMapper = mapper
 
-        if (judo.connection?.isGmcpEnabled ?: false) {
-            mapper.onGmcpAvailable()
-        } else if (judo.connection?.isMsdpEnabled ?: false) {
-            mapper.onMsdpAvailable()
-        } else {
-            judo.events.register(EVENT_GMCP_ENABLED) { _ -> mapper.onGmcpAvailable() }
-            judo.events.register(EVENT_MSDP_ENABLED) { _ -> mapper.onMsdpAvailable() }
+        when {
+            judo.connection?.isGmcpEnabled == true -> mapper.onGmcpAvailable()
+
+            judo.connection?.isMsdpEnabled == true -> mapper.onMsdpAvailable()
+
+            else -> {
+                judo.events.register(EVENT_GMCP_ENABLED) { mapper.onGmcpAvailable() }
+                judo.events.register(EVENT_MSDP_ENABLED) { mapper.onMsdpAvailable() }
+            }
         }
     }
 }

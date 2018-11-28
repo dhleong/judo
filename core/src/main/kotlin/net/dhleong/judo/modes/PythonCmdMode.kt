@@ -9,6 +9,7 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.logging.ILogManager
@@ -226,7 +227,7 @@ class PythonCmdMode(
     private fun defineEvent(eventName: String, pyHandler: PyFunction) {
         val argCount = pyHandler.__code__.__getattr__("co_argcount").asInt()
         val handler: EventHandler = when (argCount) {
-            0 -> { _ -> wrapExceptions { pyHandler.__call__() } }
+            0 -> handler { wrapExceptions { pyHandler.__call__() } }
             1 -> { arg -> wrapExceptions { pyHandler.__call__(Py.java2py(arg)) } }
             else -> { rawArg ->
                 if (rawArg !is Array<*>) {
@@ -513,7 +514,7 @@ inline private fun <reified T: Any, reified R> asPyFn(
             }
 
             val typedArgs =
-                if (takeArgs == 0) emptyArray<T>()
+                if (takeArgs == 0) emptyArray()
                 else {
                     args.take(takeArgs)
                         .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }

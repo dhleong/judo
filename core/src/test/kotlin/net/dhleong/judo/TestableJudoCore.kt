@@ -17,7 +17,7 @@ import net.dhleong.judo.trigger.TriggerManager
  * @author dhleong
  */
 
-class TestableJudoCore : IJudoCore by Proxy<IJudoCore>() {
+class TestableJudoCore : IJudoCore by Proxy() {
 
     private val actualEvents = EventManager()
     inner class TestableEventManager : IEventManager by actualEvents {

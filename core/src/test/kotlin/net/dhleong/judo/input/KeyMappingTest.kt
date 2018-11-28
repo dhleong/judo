@@ -9,7 +9,7 @@ import org.junit.Test
 class KeyMappingTest {
     @Test fun sequenceMap() {
         val map = KeyMapping(
-            keys("cd") to { _ -> }
+            keys("cd") to action { /* nop */ }
         )
 
         assertThat(map.match(keys("c"))).isNull()
@@ -18,8 +18,8 @@ class KeyMappingTest {
 
     @Test fun sequenceUnmap() {
         val map = KeyMapping(
-            keys("cd") to { _ -> },
-            keys("ce") to { _ -> }
+            keys("cd") to action { /* nop */ },
+            keys("ce") to action { /* nop */ }
         )
 
         assertThat(map.match(keys("c"))).isNull()

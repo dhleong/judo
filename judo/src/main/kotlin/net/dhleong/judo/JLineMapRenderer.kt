@@ -181,7 +181,7 @@ class SimpleJLineMapRenderer(
             }
         }
 
-    private inline fun MapGrid.forEachCol(block: (col: Int) -> Unit): Unit {
+    private inline fun MapGrid.forEachCol(block: (col: Int) -> Unit) {
         for (x in 0..(width - 1)) {
             block(x)
         }

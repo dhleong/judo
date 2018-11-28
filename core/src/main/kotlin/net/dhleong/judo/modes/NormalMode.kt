@@ -8,6 +8,7 @@ import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
@@ -26,8 +27,8 @@ import net.dhleong.judo.util.InputHistory
 class NormalMode(
     judo: IJudoCore,
     buffer: InputBuffer,
-    val history: InputHistory,
-    val opMode: OperatorPendingMode
+    private val history: InputHistory,
+    private val opMode: OperatorPendingMode
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {
@@ -67,23 +68,23 @@ class NormalMode(
             core.enterMode("insert")
         },
 
-        keys("d") to { _ ->
+        keys("d") to action {
             // TODO bell on error?
             withOperator('d') { range -> buffer.deleteWithCursor(range) }
         },
-        keys("D") to { _ ->
+        keys("D") to action {
             buffer.undoMan.initChange('D')
             buffer.deleteWithCursor(rangeOf(toEndMotion()))
         },
 
-        keys("gu") to { _ ->
+        keys("gu") to action {
             withOperator('u') { range ->
                 buffer.replaceWithCursor(range) { old ->
                     old.toString().toLowerCase()
                 }
             }
         },
-        keys("gU") to { _ ->
+        keys("gU") to action {
             withOperator('U') { range ->
                 buffer.replaceWithCursor(range) { old ->
                     old.toString().toUpperCase()
@@ -127,8 +128,8 @@ class NormalMode(
             }
         },
 
-        keys("u") to countRepeatable { _ -> buffer.undoMan.undo(buffer) },
-        keys("<ctrl r>") to countRepeatable { _ ->
+        keys("u") to countRepeatable { buffer.undoMan.undo(buffer) },
+        keys("<ctrl r>") to countRepeatable {
             buffer.undoMan.redo(judo, buffer)
         },
 
@@ -142,18 +143,18 @@ class NormalMode(
             buffer.cursor = range.endInclusive
         },
 
-        keys("y") to { _ ->
+        keys("y") to action {
             // TODO bell on error?
             withOperator('y') { range ->
                 judo.registers.current.value =
                     buffer.get(range).toString()
             }
         },
-        keys("Y") to { _ ->
+        keys("Y") to action {
             judo.registers.current.value = buffer.toString()
         },
 
-        keys(".") to countRepeatable { _ ->
+        keys(".") to countRepeatable {
             // clear out anything from the `.`; there shouldn't be
             // anything yet, but this shouldn't hurt
             buffer.undoMan.cancelChange()
@@ -176,7 +177,7 @@ class NormalMode(
                 buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
             }
         },
-        keys("g~") to { _ ->
+        keys("g~") to action {
             withOperator('~') { range ->
                 buffer.switchCaseWithCursor(range)
             }
@@ -198,7 +199,7 @@ class NormalMode(
 
         keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
         keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
-        keys("<ctrl c>") to { _ -> clearBuffer() },
+        keys("<ctrl c>") to action { clearBuffer() },
         keys("<ctrl s>") to { core -> core.enterMode("rsearch") }
 
     ) + ALL_MOTIONS.filter { (_, motion) ->
@@ -217,8 +218,8 @@ class NormalMode(
         // TODO bell?
     }
 
-    internal fun motionActionWithCount(motion: Motion): KeyAction =
-        { _ -> applyMotion(repeat(motion, count.toRepeatCount())) }
+    private fun motionActionWithCount(motion: Motion): KeyAction =
+        { applyMotion(repeat(motion, count.toRepeatCount())) }
 
     private fun withOperator(action: OperatorFunc) {
         // save now before we clear when leaving normal mode
@@ -322,7 +323,7 @@ class NormalMode(
         }
 
     private fun withCount(action: (Int) -> Unit): KeyAction =
-        { _ -> action.invoke(count.toRepeatCount()) }
+        { action.invoke(count.toRepeatCount()) }
 
     private fun pasteWithOffset(keyChar: Char, offset: Int): KeyAction = withCount { count ->
         buffer.undoMan.initChange(keyChar)

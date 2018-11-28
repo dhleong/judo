@@ -20,7 +20,7 @@ class GmcpHandlerTest {
         gmcp = GmcpHandler(
             judo,
             { false },
-            { _ -> }
+            { /* nop */ }
         )
     }
 

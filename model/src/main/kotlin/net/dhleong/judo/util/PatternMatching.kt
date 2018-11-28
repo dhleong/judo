@@ -19,7 +19,8 @@ enum class PatternProcessingFlags {
     KEEP_COLOR;
 
     companion object {
-        val NONE = EnumSet.noneOf(PatternProcessingFlags::class.java)
+        val NONE: EnumSet<PatternProcessingFlags> =
+            EnumSet.noneOf(PatternProcessingFlags::class.java)
     }
 }
 

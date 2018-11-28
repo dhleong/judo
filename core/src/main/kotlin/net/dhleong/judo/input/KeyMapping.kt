@@ -8,6 +8,11 @@ import net.dhleong.judo.IJudoCore
 
 typealias KeyAction = (IJudoCore) -> Unit
 
+inline fun action(crossinline block: () -> Unit): KeyAction = {
+    block()
+}
+
+
 data class KeyMapTarget(val action: KeyAction, val description: String)
 
 class KeyMapping() {

@@ -48,7 +48,7 @@ abstract class BaseModeWithBuffer(
      *  the given motion
      */
     protected fun motionAction(motion: Motion): KeyAction =
-        { _ -> applyMotion(motion) }
+        { applyMotion(motion) }
 
     protected fun rangeOf(motion: Motion) =
         motion.calculate(judo, buffer)

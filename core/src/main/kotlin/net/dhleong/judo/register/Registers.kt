@@ -9,6 +9,8 @@ import net.dhleong.judo.util.ClipboardFacade
  * @author dhleong
  */
 class BlackHoleRegister : IRegister {
+
+    @Suppress("UNUSED_PARAMETER")
     override var value: CharSequence
         get() = ""
         set(value) {}

@@ -35,7 +35,7 @@ internal val ELLIPSIS = "…"
  */
 class JLineRenderer(
     override var settings: StateMap,
-    val enableMouse: Boolean = false
+    private val enableMouse: Boolean = false
 ) : JudoRenderer, BlockingKeySource  {
 
     override val terminalType: String

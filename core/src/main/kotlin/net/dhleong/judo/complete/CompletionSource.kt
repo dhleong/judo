@@ -24,12 +24,3 @@ interface CompletionSource {
     fun suggest(partial: CharSequence) =
         suggest(partial, 0..partial.lastIndex)
 }
-
-class CompletionSourceFacade {
-    companion object {
-        fun create(): CompletionSource {
-            // no config to speak of...
-            return RecencyCompletionSource()
-        }
-    }
-}

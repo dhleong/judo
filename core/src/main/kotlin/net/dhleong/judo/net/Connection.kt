@@ -14,9 +14,9 @@ import kotlin.concurrent.thread
  * @author dhleong
  */
 
-val TELNET_IAC = 255.toByte()
-val TELNET_SB = 250.toByte()
-val TELNET_SE = 240.toByte()
+const val TELNET_IAC = 255.toByte()
+const val TELNET_SB = 250.toByte()
+const val TELNET_SE = 240.toByte()
 
 abstract class Connection : JudoConnection {
     /** in ms */

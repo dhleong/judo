@@ -6,7 +6,6 @@ import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.getAnsiContents
-import java.lang.reflect.Proxy
 
 /**
  * @author dhleong

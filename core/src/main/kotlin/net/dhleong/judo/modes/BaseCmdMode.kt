@@ -12,6 +12,7 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
@@ -342,8 +343,8 @@ abstract class BaseCmdMode(
     })
 
     val mapping = KeyMapping(
-        keys("<up>") to { _ -> history.scroll(-1, clampCursor = false) },
-        keys("<down>") to { _ -> history.scroll(1, clampCursor = false) },
+        keys("<up>") to action { history.scroll(-1, clampCursor = false) },
+        keys("<down>") to action { history.scroll(1, clampCursor = false) },
 
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())

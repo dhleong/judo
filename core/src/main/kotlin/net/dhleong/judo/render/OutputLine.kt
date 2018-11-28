@@ -110,7 +110,7 @@ class OutputLine : CharSequence {
         }
 
         var previousHint: CharSequence = ""
-        return lines.fold(ArrayList<OutputLine>(lines.size)) { result, it ->
+        return lines.fold(ArrayList(lines.size)) { result, it ->
             val outputLine = sealedOutputLine(it, previousHint)
             result.add(outputLine)
             // FIXME we can't allow trailing here because using the JLine

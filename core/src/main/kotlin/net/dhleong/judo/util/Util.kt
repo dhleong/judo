@@ -5,11 +5,13 @@ package net.dhleong.judo.util
  * not in a proper function and can't return from a regular
  * let {} block. Looks like this:
  *
+ * ```
  * iflet (map[key]) {
  *   somethingWith(it)
  * } ?: letelse {
  *   somethingElse
  * }
+ * ```
  *
  * @author dhleong
  */

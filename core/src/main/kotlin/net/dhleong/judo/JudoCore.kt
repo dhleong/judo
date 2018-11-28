@@ -12,6 +12,7 @@ import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.input.changes.UndoManager
 import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
@@ -362,7 +363,7 @@ class JudoCore(
             }
 
             val fromKeys = Keys.parse(from)
-            modeObj.userMappings.map(fromKeys, { _ -> to() }, description)
+            modeObj.userMappings.map(fromKeys, action(to), description)
             return
         }
 
@@ -839,7 +840,7 @@ class JudoCore(
                         // carriage return is apparently occasionally
                         // sent by itself, but not intended to indicate
                         // an actual new line (what?)
-                        continue;
+                        continue
                     }
 
                     val actualLine = primaryWindow.appendLine(

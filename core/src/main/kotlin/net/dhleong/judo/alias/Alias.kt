@@ -112,7 +112,7 @@ class Alias(
 
     /** @return True if we did anything */
     fun apply(input: IStringBuilder): Boolean {
-        return parse(input, { it })
+        return parse(input) { it }
     }
 
     fun parse(input: IStringBuilder, postProcess: (String) -> String): Boolean {
@@ -125,7 +125,7 @@ class Alias(
         if (!matcher.find()) return false
 
         // extract variables
-        for (i in 0..spec.groups - 1) {
+        for (i in 0 until spec.groups) {
             vars[i] = when {
                 PatternProcessingFlags.KEEP_COLOR in spec.flags -> {
                     (input.slice(matcher.start(i), matcher.end(i)) as AttributedCharSequence)

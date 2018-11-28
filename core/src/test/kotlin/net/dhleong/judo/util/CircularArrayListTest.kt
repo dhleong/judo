@@ -72,14 +72,14 @@ class CircularArrayListTest {
 
     @Test fun get() {
         val list1 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             0, 5, size = 5
         )
         assertThat(list1[0]).isEqualTo(1)
         assertThat(list1[4]).isEqualTo(5)
 
         val list2 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
         assertThat(list2[0]).isEqualTo(3)
@@ -88,7 +88,7 @@ class CircularArrayListTest {
         assertThat(list2[3]).isEqualTo(1)
 
         val list3 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 3, size = 1
         )
         assertThatThrownBy {
@@ -98,14 +98,14 @@ class CircularArrayListTest {
 
     @Test fun iterator() {
         val list1 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             0, 4, size = 4
         )
         assertThat(list1.iterator())
             .containsExactly(1, 2, 3, 4)
 
         val list2 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
         assertThat(list2.iterator())
@@ -118,13 +118,13 @@ class CircularArrayListTest {
 
         // NOTE: lastIndex is always size-1...
         val list2 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             0, 4, size = 4
         )
         assertThat(list2.lastIndex).isEqualTo(3)
 
         val list3 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
         assertThat(list3.lastIndex).isEqualTo(3)
@@ -132,7 +132,7 @@ class CircularArrayListTest {
 
     @Test fun removeLast() {
         val list1 = CircularArrayList<Int>(
-            arrayOf<Any?>(1),
+            arrayOf(1),
             0, 1, size = 1
         )
         assertThat(list1.removeLast()).isEqualTo(1)
@@ -144,7 +144,7 @@ class CircularArrayListTest {
         assertThat(list1).containsExactly(2)
 
         val list2 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             0, 4, size = 4
         )
         assertThat(list2.removeLast()).isEqualTo(4)
@@ -156,7 +156,7 @@ class CircularArrayListTest {
         assertThat(list2).containsExactly(1, 2, 3, 6)
 
         val list3 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
         assertThat(list3.removeLast()).isEqualTo(1)
@@ -171,14 +171,14 @@ class CircularArrayListTest {
 
     @Test fun slice() {
         val list1 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             0, 4, size = 4
         )
         assertThat(list1.slice(0..2))
             .containsExactly(1, 2, 3)
 
         val list2 = CircularArrayList<Int>(
-            arrayOf<Any?>(1, 2, 3, 4, 5),
+            arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
         assertThat(list2.slice(0..2))
@@ -187,9 +187,10 @@ class CircularArrayListTest {
 
     @Test fun sliceEmpty() {
         val list1 = CircularArrayList<Int>(
-            arrayOf<Any?>(),
+            arrayOf(),
             0, 0, size = 0
         )
+        @Suppress("EmptyRange")
         assertThat(list1.slice(0..-1))
             .isEmpty()
     }

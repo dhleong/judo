@@ -9,6 +9,7 @@ import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.MutableKeys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.normalizeForMotion
@@ -74,19 +75,18 @@ class OperatorPendingMode(
         judo.exitMode()
     }
 
-    private fun opFuncActionWith(motion: Motion): KeyAction =
-        { _ ->
-            val lastOp = repeat(motion, count.toRepeatCount())
-            judo.state[KEY_LAST_OP] = lastOp
+    private fun opFuncActionWith(motion: Motion): KeyAction = action {
+        val lastOp = repeat(motion, count.toRepeatCount())
+        judo.state[KEY_LAST_OP] = lastOp
 
-            val range = lastOp
-                .calculate(judo, buffer)
-                .normalizeForMotion(motion)
+        val range = lastOp
+            .calculate(judo, buffer)
+            .normalizeForMotion(motion)
 
-            judo.exitMode()
-            opfunc(range)
+        judo.exitMode()
+        opfunc(range)
 
-            count.clear()
-        }
+        count.clear()
+    }
 
 }
