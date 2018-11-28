@@ -7,8 +7,8 @@ import org.jline.utils.AttributedString
  * @author dhleong
  */
 
-val ESCAPE_CODE_SEARCH_LIMIT = 10
-val ESCAPE_CHAR = 27.toChar()
+const val ESCAPE_CODE_SEARCH_LIMIT = 10
+const val ESCAPE_CHAR = 27.toChar()
 
 fun ansi(attr: Int = -1, fg: Int = -1, bg: Int = -1): CharSequence {
     val hasAttr = attr >= 0

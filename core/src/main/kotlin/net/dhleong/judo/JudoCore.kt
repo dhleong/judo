@@ -78,8 +78,8 @@ class JudoCore(
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
     companion object {
-        val CLIENT_NAME = BuildConfig.NAME
-        val CLIENT_VERSION = BuildConfig.VERSION
+        const val CLIENT_NAME = BuildConfig.NAME
+        const val CLIENT_VERSION = BuildConfig.VERSION
     }
 
     override val aliases = AliasManager()
@@ -157,10 +157,10 @@ class JudoCore(
         PythonCmdMode(this, ids, cmdBuffer, renderer, cmdHistory, completions),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
-    ).fold(HashMap<String, Mode>(), { map, mode ->
+    ).fold(HashMap<String, Mode>()) { map, mode ->
         map[mode.name] = mode
         map
-    })
+    }
 
     private var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
@@ -224,7 +224,7 @@ class JudoCore(
 
         val connection: Connection
         try {
-            connection = CommonsNetConnection(this, address, port, { string -> echo(string) })
+            connection = CommonsNetConnection(this, address, port) { string -> echo(string) }
             connection.debug = debug.isEnabled
             echo("Connected.")
         } catch (e: IOException) {
@@ -254,8 +254,8 @@ class JudoCore(
         }
         connection.forEachLine { buffer, count ->
             if (debug == DebugLevel.ALL) {
-                FileOutputStream(debugLogFile, true).use {
-                    it.bufferedWriter().use {
+                FileOutputStream(debugLogFile, true).use { os ->
+                    os.bufferedWriter().use {
                         it.write(buffer, 0, count)
                         it.write("{PACKET_BOUNDARY}")
                     }
@@ -442,7 +442,7 @@ class JudoCore(
             }
         }
 
-        if (doEcho && !(connection?.isTelnetSubsequence(toSend) ?: false)) {
+        if (doEcho && connection?.isTelnetSubsequence(toSend) != true) {
             // always output what we sent
             // except... don't echo if the server has told us not to
             // (EG: passwords)
@@ -849,10 +849,10 @@ class JudoCore(
                     ) as OutputLine
                     if (process) processOutput(actualLine)
 
-                    if (i + 1 < count && buffer[i + 1] == opposite) {
-                        lastLineEnd = i + 2
+                    lastLineEnd = if (i + 1 < count && buffer[i + 1] == opposite) {
+                        i + 2
                     } else {
-                        lastLineEnd = i + 1
+                        i + 1
                     }
                 }
             }

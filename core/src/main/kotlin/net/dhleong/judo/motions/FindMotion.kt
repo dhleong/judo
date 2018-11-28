@@ -18,11 +18,10 @@ val KEY_LAST_FIND = StateKind<FindInfo>("net.dhleong.judo.motions.lastFind")
 
 
 fun calculateFind(step: Int, target: Char, buffer: CharSequence, start: Int): IntRange {
-    val end: Int
-    if (step > 0) {
-        end = buffer.indexOf(target, start + 1)
+    val end = if (step > 0) {
+        buffer.indexOf(target, start + 1)
     } else {
-        end = buffer.lastIndexOf(target, start - 1)
+        buffer.lastIndexOf(target, start - 1)
     }
 
     return if (end == -1) {

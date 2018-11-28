@@ -3,7 +3,7 @@ package net.dhleong.judo.render
 import net.dhleong.judo.util.CircularArrayList
 
 
-private val DEFAULT_SCROLLBACK_SIZE = 20_000
+private const val DEFAULT_SCROLLBACK_SIZE = 20_000
 
 /**
  * @author dhleong

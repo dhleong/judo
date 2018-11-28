@@ -180,14 +180,14 @@ class AutomagicMapper(
     }
 
     private fun createStrategy(exits: Map<String, Any>): MapStrategy {
-        if (exits.any { (it.value as String).toIntOrNull() != null }) {
+        return if (exits.any { (it.value as String).toIntOrNull() != null }) {
             // if the exit maps to an int vnum, that means we can
             // use the "easy" map strategy
-            return EasyMapStrategy(this)
+            EasyMapStrategy(this)
         } else {
             // if not an int, we don't know the exit target vnums,
             // so we have to intuit the links
-            return DirectionalMapStrategy(this)
+            DirectionalMapStrategy(this)
         }
     }
 

@@ -619,8 +619,8 @@ abstract class BaseCmdMode(
     }
 
     internal fun showHelp(command: String) {
-        COMMAND_HELP[command]?.let {
-            it.split("\n").forEach { judo.echoRaw(it) }
+        COMMAND_HELP[command]?.let { help ->
+            help.split("\n").forEach { judo.echoRaw(it) }
             return
         }
 
@@ -644,7 +644,7 @@ abstract class BaseCmdMode(
 
     abstract fun execute(code: String)
 
-    abstract protected fun readFile(fileName: String, stream: InputStream)
+    protected abstract fun readFile(fileName: String, stream: InputStream)
 
     private fun clearBuffer() {
         buffer.clear()

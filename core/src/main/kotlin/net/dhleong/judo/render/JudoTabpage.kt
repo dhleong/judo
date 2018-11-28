@@ -3,7 +3,7 @@ package net.dhleong.judo.render
 import net.dhleong.judo.StateMap
 import org.jline.utils.AttributedString
 
-val WINDOW_MIN_HEIGHT = 2
+const val WINDOW_MIN_HEIGHT = 2
 
 /**
  * @author dhleong

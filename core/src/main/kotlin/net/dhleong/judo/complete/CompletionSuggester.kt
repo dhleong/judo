@@ -80,10 +80,10 @@ class CompletionSuggester(private val completions: CompletionSource) {
         val move = wordStartMovement.calculate(input, cursor)
         val wordStart = move.endInclusive
 
-        if (wordStart < 0) {
-            return 0 until cursor
+        return if (wordStart < 0) {
+            0 until cursor
         } else {
-            return wordStart until cursor
+            wordStart until cursor
         }
     }
 

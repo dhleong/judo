@@ -142,12 +142,11 @@ class OutputLine : CharSequence {
             if (trailing != null) return trailing
         }
 
-        val attributed: AttributedCharSequence
-        if (lastWindowWidth != -1) {
+        val attributed: AttributedCharSequence = if (lastWindowWidth != -1) {
             val lines = getDisplayLines(lastWindowWidth)
-            attributed = lines.last()
+            lines.last()
         } else {
-            attributed = toAttributedString()
+            toAttributedString()
         }
 
         if (attributed.isEmpty() && rawChars.isEmpty()) {
@@ -188,37 +187,41 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: ArrayList
             if (isHidden(end)) 0
             else WCWidth.wcwidth(cp)
 
-        if (cp == '\n'.toInt()) {
-            out.add(subSequence(start, end))
-            start = end + 1
-            col = 0
-        } else if (col + charWidth > windowWidth) {
-            // WRAP! search back for the previous word boundary (if necessary)
-            val atBoundary = end == attrLength - 1 || Character.isWhitespace(cp)
-            val boundary = when {
-                (atBoundary && Character.isWhitespace(cp)) -> -1
-
-                else -> findLastBefore(end) { Character.isWhitespace(it) }
+        when {
+            cp == '\n'.toInt() -> {
+                out.add(subSequence(start, end))
+                start = end + 1
+                col = 0
             }
 
-            if (boundary != -1 && boundary > start) {
-                // found it!
-                // end *after* the whitespace
-                end = boundary + 1
-                col =
-                    if (isHidden(end)) 0
-                    else WCWidth.wcwidth(codePointAt(end))
+            col + charWidth > windowWidth -> {
+                // WRAP! search back for the previous word boundary (if necessary)
+                val atBoundary = end == attrLength - 1 || Character.isWhitespace(cp)
+                val boundary = when {
+                    (atBoundary && Character.isWhitespace(cp)) -> -1
 
-            } else {
-                // if we didn't find any usable boundary, just do a hard split
-                // (or if this word ends RIGHT AT a boundary)
-                col = charWidth
+                    else -> findLastBefore(end) { Character.isWhitespace(it) }
+                }
+
+                if (boundary != -1 && boundary > start) {
+                    // found it!
+                    // end *after* the whitespace
+                    end = boundary + 1
+                    col =
+                        if (isHidden(end)) 0
+                        else WCWidth.wcwidth(codePointAt(end))
+
+                } else {
+                    // if we didn't find any usable boundary, just do a hard split
+                    // (or if this word ends RIGHT AT a boundary)
+                    col = charWidth
+                }
+
+                out.add(subSequence(start, end))
+                start = end
             }
 
-            out.add(subSequence(start, end))
-            start = end
-        } else {
-            col += charWidth
+            else -> col += charWidth
         }
 
         end += Character.charCount(cp)

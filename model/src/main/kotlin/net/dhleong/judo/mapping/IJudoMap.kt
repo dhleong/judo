@@ -52,12 +52,12 @@ interface IJudoExits : Iterable<IJudoExit> {
 
 interface IJudoExit {
     companion object {
-        val DIR_N = 1
-        val DIR_E = 2
-        val DIR_S = 4
-        val DIR_W = 8
-        val DIR_U = 16
-        val DIR_D = 32
+        const val DIR_N = 1
+        const val DIR_E = 2
+        const val DIR_S = 4
+        const val DIR_W = 8
+        const val DIR_U = 16
+        const val DIR_D = 32
     }
 
     val room: IJudoRoom

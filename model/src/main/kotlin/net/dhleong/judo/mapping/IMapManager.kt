@@ -11,7 +11,7 @@ import java.io.File
  */
 interface IMapManagerPublic {
     companion object {
-        private val DEFAULT_MAP_CAPACITY = 50000
+        private const val DEFAULT_MAP_CAPACITY = 50000
     }
 
     val current: IJudoMap?

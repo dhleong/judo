@@ -22,13 +22,13 @@ import java.io.StringWriter
 import java.util.EnumSet
 
 // ascii codes:
-val KEY_ESCAPE = 27
-val KEY_DELETE = 127
+const val KEY_ESCAPE = 27
+const val KEY_DELETE = 127
 
 // this is returned by read() when it times out
-val KEY_TIMEOUT = -2
+const val KEY_TIMEOUT = -2
 
-internal val ELLIPSIS = "…"
+internal const val ELLIPSIS = "…"
 
 /**
  * @author dhleong
@@ -102,9 +102,9 @@ class JLineRenderer(
         registerEscapeHandler(InfoCmp.Capability.key_up) {
             Key.parse("up")
         }
-        registerEscapeHandler(listOf(KEY_DELETE), {
+        registerEscapeHandler(listOf(KEY_DELETE)) {
             Key.parse("alt bs")
-        })
+        }
 
         // determine capabilities
         capabilities = EnumSet.of(JudoRendererInfo.Capabilities.UTF8)
@@ -276,7 +276,7 @@ class JLineRenderer(
     }
 
     private fun registerEscapeHandler(strokes: List<Int>, block: () -> Key?) {
-        escapeSequenceHandlers.getOrPut(strokes[0], { HashMap<Int, () -> Key?>() }).let {
+        escapeSequenceHandlers.getOrPut(strokes[0]) { HashMap<Int, () -> Key?>() }.let {
             if (strokes.size == 2) {
                 it[strokes[1]] = block
             } else {

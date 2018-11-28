@@ -295,9 +295,9 @@ class PythonCmdModeTest {
         assertThat(judo.echos).isEmpty()
         assertThat(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
-        val result = judo.prompts.process("Input(42)", { _, prompt ->
+        val result = judo.prompts.process("Input(42)") { _, prompt ->
             lastPrompt = prompt
-        })
+        }
         assertThat(result).isEmpty()
         assertThat(lastPrompt).isEqualTo("prompt 42>")
     }
@@ -311,9 +311,9 @@ class PythonCmdModeTest {
         assertThat(judo.echos).isEmpty()
         assertThat(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
-        val result = judo.prompts.process("Input(${ansi(1,2)}42)", { _, prompt ->
+        val result = judo.prompts.process("Input(${ansi(1,2)}42)") { _, prompt ->
             lastPrompt = prompt
-        })
+        }
         assertThat(result).isEmpty()
         assertThat(lastPrompt).isEqualTo("prompt ${ansi(1,2)}42${ansi(0)}>")
     }

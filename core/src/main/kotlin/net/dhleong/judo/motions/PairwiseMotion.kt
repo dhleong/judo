@@ -45,12 +45,12 @@ internal fun calculateInnerPair(
             open, close,
             buffer, closeRange.last + 1,
             isRecursion = true)
-        if (fromRecursion.first == fromRecursion.last) {
+        return if (fromRecursion.first == fromRecursion.last) {
             // nothing found; don't move anywhere
-            return cursor..cursor
+            cursor..cursor
         } else {
             // huzzah! return what we found
-            return fromRecursion
+            fromRecursion
         }
     } else {
         // found it!

@@ -90,10 +90,10 @@ class InputBuffer(
         buffer.setLength(0)
         buffer.append(value)
 
-        if (clampCursor) {
-            cursor = maxOf(0, value.length - 1)
+        cursor = if (clampCursor) {
+            maxOf(0, value.length - 1)
         } else {
-            cursor = value.length
+            value.length
         }
     }
 
@@ -107,9 +107,9 @@ class InputBuffer(
 
             inChangeSet {
                 val insertValue = it.current.value.toString()
-                undoMan.current.addUndoAction {
-                    it.buffer.insert(range.start, insertValue)
-                    it.cursor = range.start
+                undoMan.current.addUndoAction { input ->
+                    input.buffer.insert(range.start, insertValue)
+                    input.cursor = range.start
                 }
             }
 
@@ -186,14 +186,18 @@ class InputBuffer(
     private fun amendBackspaceUndo(index: Int, char: Char) {
         inChangeSet {
             undoMan.current.amendUndo<BackspaceUndoable> {
-                if (it.start == -1) {
-                    it.start = index
-                    it.deleted.append(char)
-                } else if (index == it.start - 1) {
-                    --it.start
-                    it.deleted.insert(0, char)
-                } else {
-                    undoMan.current.addUndoAction(BackspaceUndoable(index, char))
+                when {
+                    it.start == -1 -> {
+                        it.start = index
+                        it.deleted.append(char)
+                    }
+
+                    index == it.start - 1 -> {
+                        --it.start
+                        it.deleted.insert(0, char)
+                    }
+
+                    else -> undoMan.current.addUndoAction(BackspaceUndoable(index, char))
                 }
             }
         }
@@ -202,13 +206,15 @@ class InputBuffer(
     private fun amendInsertUndo(index: Int, length: Int) {
         inChangeSet {
             undoMan.current.amendUndo<InsertUndoable> {
-                if (it.start == -1) {
-                    it.start = index
-                    it.length = length
-                } else if (index in it) {
-                    it.length += length
-                } else {
-                    undoMan.current.addUndoAction(InsertUndoable(index, length))
+                when {
+                    it.start == -1 -> {
+                        it.start = index
+                        it.length = length
+                    }
+
+                    index in it -> it.length += length
+
+                    else -> undoMan.current.addUndoAction(InsertUndoable(index, length))
                 }
             }
         }

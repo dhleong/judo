@@ -6,7 +6,7 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.io.Writer
 
-val DATE_FORMAT = "yyyy MMMM dd  hh:mm a"
+const val DATE_FORMAT = "yyyy MMMM dd  hh:mm a"
 
 /**
  * @author dhleong

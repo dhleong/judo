@@ -4,7 +4,7 @@ package net.dhleong.judo.event
  * @author dhleong
  */
 
-val EVENT_GMCP_ENABLED = "GMCP ENABLED"
+const val EVENT_GMCP_ENABLED = "GMCP ENABLED"
 
-val EVENT_MSDP_ENABLED = "MSDP ENABLED"
-val EVENT_MSDP_VAR = "MSDP"
+const val EVENT_MSDP_ENABLED = "MSDP ENABLED"
+const val EVENT_MSDP_VAR = "MSDP"

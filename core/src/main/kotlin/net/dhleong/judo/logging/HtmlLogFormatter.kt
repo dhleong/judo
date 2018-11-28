@@ -166,48 +166,54 @@ $STYLES
     }
 
     fun writeIntColor(intColor: Int, out: Writer) {
-        if (intColor < -1) {
-            // "true" color
-            val red = (intColor shr 16) and 0xFF
-            val green = (intColor shr 8) and 0xFF
-            val blue = intColor and 0xFF
+        when {
+            intColor < -1 -> {
+                // "true" color
+                val red = (intColor shr 16) and 0xFF
+                val green = (intColor shr 8) and 0xFF
+                val blue = intColor and 0xFF
 
-            writeRgb(red, green, blue, out)
-        } else if (intColor < 16) {
-            // high intensity color
-            out.write(when (intColor) {
-                8 -> "#888"
-                9 -> "#F00"
-                10 -> "#0F0"
-                11 -> "#FF0"
-                12 -> "#00F"
-                13 -> "#F0F"
-                14 -> "#0FF"
-                else -> "#FFF"
-            })
-        } else if (intColor < 232) {
-            // 256 color (actually, 216 colors):
-            // the red increases one "block" (see constant above) every 36 numbers;
-            // the green increases one "block" every 6 numbers;
-            // and blue increases each step (within each 6-block of green)
-            val color = intColor - 16
-            val redPart = color / 36
-            val greenPart = (color % 36) / 6
-            val bluePart = (color % 6)
-
-            out.apply {
-                write("#")
-                append(COLOR_256_BLOCKS[redPart])
-                append(COLOR_256_BLOCKS[greenPart])
-                append(COLOR_256_BLOCKS[bluePart])
+                writeRgb(red, green, blue, out)
             }
-        } else {
-            // grayscale from black to white in 24 steps (IE [0,23])
-            // each one is ~10, but just multiplying by 10 doesn't get
-            // us very bright at 255 (actually it's 230). So, we'll just
-            // add 8 like on wikipedia
-            val gray = (intColor - 232) * 10 + 8
-            writeRgb(gray, gray, gray, out)
+
+            intColor < 16 -> // high intensity color
+                out.write(when (intColor) {
+                    8 -> "#888"
+                    9 -> "#F00"
+                    10 -> "#0F0"
+                    11 -> "#FF0"
+                    12 -> "#00F"
+                    13 -> "#F0F"
+                    14 -> "#0FF"
+                    else -> "#FFF"
+                })
+
+            intColor < 232 -> {
+                // 256 color (actually, 216 colors):
+                // the red increases one "block" (see constant above) every 36 numbers;
+                // the green increases one "block" every 6 numbers;
+                // and blue increases each step (within each 6-block of green)
+                val color = intColor - 16
+                val redPart = color / 36
+                val greenPart = (color % 36) / 6
+                val bluePart = (color % 6)
+
+                out.apply {
+                    write("#")
+                    append(COLOR_256_BLOCKS[redPart])
+                    append(COLOR_256_BLOCKS[greenPart])
+                    append(COLOR_256_BLOCKS[bluePart])
+                }
+            }
+
+            else -> {
+                // grayscale from black to white in 24 steps (IE [0,23])
+                // each one is ~10, but just multiplying by 10 doesn't get
+                // us very bright at 255 (actually it's 230). So, we'll just
+                // add 8 like on wikipedia
+                val gray = (intColor - 232) * 10 + 8
+                writeRgb(gray, gray, gray, out)
+            }
         }
     }
 

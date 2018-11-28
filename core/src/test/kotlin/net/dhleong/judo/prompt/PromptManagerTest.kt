@@ -34,7 +34,7 @@ class PromptManagerTest {
     }
 
     private fun process(input: String): String
-        = prompts.process(input, { index, prompt ->
-            extractedPrompts.add(index to prompt)
-        }).toString()
+        = prompts.process(input) { index, prompt ->
+        extractedPrompts.add(index to prompt)
+    }.toString()
 }

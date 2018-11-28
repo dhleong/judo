@@ -10,20 +10,20 @@ import java.lang.reflect.Modifier
 import java.nio.charset.Charset
 
 
-val TELNET_TELOPT_MSDP = 69.toByte()
+const val TELNET_TELOPT_MSDP = 69.toByte()
 
-val MSDP_VAR = 1
-val MSDP_VAL = 2
+const val MSDP_VAR = 1
+const val MSDP_VAL = 2
 
-val MSDP_TABLE_OPEN = 3
-val MSDP_TABLE_CLOSE = 4
+const val MSDP_TABLE_OPEN = 3
+const val MSDP_TABLE_CLOSE = 4
 
-val MSDP_ARRAY_OPEN = 5
-val MSDP_ARRAY_CLOSE = 6
+const val MSDP_ARRAY_OPEN = 5
+const val MSDP_ARRAY_CLOSE = 6
 
-private val INITIAL_LIST = "COMMANDS"
+private const val INITIAL_LIST = "COMMANDS"
 private val MSDP_LIST_COMMANDS = buildMsdpRequest("LIST", INITIAL_LIST)
-private val MSDP_SUBNEGOTIATION_MAX_LENGTH = 8192
+private const val MSDP_SUBNEGOTIATION_MAX_LENGTH = 8192
 
 class MsdpHandler(
     private val judo: IJudoCore,
@@ -59,10 +59,10 @@ class MsdpHandler(
 
             var stream: InputStream? = input
             while (stream != null && stream::class.java != telnetInputStreamClass) {
-                if (stream is FilterInputStream) {
-                    stream = filterInputStreamIn.get(stream) as InputStream?
+                stream = if (stream is FilterInputStream) {
+                    filterInputStreamIn.get(stream) as InputStream?
                 } else {
-                    stream = null
+                    null
                 }
             }
 

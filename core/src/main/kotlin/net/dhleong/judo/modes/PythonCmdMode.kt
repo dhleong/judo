@@ -248,14 +248,15 @@ class PythonCmdMode(
     }
 
     private fun defineMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
-        if (mapTo is String) {
-            judo.map(
+        when (mapTo) {
+            is String -> judo.map(
                 modeName,
                 fromKeys as String,
                 mapTo,
-                remap)
-        } else if (mapTo is PyFunction) {
-            judo.map(
+                remap
+            )
+
+            is PyFunction -> judo.map(
                 modeName,
                 fromKeys as String,
                 {
@@ -265,8 +266,8 @@ class PythonCmdMode(
                 },
                 mapTo.toString()
             )
-        } else {
-            throw IllegalArgumentException("Unexpected map-to value")
+
+            else -> throw IllegalArgumentException("Unexpected map-to value")
         }
 
         queueMap(modeName, fromKeys)
@@ -275,13 +276,13 @@ class PythonCmdMode(
     private fun definePrompt(alias: PatternSpec, handler: Any) {
         queuePrompt(alias.original)
         if (handler is PyFunction) {
-            judo.prompts.define(alias, { args ->
+            judo.prompts.define(alias) { args ->
                 wrapExceptions {
                     handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                         .__tojava__(String::class.java)
                         as String
                 }
-            })
+            }
         } else {
             judo.prompts.define(alias, handler as String)
         }
@@ -289,11 +290,11 @@ class PythonCmdMode(
 
     private fun defineTrigger(alias: PatternSpec, handler: PyFunction) {
         queueTrigger(alias.original)
-        judo.triggers.define(alias, { args ->
+        judo.triggers.define(alias) { args ->
             wrapExceptions {
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
             }
-        })
+        }
     }
 
     private fun feedKeys(userInput: Array<Any>, mode: String) {
@@ -421,7 +422,7 @@ internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
     }
 }
 
-inline private fun <reified T: Any> asMaybeDecorator(
+private inline fun <reified T: Any> asMaybeDecorator(
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline fn: (Array<T>) -> Unit): PyObject =
@@ -431,7 +432,7 @@ inline private fun <reified T: Any> asMaybeDecorator(
         fn = fn
     )
 
-inline private fun <reified T: Any> asMaybeDecorator(
+private inline fun <reified T: Any> asMaybeDecorator(
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline isFlag: (String) -> Boolean,
@@ -446,7 +447,7 @@ inline private fun <reified T: Any> asMaybeDecorator(
  * Create a Python function that can be used either as a normal
  * function OR a decorator
  */
-inline private fun <reified T: Any> asMaybeDecorator(
+private inline fun <reified T: Any> asMaybeDecorator(
         takeArgs: Int,
         minArgs: Int = takeArgs - 1,
         acceptsFlag: Boolean,
@@ -496,14 +497,14 @@ private inline fun <T : Any> isDecoratorCall(
     return true
 }
 
-inline private fun <reified T: Any> asUnitPyFn(
+private inline fun <reified T: Any> asUnitPyFn(
         takeArgs: Int = 0,
         minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> Unit): PyObject {
     return asPyFn(takeArgs, minArgs, fn)
 }
 
-inline private fun <reified T: Any, reified R> asPyFn(
+private inline fun <reified T: Any, reified R> asPyFn(
         takeArgs: Int = 0,
         minArgs: Int = takeArgs,
         crossinline fn: (Array<T>) -> R): PyObject {

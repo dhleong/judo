@@ -2,10 +2,10 @@ package net.dhleong.judo.mapping
 
 import java.util.ArrayDeque
 
-private val FLAG_VISITED = 32
+private const val FLAG_VISITED = 32
 
-val DEFAULT_MIN_MAP_HEIGHT = 9
-val DEFAULT_MIN_MAP_WIDTH = 6
+const val DEFAULT_MIN_MAP_HEIGHT = 9
+const val DEFAULT_MIN_MAP_WIDTH = 6
 
 /**
  * @author dhleong

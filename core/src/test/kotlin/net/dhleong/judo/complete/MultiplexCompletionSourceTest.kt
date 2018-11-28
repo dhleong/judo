@@ -11,9 +11,8 @@ class MultiplexCompletionSourceTest {
     @Test fun weightedSelector() {
         var nextRandom = 0.0
         val selector = WeightedRandomSelector(
-            doubleArrayOf(.60, .40),
-            { nextRandom }
-        )
+            doubleArrayOf(.60, .40)
+        ) { nextRandom }
         val multiplex = MultiplexCompletionSource(
             listOf(
                 DumbCompletionSource().apply {
@@ -23,9 +22,8 @@ class MultiplexCompletionSourceTest {
                 DumbCompletionSource().apply {
                     process("By the sea shore")
                 }
-            ),
-            { _, _ -> selector }
-        )
+            )
+        ) { _, _ -> selector }
 
         val suggestions = multiplex.suggest("s").iterator()
         nextRandom = .39 // below 40 should go to the 2nd source
@@ -59,9 +57,8 @@ class MultiplexCompletionSourceTest {
 
         var nextRandom = 0.0
         val selector = WeightedRandomSelector(
-            doubleArrayOf(.60, .40),
-            { nextRandom }
-        )
+            doubleArrayOf(.60, .40)
+        ) { nextRandom }
         val multiplex = MultiplexCompletionSource(
             listOf(
                 // first has a higher weight, but is empty!
@@ -70,9 +67,8 @@ class MultiplexCompletionSourceTest {
                 DumbCompletionSource().apply {
                     process("By the sea shore")
                 }
-            ),
-            { _, _ -> selector }
-        )
+            )
+        ) { _, _ -> selector }
 
         val suggestions = multiplex.suggest("s").iterator()
 

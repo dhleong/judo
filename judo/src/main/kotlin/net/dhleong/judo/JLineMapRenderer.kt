@@ -31,13 +31,13 @@ abstract class JLineMapRenderer(
 
     override fun renderMap(map: IJudoMap, window: IJudoWindow?) {
         renderer.inTransaction {
-            map.currentRoom?.let {
-                mapGrid.buildAround(map, it)
+            map.currentRoom?.let { room ->
+                mapGrid.buildAround(map, room)
 
                 // if provided a window, use it; otherwise, try to use
                 // the current window
-                (window ?: renderer.currentTabpage?.currentWindow)?.let {
-                    appendGridInto(map, mapGrid, it)
+                (window ?: renderer.currentTabpage?.currentWindow)?.let { w ->
+                    appendGridInto(map, mapGrid, w)
                 }
             }
         }

@@ -59,7 +59,7 @@ class AliasManagerTest {
 
     @Test fun fnReplace() {
         var count = 0
-        aliases.define("firefly", { "firefly_${++count}" })
+        aliases.define("firefly") { "firefly_${++count}" }
 
         assertThat(process("this firefly that firefly"))
             .isEqualTo("this firefly_1 that firefly_2")
@@ -82,7 +82,7 @@ class AliasManagerTest {
     }
 
     @Test fun replaceWithOneVar_func() {
-        aliases.define("admire $1", { args -> "This ${args[0]} is VERY cool"})
+        aliases.define("admire $1") { args -> "This ${args[0]} is VERY cool"}
 
         assertThat(process("admire shiny"))
             .isEqualTo("This shiny is VERY cool")

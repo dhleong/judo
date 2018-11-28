@@ -21,18 +21,18 @@ class Key private constructor(
     val modifiers: EnumSet<Modifier> = Modifier.NONE
 ) {
     companion object {
-        val CODE_BACKSPACE = 8
-        val CODE_ENTER = 13
-        val CODE_ESCAPE = 27
-        val CODE_TAB = '\t'.toInt()
+        const val CODE_BACKSPACE = 8
+        const val CODE_ENTER = 13
+        const val CODE_ESCAPE = 27
+        const val CODE_TAB = '\t'.toInt()
 
-        val CODE_LEFT = 128
-        val CODE_UP = 129
-        val CODE_RIGHT = 130
-        val CODE_DOWN = 131
+        const val CODE_LEFT = 128
+        const val CODE_UP = 129
+        const val CODE_RIGHT = 130
+        const val CODE_DOWN = 131
 
-        val CODE_PAGE_UP = 132
-        val CODE_PAGE_DOWN = 133
+        const val CODE_PAGE_UP = 132
+        const val CODE_PAGE_DOWN = 133
 
         val BACKSPACE: Key by lazy { ofChar(CODE_BACKSPACE.toChar()) }
         val ESCAPE: Key by lazy { ofChar(CODE_ESCAPE.toChar()) }

@@ -16,7 +16,7 @@ class RecencyCompletionSource(
         tokensFrom(string).forEach {
             val normalized = it.toLowerCase()
 
-            candidates.put(normalized, it)
+            candidates[normalized] = it
         }
     }
 

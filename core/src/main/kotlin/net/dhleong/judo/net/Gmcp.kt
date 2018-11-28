@@ -9,7 +9,7 @@ import org.apache.commons.net.telnet.TelnetOptionHandler
 import java.io.ByteArrayInputStream
 import java.io.EOFException
 
-val TELNET_TELOPT_GMCP = 201
+const val TELNET_TELOPT_GMCP = 201
 
 class GmcpHandler(
     private val judo: IJudoCore,

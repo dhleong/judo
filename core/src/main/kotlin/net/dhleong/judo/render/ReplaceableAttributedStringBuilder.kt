@@ -33,11 +33,11 @@ class ReplaceableAttributedStringBuilder(capacity: Int)
         super.subSequence(startIndex, endIndex)
 
     override fun slice(startIndex: Int, endIndex: Int): AttributedCharSequence {
-        if (endIndex < this.lastIndex || postEscapePartials == null) {
-            return super.subSequence(startIndex, endIndex)
+        return if (endIndex < this.lastIndex || postEscapePartials == null) {
+            super.subSequence(startIndex, endIndex)
         } else {
             val partials = postEscapePartials
-            return ReplaceableAttributedStringBuilder(endIndex - startIndex).apply {
+            ReplaceableAttributedStringBuilder(endIndex - startIndex).apply {
                 append(super.subSequence(startIndex, endIndex))
                 postEscapePartials = partials
             }
