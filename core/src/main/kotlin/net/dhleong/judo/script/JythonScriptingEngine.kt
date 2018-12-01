@@ -89,6 +89,12 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
+    override fun callableToFunction0(fromScript: Any): () -> Unit = {
+        wrapExceptions {
+            (fromScript as PyFunction).__call__()
+        }
+    }
+
     override fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec {
         val flagsSet = patternSpecFlagsToEnums(flags)
 

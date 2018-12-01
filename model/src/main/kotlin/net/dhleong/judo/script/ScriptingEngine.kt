@@ -34,6 +34,7 @@ interface ScriptingEngine {
     fun readFile(fileName: String, stream: InputStream)
 
     fun callableToAliasProcessor(fromScript: Any): AliasProcesser
+    fun callableToFunction0(fromScript: Any): Function0<Unit>
     fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec
 
     fun patternSpecFlagsToEnums(flags: String) =

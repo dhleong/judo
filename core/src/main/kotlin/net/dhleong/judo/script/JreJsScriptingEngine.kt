@@ -15,10 +15,17 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
 
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
         return { args ->
-            // NOTE: this is definitely JS specific...
             (engine as Invocable).invokeMethod(
                 fromScript, "call", fromScript, *args
             ) as String? ?: ""
+        }
+    }
+
+    override fun callableToFunction0(fromScript: Any): () -> Unit {
+        return {
+            (engine as Invocable).invokeMethod(
+                fromScript, "call", fromScript
+            )
         }
     }
 }

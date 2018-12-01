@@ -379,6 +379,7 @@ class JudoCore(
     }
 
     override fun printMappings(mode: String) {
+        // TODO if mode.isBlank() print ALL mappings
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")

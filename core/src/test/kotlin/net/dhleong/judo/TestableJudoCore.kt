@@ -3,9 +3,14 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.Keys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.modes.NormalMode
+import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
@@ -13,6 +18,7 @@ import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.trigger.TriggerManager
+import net.dhleong.judo.util.InputHistory
 
 /**
  * @author dhleong
@@ -52,12 +58,28 @@ class TestableJudoCore : IJudoCore by Proxy() {
         )
     )
 
-    override fun feedKeys(keys: Sequence<Key>, remap: Boolean, mode: String) {
-        TODO("not implemented")
-    }
+    private val buffer = InputBuffer()
+    private val normalMode = NormalMode(
+        this, buffer, InputHistory(buffer),
+        OperatorPendingMode(this, buffer)
+    )
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
         maps.add(listOf(mode, from, to, remap))
+        if (mode == normalMode.name) {
+            normalMode.userMappings.map(Keys.parse(from), Keys.parse(to))
+        }
+    }
+
+    override fun map(mode: String, from: String, to: () -> Unit, description: String) {
+        maps.add(listOf(mode, from, to, false))
+        if (mode == normalMode.name) {
+            normalMode.userMappings.map(Keys.parse(from), action(to))
+        }
+    }
+
+    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
+        normalMode.feedKey(stroke, remap, fromMap)
     }
 
     override fun unmap(mode: String, from: String) {

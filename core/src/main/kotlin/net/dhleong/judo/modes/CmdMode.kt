@@ -41,28 +41,33 @@ class CmdMode(
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser =
         engine.callableToAliasProcessor(fromScript)
 
-    private fun createMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
+    private fun createMap(modeName: String, fromKeys: String, mapTo: Any, remap: Boolean) {
         when (mapTo) {
             is String -> judo.map(
                 modeName,
-                fromKeys as String,
+                fromKeys,
                 mapTo,
                 remap
             )
 
-            // TODO ?
-//            is PyFunction -> judo.map(
-//                modeName,
-//                fromKeys as String,
-//                {
-//                    wrapExceptions {
-//                        mapTo.__call__()
-//                    }
-//                },
-//                mapTo.toString()
-//            )
+            else -> {
+                val fn = try {
+                    engine.callableToFunction0(mapTo)
+                } catch (e: Throwable) {
+                    throw IllegalArgumentException(
+                        "Unexpected map-to value $mapTo " +
+                            "(${mapTo.javaClass} / ${mapTo.javaClass.genericInterfaces.toList()})",
+                        e
+                    )
+                }
 
-            else -> throw IllegalArgumentException("Unexpected map-to value")
+                judo.map(
+                    modeName,
+                    fromKeys,
+                    fn,
+                    mapTo.toString()
+                )
+            }
         }
 
         queueMap(modeName, fromKeys)
@@ -131,7 +136,7 @@ class CmdMode(
                         judo.printMappings(args[0] as String)
                     }
                     else -> {
-                        createMap(modeName, args[0], args[1], true)
+                        createMap(modeName, args[0] as String, args[1], true)
                     }
                 }
             }

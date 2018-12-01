@@ -5,7 +5,6 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.script.ScriptingEngine
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -25,7 +24,6 @@ class CmdModeMappingTest(
             .containsExactly(listOf("normal", "a", "bc", false))
     }
 
-    @Ignore
     @Test fun `nnoremap supports functions`() {
         val fnDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
@@ -41,7 +39,7 @@ class CmdModeMappingTest(
         mode.execute(fnDef)
         mode.execute(fnCall("nnoremap", "a", Var("action")))
 
-        mode.feedKey(Key.ofChar('a'))
+        judo.feedKey(Key.ofChar('a'))
 
         assert(judo.echos).containsExactly("mapped!")
     }
