@@ -17,7 +17,8 @@ class JudoScriptInvocation(
 class JudoScriptArgument(
     val name: String,
     val type: String,
-    val isOptional: Boolean = false
+    val isOptional: Boolean = false,
+    val flags: Class<out Enum<*>>? = null
 )
 
 class InvocationBuilder(
@@ -25,6 +26,10 @@ class InvocationBuilder(
 ) {
     private val args = mutableListOf<JudoScriptArgument>()
     private var hasVarArgs: Boolean = false
+
+    fun arg(name: String, type: String, flags: Class<out Enum<*>>) {
+        args += JudoScriptArgument(name, type, isOptional = true, flags = flags)
+    }
 
     fun arg(name: String, type: String, isOptional: Boolean = false) {
         args += JudoScriptArgument(name, type, isOptional)

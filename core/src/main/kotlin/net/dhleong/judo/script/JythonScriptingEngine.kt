@@ -175,6 +175,10 @@ class JythonScriptingEngine : ScriptingEngine {
         val usages = doc.invocations ?: throw IllegalArgumentException("No invocations for Fn?")
         val hasVarArgs = usages.any { it.hasVarArgs }
         val hasDecorator = usages.any { it.canBeDecorator }
+        val flagsType = usages.flatMap { usage ->
+            usage.args.map { it.flags }
+        }.firstOrNull { it != null }
+        val hasFlags = flagsType != null
         val maxArgs = when {
             hasVarArgs -> Int.MAX_VALUE
             else -> usages.maxBy { it.args.size }!!.args.size
@@ -188,9 +192,10 @@ class JythonScriptingEngine : ScriptingEngine {
         val callable = this.toFunctionalInterface(this@JythonScriptingEngine)
 
         return if (hasDecorator) {
-            // TODO does it accept flags?
             asMaybeDecorator<Any>(
                 name,
+                acceptsFlag = hasFlags,
+                isFlag = flagCheckerFor(flagsType),
                 takeArgs = maxArgs,
                 minArgs = minArgs - 1 // as a decorator, it can be called with min-1
             ) { args -> callable.call(*args) }
@@ -201,6 +206,20 @@ class JythonScriptingEngine : ScriptingEngine {
                 minArgs = minArgs
             ) { args -> callable.call(*args) }
         }
+    }
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun flagCheckerFor(type: Class<out Enum<*>>?): (String) -> Boolean {
+    return if (type == null) { input -> false }
+    else {
+        val stringTypes = type.declaredFields.filter {
+            it.isEnumConstant
+        }.map {
+            it.get(type).toString().toLowerCase()
+        }.toSet()
+
+        return { input -> stringTypes.contains(input.toLowerCase()) }
     }
 }
 
@@ -224,33 +243,6 @@ private class PyGlobals : PyStringMap() {
         super.__setitem__(key, Py.java2py(value))
     }
 }
-
-private inline fun <reified T: Any> asMaybeDecorator(
-    name: String,
-    takeArgs: Int,
-    minArgs: Int = takeArgs - 1,
-    crossinline fn: (Array<T>) -> Unit
-): PyObject = asMaybeDecorator(
-    name,
-    takeArgs, minArgs,
-    acceptsFlag = false,
-    isFlag = { false },
-    fn = fn
-)
-
-private inline fun <reified T: Any> asMaybeDecorator(
-    name: String,
-    takeArgs: Int,
-    minArgs: Int = takeArgs - 1,
-    crossinline isFlag: (String) -> Boolean,
-    crossinline fn: (Array<T>) -> Unit
-): PyObject = asMaybeDecorator(
-    name,
-    takeArgs, minArgs,
-    acceptsFlag = true,
-    isFlag = isFlag,
-    fn = fn
-)
 
 /**
  * Create a Python function that can be used either as a normal

@@ -11,6 +11,7 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.doc
+import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
 
@@ -112,6 +113,16 @@ class CmdMode(
         queueEvent(eventName, handler)
     }
 
+    private fun definePrompt(prompt: PatternSpec, handler: Any) {
+        queuePrompt(prompt.original)
+        if (handler is String) {
+            judo.prompts.define(prompt, handler)
+        } else {
+            val processor = callableToAliasProcessor(handler)
+            judo.prompts.define(prompt, processor)
+        }
+    }
+
     private fun defineTrigger(trigger: PatternSpec, handler: Any) {
         queueTrigger(trigger.original)
         val fn = engine.callableToFunctionN(handler)
@@ -129,6 +140,7 @@ class CmdMode(
         initAliases()
         initEvents()
         initKeymaps()
+        initPrompts()
         initTriggers()
     }
 
@@ -354,13 +366,43 @@ class CmdMode(
         }
     }
 
+    private fun ScriptingEngine.initPrompts() {
+        registerFn<Unit>(
+            "prompt",
+            doc {
+                usage {
+                    arg("inputSpec", "Pattern/String")
+                    arg("options", "String", flags = PatternProcessingFlags::class.java)
+                    arg("outputSpec", "String")
+                }
+
+                usage(decorator = true) {
+                    arg("inputSpec", "Pattern/String")
+                    arg("options", "String", flags = PatternProcessingFlags::class.java)
+                    arg("handler", "Fn")
+                }
+                body { """
+                    Prepare a prompt to be displayed in the status area.
+                    See :help alias for more about `inputSpec`, and :help trigger for more
+                    about the optional `options`.
+                """.trimIndent() }
+            }
+        ) { args: Array<Any> ->
+            if (args.size == 2) {
+                definePrompt(compilePatternSpec(args[0], ""), args[1])
+            } else {
+                definePrompt(compilePatternSpec(args[0], args[1] as String), args[2])
+            }
+        }
+    }
+
     private fun ScriptingEngine.initTriggers() {
         registerFn<Unit>(
             "trigger",
             doc {
                 usage(decorator = true) {
                     arg("inputSpec", "String/Pattern")
-                    arg("options", "String", isOptional = true)
+                    arg("options", "String", flags = PatternProcessingFlags::class.java)
                     arg("handler", "Fn")
                 }
 
