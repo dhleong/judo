@@ -28,6 +28,8 @@ class JythonScriptingEngine : ScriptingEngine {
         override fun supportsFileType(ext: String): Boolean = ext == "py"
 
         override fun create(): ScriptingEngine = JythonScriptingEngine()
+
+        override fun toString(): String = "PY ScriptingFactory (Jython)"
     }
 
     private val python = PythonInterpreter()
@@ -157,11 +159,13 @@ class JythonScriptingEngine : ScriptingEngine {
         return if (hasDecorator) {
             // TODO does it accept flags?
             asMaybeDecorator<Any>(
+                name,
                 takeArgs = maxArgs,
-                minArgs = minArgs
+                minArgs = minArgs - 1 // as a decorator, it can be called with min-1
             ) { args -> callable.call(*args) }
         } else {
             asPyFn<Any, Any>(
+                name,
                 takeArgs = maxArgs,
                 minArgs = minArgs
             ) { args -> callable.call(*args) }
@@ -191,10 +195,12 @@ private class PyGlobals : PyStringMap() {
 }
 
 private inline fun <reified T: Any> asMaybeDecorator(
+    name: String,
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline fn: (Array<T>) -> Unit
 ): PyObject = asMaybeDecorator(
+    name,
     takeArgs, minArgs,
     acceptsFlag = false,
     isFlag = { false },
@@ -202,11 +208,13 @@ private inline fun <reified T: Any> asMaybeDecorator(
 )
 
 private inline fun <reified T: Any> asMaybeDecorator(
+    name: String,
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline isFlag: (String) -> Boolean,
     crossinline fn: (Array<T>) -> Unit
 ): PyObject = asMaybeDecorator(
+    name,
     takeArgs, minArgs,
     acceptsFlag = true,
     isFlag = isFlag,
@@ -218,25 +226,25 @@ private inline fun <reified T: Any> asMaybeDecorator(
  * function OR a decorator
  */
 private inline fun <reified T: Any> asMaybeDecorator(
+    name: String,
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     acceptsFlag: Boolean,
     crossinline isFlag: (String) -> Boolean,
-    crossinline fn: (Array<T>) -> Unit): PyObject {
-    return asPyFn<T, PyObject?>(takeArgs, minArgs) { args ->
-        if (isDecoratorCall(args, minArgs, takeArgs, acceptsFlag, isFlag)) {
-            // decorator mode; we return a function that accepts
-            // a function and finally calls `fn`
-            asPyFn<PyObject, PyObject>(1) { wrappedArgs ->
-                val combined = args + (wrappedArgs[0] as T)
-                fn(combined)
-                wrappedArgs[0]
-            }
-        } else {
-            // regular function call
-            fn(args)
-            null
+    crossinline fn: (Array<T>) -> Unit
+) = asPyFn<T, PyObject?>(name, takeArgs, minArgs) { args ->
+    if (isDecoratorCall(args, minArgs, takeArgs, acceptsFlag, isFlag)) {
+        // decorator mode; we return a function that accepts
+        // a function and finally calls `fn`
+        asPyFn<PyObject, PyObject>(name, 1) { wrappedArgs ->
+            val combined = args + (wrappedArgs[0] as T)
+            fn(combined)
+            wrappedArgs[0]
         }
+    } else {
+        // regular function call
+        fn(args)
+        null
     }
 }
 
@@ -269,33 +277,33 @@ private inline fun <T : Any> isDecoratorCall(
 
 
 private inline fun <reified T: Any, reified R> asPyFn(
+    name: String,
     takeArgs: Int = 0,
     minArgs: Int = takeArgs,
-    crossinline fn: (Array<T>) -> R): PyObject {
-    return object : PyObject() {
-        override fun __call__(args: Array<PyObject>, keywords: Array<String>): PyObject {
-            if (minArgs != Int.MAX_VALUE && args.size < minArgs) {
-                throw IllegalArgumentException("Expected $minArgs arguments; got ${args.size}")
-            }
-
-            if (args.size > takeArgs) {
-                throw IllegalArgumentException("Expected no more than $takeArgs arguments; got ${args.size}")
-            }
-
-            val typedArgs =
-                if (takeArgs == 0) emptyArray()
-                else {
-                    args.take(takeArgs)
-                        .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }
-                        .toTypedArray()
-                }
-
-            val result = fn(typedArgs)
-            if (T::class == Unit::class) {
-                return Py.None
-            }
-
-            return Py.java2py(result)
+    crossinline fn: (Array<T>) -> R
+) = object : PyObject() {
+    override fun __call__(args: Array<PyObject>, keywords: Array<String>): PyObject {
+        if (minArgs != Int.MAX_VALUE && args.size < minArgs) {
+            throw IllegalArgumentException("$name Expected $minArgs arguments; got ${args.size}")
         }
+
+        if (args.size > takeArgs) {
+            throw IllegalArgumentException("$name Expected no more than $takeArgs arguments; got ${args.size}")
+        }
+
+        val typedArgs =
+            if (takeArgs == 0) emptyArray()
+            else {
+                args.take(takeArgs)
+                    .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }
+                    .toTypedArray()
+            }
+
+        val result = fn(typedArgs)
+        if (T::class == Unit::class) {
+            return Py.None
+        }
+
+        return Py.java2py(result)
     }
 }

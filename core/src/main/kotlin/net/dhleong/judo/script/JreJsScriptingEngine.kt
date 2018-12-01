@@ -11,6 +11,7 @@ import javax.script.Invocable
 class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
     class Factory : Jsr223ScriptingEngine.Factory(forExtension = "js") {
         override fun create(): ScriptingEngine = JreJsScriptingEngine()
+        override fun toString(): String = "JS ScriptingFactory"
     }
 
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {

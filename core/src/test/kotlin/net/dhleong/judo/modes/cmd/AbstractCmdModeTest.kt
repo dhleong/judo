@@ -26,7 +26,7 @@ abstract class AbstractCmdModeTest(
 ) {
     companion object {
         @JvmStatic
-        @Parameterized.Parameters
+        @Parameterized.Parameters(name = "{index}. {0}")
         fun data() = listOf<Array<Any>>(
             arrayOf(JreJsScriptingEngine.Factory()),
             arrayOf(JythonScriptingEngine.Factory())
