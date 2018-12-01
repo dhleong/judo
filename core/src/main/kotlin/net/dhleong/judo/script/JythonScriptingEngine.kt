@@ -190,7 +190,8 @@ private inline fun <reified T: Any> asMaybeDecorator(
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline fn: (Array<T>) -> Unit
-): PyObject = asMaybeDecorator(takeArgs, minArgs,
+): PyObject = asMaybeDecorator(
+    takeArgs, minArgs,
     acceptsFlag = false,
     isFlag = { false },
     fn = fn
@@ -201,7 +202,8 @@ private inline fun <reified T: Any> asMaybeDecorator(
     minArgs: Int = takeArgs - 1,
     crossinline isFlag: (String) -> Boolean,
     crossinline fn: (Array<T>) -> Unit
-): PyObject = asMaybeDecorator(takeArgs, minArgs,
+): PyObject = asMaybeDecorator(
+    takeArgs, minArgs,
     acceptsFlag = true,
     isFlag = isFlag,
     fn = fn
