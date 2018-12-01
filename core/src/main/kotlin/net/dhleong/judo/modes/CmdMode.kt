@@ -213,6 +213,16 @@ class CmdMode(
         ) { spec: Any, alias: Any ->
             defineAlias(compilePatternSpec(spec, ""), alias)
         }
+
+        registerFn<Unit>(
+            "unalias",
+            doc {
+                usage { arg("inputSpec", "String") }
+                body { "Delete the alias with the specified inputSpec" }
+            }
+        ) { inputSpec: String ->
+            judo.aliases.undefine(inputSpec)
+        }
     }
 
     private fun ScriptingEngine.initEvents() {
@@ -366,6 +376,16 @@ class CmdMode(
             } else {
                 defineTrigger(compilePatternSpec(args[0], args[1] as String), args[2])
             }
+        }
+
+        registerFn<Unit>(
+            "untrigger",
+            doc {
+                usage { arg("inputSpec", "String") }
+                body { "Delete the trigger with the specified inputSpec" }
+            }
+        ) { inputSpec: String ->
+            judo.triggers.undefine(inputSpec)
         }
     }
 }
