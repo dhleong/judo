@@ -179,7 +179,12 @@ class JythonScriptingEngine : ScriptingEngine {
             hasVarArgs -> Int.MAX_VALUE
             else -> usages.maxBy { it.args.size }!!.args.size
         }
-        val minArgs = usages.minBy { it.args.size }!!.args.size
+        val minArgs = usages.asSequence().map { usage ->
+            usage.args.sumBy {
+                if (it.isOptional) 0
+                else 1
+            }
+        }.min() ?: throw IllegalStateException()
         val callable = this.toFunctionalInterface(this@JythonScriptingEngine)
 
         return if (hasDecorator) {

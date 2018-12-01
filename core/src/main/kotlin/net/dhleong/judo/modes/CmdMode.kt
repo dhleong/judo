@@ -11,6 +11,7 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.doc
+import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
 
 /**
@@ -111,6 +112,16 @@ class CmdMode(
         queueEvent(eventName, handler)
     }
 
+    private fun defineTrigger(trigger: PatternSpec, handler: Any) {
+        queueTrigger(trigger.original)
+        val fn = engine.callableToFunctionN(handler)
+        judo.triggers.define(trigger) { args ->
+            @Suppress("UNCHECKED_CAST")
+            fn(args as Array<Any>)
+        }
+    }
+
+
     private fun ScriptingEngine.init() {
         initConsts()
         initCore()
@@ -118,6 +129,7 @@ class CmdMode(
         initAliases()
         initEvents()
         initKeymaps()
+        initTriggers()
     }
 
     private fun ScriptingEngine.initConsts() {
@@ -331,4 +343,30 @@ class CmdMode(
             judo.unmap(modeName, inputKeys)
         }
     }
+
+    private fun ScriptingEngine.initTriggers() {
+        registerFn<Unit>(
+            "trigger",
+            doc {
+                usage(decorator = true) {
+                    arg("inputSpec", "String/Pattern")
+                    arg("options", "String", isOptional = true)
+                    arg("handler", "Fn")
+                }
+
+                body { """
+        Declare a trigger. See :help alias for more about inputSpec.
+        `options` is an optional, space-separated string that may contain any of:
+             color - Keep color codes in the values passed to the handler
+        """.trimIndent() }
+            }
+        ) { args: Array<Any> ->
+            if (args.size == 2) {
+                defineTrigger(compilePatternSpec(args[0], ""), args[1])
+            } else {
+                defineTrigger(compilePatternSpec(args[0], args[1] as String), args[2])
+            }
+        }
+    }
 }
+
