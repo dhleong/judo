@@ -1,6 +1,7 @@
 package net.dhleong.judo.script
 
 import net.dhleong.judo.alias.AliasProcesser
+import javax.script.Bindings
 import javax.script.Invocable
 
 /**
@@ -14,6 +15,9 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
         override fun toString(): String = "JS ScriptingFactory"
     }
 
+    override fun callableArgsCount(fromScript: Any): Int =
+        (fromScript as Bindings)["length"] as Int
+
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
         return { args ->
             (engine as Invocable).invokeMethod(
@@ -22,10 +26,27 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
         }
     }
 
-    override fun callableToFunction0(fromScript: Any): () -> Unit {
+    override fun <R> callableToFunction0(fromScript: Any): () -> R {
         return {
+            @Suppress("UNCHECKED_CAST")
             (engine as Invocable).invokeMethod(
                 fromScript, "call", fromScript
+            ) as R
+        }
+    }
+
+    override fun callableToFunction1(fromScript: Any): (Any) -> Any? {
+        return { arg ->
+            (engine as Invocable).invokeMethod(
+                fromScript, "call", fromScript, toScript(arg)
+            )
+        }
+    }
+
+    override fun callableToFunctionN(fromScript: Any): (Array<Any>) -> Any? {
+        return { args ->
+            (engine as Invocable).invokeMethod(
+                fromScript, "call", fromScript, *toScript(args)
             )
         }
     }

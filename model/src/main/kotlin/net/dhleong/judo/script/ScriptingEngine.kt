@@ -34,10 +34,18 @@ interface ScriptingEngine {
     fun readFile(fileName: String, stream: InputStream)
 
     fun callableToAliasProcessor(fromScript: Any): AliasProcesser
-    fun callableToFunction0(fromScript: Any): Function0<Unit>
+    fun <R> callableToFunction0(fromScript: Any): Function0<R>
+    fun callableToFunction1(fromScript: Any): Function1<Any, Any?>
+    fun callableToFunctionN(fromScript: Any): Function1<Array<Any>, Any?>
+
+    /**
+     * Return the number of arguments the given callable expects
+     */
+    fun callableArgsCount(fromScript: Any): Int
+
     fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec
 
-    fun patternSpecFlagsToEnums(flags: String) =
+    fun patternSpecFlagsToEnums(flags: String): EnumSet<PatternProcessingFlags> =
         if (flags.isNotBlank()) {
             EnumSet.copyOf(PatternProcessingFlags.NONE).also { flagsSet ->
                 if (flags.contains("color", ignoreCase = true)) {
@@ -50,6 +58,10 @@ interface ScriptingEngine {
 
     /** Coerce a script-engine type to Java */
     fun toJava(fromScript: Any): Any = fromScript
+    fun toJava(fromScriptArray: Array<Any>): Array<Any> =
+        Array(fromScriptArray.size) { i ->
+            toJava(fromScriptArray[i])
+        }
 
     /** Coerce a Java type to the Script engine */
     fun toScript(fromJava: Any): Any = fromJava

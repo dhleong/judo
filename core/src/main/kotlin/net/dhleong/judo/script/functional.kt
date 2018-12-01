@@ -31,7 +31,7 @@ internal interface FIN : JudoCallable {
 @Suppress("UNCHECKED_CAST")
 private class FnN(name: String, engine: ScriptingEngine, val fn: Function1<Array<out Any?>, Any>) : FnBase(name, engine) {
     override fun invoke(vararg args: Any) = safely {
-        fn.invoke(engine.toScript(args as Array<Any>))
+        fn.invoke(engine.toJava(args as Array<Any>))
     }
 }
 
@@ -75,7 +75,7 @@ private class Fn1(name: String, engine: ScriptingEngine, val fn: Function1<Any, 
         }
         return super.invoke(*args)
     }
-    override fun invoke(p1: Any): Any = safely { fn.invoke(engine.toScript(p1)) }
+    override fun invoke(p1: Any): Any = safely { fn.invoke(engine.toJava(p1)) }
 }
 
 @FunctionalInterface
@@ -88,7 +88,7 @@ private class Fn2(name: String, engine: ScriptingEngine, val fn: Function2<Any, 
         return super.invoke(*args)
     }
     override fun invoke(p1: Any, p2: Any) = safely {
-        fn.invoke(engine.toScript(p1), engine.toScript(p2))
+        fn.invoke(engine.toJava(p1), engine.toJava(p2))
     }
 }
 
@@ -104,9 +104,9 @@ private class Fn3(name: String, engine: ScriptingEngine, val fn: Function3<Any, 
 
     override fun invoke(p1: Any, p2: Any, p3: Any) = safely {
         fn.invoke(
-            engine.toScript(p1),
-            engine.toScript(p2),
-            engine.toScript(p3)
+            engine.toJava(p1),
+            engine.toJava(p2),
+            engine.toJava(p3)
         )
     }
 }

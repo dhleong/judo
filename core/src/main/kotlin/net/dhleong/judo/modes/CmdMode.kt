@@ -4,6 +4,8 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource
+import net.dhleong.judo.event.EventHandler
+import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
@@ -52,7 +54,7 @@ class CmdMode(
 
             else -> {
                 val fn = try {
-                    engine.callableToFunction0(mapTo)
+                    engine.callableToFunction0<Unit>(mapTo)
                 } catch (e: Throwable) {
                     throw IllegalArgumentException(
                         "Unexpected map-to value $mapTo " +
@@ -73,8 +75,52 @@ class CmdMode(
         queueMap(modeName, fromKeys)
     }
 
+    private fun defineEvent(eventName: String, handlerFromScript: Any) {
+        val argCount = engine.callableArgsCount(handlerFromScript)
+        val handler: EventHandler = when (argCount) {
+            0 -> {
+                val fn0 = engine.callableToFunction0<Any>(handlerFromScript)
+                handler { fn0() }
+            }
+
+            1 -> {
+                val fn1 = engine.callableToFunction1(handlerFromScript)
+                object : EventHandler {
+                    override fun invoke(arg: Any?) { fn1(arg!!) }
+                }
+            }
+
+            else -> {
+                val fnN = engine.callableToFunctionN(handlerFromScript)
+
+                object : EventHandler {
+                    override fun invoke(rawArg: Any?) {
+                        if (rawArg !is Array<*>) {
+                            throw ScriptExecutionException(
+                                "$handlerFromScript expected $argCount arguments, but event arg was not an array")
+                        }
+
+                        @Suppress("UNCHECKED_CAST")
+                        fnN(rawArg as Array<Any>)
+                    }
+                }
+            }
+        }
+
+        judo.events.register(eventName, handler)
+        queueEvent(eventName, handler)
+    }
 
     private fun ScriptingEngine.init() {
+        initConsts()
+        initCore()
+
+        initAliases()
+        initEvents()
+        initKeymaps()
+    }
+
+    private fun ScriptingEngine.initConsts() {
         registerConst(
             "MYJUDORC",
             doc {
@@ -84,7 +130,54 @@ class CmdMode(
             },
             USER_CONFIG_FILE.absolutePath
         )
+    }
 
+    private fun ScriptingEngine.initCore() {
+        registerFn<Unit>(
+            "config",
+            doc {
+                usage {
+                    arg("setting", "String")
+                    arg("value", "Any")
+                }
+                usage { arg("setting", "String") }
+                usage { /* no-arg */ }
+
+                body { "Set or get the value of a setting, or list all settings" }
+            }
+        ) { args: Array<Any> -> config(args) }
+
+        registerFn(
+            "connect",
+            doc {
+                usage {
+                    arg("host", "String")
+                    arg("port", "Int")
+                }
+
+                body { "Connect to a server." }
+            },
+            judo::connect
+        )
+
+        registerFn<Unit>(
+            "echo",
+            doc {
+                usage { withVarArgs() }
+                body { "Print some output to the screen locally." }
+            }
+        ) { args: Array<Any> -> judo.echo(*args) }
+
+        registerFn<Unit>(
+            "send",
+            doc {
+                usage { arg("text", "String") }
+                body { "Send some text to the connected server." }
+            }
+        ) { text: String -> judo.send(text, true) }
+    }
+
+    private fun ScriptingEngine.initAliases() {
         // aliasing
         registerFn<Unit>(
             "alias",
@@ -108,7 +201,39 @@ class CmdMode(
         ) { spec: Any, alias: Any ->
             defineAlias(compilePatternSpec(spec, ""), alias)
         }
+    }
 
+    private fun ScriptingEngine.initEvents() {
+        registerFn<Unit>(
+            "event",
+            doc {
+                usage(decorator = true) {
+                    arg("eventName", "String")
+                    arg("handler", "Fn")
+                }
+
+                body { """
+                    Subscribe to an event with the provided handler.
+                    Available events:
+
+                    "Name": (args) Description
+                    --------------------------
+                    "CONNECTED"      ():            Connected to the server
+                    "DISCONNECTED"   ():            Disconnected to the server
+                    "GMCP ENABLED    ():            The server declared support for GMCP
+                    "GMCP            (name, value): A GMCP event was sent by the server
+                    "GMCP:{pkgName}" (value):       The server sent the value of the GMCP
+                    package {pkgName} (ex: "GMCP:room.info")
+                    "MSDP ENABLED"   ():            The server declared support for MSDP
+                    "MSDP"           (name, value): An MSDP variable was sent by the server.
+                    "MSDP:{varName}" (value):       The server sent the value of the MSDP
+                    variable {varName} (ex: "MSDP:COMMANDS")
+                """.trimIndent() }
+            }
+        ) { eventName: String, handler: Any -> defineEvent(eventName, handler) }
+    }
+
+    private fun ScriptingEngine.initKeymaps() {
         // mapping functions
         sequenceOf(
             "" to "",
@@ -205,48 +330,5 @@ class CmdMode(
         ) { modeName: String, inputKeys: String ->
             judo.unmap(modeName, inputKeys)
         }
-
-        registerFn<Unit>(
-            "config",
-            doc {
-                usage {
-                    arg("setting", "String")
-                    arg("value", "Any")
-                }
-                usage { arg("setting", "String") }
-                usage { /* no-arg */ }
-
-                body { "Set or get the value of a setting, or list all settings" }
-            }
-        ) { args: Array<Any> -> config(args) }
-
-        registerFn(
-            "connect",
-            doc {
-                usage {
-                    arg("host", "String")
-                    arg("port", "Int")
-                }
-
-                body { "Connect to a server." }
-            },
-            judo::connect
-        )
-
-        registerFn<Unit>(
-            "echo",
-            doc {
-                usage { withVarArgs() }
-                body { "Print some output to the screen locally." }
-            }
-        ) { args: Array<Any> -> judo.echo(*args) }
-
-        registerFn<Unit>(
-            "send",
-            doc {
-                usage { arg("text", "String") }
-                body { "Send some text to the connected server." }
-            }
-        ) { text: String -> judo.send(text, true) }
     }
 }

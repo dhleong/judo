@@ -79,6 +79,16 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
+    override fun toScript(fromJava: Any): Any = Py.java2py(fromJava)
+    override fun toJava(fromScript: Any): Any =
+        (fromScript as? PyObject)?.__tojava__(Any::class.java)
+            ?: fromScript
+
+    override fun callableArgsCount(fromScript: Any): Int {
+        val pyHandler = fromScript as PyFunction
+        return pyHandler.__code__.__getattr__("co_argcount").asInt()
+    }
+
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
         val handler = fromScript as? PyFunction ?: throw IllegalArgumentException()
         return { args ->
@@ -91,9 +101,25 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
-    override fun callableToFunction0(fromScript: Any): () -> Unit = {
+    override fun <R> callableToFunction0(fromScript: Any): () -> R = {
         wrapExceptions {
-            (fromScript as PyFunction).__call__()
+            @Suppress("UNCHECKED_CAST")
+            (fromScript as PyFunction).__call__() as R
+        }
+    }
+
+    override fun callableToFunction1(fromScript: Any): (Any?) -> Any? = { arg ->
+        wrapExceptions {
+            (fromScript as PyFunction).__call__(Py.java2py(arg))
+        }
+    }
+
+    override fun callableToFunctionN(fromScript: Any): (Array<Any>) -> Any? = { rawArg ->
+        wrapExceptions {
+            val pythonArgs = Array<PyObject>(rawArg.size) { index ->
+                Py.java2py(rawArg[index])
+            }
+            (fromScript as PyFunction).__call__(pythonArgs)
         }
     }
 
