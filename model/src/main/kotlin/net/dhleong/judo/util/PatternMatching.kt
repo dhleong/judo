@@ -27,13 +27,14 @@ enum class PatternProcessingFlags {
 interface PatternSpec {
     val flags: EnumSet<PatternProcessingFlags>
 
-    val groups: Int
     fun matcher(input: CharSequence): PatternMatcher
 
     val original: String
 }
 
 interface PatternMatcher {
+    val groups: Int
+
     fun find(): Boolean
     fun group(index: Int): String
 

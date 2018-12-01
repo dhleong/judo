@@ -4,6 +4,8 @@ import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 import javax.script.Bindings
 import javax.script.Invocable
 import javax.script.ScriptEngineManager
@@ -58,8 +60,9 @@ class Jsr223ScriptingEngine(
 
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
         return { args ->
+            // NOTE: this is definitely JS specific...
             (engine as Invocable).invokeMethod(
-                fromScript, "call", *args
+                fromScript, "call", fromScript, *args
             ) as String? ?: ""
         }
     }
@@ -69,27 +72,26 @@ class Jsr223ScriptingEngine(
         return when (fromScript) {
             is String -> compileSimplePatternSpec(fromScript, flagsSet)
             is Bindings -> {
-//                // first, try to compile it as a Java regex Pattern;
-//                // that will be much more efficient than delegating
-//                // to Python regex stuff (since we have to allocate
-//                // arrays for just about every call)
-//                val patternAsString = input.pattern.string
-//                try {
-//                    val javaPattern = Pattern.compile(patternAsString)
-//
-//                    // if we got here, huzzah! no compile issues
-//                    CoercedRegexAliasSpec(
-//                        patternAsString,
-//                        javaPattern,
-//                        input.groups,
-//                        flagsSet
-//                    )
-//                } catch (e: PatternSyntaxException) {
-//                    // alas, fallback to using the python pattern
-//                    PyPatternSpec(input, flagsSet)
-//                }
+                // try to compile it as a Java regex Pattern;
+                // that will be much more efficient than delegating
+                // to Python regex stuff (since we have to allocate
+                // arrays for just about every call)
+                val patternAsString = fromScript["source"] as? String
+                try {
+                    val javaPattern = Pattern.compile(patternAsString)
 
-                throw UnsupportedOperationException("TODO: Regex support: $fromScript / ${fromScript.javaClass}")
+                    // if we got here, huzzah! no compile issues
+                    JavaRegexPatternSpec(
+                        patternAsString!!,
+                        javaPattern,
+                        flagsSet
+                    )
+                } catch (e: PatternSyntaxException) {
+                    throw UnsupportedOperationException(
+                        "Unsupported regex: $fromScript / ${fromScript.javaClass}"
+                    )
+                }
+
             }
 
             else -> throw IllegalArgumentException(

@@ -18,7 +18,6 @@ import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.util.InputHistory
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -120,7 +119,6 @@ class CmdModeTest(
             .isEqualTo("this is awesome")
     }
 
-    @Ignore
     @Test fun `alias() with Regex`() {
         val regex = "^keep(.*)"
         val regexDef = when (scriptType()) {

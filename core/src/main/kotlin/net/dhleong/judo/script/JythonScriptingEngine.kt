@@ -2,7 +2,6 @@ package net.dhleong.judo.script
 
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.alias.compileSimplePatternSpec
-import net.dhleong.judo.modes.CoercedRegexAliasSpec
 import net.dhleong.judo.modes.InterfaceAdapter
 import net.dhleong.judo.modes.PyPatternSpec
 import net.dhleong.judo.modes.ScriptExecutionException
@@ -105,10 +104,9 @@ class JythonScriptingEngine : ScriptingEngine {
                     val javaPattern = Pattern.compile(patternAsString)
 
                     // if we got here, huzzah! no compile issues
-                    CoercedRegexAliasSpec(
+                    JavaRegexPatternSpec(
                         patternAsString,
                         javaPattern,
-                        fromScript.groups,
                         flagsSet
                     )
                 } catch (e: PatternSyntaxException) {

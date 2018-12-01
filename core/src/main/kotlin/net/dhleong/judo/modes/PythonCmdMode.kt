@@ -21,6 +21,7 @@ import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.script.JavaRegexPatternSpec
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternProcessingFlags
@@ -43,7 +44,6 @@ import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
 import java.util.EnumSet
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
@@ -570,10 +570,9 @@ private fun compilePatternSpec(input: Any, flags: String): PatternSpec {
                 val javaPattern = Pattern.compile(patternAsString)
 
                 // if we got here, huzzah! no compile issues
-                CoercedRegexAliasSpec(
+                JavaRegexPatternSpec(
                     patternAsString,
                     javaPattern,
-                    input.groups,
                     flagsSet
                 )
             } catch (e: PatternSyntaxException) {
@@ -587,38 +586,6 @@ private fun compilePatternSpec(input: Any, flags: String): PatternSpec {
     }
 }
 
-
-internal class CoercedRegexAliasSpec(
-    override val original: String,
-    private val pattern: Pattern,
-    override val groups: Int,
-    override val flags: EnumSet<PatternProcessingFlags>
-) : PatternSpec {
-    override fun matcher(input: CharSequence): PatternMatcher =
-        CoercedRegexAliasMatcher(pattern.matcher(input))
-}
-
-internal class CoercedRegexAliasMatcher(
-    private val matcher: Matcher
-) : PatternMatcher {
-    override fun find(): Boolean = matcher.find()
-
-    override fun group(index: Int): String =
-        // NOTE group 0 is the entire pattern
-        matcher.group(index + 1)
-
-    override val start: Int
-        get() = matcher.start()
-    override fun start(index: Int): Int =
-        matcher.start(index + 1)
-
-    override val end: Int
-        get() = matcher.end()
-    override fun end(index: Int): Int =
-        matcher.end(index + 1)
-}
-
-
 /**
  * If we can't use the Python pattern as a Java pattern,
  *  we have to fall back to this
@@ -627,10 +594,10 @@ internal class PyPatternSpec(
     private val pattern: PatternObject,
     override val flags: EnumSet<PatternProcessingFlags>
 ) : PatternSpec {
-    override val groups: Int = pattern.groups
 
     override fun matcher(input: CharSequence): PatternMatcher =
         PyPatternMatcher(
+            pattern.groups,
             pattern.finditer(arrayOf(Py.java2py(input.toString())), emptyArray())
                 as PyCallIter
         )
@@ -638,10 +605,14 @@ internal class PyPatternSpec(
     override val original: String = pattern.pattern.string
 }
 
-internal class PyPatternMatcher(finditer: PyIterator) : PatternMatcher {
+internal class PyPatternMatcher(
+    override val groups: Int,
+    finditer: PyIterator
+) : PatternMatcher {
 
     private var iterator = finditer.iterator()
     private var current: MatchObject? = null
+
 
     override fun find(): Boolean =
         if (iterator.hasNext()) {
