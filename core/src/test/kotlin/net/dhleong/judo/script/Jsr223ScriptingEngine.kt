@@ -1,6 +1,11 @@
 package net.dhleong.judo.script
 
+import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.alias.compileSimplePatternSpec
+import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
+import javax.script.Bindings
+import javax.script.Invocable
 import javax.script.ScriptEngineManager
 
 /**
@@ -9,15 +14,27 @@ import javax.script.ScriptEngineManager
 class Jsr223ScriptingEngine(
     extension: String = "js" // built in to JVM
 ) : ScriptingEngine {
-    class Factory(
+
+    open class Factory(
         private val forExtension: String = "js" // built in to JVM
     ) : ScriptingEngine.Factory {
+
+        override val supportsDecorators: Boolean
+            get() = forExtension == "py"
+
         override fun supportsFileType(ext: String): Boolean = ext == forExtension
 
         override fun create(): ScriptingEngine = Jsr223ScriptingEngine(forExtension)
     }
 
-    private val engine = ScriptEngineManager().getEngineByExtension(extension)
+    private val engine = ScriptEngineManager()
+        .getEngineByExtension(extension).also {
+            if (it !is Invocable) {
+                throw IllegalArgumentException(
+                    "JSR223 ScriptEngine $it does not support Invocable"
+                )
+            }
+        }
 
     override fun register(entity: JudoScriptingEntity) {
         when (entity) {
@@ -26,7 +43,7 @@ class Jsr223ScriptingEngine(
             }
 
             is JudoScriptingEntity.Function<*> -> {
-                engine.put(entity.name, entity.toFunctionalInterface())
+                engine.put(entity.name, entity.toFunctionalInterface(this))
             }
         }
     }
@@ -38,63 +55,46 @@ class Jsr223ScriptingEngine(
     override fun readFile(fileName: String, stream: InputStream) {
         engine.eval(stream.bufferedReader())
     }
-}
 
-@Suppress("UNCHECKED_CAST")
-private fun JudoScriptingEntity.Function<*>.toFunctionalInterface(): Any = when (fn) {
-    is Function1<*, *> -> {
-        if (hasMultipleUsages) {
-            FnN(fn as Function1<Array<out Any?>, Any>)
-        } else {
-            Fn1(name, fn as Function1<Any, Any>)
+    override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
+        return { args ->
+            (engine as Invocable).invokeMethod(
+                fromScript, "call", *args
+            ) as String? ?: ""
         }
     }
-    is Function2<*, *, *> -> Fn2(name, fn as Function2<Any, Any, Any>)
-    is Function3<*, *, *, *> -> Fn3(name, fn as Function3<Any, Any, Any, Any>)
-    is Function4<*, *, *, *, *> -> Fn4(name, fn as Function4<Any, Any, Any, Any, Any>)
-    else -> FnN(fn as Function1<Array<out Any?>, Any>)
-}
 
-@FunctionalInterface
-internal interface FIN {
-    fun invoke(vararg args: Any): Any
-}
-private class FnN(val fn: Function1<Array<out Any?>, Any>) : FIN {
-    override fun invoke(vararg args: Any) = fn.invoke(args)
-}
+    override fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec {
+        val flagsSet = patternSpecFlagsToEnums(flags)
+        return when (fromScript) {
+            is String -> compileSimplePatternSpec(fromScript, flagsSet)
+            is Bindings -> {
+//                // first, try to compile it as a Java regex Pattern;
+//                // that will be much more efficient than delegating
+//                // to Python regex stuff (since we have to allocate
+//                // arrays for just about every call)
+//                val patternAsString = input.pattern.string
+//                try {
+//                    val javaPattern = Pattern.compile(patternAsString)
+//
+//                    // if we got here, huzzah! no compile issues
+//                    CoercedRegexAliasSpec(
+//                        patternAsString,
+//                        javaPattern,
+//                        input.groups,
+//                        flagsSet
+//                    )
+//                } catch (e: PatternSyntaxException) {
+//                    // alas, fallback to using the python pattern
+//                    PyPatternSpec(input, flagsSet)
+//                }
 
-/**
- * Base class that throws a useful error when an unexpected number
- *  of args is passed
- */
-private abstract class FnBase(private val name: String) : FIN {
-    override fun invoke(vararg args: Any): Any {
-        throw IllegalArgumentException(
-            "Incorrect arguments to $name()"
-        )
+                throw UnsupportedOperationException("TODO: Regex support: $fromScript / ${fromScript.javaClass}")
+            }
+
+            else -> throw IllegalArgumentException(
+                "Invalid alias type: $fromScript (${fromScript.javaClass})")
+        }
     }
 }
 
-@FunctionalInterface
-internal interface FI1 : Function1<Any, Any>, FIN
-private class Fn1(name: String, val fn: Function1<Any, Any>) : FnBase(name), FI1 {
-    override fun invoke(p1: Any): Any = fn.invoke(p1)
-}
-
-@FunctionalInterface
-internal interface FI2 : Function2<Any, Any, Any>
-private class Fn2(name: String, val fn: Function2<Any, Any, Any>) : FnBase(name), FI2 {
-    override fun invoke(p1: Any, p2: Any) = fn.invoke(p1, p2)
-}
-
-@FunctionalInterface
-internal interface FI3 : Function3<Any, Any, Any, Any>
-private class Fn3(name: String, val fn: Function3<Any, Any, Any, Any>) : FnBase(name), FI3 {
-    override fun invoke(p1: Any, p2: Any, p3: Any) = fn.invoke(p1, p2, p3)
-}
-
-@FunctionalInterface
-internal interface FI4 : Function4<Any, Any, Any, Any, Any>
-private class Fn4(name: String, val fn: Function4<Any, Any, Any, Any, Any>) : FnBase(name), FI4 {
-    override fun invoke(p1: Any, p2: Any, p3: Any, p4: Any) = fn.invoke(p1, p2, p3, p4)
-}

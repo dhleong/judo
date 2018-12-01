@@ -206,21 +206,15 @@ class PythonCmdMode(
         }
     }
 
-    private fun defineAlias(alias: PatternSpec, handler: Any) {
-        queueAlias(alias.original)
-        if (handler is PyFunction) {
-            val handlerFn: AliasProcesser = { args ->
-                wrapExceptions {
-                    handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
-                           .__tojava__(String::class.java)
-                        as String?
-                        ?: ""
-                }
+    override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
+        val handler = fromScript as? PyFunction ?: throw IllegalArgumentException()
+        return { args ->
+            wrapExceptions {
+                handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
+                    .__tojava__(String::class.java)
+                    as String?
+                    ?: ""
             }
-
-            judo.aliases.define(alias, handlerFn)
-        } else {
-            judo.aliases.define(alias, handler as String)
         }
     }
 
@@ -425,23 +419,23 @@ internal fun PyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
 private inline fun <reified T: Any> asMaybeDecorator(
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
-    crossinline fn: (Array<T>) -> Unit): PyObject =
-    asMaybeDecorator(takeArgs, minArgs,
-        acceptsFlag = false,
-        isFlag = { false },
-        fn = fn
-    )
+    crossinline fn: (Array<T>) -> Unit
+): PyObject = asMaybeDecorator(takeArgs, minArgs,
+    acceptsFlag = false,
+    isFlag = { false },
+    fn = fn
+)
 
 private inline fun <reified T: Any> asMaybeDecorator(
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
     crossinline isFlag: (String) -> Boolean,
-    crossinline fn: (Array<T>) -> Unit): PyObject =
-    asMaybeDecorator(takeArgs, minArgs,
-        acceptsFlag = true,
-        isFlag = isFlag,
-        fn = fn
-    )
+    crossinline fn: (Array<T>) -> Unit
+): PyObject = asMaybeDecorator(takeArgs, minArgs,
+    acceptsFlag = true,
+    isFlag = isFlag,
+    fn = fn
+)
 
 /**
  * Create a Python function that can be used either as a normal
@@ -553,7 +547,7 @@ private class PyGlobals : PyStringMap() {
     }
 }
 
-internal fun compilePatternSpec(input: Any, flags: String): PatternSpec {
+private fun compilePatternSpec(input: Any, flags: String): PatternSpec {
     val flagsSet: EnumSet<PatternProcessingFlags>
     if (flags.isNotBlank()) {
         flagsSet = EnumSet.copyOf(PatternProcessingFlags.NONE)
@@ -674,12 +668,6 @@ internal class PyPatternMatcher(finditer: PyIterator) : PatternMatcher {
 
     override fun end(index: Int): Int =
         current!!.end(Py.java2py(index + 1)).asInt()
-}
-
-internal fun <T> java2py(type: Class<T>, obj: T): PyObject {
-    val pyObj = PyObjectDerived(PyType.fromClass(type, false))
-    JyAttribute.setAttr(pyObj, JyAttribute.JAVA_PROXY_ATTR, obj)
-    return pyObj
 }
 
 class InterfaceAdapter : PyObjectAdapter {

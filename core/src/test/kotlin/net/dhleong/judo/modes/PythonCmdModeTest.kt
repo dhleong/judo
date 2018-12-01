@@ -46,11 +46,11 @@ class PythonCmdModeTest {
         assertThat(judo.echos).containsExactly(USER_CONFIG_FILE.absolutePath)
     }
 
-    @Test fun send_ignoreExtraArgs() {
-        mode.execute("send('test', 2)")
-
-        assertThat(judo.sends).containsExactly("test")
-    }
+//    @Test fun send_ignoreExtraArgs() {
+//        mode.execute("send('test', 2)")
+//
+//        assertThat(judo.sends).containsExactly("test")
+//    }
 
     @Test fun map_nnoremap() {
         mode.execute("nnoremap('a', 'bc')")

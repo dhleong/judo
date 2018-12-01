@@ -2,6 +2,7 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
@@ -36,6 +37,9 @@ class CmdMode(
     override fun readFile(fileName: String, stream: InputStream) {
         engine.readFile(fileName, stream)
     }
+
+    override fun callableToAliasProcessor(fromScript: Any): AliasProcesser =
+        engine.callableToAliasProcessor(fromScript)
 
     private fun createMap(modeName: String, fromKeys: Any, mapTo: Any, remap: Boolean) {
         when (mapTo) {
@@ -74,6 +78,30 @@ class CmdMode(
             },
             USER_CONFIG_FILE.absolutePath
         )
+
+        // aliasing
+        registerFn<Unit>(
+            "alias",
+            doc {
+                usage {
+                    arg("inputSpec", "String/Pattern")
+                    arg("outputSpec", "String")
+                }
+                usage(decorator = true) {
+                    arg("inputSpec", "String/Pattern")
+                    arg("handler", "Fn")
+                }
+
+                body { """
+                    Create a text alias. You may use Regex objects to match against
+                    a regular expression. In Python, for example:
+                        import re
+                        alias(re.compile("^study (.*)"), "say I'd like to study '$1'")
+                """.trimIndent() }
+            }
+        ) { spec: Any, alias: Any ->
+            defineAlias(compilePatternSpec(spec, ""), alias)
+        }
 
         // TODO mapping functions
         registerFn<Unit>(

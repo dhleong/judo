@@ -4,6 +4,7 @@ import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.Setting
+import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.event.EventHandler
@@ -18,6 +19,7 @@ import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.util.Clearable
+import net.dhleong.judo.util.PatternSpec
 import net.dhleong.judo.util.hash
 import java.io.File
 import java.io.InputStream
@@ -535,6 +537,17 @@ abstract class BaseCmdMode(
             judo.state[it] = it.type.cast(value) as Any
         }
     }
+
+    protected fun defineAlias(alias: PatternSpec, handler: Any) {
+        queueAlias(alias.original)
+        if (handler is String) {
+            judo.aliases.define(alias, handler)
+        } else {
+            judo.aliases.define(alias, callableToAliasProcessor(handler))
+        }
+    }
+
+    abstract fun callableToAliasProcessor(fromScript: Any): AliasProcesser
 
     private inline fun withSetting(settingName: String, block: (Setting<Any>) -> Unit) {
         ALL_SETTINGS[settingName]?.let {

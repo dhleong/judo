@@ -1,14 +1,25 @@
 package net.dhleong.judo.script
 
+import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.util.PatternProcessingFlags
+import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
+import java.util.EnumSet
 
 /**
  * @author dhleong
  */
 interface ScriptingEngine {
     interface Factory {
+        val supportsDecorators: Boolean
+
         fun supportsFileType(ext: String): Boolean
         fun create(): ScriptingEngine
+
+        // NOTE all supported types currently use C-style fn calls,
+        // so it's a safe default
+        fun formatFnCall(name: String, vararg args: String) =
+            "$name(${args.joinToString(",")})"
     }
 
     fun register(entity: JudoScriptingEntity)
@@ -21,6 +32,30 @@ interface ScriptingEngine {
 
     fun execute(code: String)
     fun readFile(fileName: String, stream: InputStream)
+
+    fun callableToAliasProcessor(fromScript: Any): AliasProcesser
+    fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec
+
+    fun patternSpecFlagsToEnums(flags: String) =
+        if (flags.isNotBlank()) {
+            EnumSet.copyOf(PatternProcessingFlags.NONE).also { flagsSet ->
+                if (flags.contains("color", ignoreCase = true)) {
+                    flagsSet.add(PatternProcessingFlags.KEEP_COLOR)
+                }
+            }
+        } else {
+            PatternProcessingFlags.NONE
+        }
+
+    /** Coerce a script-engine type to Java */
+    fun toJava(fromScript: Any): Any = fromScript
+
+    /** Coerce a Java type to the Script engine */
+    fun toScript(fromJava: Any): Any = fromJava
+    fun toScript(fromJavaArray: Array<Any>): Array<Any> =
+        Array(fromJavaArray.size) { i ->
+            toScript(fromJavaArray[i])
+        }
 }
 
 sealed class JudoScriptingEntity(

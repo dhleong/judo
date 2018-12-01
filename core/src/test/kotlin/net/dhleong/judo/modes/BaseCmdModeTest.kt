@@ -2,6 +2,7 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.TestableJudoCore
 import net.dhleong.judo.TestableJudoRenderer
+import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.util.InputHistory
 import org.assertj.core.api.Assertions.assertThat
@@ -32,6 +33,10 @@ class BaseCmdModeTest {
             }
 
             override fun readFile(fileName: String, stream: InputStream) {
+                throw UnsupportedOperationException()
+            }
+
+            override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
                 throw UnsupportedOperationException()
             }
         }
