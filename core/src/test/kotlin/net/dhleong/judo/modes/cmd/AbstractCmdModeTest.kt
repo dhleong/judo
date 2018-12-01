@@ -1,0 +1,74 @@
+package net.dhleong.judo.modes.cmd
+
+import net.dhleong.judo.TestableJudoCore
+import net.dhleong.judo.TestableJudoRenderer
+import net.dhleong.judo.complete.DumbCompletionSource
+import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.modes.CmdMode
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.script.JreJsScriptingEngine
+import net.dhleong.judo.script.JythonScriptingEngine
+import net.dhleong.judo.script.ScriptingEngine
+import net.dhleong.judo.util.InputHistory
+import org.junit.Before
+import org.junit.runners.Parameterized
+
+enum class SupportedScriptTypes {
+    JS,
+    PY
+}
+
+/**
+ * @author dhleong
+ */
+abstract class AbstractCmdModeTest(
+    protected val factory: ScriptingEngine.Factory
+) {
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun data() = listOf<Array<Any>>(
+            arrayOf(JreJsScriptingEngine.Factory()),
+            arrayOf(JythonScriptingEngine.Factory())
+        )
+    }
+
+    protected val judo = TestableJudoCore()
+    protected val input = InputBuffer()
+    protected val mode = CmdMode(
+        judo, IdManager(), input,
+        TestableJudoRenderer(),
+        InputHistory(input),
+        DumbCompletionSource(),
+        factory
+    )
+
+    @Before fun setUp() {
+        mode.onEnter()
+        judo.clearTestable()
+    }
+
+    /*
+     * Utils
+     */
+
+    private fun testingType(fileExtension: String) =
+        factory.supportsFileType(fileExtension)
+
+    protected fun scriptType() = when {
+        testingType("js") -> SupportedScriptTypes.JS
+        testingType("py") -> SupportedScriptTypes.PY
+        else -> throw UnsupportedOperationException()
+    }
+
+    protected fun fnCall(fnName: String, vararg args: Any): String =
+        factory.formatFnCall(fnName, *args.map {
+            if (it is String) "\"$it\""
+            else it.toString()
+        }.toTypedArray())
+
+    protected class Var(private val fnName: String) {
+        override fun toString() = fnName
+    }
+
+}

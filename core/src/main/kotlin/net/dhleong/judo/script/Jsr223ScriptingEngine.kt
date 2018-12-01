@@ -1,6 +1,5 @@
 package net.dhleong.judo.script
 
-import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
@@ -13,11 +12,11 @@ import javax.script.ScriptEngineManager
 /**
  * @author dhleong
  */
-class Jsr223ScriptingEngine(
+abstract class Jsr223ScriptingEngine(
     extension: String = "js" // built in to JVM
 ) : ScriptingEngine {
 
-    open class Factory(
+    abstract class Factory(
         private val forExtension: String = "js" // built in to JVM
     ) : ScriptingEngine.Factory {
 
@@ -25,11 +24,9 @@ class Jsr223ScriptingEngine(
             get() = forExtension == "py"
 
         override fun supportsFileType(ext: String): Boolean = ext == forExtension
-
-        override fun create(): ScriptingEngine = Jsr223ScriptingEngine(forExtension)
     }
 
-    private val engine = ScriptEngineManager()
+    protected val engine = ScriptEngineManager()
         .getEngineByExtension(extension).also {
             if (it !is Invocable) {
                 throw IllegalArgumentException(
@@ -45,7 +42,7 @@ class Jsr223ScriptingEngine(
             }
 
             is JudoScriptingEntity.Function<*> -> {
-                engine.put(entity.name, entity.toFunctionalInterface(this))
+                engine.put(entity.name, toScript(entity))
             }
         }
     }
@@ -56,15 +53,6 @@ class Jsr223ScriptingEngine(
 
     override fun readFile(fileName: String, stream: InputStream) {
         engine.eval(stream.bufferedReader())
-    }
-
-    override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
-        return { args ->
-            // NOTE: this is definitely JS specific...
-            (engine as Invocable).invokeMethod(
-                fromScript, "call", fromScript, *args
-            ) as String? ?: ""
-        }
     }
 
     override fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec {
@@ -87,9 +75,7 @@ class Jsr223ScriptingEngine(
                         flagsSet
                     )
                 } catch (e: PatternSyntaxException) {
-                    throw UnsupportedOperationException(
-                        "Unsupported regex: $fromScript / ${fromScript.javaClass}"
-                    )
+                    scriptRegexToPatternSpec(fromScript)
                 }
 
             }
@@ -98,5 +84,20 @@ class Jsr223ScriptingEngine(
                 "Invalid alias type: $fromScript (${fromScript.javaClass})")
         }
     }
+
+    override fun toScript(fromJava: Any): Any {
+        if (fromJava is JudoScriptingEntity.Function<*>) {
+            return fromJava.toFunctionalInterface(this)
+        }
+
+        return super.toScript(fromJava)
+    }
+
+    protected open fun scriptRegexToPatternSpec(fromScript: Bindings): PatternSpec {
+        throw UnsupportedOperationException(
+            "Unsupported regex: $fromScript / ${fromScript.javaClass}"
+        )
+    }
+
 }
 
