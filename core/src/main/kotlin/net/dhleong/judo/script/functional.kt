@@ -41,11 +41,17 @@ private class FnN(name: String, engine: ScriptingEngine, val fn: Function1<Array
  */
 private abstract class FnBase(
     private val name: String,
-    protected val engine: ScriptingEngine
+    protected val engine: ScriptingEngine,
+    private val expectedArgs: Int = -1
 ) : FIN {
     override fun invoke(vararg args: Any): Any {
+        val expectedStatement = when {
+            expectedArgs != -1 -> "expected $expectedArgs, "
+            else -> ""
+        }
         throw IllegalArgumentException(
-            "Incorrect arguments to $name()"
+            "Incorrect arguments to $name(); $expectedStatement" +
+                "received ${args.size}"
         )
     }
 

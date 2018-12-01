@@ -76,7 +76,7 @@ sealed class JudoScriptingEntity(
         val hasMultipleUsages: Boolean
             get() = doc.invocations?.size ?: 0 > 1 ||
                 doc.invocations?.any {
-                    it.hasVarArgs
+                    it.hasVarArgs || it.args.any { it.isOptional }
                 } ?: false
     }
 }

@@ -56,14 +56,14 @@ class PythonCmdModeTest {
         mode.execute("nnoremap('a', 'bc')")
 
         assertThat(judo.maps)
-            .containsExactly(arrayOf("normal", "a", "bc", false))
+            .containsExactly(listOf("normal", "a", "bc", false))
     }
 
     @Test fun map_createMap() {
         mode.execute("createMap('custom', 'a', 'bc', True)")
 
         assertThat(judo.maps)
-            .containsExactly(arrayOf("custom", "a", "bc", true))
+            .containsExactly(listOf("custom", "a", "bc", true))
     }
 
     @Test fun alias_static() {
@@ -438,7 +438,7 @@ class PythonCmdModeTest {
         assertThat(judo.events.has("CONNECTED")).isTrue()
         assertThat(judo.events.has("DISCONNECTED")).isFalse()
         assertThat(judo.prompts.size).isEqualTo(1)
-        assertThat(judo.maps).contains(arrayOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
         assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
 
         // read a different file, and no change to original
@@ -450,7 +450,7 @@ class PythonCmdModeTest {
         assertThat(judo.events.has("CONNECTED")).isTrue()
         assertThat(judo.events.has("DISCONNECTED")).isTrue()
         assertThat(judo.prompts.size).isEqualTo(1)
-        assertThat(judo.maps).contains(arrayOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
         assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
 
         // read the original file (which is now inexplicably empty) and

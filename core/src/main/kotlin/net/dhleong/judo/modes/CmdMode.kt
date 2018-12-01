@@ -68,6 +68,7 @@ class CmdMode(
         queueMap(modeName, fromKeys)
     }
 
+
     private fun ScriptingEngine.init() {
         registerConst(
             "MYJUDORC",
@@ -103,7 +104,68 @@ class CmdMode(
             defineAlias(compilePatternSpec(spec, ""), alias)
         }
 
-        // TODO mapping functions
+        // mapping functions
+        sequenceOf(
+            "" to "",
+            "c" to "cmd",
+            "i" to "insert",
+            "n" to "normal"
+        ).forEach { (letter, modeName) ->
+
+            registerFn<Unit>(
+                "${letter}map",
+                doc {
+                    usage {
+                        arg("inputKeys", "String")
+                        arg("output", "String/Fn")
+                    }
+                    usage { /* no args to list */ }
+
+                    body { "Create a mapping in a specific mode from inputKeys to outputKeys" }
+                }
+            ) { args: Array<Any> ->
+                when (args.size) {
+                    0 -> judo.printMappings(modeName)
+                    1 -> {
+                        // special case; map(mode)
+                        judo.printMappings(args[0] as String)
+                    }
+                    else -> {
+                        createMap(modeName, args[0], args[1], true)
+                    }
+                }
+            }
+
+            registerFn<Unit>(
+                "${letter}noremap",
+                doc {
+                    usage {
+                        arg("inputKeys", "String")
+                        arg("output", "String/Fn")
+                    }
+                    usage { /* no args to list */ }
+
+                    body { "Create a mapping in a specific mode from inputKeys to outputKeys" }
+                }
+            ) { inputKeys: String, output: Any ->
+                createMap(modeName, inputKeys, output, false)
+            }
+
+            registerFn<Unit>(
+                "${letter}unmap",
+                doc {
+                    usage {
+                        arg("inputKeys", "String")
+                    }
+                    usage { /* no args to list */ }
+
+                    body { "Delete a mapping in the specific mode with inputKeys" }
+                }
+            ) { inputKeys: String ->
+                judo.unmap(modeName, inputKeys)
+            }
+        }
+
         registerFn<Unit>(
             "createMap",
             doc {
@@ -111,8 +173,13 @@ class CmdMode(
                     arg("modeName", "String")
                     arg("inputKeys", "String")
                     arg("outputKeys", "String")
+                    arg("remap", "Boolean", isOptional = true)
                 }
-                body { "Create a mapping in a specific mode from inputKeys to outputKeys" }
+                body { """
+                    Create a mapping in a specific mode from inputKeys to outputKeys.
+                    If remap is provided and True, the outputKeys can trigger other mappings.
+                    Otherwise, they will be sent as-is.
+                """.trimIndent() }
             }
         ) { args: Array<Any> ->
             val remap =

@@ -63,8 +63,16 @@ abstract class AbstractCmdModeTest(
 
     protected fun fnCall(fnName: String, vararg args: Any): String =
         factory.formatFnCall(fnName, *args.map {
-            if (it is String) "\"$it\""
-            else it.toString()
+            when (it) {
+                is String -> "\"$it\""
+
+                is Boolean -> when (scriptType()) {
+                    SupportedScriptTypes.PY -> it.toString().capitalize()
+                    else -> it.toString()
+                }
+
+                else -> it.toString()
+            }
         }.toTypedArray())
 
     protected class Var(private val fnName: String) {

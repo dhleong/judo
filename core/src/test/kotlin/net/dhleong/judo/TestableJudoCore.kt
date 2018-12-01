@@ -3,6 +3,7 @@ package net.dhleong.judo
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.input.Key
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.prompt.PromptManager
@@ -29,7 +30,7 @@ class TestableJudoCore : IJudoCore by Proxy() {
 
     val echos = ArrayList<Any?>()
     val sends = ArrayList<String>()
-    val maps = ArrayList<Array<Any>>()
+    val maps = ArrayList<List<Any>>()
     val raised = ArrayList<Pair<String, Any?>>()
 
     private val mapRenderer = Proxy<MapRenderer> { _, _ -> }
@@ -51,8 +52,12 @@ class TestableJudoCore : IJudoCore by Proxy() {
         )
     )
 
+    override fun feedKeys(keys: Sequence<Key>, remap: Boolean, mode: String) {
+        TODO("not implemented")
+    }
+
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
-        maps.add(arrayOf(mode, from, to, remap))
+        maps.add(listOf(mode, from, to, remap))
     }
 
     override fun unmap(mode: String, from: String) {
