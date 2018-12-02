@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes.cmd
 
+import assertk.Assert
 import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
@@ -9,6 +10,8 @@ import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isTrue
 import assertk.assertions.message
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.USER_CONFIG_FILE
@@ -188,6 +191,21 @@ class CmdModeCoreTest(
         assert(judo.events.has("DISCONNECTED")).isTrue()
     }
 
+    @Test fun `Render help items in columns`() {
+        val colWidth = "createUserMode  ".length
+        renderer.settableWindowWidth = colWidth * 2
+
+        mode.showHelp()
+
+        assert(judo.echos)
+            .startsWith("alias           cmap            ")
+    }
+}
+
+private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) {
+    val actualFirstSequence = actual.take(sequence.size)
+    if (actualFirstSequence == sequence.asList()) return
+    expected("to start with ${show(sequence)}, but was ${show(actualFirstSequence)}")
 }
 
 private fun CmdMode.readLikeFile(fileName: String, fileContents: String) =
