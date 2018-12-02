@@ -3,16 +3,21 @@ package net.dhleong.judo.modes.cmd
 import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isTrue
 import assertk.assertions.message
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.USER_CONFIG_FILE
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.ByteArrayInputStream
+import java.io.File
 
 /**
  * @author dhleong
@@ -117,4 +122,73 @@ class CmdModeCoreTest(
             .containsExactly("magic")
     }
 
+    @Test fun `Second readFile() call clears old declarations from same file`() {
+        when (scriptType()) {
+            SupportedScriptTypes.PY -> mode.readLikeFile("test.py", """
+                alias('shiny $1', 'Mighty fine $1')
+
+                @event('CONNECTED')
+                def on_connect(): pass
+
+                nmap('gkf', 'ikeep flyin<cr>')
+                prompt('foo $1>', '[$1]')
+
+                @trigger('foo')
+                def on_foo(): pass
+            """.trimIndent())
+
+            SupportedScriptTypes.JS -> mode.readLikeFile("test.js", """
+                alias('shiny $1', 'Mighty fine $1');
+
+                event('CONNECTED', function onConnect() {});
+
+                nmap('gkf', 'ikeep flyin<cr>');
+                prompt('foo $1>', '[$1]');
+
+                trigger('foo', function onFoo() {});
+            """.trimIndent())
+        }
+
+        assert(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assert(judo.events.has("CONNECTED")).isTrue()
+        assert(judo.events.has("DISCONNECTED")).isFalse()
+        assert(judo.prompts.size).isEqualTo(1)
+        assert(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assert(judo.triggers.hasTriggerFor("foo")).isTrue()
+
+        // read a different file, and no change to original
+        when (scriptType()) {
+            SupportedScriptTypes.PY -> mode.readLikeFile("different.py", """
+                @event("DISCONNECTED")
+                def on_disconnect(): pass
+            """.trimIndent())
+
+            SupportedScriptTypes.JS -> mode.readLikeFile("different.js", """
+                event("DISCONNECTED", function onDisconnect() {});
+            """.trimIndent())
+        }
+        assert(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assert(judo.events.has("CONNECTED")).isTrue()
+        assert(judo.events.has("DISCONNECTED")).isTrue()
+        assert(judo.prompts.size).isEqualTo(1)
+        assert(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assert(judo.triggers.hasTriggerFor("foo")).isTrue()
+
+        // read the original file (which is now inexplicably empty) and
+        // clear out the things it created...
+        val ext = scriptType().name.toLowerCase()
+        mode.readLikeFile("test.$ext","")
+        assert(judo.aliases.hasAliasFor("shiny $1")).isFalse()
+        assert(judo.events.has("CONNECTED")).isFalse()
+        assert(judo.maps).isEmpty()
+        assert(judo.prompts.size).isEqualTo(0)
+        assert(judo.triggers.hasTriggerFor("foo")).isFalse()
+
+        // ... but the other file is intact
+        assert(judo.events.has("DISCONNECTED")).isTrue()
+    }
+
 }
+
+private fun CmdMode.readLikeFile(fileName: String, fileContents: String) =
+    readFile(File(fileName), ByteArrayInputStream(fileContents.toByteArray()))
