@@ -54,6 +54,7 @@ class JLineRenderer(
     override var windowWidth = -1
     private val windowSize = Size(0, 0)
 
+    private var isLoading = true
     private var input = AttributedString.EMPTY
     private var cursor = 0
     private var lastKeyTime: Long = -1
@@ -276,7 +277,7 @@ class JLineRenderer(
     }
 
     private fun registerEscapeHandler(strokes: List<Int>, block: () -> Key?) {
-        escapeSequenceHandlers.getOrPut(strokes[0]) { HashMap<Int, () -> Key?>() }.let {
+        escapeSequenceHandlers.getOrPut(strokes[0]) { HashMap() }.let {
             if (strokes.size == 2) {
                 it[strokes[1]] = block
             } else {
@@ -288,6 +289,13 @@ class JLineRenderer(
     // TODO it'd be great if this could be inline somehow...
     override fun inTransaction(block: () -> Unit) {
         doInTransaction(block)
+    }
+
+    override fun setLoading(isLoading: Boolean) {
+        if (isLoading != this.isLoading) {
+            this.isLoading = isLoading
+            this.redraw()
+        }
     }
 
     internal inline fun doInTransaction(block: () -> Unit) {
@@ -309,7 +317,7 @@ class JLineRenderer(
     @Synchronized override fun redraw() {
         val lastInputLineCount = this.lastInputLinesCount
         val (lines, cursorRow, cursorCol) = getDisplayLines()
-        if (lines.isEmpty()) {
+        if (isLoading || lines.isEmpty()) {
             // splash screen?
             if (windowHeight > 0) {
                 renderedSplashScreen = true

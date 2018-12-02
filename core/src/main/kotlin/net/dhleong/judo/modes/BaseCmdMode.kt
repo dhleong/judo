@@ -4,6 +4,8 @@ import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.Setting
+import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.event.EventHandler
@@ -17,7 +19,10 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.script.JudoScriptInvocation
+import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.util.Clearable
+import net.dhleong.judo.util.PatternSpec
 import net.dhleong.judo.util.hash
 import java.io.File
 import java.io.InputStream
@@ -26,306 +31,13 @@ import java.io.InputStream
  * @author dhleong
  */
 
-val USER_HOME = System.getProperty("user.home")!!
-val USER_CONFIG_DIR = File("$USER_HOME/.config/judo/").absoluteFile!!
-val USER_CONFIG_FILE = File("${USER_CONFIG_DIR.absolutePath}/init.py").absoluteFile!!
-
-private fun buildHelp(usage: String, description: String): String =
-    buildHelp(listOf(usage), description)
-private fun buildHelp(usages: Iterable<String>, description: String): String =
-    with(StringBuilder()) {
-        var maxUsageLength = 0
-        usages.forEach {
-            appendln(it)
-            maxUsageLength = maxOf(maxUsageLength, it.length)
-        }
-        appendln("=".repeat(maxUsageLength))
-        appendln(description)
-
-        toString()
-    }
-
-private val COMMAND_HELP = mutableMapOf(
-    "alias" to buildHelp(
-        listOf(
-            "alias(inputSpec: String/Pattern, outputSpec: String)",
-            "alias(inputSpec: String/Pattern, handler: Fn)",
-            "@alias(inputSpec: String/Pattern)"
-        ),
-        """
-        Create a text alias. You may use re.compile() to match against
-        a regular expression, eg:
-            import re
-            alias(re.compile("^study (.*)"), "say I'd like to study '$1'")
-        """.trimIndent()
-    ),
-
-    "event" to buildHelp(
-        listOf(
-            "event(eventName: String, handler: Fn)",
-            "@event(eventName: String)"
-        ),
-        """
-        Subscribe to an event with the provided handler.
-        Available events:
-
-         "Name": (args) Description
-         --------------------------
-         "CONNECTED"      ():            Connected to the server
-         "DISCONNECTED"   ():            Disconnected to the server
-         "GMCP ENABLED    ():            The server declared support for GMCP
-         "GMCP            (name, value): A GMCP event was sent by the server
-         "GMCP:{pkgName}" (value):       The server sent the value of the GMCP
-                                         package {pkgName} (ex: "GMCP:room.info")
-         "MSDP ENABLED"   ():            The server declared support for MSDP
-         "MSDP"           (name, value): An MSDP variable was sent by the server.
-         "MSDP:{varName}" (value):       The server sent the value of the MSDP
-                                         variable {varName} (ex: "MSDP:COMMANDS")
-        """.trimIndent()
-    ),
-
-    "prompt" to buildHelp(
-        listOf(
-            "prompt(inputSpec: String/Pattern, [options: String,] outputSpec: String)",
-            "prompt(inputSpec: String/Pattern, [options: String,] handler: Fn)",
-            "@prompt(inputSpec: String/Pattern [, options: String])"
-        ),
-        """
-        Prepare a prompt to be displayed in the status area.
-        See :help alias for more about `inputSpec`, and :help trigger for more
-        about the optional `options`.
-        """.trimIndent()
-    ),
-
-    "trigger" to buildHelp(
-        listOf(
-            "trigger(inputSpec: String/Pattern, [options: String,] handler: Fn)",
-            "@trigger(inputSpec: String/Pattern [, options: String])"
-        ),
-        """
-        Declare a trigger. See :help alias for more about inputSpec.
-        `options` is an optional, space-separated string that may contain any of:
-             color - Keep color codes in the values passed to the handler
-        """.trimIndent()
-    ),
-
-    "complete" to buildHelp(
-        "complete(text: String)",
-        """Feed some text into the text completion system.
-          |NOTE: This does not yet guarantee that the provided words will
-          |be suggested in the sequence provided, but it may in the future.
-        """.trimMargin()
-    ),
-
-    "connect" to buildHelp(
-        "connect(host: String, port: Int)",
-        "Connect to a server."
-    ),
-
-    "createUserMode" to buildHelp(
-        "createUserMode(modeName: String)",
-        "Create a new mode with the given name. Mappings can be added to it" +
-        "using the createMap() function"
-    ),
-
-    "disconnect" to buildHelp(
-        "disconnect()",
-        "Disconnect from the server."
-    ),
-
-    "enterMode" to buildHelp(
-        "enterMode(modeName: String)",
-        "Enter the mode with the given name."
-    ),
-
-    "exitMode" to buildHelp(
-        "exitMode()",
-        "Enter the current mode."
-    ),
-
-    "echo" to buildHelp(
-        "echo(...)",
-        "Print some output to the screen locally."
-    ),
-
-    "hsplit" to buildHelp(
-        listOf(
-            "hsplit(rows: Int) -> Window",
-            "hsplit(perc: Float) -> Window"
-        ),
-        """
-        Create a new window by splitting the active window. The new window
-        will be `rows` tall, or `perc` % of the active window's height.
-        The resulting Window object has the following attributes and methods:
-            id - The window's unique, numeric ID
-            buffer - The window's underlying Buffer object
-            height - The height of the window in rows
-            width - The width of the window in columns
-            close() - Close the window
-            resize(width, height) - Resize the window
-
-        A Buffer object has the following attributes and methods:
-            id - The buffer's unique, numeric ID
-            append(line: String) - Append a line to the buffer
-            clear() - Remove all lines from the buffer
-            set(lines: String[]) - Replace the buffer's contents
-                                   with the given lines list
-        Buffer also supports len() to get the number of lines
-        """.trimIndent()
-    ),
-
-    "input" to buildHelp(
-        listOf(
-            "input() -> String",
-            "input(prompt: String) -> String"
-        ),
-        """Request a string from the user, returning whatever they typed.
-          |NOTE: Unlike the equivalent function in Vim, input() DOES NOT currently
-          |consume pending input from mappings.
-        """.trimMargin()
-    ),
-
-    "isConnected" to buildHelp(
-        "isConnected() -> Boolean",
-        "Check if connected."
-    ),
-
-    "load" to buildHelp(
-        "load(pathToFile: String)",
-        "Load and execute a script."
-    ),
-
-    "logToFile" to buildHelp(
-        "logToFile(pathToFile: String, options: String)",
-        """Enable logging to the given file with the given options. `options` is
-          |a space-separated string that may contain any of:
-          | append - Append output to the given file if it already exists, instead
-          |          of replacing it
-          | raw - Output the raw data received from the server, including ANSI codes
-          | plain - Output the plain text received from the server, with no coloring
-          | html - Output the data received from the server formatted as HTML.
-        """.trimMargin()
-    ),
-
-    "normal" to buildHelp(
-        listOf(
-            "normal(keys: String)",
-            "normal(keys: String, remap: Boolean)"
-        ),
-        """Process [keys] as though they were typed by the user in normal mode.
-          |To perform this operation with remaps disabled (as in nnoremap), pass
-          |False for the second parameter.
-        """.trimMargin()
-    ),
-
-    "persistInput" to buildHelp(
-        listOf(
-            "persistInput()",
-            "persistInput(path: String)"
-        ),
-        """Enable input history persistence for the current world, optionally
-          |providing the path to save the history. If not provided, it will pick
-          |a path in the ~/.config/judo directory with a filename based on the
-          |currently-connected world (which means this should be called AFTER a
-          |call to connect()).
-          |This will immediately attempt to import input history from the given
-          |file, and writes the new history on disconnect. Persistence is also
-          |disabled on disconnect, so you'll need to call this again the next time
-          |you connect.
-        """.trimMargin()
-    ),
-
-    "quit" to buildHelp(
-        "quit()",
-        "Exit Judo."
-    ),
-
-    "reconnect" to buildHelp(
-        "reconnect()",
-        "Repeat the last connect()"
-    ),
-
-    "reload" to buildHelp(
-        "reload()",
-        "Reload the last-loaded, non-MYJUDORC script file."
-    ),
-
-    "send" to buildHelp(
-        "send(text: String)",
-        "Send some text to the connected server."
-    ),
-
-    "config" to buildHelp(
-        listOf(
-            "config(setting: String, value)",
-            "config(setting: String)",
-            "config"
-        ),
-        "Set or get the value of a setting, or list all settings"
-    ),
-
-    "startInsert" to buildHelp(
-        "startInsert()",
-        "Enter insert mode as if by pressing `i`"
-    ),
-
-    "stopInsert" to buildHelp(
-        "stopInsert()",
-        "Exit insert mode as soon as possible"
-    ),
-
-    "unalias" to buildHelp(
-        "unalias(inputSpec: String)",
-        "Delete the alias with the specified inputSpec"
-    ),
-
-    "unsplit" to buildHelp(
-        "unsplit()",
-        "Remove any split windows"
-    ),
-
-    "untrigger" to buildHelp(
-        "untrigger(inputSpec: String)",
-        "Delete the trigger with the specified inputSpec"
-    )
-
-).apply {
-    val kinds = sequenceOf("", "c", "i", "n")
-    val mapTypes = kinds.flatMap { sequenceOf("${it}map", "${it}noremap") }
-    val unmapTypes = kinds.map { "${it}unmap" }
-
-    val mapHelp = buildHelp(
-        mapTypes.map {
-            "$it(inputKeys: String, outputKeys: String)"
-        }.toList()
-            + "createMap(modeName: String, inputKeys: String, outputKeys: String)",
-        "Create a mapping in a specific mode from inputKeys to outputKeys"
-    )
-
-    val unmapHelp = buildHelp(
-        unmapTypes.map {
-            "$it(inputKeys: String)"
-        }.toList()
-            + "deleteMap(modeName: String, inputKeys: String)",
-        "Delete a mapping in the specific mode with inputKeys"
-    )
-
-    mapTypes.forEach {
-        put(it, mapHelp)
-    }
-    put("createMap", mapHelp)
-
-    unmapTypes.forEach {
-        put(it, unmapHelp)
-    }
-    put("deleteMap", unmapHelp)
-}
-
 abstract class BaseCmdMode(
     judo: IJudoCore,
     buffer: InputBuffer,
     private val rendererInfo: JudoRendererInfo,
-    val history: IInputHistory
+    private val history: IInputHistory,
+    private val userConfigDir: File,
+    val userConfigFile: File
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     StatusBufferProvider {
@@ -335,12 +47,13 @@ abstract class BaseCmdMode(
 
     private val mapClearable = MapClearable(judo)
     private val clearQueue = ArrayList<QueuedClear<*>>()
-    protected var currentClearableContext: String? = null
+    private var currentClearableContext: String? = null
 
-    private val suggester = CompletionSuggester(DumbCompletionSource(normalize = false).apply {
-        COMMAND_HELP.keys.forEach(this::process)
-        process("help")
-    })
+    protected val completionSource: CompletionSource = DumbCompletionSource(normalize = false)
+    private val suggester = CompletionSuggester(completionSource)
+
+    protected abstract val registeredFns: MutableSet<String>
+    protected abstract val registeredVars: MutableMap<String, JudoScriptingEntity>
 
     val mapping = KeyMapping(
         keys("<up>") to action { history.scroll(-1, clampCursor = false) },
@@ -379,11 +92,11 @@ abstract class BaseCmdMode(
 
                 if (code.startsWith("help")) {
                     showHelp(code.substring(5))
-                } else if (!(code.contains('(') && code.contains(')')) && code !in COMMAND_HELP) {
+                } else if (!(code.contains('(') && code.contains(')')) && code !in registeredFns) {
                     showHelp(code)
-                } else if (code in COMMAND_HELP) {
+                } else if (code in registeredFns) {
                     // no args needed, so just implicitly handle for convenience
-                    execute("$code()")
+                    executeImplicit(code)
                     history.push(code)
                 } else {
                     execute(code)
@@ -447,8 +160,8 @@ abstract class BaseCmdMode(
     fun persistInput() {
         judo.connection?.let {
             val fileName = hash(it.toString())
-            val filePath = "$USER_CONFIG_DIR/input-history/$fileName"
-            judo.persistInput(File(filePath))
+            val historyDir = File(userConfigDir, "input-history")
+            judo.persistInput(File(historyDir, fileName))
             return
         }
 
@@ -466,7 +179,7 @@ abstract class BaseCmdMode(
     }
 
     open fun readFile(file: File, inputStream: InputStream) {
-        if (file != USER_CONFIG_FILE) {
+        if (file != userConfigFile) {
             lastReadFile = file
         }
 
@@ -525,7 +238,7 @@ abstract class BaseCmdMode(
             judo.echo("${setting.userName} = $valueDisp$isDefaultFlag")
         }
 
-    fun config(settingName: String, value: Any) {
+    private fun config(settingName: String, value: Any) {
         withSetting(settingName) {
             if (!it.type.isAssignableFrom(value.javaClass)) {
                 throw ScriptExecutionException(
@@ -535,6 +248,17 @@ abstract class BaseCmdMode(
             judo.state[it] = it.type.cast(value) as Any
         }
     }
+
+    protected fun defineAlias(alias: PatternSpec, handler: Any) {
+        queueAlias(alias.original)
+        if (handler is String) {
+            judo.aliases.define(alias, handler)
+        } else {
+            judo.aliases.define(alias, callableToAliasProcessor(handler))
+        }
+    }
+
+    abstract fun callableToAliasProcessor(fromScript: Any): AliasProcesser
 
     private inline fun withSetting(settingName: String, block: (Setting<Any>) -> Unit) {
         ALL_SETTINGS[settingName]?.let {
@@ -546,7 +270,7 @@ abstract class BaseCmdMode(
         throw ScriptExecutionException("No such setting `$settingName`")
     }
 
-    internal fun handleNoArgListingCommand(command: String): Boolean =
+    private fun handleNoArgListingCommand(command: String): Boolean =
         when (command) {
             "alias" -> {
                 judo.echoRaw()
@@ -587,7 +311,17 @@ abstract class BaseCmdMode(
         }
 
     internal fun showHelp() {
-        val commands = COMMAND_HELP.keys.sorted().toList()
+        val commands = registeredVars.values.asSequence()
+            .sortedBy {
+                // sort functions first, vars last
+                if (it is JudoScriptingEntity.Function<*>) {
+                    "0 - ${it.name}"
+                } else {
+                    "1 - ${it.name}"
+                }
+            }
+            .map { it.name }
+            .toList()
         val longest = commands.asSequence().map { it.length }.max()!!
         val colWidth = longest + 2
 
@@ -616,11 +350,15 @@ abstract class BaseCmdMode(
                 line.setLength(0)
             }
         }
+
+        if (line.isNotEmpty()) {
+            judo.echoRaw(line.toString())
+        }
     }
 
     internal fun showHelp(command: String) {
-        COMMAND_HELP[command]?.let { help ->
-            help.split("\n").forEach { judo.echoRaw(it) }
+        registeredVars[command]?.let { help ->
+            help.formatHelp().forEach { judo.echoRaw(it) }
             return
         }
 
@@ -643,6 +381,70 @@ abstract class BaseCmdMode(
     }
 
     abstract fun execute(code: String)
+    abstract fun executeImplicit(fnName: String)
+
+    protected abstract val supportsDecorators: Boolean
+
+    private fun JudoScriptingEntity.formatHelp(): List<String> {
+        val result = mutableListOf<String>()
+        val maxUsageLength = doc.invocations?.let { invocations ->
+            var max = 0
+            invocations.forEach { usage ->
+                result.add(format(usage, asDecorator = false).also {
+                    max = maxOf(max, it.length)
+                })
+
+                if (supportsDecorators && usage.canBeDecorator) {
+                    // NOTE the decorator version is never longer than
+                    // the non-decorator, because it has less args!
+                    result.add(format(usage, asDecorator = true))
+                }
+            }
+            max
+        } ?: name.let {
+            result.add(it)
+            it.length
+        }
+
+        result.add("=".repeat(maxUsageLength))
+
+        result.addAll(doc.text.split("\n"))
+        return result
+    }
+
+    protected open fun JudoScriptingEntity.format(
+        usage: JudoScriptInvocation,
+        asDecorator: Boolean
+    ): String = StringBuilder().apply {
+
+        if (asDecorator) {
+            append("@")
+        }
+
+        append(name)
+        append("(")
+
+        val last = usage.args.lastIndex
+        usage.args.forEachIndexed { index, arg ->
+            if (index == last && asDecorator) return@forEachIndexed
+            if (arg.isOptional) append("[")
+            if (index > 0) append(", ")
+
+            append(arg.name)
+            append(": ")
+            append(arg.type)
+
+            if (arg.isOptional) append("]")
+        }
+
+        append(")")
+
+        usage.returnType?.let {
+            append(" -> ")
+            append(it)
+        }
+
+    }.toString()
 
     protected abstract fun readFile(fileName: String, stream: InputStream)
 
@@ -651,7 +453,7 @@ abstract class BaseCmdMode(
         input.clear()
     }
 
-    protected fun clearQueuedForContext(context: String) {
+    private fun clearQueuedForContext(context: String) {
         val iter = clearQueue.iterator()
         while (iter.hasNext()) {
             val candidate = iter.next()
@@ -662,7 +464,7 @@ abstract class BaseCmdMode(
         }
     }
 
-    protected fun queueAlias(specOriginal: String) =
+    private fun queueAlias(specOriginal: String) =
         enqueueClear(judo.aliases, specOriginal)
 
     protected fun queueEvent(event: String, handler: EventHandler) =
@@ -682,7 +484,7 @@ abstract class BaseCmdMode(
             clearQueue.add(QueuedClear(it, source, entry))
         }
 
-    protected inline fun withClearableContext(context: String, block: () -> Unit) {
+    private inline fun withClearableContext(context: String, block: () -> Unit) {
         val oldContext = currentClearableContext
         currentClearableContext = context
         try {
@@ -711,8 +513,8 @@ internal class MapClearable(private val judo: IJudoCore) : Clearable<Pair<String
 
 internal class QueuedClear<T>(
     val context: String,
-    val source: Clearable<T>,
-    val entry: T
+    private val source: Clearable<T>,
+    private val entry: T
 ) {
     fun clear() {
         source.clear(entry)

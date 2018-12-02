@@ -17,7 +17,6 @@ internal class RegexAliasSpec(
     private val groupNames: List<String>,
     override val flags: EnumSet<PatternProcessingFlags> = PatternProcessingFlags.NONE
 ) : PatternSpec {
-    override val groups = groupNames.size
 
     override fun matcher(input: CharSequence): PatternMatcher =
         RegexAliasMatcher(pattern.matcher(input), groupNames)
@@ -25,22 +24,25 @@ internal class RegexAliasSpec(
 
 internal class RegexAliasMatcher(
     private val matcher: Matcher,
-    private val groups: List<String>
+    private val groupNames: List<String>
 ) : PatternMatcher {
+    override val groups: Int
+        get() = groupNames.size
+
     override fun find(): Boolean = matcher.find()
 
     override fun group(index: Int): String =
-        matcher.group(groups[index])
+        matcher.group(groupNames[index])
 
     override val start: Int
         get() = matcher.start()
     override fun start(index: Int): Int =
-        matcher.start(groups[index])
+        matcher.start(groupNames[index])
 
     override val end: Int
         get() = matcher.end()
     override fun end(index: Int): Int =
-        matcher.end(groups[index])
+        matcher.end(groupNames[index])
 }
 
 /**
@@ -117,15 +119,16 @@ class Alias(
 
     fun parse(input: IStringBuilder, postProcess: (String) -> String): Boolean {
         val matcher = spec.matcher(input)
+        val groups = matcher.groups
 
         val vars =
-            if (spec.groups == 0) emptyStringArray
-            else Array(spec.groups) { "" }
+            if (groups == 0) emptyStringArray
+            else Array(groups) { "" }
 
         if (!matcher.find()) return false
 
         // extract variables
-        for (i in 0 until spec.groups) {
+        for (i in 0 until groups) {
             vars[i] = when {
                 PatternProcessingFlags.KEEP_COLOR in spec.flags -> {
                     (input.slice(matcher.start(i), matcher.end(i)) as AttributedCharSequence)

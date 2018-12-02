@@ -73,4 +73,5 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
     fun updateInputLine(line: String, cursor: Int)
 
     fun redraw()
+    fun setLoading(isLoading: Boolean)
 }

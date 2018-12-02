@@ -1,12 +1,16 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.modes.USER_CONFIG_FILE
-import net.dhleong.judo.modes.USER_HOME
 import java.io.File
 
 /**
  * @author dhleong
  */
+
+val USER_HOME: String = System.getProperty("user.home")
+val USER_CONFIG_DIR: File = File(
+    File(USER_HOME, ".config"),
+    "judo"
+).absoluteFile
 
 fun main(args: Array<String>) {
     var closed = false
@@ -46,35 +50,47 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
+    val worldScriptFile = if (argsList.size > 0) {
+        File(
+            argsList[0].replace("^~", USER_HOME)
+        ).absoluteFile
+    } else null
+
+    // figure out what our scripting config should be
+    val config = ScriptingConfig.pick(USER_CONFIG_DIR, worldScriptFile)
+
     // the main thing
     val judo = JudoCore(
         renderer,
         mapRenderer,
         settings,
+        userConfigDir = USER_CONFIG_DIR,
+        userConfigFile = config.userConfigFile,
+        scripting = config.engineFactory,
         debug = debugLevel
     )
 
     // if they have a global init.py, read it
-    if (USER_CONFIG_FILE.exists()) {
-        judo.readFile(USER_CONFIG_FILE)
+    if (config.userConfigFile.exists()) {
+        judo.readFile(config.userConfigFile)
     }
 
     when (argsList.size) {
         1 -> {
-            // read world.py
-            val worldPy = File(argsList[0].replace("^~", USER_HOME)).absoluteFile
-            if (!(worldPy.exists() && worldPy.canRead())) {
+            // read world.(script)
+            if (worldScriptFile == null) throw IllegalStateException()
+            if (!(worldScriptFile.exists() && worldScriptFile.canRead())) {
                 closed = true
 
                 judo.quit()
                 renderer.close()
 
-                System.err.println("Unable to open world file $worldPy")
+                System.err.println("Unable to open world file $worldScriptFile")
                 System.exit(2)
                 return
             }
 
-            judo.readFile(worldPy)
+            judo.readFile(worldScriptFile)
         }
 
         2 -> {
@@ -101,6 +117,10 @@ fun main(args: Array<String>) {
         judo.registers['*'].value
     }
 
+    // we should be good to go; hide any splash screen we may have been showing
+    renderer.setLoading(false)
+
     // finally, start handling user input
     judo.readKeys(renderer)
 }
+

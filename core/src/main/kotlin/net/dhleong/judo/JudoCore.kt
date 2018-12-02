@@ -18,13 +18,13 @@ import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.BaseCmdMode
+import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.modes.OutputSearchMode
-import net.dhleong.judo.modes.PythonCmdMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
@@ -41,6 +41,8 @@ import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoTabpage
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.script.JythonScriptingEngine
+import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
@@ -75,6 +77,9 @@ class JudoCore(
     override val renderer: JudoRenderer,
     mapRenderer: MapRenderer,
     settings: StateMap,
+    userConfigDir: File = File(".judo"),
+    userConfigFile: File = File(userConfigDir, "init.py"),
+    scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
     companion object {
@@ -154,7 +159,12 @@ class JudoCore(
         normalMode,
         opMode,
         OutputSearchMode(this, outputCompletions),
-        PythonCmdMode(this, ids, cmdBuffer, renderer, cmdHistory, completions),
+        CmdMode(
+            this, ids, cmdBuffer, renderer, cmdHistory, completions,
+            userConfigDir,
+            userConfigFile,
+            scripting
+        ),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>()) { map, mode ->
@@ -379,6 +389,7 @@ class JudoCore(
     }
 
     override fun printMappings(mode: String) {
+        // TODO if mode.isBlank() print ALL mappings
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")

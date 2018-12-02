@@ -43,6 +43,7 @@ ext.deps = [
 
     test: [
         assertj: 'org.assertj:assertj-core:2.4.1',
+        assertk: 'com.willowtreeapps.assertk:assertk-jvm:0.12',
         junit: 'junit:junit:4.12',
     ],
 ]

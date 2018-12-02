@@ -9,14 +9,18 @@ import java.util.EnumSet
  * @author dhleong
  */
 
-enum class PatternProcessingFlags {
+enum class PatternProcessingFlags(
+    private val stringForm: String
+) {
     /**
      * By default, ANSI codes are stripped from
      * text matched before passing the matches to
      * the processor function; this flag can be used
      * to prevent that.
      */
-    KEEP_COLOR;
+    KEEP_COLOR("color");
+
+    override fun toString(): String = stringForm
 
     companion object {
         val NONE: EnumSet<PatternProcessingFlags> =
@@ -27,13 +31,14 @@ enum class PatternProcessingFlags {
 interface PatternSpec {
     val flags: EnumSet<PatternProcessingFlags>
 
-    val groups: Int
     fun matcher(input: CharSequence): PatternMatcher
 
     val original: String
 }
 
 interface PatternMatcher {
+    val groups: Int
+
     fun find(): Boolean
     fun group(index: Int): String
 
