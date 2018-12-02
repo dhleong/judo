@@ -358,7 +358,7 @@ abstract class BaseCmdMode(
         }
     }
 
-    private fun showHelp(command: String) {
+    internal fun showHelp(command: String) {
         registeredVars[command]?.let { help ->
             help.formatHelp().forEach { judo.echoRaw(it) }
             return
@@ -389,11 +389,11 @@ abstract class BaseCmdMode(
 
     private fun JudoScriptingEntity.formatHelp(): List<String> {
         val result = mutableListOf<String>()
-        var maxUsageLength = 0
-        doc.invocations?.let { invocations ->
+        val maxUsageLength = doc.invocations?.let { invocations ->
+            var max = 0
             invocations.forEach { usage ->
                 result.add(format(usage, asDecorator = false).also {
-                    maxUsageLength = maxOf(maxUsageLength, it.length)
+                    max = maxOf(max, it.length)
                 })
 
                 if (supportsDecorators && usage.canBeDecorator) {
@@ -402,9 +402,10 @@ abstract class BaseCmdMode(
                     result.add(format(usage, asDecorator = true))
                 }
             }
+            max
         } ?: name.let {
             result.add(it)
-            maxUsageLength = it.length
+            it.length
         }
 
         result.add("=".repeat(maxUsageLength))

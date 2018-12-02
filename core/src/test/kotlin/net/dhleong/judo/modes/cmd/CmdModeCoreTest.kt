@@ -200,6 +200,15 @@ class CmdModeCoreTest(
         assert(judo.echos)
             .startsWith("alias           cmap            ")
     }
+
+    @Test fun `Render help for vars`() {
+        mode.showHelp("judo")
+        assert(judo.echos)
+            .startsWith(
+                "judo",
+                "===="
+            )
+    }
 }
 
 private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) {

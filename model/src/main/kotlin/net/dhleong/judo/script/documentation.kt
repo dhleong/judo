@@ -78,7 +78,8 @@ class DocBuilder {
     }
 
     fun create(): JudoScriptDoc = JudoScriptDoc(
-        invocations,
+        if (invocations.isEmpty()) null
+        else invocations,
         body ?: throw IllegalArgumentException("You must provide a body")
     )
 }
