@@ -10,6 +10,8 @@ import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.script.JudoScriptDoc
+import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.doc
 import net.dhleong.judo.util.PatternProcessingFlags
@@ -29,17 +31,36 @@ class CmdMode(
     private var completions: CompletionSource,
     private val engineFactory: ScriptingEngine.Factory
 ) : BaseCmdMode(judo, inputBuffer, rendererInfo, history) {
-
     private val engine by lazy {
         engineFactory.create().apply {
             onPreRegister()
             init()
             onPostRegister()
+
+            completionSource.process("help")
         }
     }
 
+    private val myRegisteredFns = mutableSetOf<String>()
+    private val myRegisteredVars = mutableMapOf<String, JudoScriptingEntity>()
+
+    override val registeredFns: MutableSet<String>
+        get() {
+            engine // ensure initialized
+            return myRegisteredFns
+        }
+    override val registeredVars: MutableMap<String, JudoScriptingEntity>
+        get() {
+            engine // ensure initialized
+            return myRegisteredVars
+        }
+
     override fun execute(code: String) {
         engine.execute(code)
+    }
+
+    override fun executeImplicit(fnName: String) {
+        engine.execute(engineFactory.formatFnCall(fnName))
     }
 
     override fun readFile(file: File, inputStream: InputStream) {
@@ -53,6 +74,9 @@ class CmdMode(
 
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser =
         engine.callableToAliasProcessor(fromScript)
+
+    override val supportsDecorators: Boolean
+        get() = engineFactory.supportsDecorators
 
     override fun reload() {
         engine.onPreReload()
@@ -162,6 +186,21 @@ class CmdMode(
         val inputMode = ScriptInputMode(judo, completions, prompt)
         judo.enterMode(inputMode)
         return inputMode.awaitResult()
+    }
+
+    private fun <T> ScriptingEngine.registerConst(name: String, doc: JudoScriptDoc, value: T) {
+        registerVar(JudoScriptingEntity.Constant(name, doc, value))
+    }
+
+    private fun <R> ScriptingEngine.registerFn(name: String, doc: JudoScriptDoc, fn: kotlin.Function<R>) {
+        registerVar(JudoScriptingEntity.Function(name, doc, fn))
+        myRegisteredFns.add(name)
+    }
+
+    private fun ScriptingEngine.registerVar(entity: JudoScriptingEntity) {
+        register(entity)
+        myRegisteredVars[entity.name] = entity
+        completionSource.process(entity.name)
     }
 
     private fun ScriptingEngine.init() {

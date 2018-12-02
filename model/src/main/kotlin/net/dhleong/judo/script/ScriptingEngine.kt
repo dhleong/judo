@@ -27,12 +27,6 @@ interface ScriptingEngine {
 
     fun register(entity: JudoScriptingEntity)
 
-    fun <T> registerConst(name: String, doc: JudoScriptDoc, value: T) =
-        register(JudoScriptingEntity.Constant(name, doc, value))
-
-    fun <R> registerFn(name: String, doc: JudoScriptDoc, fn: kotlin.Function<R>) =
-        register(JudoScriptingEntity.Function(name, doc, fn))
-
     /**
      * When CmdMode is initializing, it calls [register] with every
      * exposed entity to allow this Engine to use them. Before doing so,

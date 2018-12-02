@@ -22,6 +22,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.script.JavaRegexPatternSpec
+import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternProcessingFlags
@@ -68,6 +69,11 @@ class PythonCmdMode(
 
     private val isPatternMatchingFlag: (String) -> Boolean =
         { maybeFlag -> maybeFlag.toLowerCase() in PATTERN_MATCHING_FLAGS }
+
+    override val registeredFns: MutableSet<String>
+        get() = throw UnsupportedOperationException()
+    override val registeredVars: MutableMap<String, JudoScriptingEntity>
+        get() = throw UnsupportedOperationException()
 
     init {
         InterfaceAdapter.init()
@@ -313,6 +319,10 @@ class PythonCmdMode(
             python.exec(code)
         }
     }
+
+    override fun executeImplicit(fnName: String) = execute("$fnName()")
+
+    override val supportsDecorators: Boolean = true
 
     override fun reload() {
         // clean up modules

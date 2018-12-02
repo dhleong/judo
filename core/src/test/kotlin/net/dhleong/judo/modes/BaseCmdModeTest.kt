@@ -2,44 +2,34 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.TestableJudoCore
 import net.dhleong.judo.TestableJudoRenderer
-import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.script.JreJsScriptingEngine
 import net.dhleong.judo.util.InputHistory
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.io.InputStream
 
 /**
  * @author dhleong
  */
 class BaseCmdModeTest {
 
-    val judo = TestableJudoCore()
-    val input = InputBuffer()
-    val renderer = TestableJudoRenderer()
-
-    lateinit var mode: BaseCmdMode
+    private val judo = TestableJudoCore()
+    private val input = InputBuffer()
+    private val renderer = TestableJudoRenderer()
+    private val mode = CmdMode(
+        judo, IdManager(), input,
+        renderer,
+        InputHistory(input),
+        DumbCompletionSource(),
+        JreJsScriptingEngine.Factory()
+    )
 
     @Before fun setUp() {
-
-        mode = object : BaseCmdMode(
-            judo, input,
-            renderer,
-            InputHistory(input)
-        ) {
-            override fun execute(code: String) {
-                throw UnsupportedOperationException()
-            }
-
-            override fun readFile(fileName: String, stream: InputStream) {
-                throw UnsupportedOperationException()
-            }
-
-            override fun callableToAliasProcessor(fromScript: Any): AliasProcesser {
-                throw UnsupportedOperationException()
-            }
-        }
+        mode.onEnter()
+        judo.clearTestable()
     }
 
     @Test fun helpColumns() {
