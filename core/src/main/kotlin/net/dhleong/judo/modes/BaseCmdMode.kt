@@ -31,15 +31,13 @@ import java.io.InputStream
  * @author dhleong
  */
 
-val USER_HOME = System.getProperty("user.home")!!
-val USER_CONFIG_DIR = File("$USER_HOME/.config/judo/").absoluteFile!!
-val USER_CONFIG_FILE = File("${USER_CONFIG_DIR.absolutePath}/init.py").absoluteFile!!
-
 abstract class BaseCmdMode(
     judo: IJudoCore,
     buffer: InputBuffer,
     private val rendererInfo: JudoRendererInfo,
-    val history: IInputHistory
+    private val history: IInputHistory,
+    private val userConfigDir: File,
+    val userConfigFile: File
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     StatusBufferProvider {
@@ -162,8 +160,8 @@ abstract class BaseCmdMode(
     fun persistInput() {
         judo.connection?.let {
             val fileName = hash(it.toString())
-            val filePath = "$USER_CONFIG_DIR/input-history/$fileName"
-            judo.persistInput(File(filePath))
+            val historyDir = File(userConfigDir, "input-history")
+            judo.persistInput(File(historyDir, fileName))
             return
         }
 
@@ -181,7 +179,7 @@ abstract class BaseCmdMode(
     }
 
     open fun readFile(file: File, inputStream: InputStream) {
-        if (file != USER_CONFIG_FILE) {
+        if (file != userConfigFile) {
             lastReadFile = file
         }
 

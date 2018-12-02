@@ -29,8 +29,15 @@ class CmdMode(
     rendererInfo: JudoRendererInfo,
     history: IInputHistory,
     private var completions: CompletionSource,
+    userConfigDir: File,
+    userConfigFile: File,
     private val engineFactory: ScriptingEngine.Factory
-) : BaseCmdMode(judo, inputBuffer, rendererInfo, history) {
+) : BaseCmdMode(
+    judo,
+    inputBuffer, rendererInfo,
+    history,
+    userConfigDir, userConfigFile
+) {
     private val engine by lazy {
         engineFactory.create().apply {
             onPreRegister()
@@ -226,7 +233,7 @@ class CmdMode(
                     "Path to the Judo config file"
                 }
             },
-            USER_CONFIG_FILE.absolutePath
+            userConfigFile.absolutePath
         )
 
         registerConst(

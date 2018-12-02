@@ -12,6 +12,7 @@ import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.util.InputHistory
 import org.junit.Before
 import org.junit.runners.Parameterized
+import java.io.File
 
 enum class SupportedScriptTypes {
     JS,
@@ -41,6 +42,8 @@ abstract class AbstractCmdModeTest(
         renderer,
         InputHistory(input),
         DumbCompletionSource(),
+        File(".judo"),
+        File(".judo/init.${scriptType().toString().toLowerCase()}"),
         factory
     )
 

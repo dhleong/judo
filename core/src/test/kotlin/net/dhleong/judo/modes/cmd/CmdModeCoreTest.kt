@@ -14,7 +14,6 @@ import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.modes.CmdMode
-import net.dhleong.judo.modes.USER_CONFIG_FILE
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -39,7 +38,7 @@ class CmdModeCoreTest(
     @Test fun globals() {
         mode.execute("echo(MYJUDORC)")
 
-        assert(judo.echos).containsExactly(USER_CONFIG_FILE.absolutePath)
+        assert(judo.echos).containsExactly(mode.userConfigFile.absolutePath)
     }
 
     @Test fun `var definitions are shared across execute() calls`() {

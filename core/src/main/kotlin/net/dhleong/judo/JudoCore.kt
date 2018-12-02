@@ -77,6 +77,8 @@ class JudoCore(
     override val renderer: JudoRenderer,
     mapRenderer: MapRenderer,
     settings: StateMap,
+    userConfigDir: File = File(".judo"),
+    userConfigFile: File = File(userConfigDir, "init.py"),
     scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
     val debug: DebugLevel = DebugLevel.OFF
 ) : IJudoCore {
@@ -157,7 +159,12 @@ class JudoCore(
         normalMode,
         opMode,
         OutputSearchMode(this, outputCompletions),
-        CmdMode(this, ids, cmdBuffer, renderer, cmdHistory, completions, scripting),
+        CmdMode(
+            this, ids, cmdBuffer, renderer, cmdHistory, completions,
+            userConfigDir,
+            userConfigFile,
+            scripting
+        ),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
     ).fold(HashMap<String, Mode>()) { map, mode ->
