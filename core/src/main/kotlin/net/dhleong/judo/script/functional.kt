@@ -8,7 +8,7 @@ fun JudoScriptingEntity.Function<*>.toFunctionalInterface(
     engine: ScriptingEngine
 ): JudoCallable = when (fn) {
     is Function1<*, *> -> {
-        if (hasMultipleUsages) {
+        if (hasMultipleArities) {
             FnN(name, engine, fn as Function1<Array<out Any?>, Any>)
         } else {
             Fn1(name, engine, fn as Function1<Any, Any>)

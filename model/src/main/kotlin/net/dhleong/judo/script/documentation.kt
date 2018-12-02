@@ -10,6 +10,7 @@ class JudoScriptDoc(
 
 class JudoScriptInvocation(
     val args: List<JudoScriptArgument>,
+    val returnType: String? = null,
     val canBeDecorator: Boolean = false,
     val hasVarArgs: Boolean = false
 )
@@ -26,6 +27,7 @@ class InvocationBuilder(
 ) {
     private val args = mutableListOf<JudoScriptArgument>()
     private var hasVarArgs: Boolean = false
+    private var returnType: String? = null
 
     fun arg(name: String, type: String, flags: Class<out Enum<*>>) {
         args += JudoScriptArgument(name, type, isOptional = true, flags = flags)
@@ -35,12 +37,17 @@ class InvocationBuilder(
         args += JudoScriptArgument(name, type, isOptional)
     }
 
+    fun returns(type: String) {
+        returnType = type
+    }
+
     fun withVarArgs() {
         hasVarArgs = true
     }
 
     fun create(): JudoScriptInvocation = JudoScriptInvocation(
         args,
+        returnType = returnType,
         canBeDecorator = this.canBeDecorator,
         hasVarArgs = this.hasVarArgs
     )

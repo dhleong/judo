@@ -1,6 +1,8 @@
 package net.dhleong.judo.script
 
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
@@ -69,6 +71,8 @@ interface ScriptingEngine {
         Array(fromJavaArray.size) { i ->
             toScript(fromJavaArray[i])
         }
+
+    fun wrapWindow(tabpage: IJudoTabpage, window: IJudoWindow): Any
 }
 
 sealed class JudoScriptingEntity(
@@ -86,10 +90,17 @@ sealed class JudoScriptingEntity(
         doc: JudoScriptDoc,
         val fn: kotlin.Function<R>
     ) : JudoScriptingEntity(name, doc) {
-        val hasMultipleUsages: Boolean
-            get() = doc.invocations?.size ?: 0 > 1 ||
-                doc.invocations?.any {
-                    it.hasVarArgs || it.args.any { it.isOptional }
+        val hasMultipleArities: Boolean
+            get() {
+                var minArity = Int.MAX_VALUE
+                var maxArity = Int.MIN_VALUE
+                val anyVarArg = doc.invocations?.any { usage ->
+                    minArity = minOf(minArity, usage.args.size)
+                    maxArity = maxOf(maxArity, usage.args.size)
+                    usage.hasVarArgs || usage.args.any { it.isOptional }
                 } ?: false
+
+                return anyVarArg || minArity != maxArity
+            }
     }
 }

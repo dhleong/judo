@@ -9,6 +9,7 @@ import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.doc
 import net.dhleong.judo.util.PatternProcessingFlags
@@ -142,6 +143,7 @@ class CmdMode(
         initKeymaps()
         initPrompts()
         initTriggers()
+        initWindows()
     }
 
     private fun ScriptingEngine.initConsts() {
@@ -428,6 +430,50 @@ class CmdMode(
             }
         ) { inputSpec: String ->
             judo.triggers.undefine(inputSpec)
+        }
+    }
+
+    private fun ScriptingEngine.initWindows() {
+        registerFn<Any>(
+            "hsplit",
+            doc {
+                usage {
+                    arg("rows", "Int")
+                    returns("Window")
+                }
+                usage {
+                    arg("perc", "Float")
+                    returns("Window")
+                }
+
+                body {
+                    """
+        Create a new window by splitting the active window. The new window
+        will be `rows` tall, or `perc` % of the active window's height.
+        The resulting Window object has the following attributes and methods:
+            id - The window's unique, numeric ID
+            buffer - The window's underlying Buffer object
+            height - The height of the window in rows
+            width - The width of the window in columns
+            close() - Close the window
+            resize(width, height) - Resize the window
+
+        A Buffer object has the following attributes and methods:
+            id - The buffer's unique, numeric ID
+            append(line: String) - Append a line to the buffer
+            clear() - Remove all lines from the buffer
+            set(lines: String[]) - Replace the buffer's contents
+                                   with the given lines list
+        Buffer also supports len() to get the number of lines
+        """.trimIndent() }
+            }
+        ) { arg: Any ->
+            val newBuffer = JudoBuffer(ids)
+            engine.wrapWindow(
+                judo.tabpage,
+                if (arg is Int) judo.tabpage.hsplit(arg, newBuffer)
+                else judo.tabpage.hsplit(arg as Float, newBuffer)
+            )
         }
     }
 }

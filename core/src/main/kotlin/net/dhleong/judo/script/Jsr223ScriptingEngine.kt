@@ -1,6 +1,9 @@
 package net.dhleong.judo.script
 
 import net.dhleong.judo.alias.compileSimplePatternSpec
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
 import java.util.regex.Pattern
@@ -99,5 +102,55 @@ abstract class Jsr223ScriptingEngine(
         )
     }
 
+    override fun wrapWindow(
+        tabpage: IJudoTabpage,
+        window: IJudoWindow
+    ): IScriptWindow = Jsr223Window(tabpage, window)
 }
+
+class Jsr223Window(
+    private val tabpage: IJudoTabpage,
+    private val window: IJudoWindow
+) : IScriptWindow {
+
+    override val id: Int = window.id
+    override val width: Int = window.width
+    override val height: Int = window.height
+    override val buffer: IScriptBuffer
+        get() = Jsr223Buffer(window, window.currentBuffer)
+
+    override fun close() {
+        tabpage.close(window)
+    }
+
+    override fun resize(width: Int, height: Int) {
+        window.resize(width, height)
+        tabpage.resize()
+    }
+
+}
+
+class Jsr223Buffer(
+    private val window: IJudoWindow,
+    private val buffer: IJudoBuffer
+) : IScriptBuffer {
+    override val id: Int = buffer.id
+
+    override val size: Int
+        get() = buffer.size
+
+    override fun append(line: String) {
+        buffer.appendLine(line, false, window.width, false)
+    }
+
+    override fun clear() {
+        buffer.clear()
+    }
+
+    override fun set(contents: List<String>) {
+        buffer.set(contents)
+    }
+
+}
+
 

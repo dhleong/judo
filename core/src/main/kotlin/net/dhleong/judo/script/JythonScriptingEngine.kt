@@ -5,6 +5,9 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.modes.InterfaceAdapter
 import net.dhleong.judo.modes.PyPatternSpec
 import net.dhleong.judo.modes.ScriptExecutionException
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
 import org.python.core.PyException
@@ -153,6 +156,11 @@ class JythonScriptingEngine : ScriptingEngine {
                 "Invalid alias type: $fromScript (${fromScript.javaClass})")
         }
     }
+
+    override fun wrapWindow(
+        tabpage: IJudoTabpage,
+        window: IJudoWindow
+    ) = createPyWindow(tabpage, window)
 
     private inline fun <R> wrapExceptions(lineExecution: Boolean = false, block: () -> R): R {
         try {
@@ -304,7 +312,7 @@ private inline fun <reified T: Any, reified R> asPyFn(
     takeArgs: Int = 0,
     minArgs: Int = takeArgs,
     crossinline fn: (Array<T>) -> R
-) = object : PyObject() {
+): PyObject = object : PyObject() {
     override fun __call__(args: Array<PyObject>, keywords: Array<String>): PyObject {
         if (minArgs != Int.MAX_VALUE && args.size < minArgs) {
             throw IllegalArgumentException("$name Expected $minArgs arguments; got ${args.size}")
@@ -328,5 +336,58 @@ private inline fun <reified T: Any, reified R> asPyFn(
         }
 
         return Py.java2py(result)
+    }
+}
+
+internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
+    val resize = asPyFn<Int, Unit>("resize", 2) {
+        window.resize(it[0], it[1])
+        tabpage.resize()
+    }
+
+    return object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject? =
+            when (name ?: "") {
+                "buffer" -> createPyBuffer(window, window.currentBuffer) // cache?
+                "height" -> Py.java2py(window.height)
+                "width" -> Py.java2py(window.width)
+                "id" -> Py.java2py(window.id)
+
+                // not used oft enough to cache
+                "close" -> asPyFn<Any, Unit>("close") {
+                    tabpage.close(window)
+                }
+                "resize" -> resize
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+}
+
+internal fun createPyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
+    val append = asPyFn<String, Unit>("append", 1) {
+        buffer.appendLine(it[0], false, window.width, false)
+    }
+    val clear = asPyFn<Any, Unit>("clear") {
+        buffer.clear()
+    }
+    val set = asPyFn<List<String>, Unit>("set", 1) {
+        buffer.set(it[0])
+    }
+
+    return object : PyObject() {
+        override fun __len__(): Int {
+            return buffer.size
+        }
+
+        override fun __findattr_ex__(name: String?): PyObject =
+            when (name ?: "") {
+                "append" -> append
+                "clear" -> clear
+                "set" -> set
+                "id" -> Py.java2py(buffer.id)
+
+                else -> super.__findattr_ex__(name)
+            }
     }
 }

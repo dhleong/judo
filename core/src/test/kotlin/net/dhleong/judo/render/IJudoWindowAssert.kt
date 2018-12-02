@@ -1,5 +1,8 @@
 package net.dhleong.judo.render
 
+import assertk.Assert
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.jline.utils.AttributedString
@@ -28,6 +31,11 @@ class IJudoWindowAssert(actual: IJudoWindow?)
 
         return myself
     }
+}
+
+fun Assert<IJudoWindow>.hasHeight(expected: Int) {
+    if (actual.height == expected) return
+    expected("height=${show(expected)} but was ${show(actual.height)}")
 }
 
 fun IJudoWindow.getDisplayStrings(): List<String> =
