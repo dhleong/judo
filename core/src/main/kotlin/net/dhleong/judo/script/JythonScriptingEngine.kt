@@ -12,10 +12,12 @@ import net.dhleong.judo.util.PatternSpec
 import org.python.core.Py
 import org.python.core.PyException
 import org.python.core.PyFunction
+import org.python.core.PyModule
 import org.python.core.PyObject
 import org.python.core.PyStringMap
 import org.python.modules.sre.PatternObject
 import org.python.util.PythonInterpreter
+import java.io.File
 import java.io.InputStream
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
@@ -44,6 +46,21 @@ class JythonScriptingEngine : ScriptingEngine {
 
         // the naming here is insane, but correct
         python.locals = globals
+    }
+
+    override fun onPostRegister() {
+        // add everything as a module
+        val asModule = PyModule("judo", globals)
+        val modules = python.systemState.modules as PyStringMap
+        modules.__setitem__("judo", asModule)
+
+        // don't override our input()!!
+        val builtins = modules.__getitem__("__builtin__")
+        builtins.dict.__setitem__("input", globals.__getitem__("input"))
+
+        modules.keys().asIterable().forEach {
+            keepModules.add(it.asString())
+        }
     }
 
     override fun register(entity: JudoScriptingEntity) {
@@ -161,6 +178,16 @@ class JythonScriptingEngine : ScriptingEngine {
         tabpage: IJudoTabpage,
         window: IJudoWindow
     ) = createPyWindow(tabpage, window)
+
+    override fun onPreReadFile(file: File, inputStream: InputStream) {
+        file.parentFile?.let { fileDir ->
+            python.exec(
+                """
+                import sys
+                sys.path.insert(0, '${fileDir.absolutePath}')
+                """.trimIndent())
+        }
+    }
 
     override fun onPreReload() {
         // clean up modules

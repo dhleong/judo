@@ -32,12 +32,19 @@ class CmdMode(
 
     private val engine by lazy {
         engineFactory.create().apply {
+            onPreRegister()
             init()
+            onPostRegister()
         }
     }
 
     override fun execute(code: String) {
         engine.execute(code)
+    }
+
+    override fun readFile(file: File, inputStream: InputStream) {
+        engine.onPreReadFile(file, inputStream)
+        super.readFile(file, inputStream)
     }
 
     override fun readFile(fileName: String, stream: InputStream) {

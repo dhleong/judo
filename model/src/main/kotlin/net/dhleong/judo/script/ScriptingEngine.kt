@@ -5,6 +5,7 @@ import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
+import java.io.File
 import java.io.InputStream
 import java.util.EnumSet
 
@@ -31,6 +32,16 @@ interface ScriptingEngine {
 
     fun <R> registerFn(name: String, doc: JudoScriptDoc, fn: kotlin.Function<R>) =
         register(JudoScriptingEntity.Function(name, doc, fn))
+
+    /**
+     * When CmdMode is initializing, it calls [register] with every
+     * exposed entity to allow this Engine to use them. Before doing so,
+     * in case the Engine needs the hints, it will call [onPreRegister];
+     * when it's done, it will call [onPostRegister].
+     */
+    fun onPreRegister() {}
+    /** @see [onPreRegister] */
+    fun onPostRegister() {}
 
     fun execute(code: String)
     fun readFile(fileName: String, stream: InputStream)
@@ -79,6 +90,9 @@ interface ScriptingEngine {
 
     /** Called just after a script file is reloaded */
     fun onPostReload() {}
+
+    /** Called just before the given file is read */
+    fun onPreReadFile(file: File, inputStream: InputStream) {}
 }
 
 sealed class JudoScriptingEntity(
