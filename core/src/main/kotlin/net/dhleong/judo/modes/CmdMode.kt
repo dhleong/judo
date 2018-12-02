@@ -46,6 +46,12 @@ class CmdMode(
     override fun callableToAliasProcessor(fromScript: Any): AliasProcesser =
         engine.callableToAliasProcessor(fromScript)
 
+    override fun reload() {
+        engine.onPreReload()
+        super.reload()
+        engine.onPostReload()
+    }
+
     private fun createMap(modeName: String, fromKeys: String, mapTo: Any, remap: Boolean) {
         when (mapTo) {
             is String -> judo.map(
@@ -133,12 +139,22 @@ class CmdMode(
         }
     }
 
+    private fun feedKeys(userInput: Array<Any>, mode: String) {
+        val keys = userInput[0] as? String ?: throw IllegalArgumentException("[keys] must be a String")
+
+        val remap =
+            if (userInput.size == 1) true
+            else userInput[1] as? Boolean ?: throw IllegalArgumentException("[remap] must be a Boolean")
+
+        judo.feedKeys(keys, remap, mode)
+    }
 
     private fun ScriptingEngine.init() {
         initConsts()
         initCore()
 
         initAliases()
+        initConnection()
         initEvents()
         initKeymaps()
         initModes()
@@ -195,29 +211,6 @@ class CmdMode(
             judo::seedCompletion
         )
 
-        registerFn(
-            "connect",
-            doc {
-                usage {
-                    arg("host", "String")
-                    arg("port", "Int")
-                }
-
-                body { "Connect to a server." }
-            },
-            judo::connect
-        )
-
-        registerFn(
-            "disconnect",
-            doc {
-                usage { }
-
-                body { "Disconnect from the server." }
-            },
-            judo::connect
-        )
-
         registerFn<Unit>(
             "echo",
             doc {
@@ -225,6 +218,39 @@ class CmdMode(
                 body { "Print some output to the screen locally." }
             }
         ) { args: Array<Any> -> judo.echo(*args) }
+
+        registerFn<Unit>(
+            "normal",
+            doc {
+                usage { arg("keys", "String") }
+                usage {
+                    arg("keys", "String")
+                    arg("remap", "Boolean")
+                }
+                body { """
+                    Process [keys] as though they were typed by the user in normal mode.
+                    To perform this operation with remaps disabled (as in nnoremap), pass
+                    False for the second parameter.
+                """.trimMargin() }
+            }
+        ) { args: Array<Any> -> feedKeys(args, mode = "normal") }
+
+        registerFn(
+            "quit",
+            doc {
+                usage { }
+                body { "Exit Judo." }
+            },
+            judo::quit
+        )
+
+        registerFn<Unit>(
+            "reload",
+            doc {
+                usage { }
+                body { "Reload the last-loaded, non-MYJUDORC script file." }
+            }
+        ) { reload() }
 
         registerFn<Unit>(
             "send",
@@ -269,6 +295,48 @@ class CmdMode(
         ) { inputSpec: String ->
             judo.aliases.undefine(inputSpec)
         }
+    }
+
+    private fun ScriptingEngine.initConnection() {
+        registerFn(
+            "connect",
+            doc {
+                usage {
+                    arg("host", "String")
+                    arg("port", "Int")
+                }
+
+                body { "Connect to a server." }
+            },
+            judo::connect
+        )
+
+        registerFn(
+            "disconnect",
+            doc {
+                usage { }
+                body { "Disconnect from the server." }
+            },
+            judo::connect
+        )
+
+        registerFn(
+            "isConnected",
+            doc {
+                usage { returns("Boolean") }
+                body { "Check if connected." }
+            },
+            judo::isConnected
+        )
+
+        registerFn(
+            "reconnect",
+            doc {
+                usage { }
+                body { "Repeat the last connect()" }
+            },
+            judo::reconnect
+        )
     }
 
     private fun ScriptingEngine.initEvents() {
@@ -553,6 +621,14 @@ class CmdMode(
                 else judo.tabpage.hsplit(arg as Float, newBuffer)
             )
         }
+
+        registerFn<Unit>(
+            "unsplit",
+            doc {
+                usage {  }
+                body { "Remove any split windows" }
+            }
+        ) { judo.tabpage.unsplit() }
     }
 }
 

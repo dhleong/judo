@@ -36,7 +36,7 @@ class JythonScriptingEngine : ScriptingEngine {
     }
 
     private val python = PythonInterpreter()
-    private val keepModules = HashSet<String>()
+    private val keepModules = HashSet<String>() // FIXME TODO initialize this
     private val globals = PyGlobals()
 
     init {
@@ -161,6 +161,23 @@ class JythonScriptingEngine : ScriptingEngine {
         tabpage: IJudoTabpage,
         window: IJudoWindow
     ) = createPyWindow(tabpage, window)
+
+    override fun onPreReload() {
+        // clean up modules
+        val modules = python.systemState.modules as PyStringMap
+        val toRemove = HashSet<PyObject>()
+        modules.keys().asIterable()
+            .filter { it.asString() !in keepModules }
+            .forEach {
+                toRemove.add(it)
+            }
+
+        for (keyToRemove in toRemove) {
+            modules.__delitem__(keyToRemove)
+        }
+
+        super.onPreReload()
+    }
 
     private inline fun <R> wrapExceptions(lineExecution: Boolean = false, block: () -> R): R {
         try {

@@ -73,6 +73,12 @@ interface ScriptingEngine {
         }
 
     fun wrapWindow(tabpage: IJudoTabpage, window: IJudoWindow): Any
+
+    /** Called just before a script file is reloaded */
+    fun onPreReload() {}
+
+    /** Called just after a script file is reloaded */
+    fun onPostReload() {}
 }
 
 sealed class JudoScriptingEntity(

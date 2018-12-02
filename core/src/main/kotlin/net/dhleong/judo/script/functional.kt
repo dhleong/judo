@@ -6,17 +6,24 @@ package net.dhleong.judo.script
 @Suppress("UNCHECKED_CAST")
 fun JudoScriptingEntity.Function<*>.toFunctionalInterface(
     engine: ScriptingEngine
-): JudoCallable = when (fn) {
-    is Function1<*, *> -> {
-        if (hasMultipleArities) {
-            FnN(name, engine, fn as Function1<Array<out Any?>, Any>)
-        } else {
-            Fn1(name, engine, fn as Function1<Any, Any>)
+): JudoCallable = try {
+    when (fn) {
+        is Function0<*> -> Fn0(name, engine, fn as Function0<Any>)
+        is Function1<*, *> -> {
+            if (hasMultipleArities) {
+                FnN(name, engine, fn as Function1<Array<out Any?>, Any>)
+            } else {
+                Fn1(name, engine, fn as Function1<Any, Any>)
+            }
         }
+        is Function2<*, *, *> -> Fn2(name, engine, fn as Function2<Any, Any, Any>)
+        is Function3<*, *, *, *> -> Fn3(name, engine, fn as Function3<Any, Any, Any, Any>)
+        else -> FnN(name, engine, fn as Function1<Array<out Any?>, Any>)
     }
-    is Function2<*, *, *> -> Fn2(name, engine, fn as Function2<Any, Any, Any>)
-    is Function3<*, *, *, *> -> Fn3(name, engine, fn as Function3<Any, Any, Any, Any>)
-    else -> FnN(name, engine, fn as Function1<Array<out Any?>, Any>)
+} catch (e: ClassCastException) {
+    throw IllegalArgumentException(
+        "Error converting $name to FunctionalInterface", e
+    )
 }
 
 interface JudoCallable {
@@ -64,6 +71,18 @@ private abstract class FnBase(
                 "Incorrect arguments to $name()", e
             )
         }
+}
+
+@FunctionalInterface
+internal interface FI0 : Function0<Any>, FIN
+private class Fn0(name: String, engine: ScriptingEngine, val fn: Function0<Any>) : FnBase(name, engine), FI0 {
+    override fun invoke(vararg args: Any): Any {
+        if (args.isEmpty()) {
+            return invoke()
+        }
+        return super.invoke(*args)
+    }
+    override fun invoke(): Any = safely { fn.invoke() }
 }
 
 @FunctionalInterface
