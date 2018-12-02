@@ -142,7 +142,7 @@ private val COMMAND_HELP = mutableMapOf(
 
     "exitMode" to buildHelp(
         "exitMode()",
-        "Enter the current mode."
+        "Exit the current mode."
     ),
 
     "echo" to buildHelp(

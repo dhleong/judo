@@ -141,6 +141,7 @@ class CmdMode(
         initAliases()
         initEvents()
         initKeymaps()
+        initModes()
         initPrompts()
         initTriggers()
         initWindows()
@@ -182,6 +183,19 @@ class CmdMode(
         ) { args: Array<Any> -> config(args) }
 
         registerFn(
+            "complete",
+            doc {
+                usage { arg("text", "String") }
+                body { """
+                    Feed some text into the text completion system.
+                    NOTE: This does not yet guarantee that the provided words will
+                    be suggested in the sequence provided, but it may in the future.
+                """.trimIndent() }
+            },
+            judo::seedCompletion
+        )
+
+        registerFn(
             "connect",
             doc {
                 usage {
@@ -190,6 +204,16 @@ class CmdMode(
                 }
 
                 body { "Connect to a server." }
+            },
+            judo::connect
+        )
+
+        registerFn(
+            "disconnect",
+            doc {
+                usage { }
+
+                body { "Disconnect from the server." }
             },
             judo::connect
         )
@@ -374,6 +398,52 @@ class CmdMode(
         ) { modeName: String, inputKeys: String ->
             judo.unmap(modeName, inputKeys)
         }
+    }
+
+    private fun ScriptingEngine.initModes() {
+        registerFn(
+            "createUserMode",
+            doc {
+                usage { arg("modeName", "String") }
+                body { """
+                    Create a new mode with the given name. Mappings can be added to it
+                    using the createMap function
+                """.trimIndent() }
+            },
+            judo::createUserMode
+        )
+
+        registerFn<Unit>(
+            "enterMode",
+            doc {
+                usage { arg("modeName", "String") }
+                body { "Enter the mode with the given name." }
+            }
+        ) { modeName: String -> judo.enterMode(modeName) }
+
+        registerFn<Unit>(
+            "exitMode",
+            doc {
+                usage { }
+                body { "Exit the current mode." }
+            }
+        ) { modeName: String -> judo.enterMode(modeName) }
+
+        registerFn<Unit>(
+            "startInsert",
+            doc {
+                usage {  }
+                body { "Enter insert mode as if by pressing `i`" }
+            }
+        ) { judo.enterMode("insert") }
+
+        registerFn<Unit>(
+            "stopInsert",
+            doc {
+                usage {  }
+                body { "Exit insert mode as soon as possible." }
+            }
+        ) { judo.exitMode() }
     }
 
     private fun ScriptingEngine.initPrompts() {
