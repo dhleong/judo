@@ -238,7 +238,17 @@ class CmdMode(
         registerFn<String?>(
             "input",
             doc {
-
+                usage { returns("String") }
+                usage {
+                    arg("prompt", "String")
+                    returns("String")
+                }
+                body {
+        """Request a string from the user, returning whatever they typed.
+          |NOTE: Unlike the equivalent function in Vim, input() DOES NOT currently
+          |consume pending input from mappings.
+        """.trimMargin()
+                }
             }
         ) { args: Array<Any> ->
             if (args.isNotEmpty()) {
