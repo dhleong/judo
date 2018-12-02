@@ -46,6 +46,7 @@ class JLineRendererTest {
         renderer.windowHeight = 6
         renderer.currentTabpage = page
         renderer.updateSize()
+        renderer.setLoading(false)
 
         mapRenderer = DelegateJLineMapRenderer(renderer)
     }
