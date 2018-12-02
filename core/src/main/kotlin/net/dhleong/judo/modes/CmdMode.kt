@@ -156,6 +156,14 @@ class CmdMode(
             },
             USER_CONFIG_FILE.absolutePath
         )
+
+        registerConst(
+            "judo",
+            doc {
+                body { "Reference to the core Judo scripting object" }
+            },
+            toScript(judo)
+        )
     }
 
     private fun ScriptingEngine.initCore() {

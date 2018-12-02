@@ -1,9 +1,18 @@
 package net.dhleong.judo.script
 
+import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.alias.compileSimplePatternSpec
+import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.logging.ILogManager
+import net.dhleong.judo.mapping.IJudoMap
+import net.dhleong.judo.mapping.IMapManagerPublic
+import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
 import java.util.regex.Pattern
@@ -88,12 +97,24 @@ abstract class Jsr223ScriptingEngine(
         }
     }
 
-    override fun toScript(fromJava: Any): Any {
-        if (fromJava is JudoScriptingEntity.Function<*>) {
-            return fromJava.toFunctionalInterface(this)
-        }
+    override fun toScript(fromJava: Any): Any = when (fromJava) {
+        is JudoScriptingEntity.Function<*> ->
+            fromJava.toFunctionalInterface(this)
 
-        return super.toScript(fromJava)
+        // wrap core judo interfaces in delegates to prevent
+        // access to private members
+        is IJudoCore -> object : IJudoCore by fromJava {}
+        is IAliasManager -> object : IAliasManager by fromJava {}
+        is IEventManager -> object : IEventManager by fromJava {}
+        is ILogManager -> object : ILogManager by fromJava {}
+        is IMapManagerPublic -> object : IMapManagerPublic by fromJava {}
+        is IPromptManager -> object : IPromptManager by fromJava {}
+        is ITriggerManager -> object : ITriggerManager by fromJava {}
+        is JudoRendererInfo -> object : JudoRendererInfo by fromJava {}
+        is IJudoTabpage -> object : IJudoTabpage by fromJava {}
+        is IJudoMap -> object : IJudoMap by fromJava {}
+
+        else -> super.toScript(fromJava)
     }
 
     protected open fun scriptRegexToPatternSpec(fromScript: Bindings): PatternSpec {
