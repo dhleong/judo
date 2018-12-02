@@ -150,6 +150,13 @@ class CmdMode(
         judo.feedKeys(keys, remap, mode)
     }
 
+    private fun readInput(prompt: String): String? {
+        // TODO user-provided completions?
+        val inputMode = ScriptInputMode(judo, completions, prompt)
+        judo.enterMode(inputMode)
+        return inputMode.awaitResult()
+    }
+
     private fun ScriptingEngine.init() {
         initConsts()
         initCore()
@@ -220,6 +227,19 @@ class CmdMode(
                 body { "Print some output to the screen locally." }
             }
         ) { args: Array<Any> -> judo.echo(*args) }
+
+        registerFn<String?>(
+            "input",
+            doc {
+
+            }
+        ) { args: Array<Any> ->
+            if (args.isNotEmpty()) {
+                readInput(args[0] as String)
+            } else {
+                readInput("")
+            }
+        }
 
         registerFn<Unit>(
             "normal",
