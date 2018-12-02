@@ -1,24 +1,42 @@
 package net.dhleong.judo.script
 
+import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.StateMap
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.alias.compileSimplePatternSpec
-import net.dhleong.judo.modes.InterfaceAdapter
-import net.dhleong.judo.modes.PyPatternSpec
+import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.logging.ILogManager
+import net.dhleong.judo.mapping.IJudoMap
+import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.modes.ScriptExecutionException
+import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.trigger.ITriggerManager
+import net.dhleong.judo.util.PatternMatcher
+import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
+import org.python.core.JyAttribute
 import org.python.core.Py
+import org.python.core.PyCallIter
 import org.python.core.PyException
 import org.python.core.PyFunction
+import org.python.core.PyIterator
 import org.python.core.PyModule
 import org.python.core.PyObject
+import org.python.core.PyObjectDerived
 import org.python.core.PyStringMap
+import org.python.core.PyType
+import org.python.core.adapter.PyObjectAdapter
+import org.python.modules.sre.MatchObject
 import org.python.modules.sre.PatternObject
 import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
+import java.util.EnumSet
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 
@@ -261,9 +279,9 @@ class JythonScriptingEngine : ScriptingEngine {
     }
 }
 
-@Suppress("NOTHING_TO_INLINE")
+@Suppress("NOTHING_TO_INLINE", "RedundantLambdaArrow")
 private inline fun flagCheckerFor(type: Class<out Enum<*>>?): (String) -> Boolean {
-    return if (type == null) { input -> false }
+    return if (type == null) { _ -> false }
     else {
         val stringTypes = type.declaredFields.filter {
             it.isEnumConstant
@@ -433,5 +451,107 @@ internal fun createPyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject 
 
                 else -> super.__findattr_ex__(name)
             }
+    }
+}
+
+/**
+ * If we can't use the Python pattern as a Java pattern,
+ *  we have to fall back to this
+ */
+internal class PyPatternSpec(
+    private val pattern: PatternObject,
+    override val flags: EnumSet<PatternProcessingFlags>
+) : PatternSpec {
+
+    override fun matcher(input: CharSequence): PatternMatcher =
+        PyPatternMatcher(
+            pattern.groups,
+            pattern.finditer(arrayOf(Py.java2py(input.toString())), emptyArray())
+                as PyCallIter
+        )
+
+    override val original: String = pattern.pattern.string
+}
+
+internal class PyPatternMatcher(
+    override val groups: Int,
+    finditer: PyIterator
+) : PatternMatcher {
+
+    private var iterator = finditer.iterator()
+    private var current: MatchObject? = null
+
+
+    override fun find(): Boolean =
+        if (iterator.hasNext()) {
+            current = iterator.next() as MatchObject
+            true
+        } else {
+            current = null
+            false
+        }
+
+    override fun group(index: Int): String =
+    // NOTE: group 0 means everything that matched, but
+    // index 0 means that actual matching group; so, index + 1
+        current!!.group(arrayOf(Py.java2py(index + 1))).asString()
+
+    override val start: Int
+        get() = current!!.start().asInt()
+
+    override fun start(index: Int): Int =
+        current!!.start(Py.java2py(index + 1)).asInt()
+
+    override val end: Int
+        get() = current!!.end().asInt()
+
+    override fun end(index: Int): Int =
+        current!!.end(Py.java2py(index + 1)).asInt()
+}
+
+class InterfaceAdapter : PyObjectAdapter {
+    companion object {
+        private var isInitialized = false
+
+        internal val exposedInterfaces = arrayOf(
+            IJudoCore::class.java,
+
+            IAliasManager::class.java,
+            IEventManager::class.java,
+            ILogManager::class.java,
+            IMapManagerPublic::class.java,
+            IPromptManager::class.java,
+            ITriggerManager::class.java,
+            StateMap::class.java,
+            JudoRendererInfo::class.java,
+            IJudoTabpage::class.java,
+
+            IJudoMap::class.java
+        )
+
+        fun init() {
+            if (!isInitialized) {
+                Py.getAdapter().addPostClass(InterfaceAdapter())
+            }
+        }
+    }
+
+    override fun adapt(obj: Any?): PyObject {
+        val type = findInterfaceFor(obj)!!
+        val pyObj = PyObjectDerived(PyType.fromClass(type, false))
+        JyAttribute.setAttr(pyObj, JyAttribute.JAVA_PROXY_ATTR, obj)
+        return pyObj
+    }
+
+    override fun canAdapt(obj: Any?): Boolean {
+        if (obj == null) return false
+        return findInterfaceFor(obj) != null
+    }
+
+    private fun findInterfaceFor(obj: Any?): Class<*>? {
+        if (obj == null) return null
+        return InterfaceAdapter.exposedInterfaces.firstOrNull {
+            it.isInstance(obj)
+        }
     }
 }
