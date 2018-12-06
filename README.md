@@ -109,22 +109,25 @@ You have a couple options here:
 
 ### Configuring
 
-Judo tries to load `$HOME/.config/judo/init.py` every time it loads, so that is a
-great place to put common mappings, etc.
+Judo tries to load `$HOME/.config/judo/init.py` or `$HOME/.config/judo/init.js`
+every time it loads—use whichever language you prefer—so that is a great place
+to put common mappings, etc.
 
 ### Scripting
 
-Judo uses [Python][9] for configuration and scripting. See [Scripting.md][11] for more
-details, or run `help` in Command Mode to get started.
+Judo uses [Python][9] or [Javascript[15] for configuration and scripting. See
+[Scripting.md][11] for more details, or run `help` in Command Mode to get
+started.
 
 
 ## Why
 
-I've played MUDs off and on throughout my life, but when I started getting into them
-again recently, I found that trying to navigate around worlds quickly put my hand
-into a very RSI-inducing position (I don't have a keyboard with a numpad). I was
-inspired by my favorite editor to create something modal, so I could bind the hjkl
-keys to the cardinal directions and keep my hands comfortably on the home row.
+I've played MUDs off and on throughout my life, but when I started getting into
+them again recently, I found that trying to navigate around worlds quickly put
+my hand into a very RSI-inducing position (I don't have a keyboard with a
+numpad). I was inspired by my favorite editor to create something modal, so I
+could bind the hjkl keys to the cardinal directions and keep my hands
+comfortably on the home row.
 
 
 [1]: https://en.wikipedia.org/wiki/MUD
@@ -141,3 +144,4 @@ keys to the cardinal directions and keep my hands comfortably on the home row.
 [12]: https://brew.sh/
 [13]: https://github.com/dhleong/judo/releases
 [14]: http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html
+[15]: https://javascript.info/
