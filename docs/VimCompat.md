@@ -73,3 +73,31 @@ nnoremap('<ctrl-r>', '<ctrl-s>')
 ```
 
 But don't forget to create a new mapping for "redo"!
+
+### Command mode is a scripting REPL
+
+While Vim has special support for things called "Commands" that you can use
+from Command mode (like `:q`), Command mode in Judo is mostly just input for
+the scripting runtime. Some special syntax is available for convenience—for
+example you can use `:q` like normal, `:disconnect` instead of
+`:disconnect()`—but in general you still have to use the correct syntax for
+the scripting language.
+
+This could change in the future, but for now its simpler to just use language
+syntax, since the scripting language would have no convenient way to make use
+of commands the way Vimscript does.
+
+
+### Only one scripting language at a time
+
+Vim has an embedded language, Vimscript, which supports embedding and calling
+other scripting languages. While Judo supports multiple scripting languages
+(currently Python and Javascript) you cannot mix and match. Judo picks which
+language to use on startup based on:
+
+1. If you provide a script file path when starting, the appropriate language
+   for that script is used.
+2. If you have an `init.py` script in `~/.config/judo`, Python is used.
+3. If you have an `init.js` script in `~/.config/judo`, Javascript is ussed.
+
+

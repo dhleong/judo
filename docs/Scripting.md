@@ -2,8 +2,9 @@ Judo Scripting
 ==============
 
 Scripting is integral to Judo, as any sort of persistent configuration is done
-in a scripting language. Currently, Judo only supports [Python][1], and all
-examples below will be in Python.
+in a scripting language. Currently, Judo supports [Python][1] and
+[Javascript][5], but all examples below will be in Python because it has some
+convenient syntax that the Javascript support does not.
 
 ## Connecting to a World
 
@@ -246,3 +247,4 @@ for key, dir in dirs.iteritems():
 [2]: http://tintin.sourceforge.net/msdp
 [3]: https://www.gammon.com.au/gmcp
 [4]: ./VimCompat.md
+[5]: https://javascript.info/
