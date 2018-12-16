@@ -1,5 +1,6 @@
 package net.dhleong.judo.net
 
+import java.io.IOException
 import java.io.InputStream
 import java.io.PushbackInputStream
 import java.net.InetAddress
@@ -11,7 +12,7 @@ const val TELNET_TELOPT_MCCP2 = 86.toByte()
 
 class MccpInputStream(val socket: MccpHandlingSocket, delegate: InputStream): InputStream() {
 
-    private val inputStream = PushbackInputStream(delegate, 64)
+    private val inputStream = PushbackInputStream(delegate, 8192)
     private val inflater = Inflater()
     private val buffer = ByteArray(1024)
 
@@ -77,7 +78,11 @@ class MccpInputStream(val socket: MccpHandlingSocket, delegate: InputStream): In
 
         if (inflater.remaining > 0) {
             val start = read - inflater.remaining
-            inputStream.unread(buffer, start, inflater.remaining)
+            try {
+                inputStream.unread(buffer, start, inflater.remaining)
+            } catch (e: IOException) {
+                throw IOException("Unable to unread ${inflater.remaining} bytes", e)
+            }
         }
 
         return inflated
