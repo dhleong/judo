@@ -50,7 +50,7 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
-    val worldScriptFile = if (argsList.size > 0) {
+    val worldScriptFile = if (argsList.size == 1) {
         File(
             argsList[0].replace("^~", USER_HOME)
         ).absoluteFile
