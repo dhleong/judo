@@ -402,7 +402,7 @@ class CmdMode(
                 usage { }
                 body { "Disconnect from the server." }
             },
-            judo::connect
+            judo::disconnect
         )
 
         registerFn(
