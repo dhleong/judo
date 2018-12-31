@@ -25,21 +25,21 @@ abstract class Connection : JudoConnection {
     abstract val input: InputStream
     abstract val output: OutputStream
 
-    var onError: ((IOException) -> Unit)? = null
-    var onDisconnect: ((Connection) -> Unit)? = null
-    var onEchoStateChanged: ((Boolean) -> Unit)? = null
+    override var onError: ((IOException) -> Unit)? = null
+    override var onDisconnect: ((JudoConnection) -> Unit)? = null
+    override var onEchoStateChanged: ((Boolean) -> Unit)? = null
 
     private val writer: Writer by lazy { BufferedWriter(OutputStreamWriter(output)) }
     private var readerThread: Thread? = null
     protected var isClosed = false
 
-    open fun send(line: String) {
+    override fun send(line: String) {
         writer.write(line)
         writer.write("\r\n")
         writer.flush()
     }
 
-    fun forEachLine(onNewLine: (CharArray, Int) -> Unit) {
+    override fun forEachLine(onNewLine: (CharArray, Int) -> Unit) {
         val reader = BufferedReader(InputStreamReader(input))
         readerThread = thread(isDaemon = true) {
             try {
@@ -60,12 +60,10 @@ abstract class Connection : JudoConnection {
             }
         }
     }
-
-    abstract fun setWindowSize(width: Int, height: Int)
-
-    internal fun isTelnetSubsequence(line: String) =
-        line.length >= 3
-            && line[0].toByte() == TELNET_IAC
-            && line[1].toByte() == TELNET_SB
-            && line.last().toByte() == TELNET_SE
 }
+
+internal fun isTelnetSubsequence(line: String) =
+    line.length >= 3
+        && line[0].toByte() == TELNET_IAC
+        && line[1].toByte() == TELNET_SB
+        && line.last().toByte() == TELNET_SE

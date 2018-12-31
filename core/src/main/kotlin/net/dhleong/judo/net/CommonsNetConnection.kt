@@ -19,6 +19,13 @@ class CommonsNetConnection(
     private val address: String, private val port: Int,
     private val echo: (String) -> Unit
 ) : Connection() {
+    class Factory(val debug: Boolean = false) : JudoConnection.Factory {
+        override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
+            return CommonsNetConnection(judo, address, port) { judo.echo(it) }.also {
+                it.debug = debug
+            }
+        }
+    }
 
     override val input: InputStream
     override val output: OutputStream

@@ -32,6 +32,7 @@ import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.Connection
 import net.dhleong.judo.net.JudoConnection
+import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.IJudoBuffer
@@ -80,7 +81,8 @@ class JudoCore(
     userConfigDir: File = File(".judo"),
     userConfigFile: File = File(userConfigDir, "init.py"),
     scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
-    val debug: DebugLevel = DebugLevel.OFF
+    val debug: DebugLevel = DebugLevel.OFF,
+    private val connections: JudoConnection.Factory = CommonsNetConnection.Factory(debug.isEnabled)
 ) : IJudoCore {
     companion object {
         const val CLIENT_NAME = BuildConfig.NAME
@@ -178,7 +180,7 @@ class JudoCore(
     internal var running = true
     internal var doEcho = true
 
-    override var connection: Connection? = null
+    override var connection: JudoConnection? = null
     private var lastConnect: Pair<String, Int>? = null
 
     private val statusLineWorkspace = IStringBuilder.create(128)
@@ -232,16 +234,14 @@ class JudoCore(
 
         lastConnect = address to port
 
-        val connection: Connection
+        val connection: JudoConnection
         try {
-            connection = CommonsNetConnection(this, address, port) { string -> echo(string) }
-            connection.debug = debug.isEnabled
+            connection = connections.create(this, address, port)
             echo("Connected.")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")
             return
         }
-
 
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
@@ -453,7 +453,7 @@ class JudoCore(
             }
         }
 
-        if (doEcho && connection?.isTelnetSubsequence(toSend) != true) {
+        if (doEcho && !isTelnetSubsequence(toSend)) {
             // always output what we sent
             // except... don't echo if the server has told us not to
             // (EG: passwords)
