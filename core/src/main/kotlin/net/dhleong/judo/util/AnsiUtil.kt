@@ -32,7 +32,7 @@ fun ansi(attr: Int = -1, fg: Int = -1, bg: Int = -1): CharSequence {
         }
     }
 
-    if (bg >= 0) {
+    if (hasBg) {
         builder.append(40 + bg)
     }
 

@@ -7,9 +7,15 @@ interface IJudoBuffer2 {
 
     operator fun get(index: Int): FlavorableCharSequence
 
-    fun append(
-        line: FlavorableCharSequence, isPartialLine: Boolean
-    )
+    /**
+     * Append text to the last line
+     */
+    fun append(text: FlavorableCharSequence)
+
+    /**
+     * Append a whole line
+     */
+    fun appendLine(line: FlavorableCharSequence)
 
     fun clear()
     fun replaceLastLine(result: FlavorableCharSequence)

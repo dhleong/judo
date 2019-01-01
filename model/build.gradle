@@ -18,4 +18,3 @@ dependencies {
     testCompile deps.test.junit
     testCompile deps.test.assertj
 }
-

@@ -6,6 +6,8 @@ package net.dhleong.judo.render
  */
 interface FlavorableCharSequence : CharSequence {
 
+    operator fun plusAssign(other: FlavorableCharSequence)
+
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableCharSequence
 
     /**
@@ -59,4 +61,25 @@ interface FlavorableCharSequence : CharSequence {
         endIndex: Int
     )
 
+}
+
+inline fun FlavorableCharSequence.forEachChunk(
+    start: Int = 0,
+    end: Int = length,
+    block: (startIndex: Int, endIndex: Int, flavor: Flavor) -> Unit
+) {
+    var regionStart = start
+    var lastFlavor = getFlavor(start)
+    for (i in start + 1 until end) {
+        val thisFlavor = getFlavor(i)
+        if (thisFlavor != lastFlavor) {
+            // new region!
+            block(regionStart, i, lastFlavor)
+
+            lastFlavor = thisFlavor
+            regionStart = i + 1
+        }
+    }
+
+    block(regionStart, end, lastFlavor)
 }
