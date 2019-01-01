@@ -2,12 +2,15 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
-import net.dhleong.judo.render.*
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
 import org.jline.utils.WCWidth
 
-abstract class JLineWindow(
+class JLineWindow(
     ids: IdManager,
     private val settings: StateMap,
     initialWidth: Int,
@@ -56,7 +59,6 @@ abstract class JLineWindow(
                 wordWrap = wordWrap
             )
         }
-        // TODO
 
         var displayEnd = renderWorkspace.size - scrollbackOffset
         if (isFocusable && isFocused && statusLineOverlaysOutput) {
@@ -99,6 +101,30 @@ abstract class JLineWindow(
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         status = line.toString()
         statusCursor = cursor
+    }
+
+    override fun resize(width: Int, height: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun getScrollback(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun scrollLines(count: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun scrollPages(count: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun scrollToBottom() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun searchForKeyword(word: CharSequence, direction: Int) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 }

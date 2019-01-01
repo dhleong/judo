@@ -1,11 +1,19 @@
 package net.dhleong.judo.jline
 
-import assertk.Assert
 import assertk.assert
-import assertk.assertions.*
+import assertk.assertions.isInstanceOf
 import org.junit.Test
 
 class JLineDisplayTest {
+    @Test fun `Empty display`() {
+        val display = JLineDisplay(11, 3)
+        assert(display).linesEqual("""
+            |___________
+            |_         _
+            |___________
+        """.trimMargin())
+    }
+
     @Test fun `Write into Display`() {
         val display = JLineDisplay(11, 3)
         display.withLine(2, 1) {
@@ -15,6 +23,7 @@ class JLineDisplayTest {
         assert(display).linesEqual("""
             |___________
             |  mreynolds
+            |___________
         """.trimMargin())
     }
 
@@ -46,11 +55,3 @@ class JLineDisplayTest {
     }
 }
 
-private fun Assert<JLineDisplay>.linesEqual(expected: String) {
-    val asString = actual.lines.map { it.toString() }
-        .joinToString("\n")
-    assert(asString).isEqualTo(
-        // allow using underscore to visually indicate spaces
-        expected.replace("_", " ")
-    )
-}

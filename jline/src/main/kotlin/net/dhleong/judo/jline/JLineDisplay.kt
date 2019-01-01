@@ -6,7 +6,15 @@ class JLineDisplay(
     val width: Int,
     val height: Int
 ) {
-    val lines = mutableListOf<AttributedStringBuilder>()
+    val lines: List<AttributedStringBuilder> = ArrayList<AttributedStringBuilder>(height).also {
+        for (i in 0 until height) {
+            it += AttributedStringBuilder(width).apply {
+                for (i in 0 until width) {
+                    append(" ")
+                }
+            }
+        }
+    }
 
     inline fun withLine(x: Int, y: Int, block: AttributedStringBuilder.() -> Unit) {
         if (y >= width) throw IndexOutOfBoundsException(
@@ -15,16 +23,6 @@ class JLineDisplay(
         if (y >= height) throw IndexOutOfBoundsException(
             "Attempting to update non-existent line; windowHeight=$height; y=$y"
         )
-
-        if (y >= lines.size) {
-            for (i in 0..y) {
-                lines += AttributedStringBuilder(width).apply {
-                    for (i in 0 until width) {
-                        append(" ")
-                    }
-                }
-            }
-        }
 
         lines[y].let { builder ->
             if (builder.length < x) {
@@ -40,6 +38,7 @@ class JLineDisplay(
             if (builder.length > width) {
                 throw IndexOutOfBoundsException("Wrote on line #$y past display width ($width)")
             }
+            builder.setLength(width) // restore length
         }
     }
 
