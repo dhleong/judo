@@ -62,7 +62,7 @@ class JLineRenderer2(
     }
 
     private fun render() {
-        val display = JLineDisplay(windowWidth) // reuse?
+        val display = JLineDisplay(windowWidth, windowHeight) // reuse?
         (currentTabpage as? JLineTabpage)?.render(display)
 
         // TODO

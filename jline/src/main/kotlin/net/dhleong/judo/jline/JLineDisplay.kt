@@ -3,11 +3,19 @@ package net.dhleong.judo.jline
 import org.jline.utils.AttributedStringBuilder
 
 class JLineDisplay(
-    val width: Int
+    val width: Int,
+    val height: Int
 ) {
     val lines = mutableListOf<AttributedStringBuilder>()
 
     inline fun withLine(x: Int, y: Int, block: AttributedStringBuilder.() -> Unit) {
+        if (y >= width) throw IndexOutOfBoundsException(
+            "Attempting to update non-existent column; windowWidth=$width; x=$x"
+        )
+        if (y >= height) throw IndexOutOfBoundsException(
+            "Attempting to update non-existent line; windowHeight=$height; y=$y"
+        )
+
         if (y >= lines.size) {
             for (i in 0..y) {
                 lines += AttributedStringBuilder(width).apply {

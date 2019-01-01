@@ -7,7 +7,7 @@ import org.junit.Test
 
 class JLineDisplayTest {
     @Test fun `Write into Display`() {
-        val display = JLineDisplay(11)
+        val display = JLineDisplay(11, 3)
         display.withLine(2, 1) {
             append("mreynolds")
         }
@@ -19,7 +19,23 @@ class JLineDisplayTest {
     }
 
     @Test fun `Prevent writing out of range`() {
-        val display = JLineDisplay(10)
+        val display = JLineDisplay(10, 3)
+        assert {
+            display.withLine(14, 1) {
+                // nop
+            }
+        }.thrownError {
+            isInstanceOf(IndexOutOfBoundsException::class.java)
+        }
+
+        assert {
+            display.withLine(0, 20) {
+                // nop
+            }
+        }.thrownError {
+            isInstanceOf(IndexOutOfBoundsException::class.java)
+        }
+
         assert {
             display.withLine(4, 1) {
                 append("mreynolds")
