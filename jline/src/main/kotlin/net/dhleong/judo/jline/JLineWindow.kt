@@ -74,7 +74,7 @@ class JLineWindow(
         }
 
         val listStart = y
-        var line = y
+        var line = y + blankLinesNeeded
         for (i in displayStart until displayEnd) {
             display.withLine(x, line) {
                 // TODO probably, clear line to end of width?

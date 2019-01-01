@@ -12,7 +12,6 @@ import org.junit.Test
 
 class JLineWindowTest {
 
-    @Ignore("TODO")
     @Test fun `Simple Window rendering`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
