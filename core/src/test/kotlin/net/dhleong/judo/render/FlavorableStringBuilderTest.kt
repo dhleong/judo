@@ -5,6 +5,9 @@ import assertk.all
 import assertk.assert
 import assertk.assertions.hasLength
 import assertk.assertions.isEqualTo
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
+import org.junit.Ignore
 import org.junit.Test
 
 class FlavorableStringBuilderTest {
@@ -19,6 +22,92 @@ class FlavorableStringBuilderTest {
         assert(b).all {
             hasToString("Mal Reynolds")
             hasLength(12)
+        }
+    }
+
+    @Test fun `Continue old flavor if not otherwise specified in append (String)`() {
+        val b = FlavorableStringBuilder.fromString("Mal")
+        b.beginFlavor(SimpleFlavor(isBold = true), 0)
+
+        b += " Reynolds"
+        assert(b).all {
+            hasToString("Mal Reynolds")
+            hasFlavor(SimpleFlavor(isBold = true))
+            hasLength(12)
+        }
+    }
+
+    @Test fun `Continue old flavor if not otherwise specified in append (Flavorable)`() {
+        val b = FlavorableStringBuilder.fromString("Mal")
+        b.beginFlavor(SimpleFlavor(isBold = true), 0)
+
+        b += FlavorableStringBuilder.fromString(" Reynolds")
+        assert(b).all {
+            hasToString("Mal Reynolds")
+            hasFlavor(SimpleFlavor(isBold = true))
+            hasLength(12)
+        }
+    }
+
+    @Test fun `Keep new flavor in append`() {
+        val b = FlavorableStringBuilder.fromString("Mal").apply {
+            beginFlavor(SimpleFlavor(isBold = true), 0)
+        }
+
+        b += FlavorableStringBuilder.fromString(" Reynolds").apply {
+            beginFlavor(SimpleFlavor(isItalic = true), 0)
+        }
+        assert(b).all {
+            hasToString("Mal Reynolds")
+            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 3)
+            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 3)
+            hasLength(12)
+        }
+    }
+
+    @Test fun `subSequence works as expected`() {
+        val b = FlavorableStringBuilder.fromString("mreynolds")
+        val sub = b.subSequence(1, 4)
+        assert(sub).hasToString("rey")
+    }
+
+    @Test fun `append to subSequence works as expected`() {
+        val b = FlavorableStringBuilder.fromString("mreynolds")
+        val sub = b.subSequence(1, 4)
+        sub += "noldo"
+        assert(sub).hasToString("reynoldo")
+    }
+
+    @Test fun `append subSequence to subSequence works as expected`() {
+        val b = FlavorableStringBuilder.fromString("mreynolds")
+        val sub1 = b.subSequence(1, 4)
+        val sub2 = b.subSequence(4, 8)
+
+        sub1 += sub2
+        assert(sub1).hasToString("reynold")
+    }
+
+    @Test fun `subSequence edge cases`() {
+        val b = FlavorableStringBuilder.fromString("mreynolds")
+        assert(b.subSequence(0, 0)).hasToString("")
+        assert(b.subSequence(0, 9)).hasToString("mreynolds")
+        assert(b.subSequence(9, 9)).hasToString("")
+    }
+}
+
+private fun Assert<FlavorableCharSequence>.hasFlavor(
+    flavor: Flavor,
+    atIndex: Int = 0,
+    untilIndex: Int = actual.length
+) {
+    for (i in atIndex until untilIndex) {
+        val thisFlavor = actual.getFlavor(i)
+        if (thisFlavor != flavor) {
+            expected(
+                "from ${show(atIndex)} until ${show(untilIndex)} ${show(flavor)};" +
+                "\n encountered at ${show(i)}: ${show(thisFlavor)}"
+            )
+            return
         }
     }
 }

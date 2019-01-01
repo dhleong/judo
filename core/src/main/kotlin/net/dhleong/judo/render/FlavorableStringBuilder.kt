@@ -33,8 +33,10 @@ class FlavorableStringBuilder private constructor(
             System.arraycopy(other.chars, other.start, chars, start + myLength, other.myLength)
             System.arraycopy(other.flavors, other.start, flavors, start + myLength, other.myLength)
 
-            val newStartingFlavor = getFlavor(lastIndex) + other.flavors[other.start]
-            beginFlavor(newStartingFlavor, myLength)
+            val newStartingFlavor = flavors[start + myLength - 1] + other.flavors[other.start]
+            if (newStartingFlavor != null) {
+                beginFlavor(newStartingFlavor, myLength)
+            }
         } else {
             TODO("not implemented")
         }
@@ -42,7 +44,7 @@ class FlavorableStringBuilder private constructor(
         myLength += other.length
     }
 
-    override fun subSequence(startIndex: Int, endIndex: Int): FlavorableCharSequence =
+    override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
         FlavorableStringBuilder(chars, flavors, start + startIndex, endIndex - startIndex)
 
     override fun clearFlavor(startIndex: Int, endIndex: Int) {

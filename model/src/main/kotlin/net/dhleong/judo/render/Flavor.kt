@@ -36,11 +36,11 @@ interface Flavor{
     }
 }
 
-operator fun Flavor?.plus(other: Flavor) =
+operator fun Flavor?.plus(other: Flavor?) =
     if (this == null) other
     else this + other
 
-operator fun Flavor?.minus(other: Flavor) =
+operator fun Flavor?.minus(other: Flavor?) =
     if (this == null) Flavor.default
     else this - other
 
