@@ -7,7 +7,6 @@ import assertk.assertions.hasLength
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
-import org.junit.Ignore
 import org.junit.Test
 
 class FlavorableStringBuilderTest {
@@ -61,6 +60,22 @@ class FlavorableStringBuilderTest {
             hasToString("Mal Reynolds")
             hasFlavor(SimpleFlavor(isBold = true), untilIndex = 3)
             hasFlavor(SimpleFlavor(isItalic = true), atIndex = 3)
+            hasLength(12)
+        }
+    }
+
+    @Test fun `Keep partial new flavor in append`() {
+        val b = FlavorableStringBuilder.fromString("Mal").apply {
+            beginFlavor(SimpleFlavor(isBold = true), 0)
+        }
+
+        b += FlavorableStringBuilder.fromString(" Reynolds").apply {
+            beginFlavor(SimpleFlavor(isItalic = true), 4)
+        }
+        assert(b).all {
+            hasToString("Mal Reynolds")
+            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 7)
+            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 7)
             hasLength(12)
         }
     }
