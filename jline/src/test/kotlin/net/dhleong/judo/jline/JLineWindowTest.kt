@@ -29,8 +29,51 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore
-    @Test fun `Word wrap buffers`() { TODO() }
+    @Test fun `Render empty buffer`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("")
+
+        windowOf(buffer, 10, 3)
+            .render(display, 0, 0)
+
+        assert(display).linesEqual("""
+            |__________
+            |_        _
+            |__________
+        """.trimMargin())
+    }
+
+    @Test fun `Hard buffer line breaks`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain mreynolds
+        """.trimIndent())
+
+        windowOf(buffer, 10, 3)
+            .render(display, 0, 0)
+
+        assert(display).linesEqual("""
+            |__________
+            |captain mr
+            |eynolds___
+        """.trimMargin())
+    }
+
+    @Test fun `Word wrap buffers`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain mreynolds
+        """.trimIndent())
+
+        windowOf(buffer, 10, 3, wrap = true)
+            .render(display, 0, 0)
+
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |mreynolds_
+        """.trimMargin())
+    }
 
     @Ignore
     @Test fun `Scrolling in wrapped buffers`() { TODO() }

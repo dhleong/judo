@@ -59,6 +59,9 @@ inline fun FlavorableCharSequence.forEachChunk(
     end: Int = length,
     block: (startIndex: Int, endIndex: Int, flavor: Flavor) -> Unit
 ) {
+    if (end - start < 0) throw IllegalArgumentException()
+    if (end - start == 0) return
+
     var regionStart = start
     var lastFlavor = getFlavor(start)
     for (i in start + 1 until end) {
