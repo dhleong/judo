@@ -115,7 +115,7 @@ to put common mappings, etc.
 
 ### Scripting
 
-Judo uses [Python][9] or [Javascript[15] for configuration and scripting. See
+Judo uses [Python][9] or [Javascript][15] for configuration and scripting. See
 [Scripting.md][11] for more details, or run `help` in Command Mode to get
 started.
 
