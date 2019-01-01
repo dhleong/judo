@@ -2,7 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.Assert
 import assertk.assert
-import assertk.assertions.isEqualTo
+import assertk.assertions.*
 import org.junit.Test
 
 class JLineDisplayTest {
@@ -16,6 +16,17 @@ class JLineDisplayTest {
             |___________
             |  mreynolds
         """.trimMargin())
+    }
+
+    @Test fun `Prevent writing out of range`() {
+        val display = JLineDisplay(10)
+        assert {
+            display.withLine(4, 1) {
+                append("mreynolds")
+            }
+        }.thrownError {
+            isInstanceOf(IndexOutOfBoundsException::class.java)
+        }
     }
 }
 

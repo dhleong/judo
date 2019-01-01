@@ -28,6 +28,10 @@ class JLineDisplay(
             }
 
             builder.block()
+
+            if (builder.length > width) {
+                throw IndexOutOfBoundsException("Wrote on line #$y past display width ($width)")
+            }
         }
     }
 
