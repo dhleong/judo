@@ -85,6 +85,28 @@ class FlavorableStringBuilder private constructor(
 
     override fun toString(): String = String(chars, start, myLength)
 
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other !is FlavorableCharSequence) return false
+        if (myLength != other.length) return false
+
+        for (i in 0 until myLength) {
+            if (this[i] != other[i]) return false
+            if (getFlavor(i) != other.getFlavor(i)) return false
+        }
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = myLength
+        for (i in start until start + myLength) {
+            result = 31 * result + chars[i].hashCode()
+            result = 31 * result + flavors[i].hashCode()
+        }
+        return result
+    }
+
+
     private fun ensureCapacity(newCapacity: Int) {
         if (start + newCapacity <= chars.size) return // good to go
 

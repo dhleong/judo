@@ -8,8 +8,8 @@ class JLineDisplay(
     val lines = mutableListOf<AttributedStringBuilder>()
 
     inline fun withLine(x: Int, y: Int, block: AttributedStringBuilder.() -> Unit) {
-        if (y > lines.size) {
-            for (i in 0 until y) {
+        if (y >= lines.size) {
+            for (i in 0..y) {
                 lines += AttributedStringBuilder(width).apply {
                     for (i in 0 until width) {
                         append(" ")
@@ -32,4 +32,17 @@ class JLineDisplay(
     }
 
     fun toAttributedStrings() = lines.map { it.toAttributedString() }
+
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other !is JLineDisplay) return false
+        if (width != other.width) return false
+        return lines == other.lines
+    }
+
+    override fun hashCode(): Int {
+        var result = width
+        result = 31 * result + lines.hashCode()
+        return result
+    }
 }
