@@ -2,9 +2,9 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.render.BaseJudoWindow2
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
@@ -12,17 +12,17 @@ import org.jline.utils.WCWidth
 
 class JLineWindow(
     ids: IdManager,
-    private val settings: StateMap,
+    settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
     initialBuffer: IJudoBuffer2,
-    override val isFocusable: Boolean = false,
-    val statusLineOverlaysOutput: Boolean = false
-) : IJudoWindow2 {
-
-    override val id = ids.newWindow()
-    override var width: Int = initialWidth
-    override var height: Int = initialHeight
+    isFocusable: Boolean = false,
+    statusLineOverlaysOutput: Boolean = false
+) : BaseJudoWindow2(
+    ids, settings,
+    initialWidth, initialHeight, initialBuffer,
+    isFocusable, statusLineOverlaysOutput
+) {
 
     override var currentBuffer: IJudoBuffer2 = initialBuffer
     override var isFocused: Boolean = false
@@ -104,29 +104,23 @@ class JLineWindow(
     }
 
     override fun resize(width: Int, height: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
-    override fun getScrollback(): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun getScrollback(): Int = scrollbackBottom
 
     override fun scrollLines(count: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun scrollPages(count: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun scrollToBottom() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        scrollbackBottom = 0
+        searchResultLine = -1
     }
 
-    override fun searchForKeyword(word: CharSequence, direction: Int) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun scrollToBufferLine(line: Int) {
+        TODO("not implemented")
     }
-
 }
 
 internal fun FlavorableCharSequence.splitLinesInto(

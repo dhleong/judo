@@ -127,5 +127,9 @@ class FlavorableStringBuilder private constructor(
         fun fromString(string: String) = FlavorableStringBuilder(string.length).also {
             it += string
         }
+
+        fun withDefaultFlavor(string: String) = fromString(string).apply {
+            beginFlavor(Flavor.default, 0)
+        }
     }
 }

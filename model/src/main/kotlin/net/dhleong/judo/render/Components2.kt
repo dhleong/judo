@@ -51,6 +51,11 @@ interface IJudoWindow2 {
     fun scrollPages(count: Int)
     fun scrollToBottom()
 
+    /**
+     * Scroll such that the given line in this window's [IJudoBuffer2] is visible
+     */
+    fun scrollToBufferLine(line: Int)
+
     fun updateStatusLine(line: CharSequence, cursor: Int = -1)
     fun searchForKeyword(word: CharSequence, direction: Int)
 }
