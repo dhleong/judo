@@ -24,15 +24,6 @@ interface FlavorableCharSequence : CharSequence {
     fun getFlavor(index: Int): Flavor
 
     /**
-     * Remove the given [Flavor] from the given range
-     */
-    fun removeFlavor(
-        flavor: Flavor,
-        startIndex: Int,
-        endIndex: Int
-    )
-
-    /**
      * Add the given [Flavor] to the given range
      */
     fun addFlavor(
@@ -58,7 +49,7 @@ interface FlavorableCharSequence : CharSequence {
     fun setFlavor(
         flavor: Flavor,
         startIndex: Int,
-        endIndex: Int
+        endIndex: Int = startIndex + 1
     )
 
 }
