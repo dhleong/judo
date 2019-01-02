@@ -18,9 +18,7 @@ fun FlavorableCharSequence.computeRenderedLines(
     wordWrap: Boolean
 ): Int {
     var lines = 0
-//    forEachRenderedLine(windowWidth, wordWrap) { _, _ ->
-    forEachRenderedLine(windowWidth, wordWrap) { start, end ->
-        println("  [$start, $end] = `${subSequence(start, end)}`")
+    forEachRenderedLine(windowWidth, wordWrap) { _, _ ->
         ++lines
     }
     return lines
@@ -79,7 +77,6 @@ inline fun FlavorableCharSequence.forEachRenderedLine(
 
             // new line with word wrap
             wordWrap && lastWordEnd > lineStart -> {
-                println("wordWrap! @$i: $lineStart; $lastWordStart - $lastWordEnd")
                 block(lineStart, lastWordEnd)
                 if (lastWordStart == lineStart) {
                     lineStart = i
@@ -101,7 +98,6 @@ inline fun FlavorableCharSequence.forEachRenderedLine(
 
             // simple-split newline (or word wrap without a word boundary)
             else -> {
-                println("split! width <- ${newWidth - windowWidth}")
                 block(lineStart, i)
                 lineStart = i
                 lastWordStart = i
@@ -114,7 +110,9 @@ inline fun FlavorableCharSequence.forEachRenderedLine(
         if (foundLine && wordWrap && lineStart < len) {
             cp = codePointAt(lineStart)
             while (lineStart < len && Character.isWhitespace(cp)) {
-                lineStart += Character.charCount(cp)
+                val charCount = Character.charCount(cp)
+                lineStart += charCount
+                i += charCount
                 cp = codePointAt(lineStart)
             }
         }

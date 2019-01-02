@@ -1,13 +1,25 @@
 package net.dhleong.judo.jline
 
 import net.dhleong.judo.render.FlavorableStringBuilder
-import org.junit.Ignore
 import org.junit.Test
 
 class LineSplittingTest {
     private val s = FlavorableStringBuilder.withDefaultFlavor("Captain Mal Reynolds")
 
-    @Ignore("FIXME")
+    @Test fun `Split lines with word wrap and width 1`() {
+        val shorter = FlavorableStringBuilder.withDefaultFlavor("Its Zoe")
+        assertInWindow(width = 1, wordWrap = true) {
+            shorter.hasRenderedLines(
+                "I",
+                "t",
+                "s",
+                "Z",
+                "o",
+                "e"
+            )
+        }
+    }
+
     @Test fun `Split lines with word wrap and width 3`() {
         assertInWindow(width = 3, wordWrap = true) {
             s.hasRenderedLines(

@@ -15,7 +15,7 @@ class WindowContext(
     fun FlavorableStringBuilder.hasRenderedLinesCount(count: Int) {
         assert(
             computeRenderedLines(windowWidth, wordWrap),
-            "In (width=$windowWidth, wrap=$wordWrap): rendered lines count of $this"
+            describe("rendered lines count")
         ).isEqualTo(count)
     }
 
@@ -26,9 +26,12 @@ class WindowContext(
         }
         assert(
             actual,
-            "In (width=$windowWidth, wrap=$wordWrap): rendered lines of $this"
+            describe("rendered lines")
         ).isEqualTo(lines.toList())
     }
+
+    private fun describe(what: String) =
+        "In (width=$windowWidth, wrap=$wordWrap): $what of $this"
 }
 
 fun assertInWindow(

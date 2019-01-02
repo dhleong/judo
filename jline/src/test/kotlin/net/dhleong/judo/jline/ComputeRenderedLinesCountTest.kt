@@ -32,7 +32,7 @@ class ComputeRenderedLinesCountTest {
     @Test fun `Word-wrapped lines`() {
         val s = FlavorableStringBuilder.withDefaultFlavor("Captain Mal Reynolds")
         assertInWindow(width = 1, wordWrap = true) {
-            s.hasRenderedLinesCount(20)
+            s.hasRenderedLinesCount(18) // no spaces!
         }
         assertInWindow(width = 2, wordWrap = true) {
             s.hasRenderedLinesCount(10)
