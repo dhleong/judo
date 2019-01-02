@@ -6,9 +6,7 @@ import net.dhleong.judo.render.BaseJudoWindow2
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IdManager
-import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedString
-import org.jline.utils.WCWidth
 
 class JLineWindow(
     ids: IdManager,
@@ -73,12 +71,24 @@ class JLineWindow(
             blankLinesNeeded -= 1
         }
 
-        val listStart = y
+        for (i in 0 until blankLinesNeeded) {
+            display.withLine(x, y + i) {
+                // clear the line
+                for (j in 0 until width) {
+                    append(" ")
+                }
+            }
+        }
+
         var line = y + blankLinesNeeded
         for (i in displayStart until displayEnd) {
             display.withLine(x, line) {
-                // TODO probably, clear line to end of width?
                 append(renderWorkspace[i])
+
+                // fill remaining width with blank space
+                for (j in renderWorkspace[i].length until width) {
+                    append(" ")
+                }
             }
 
             ++line
@@ -113,7 +123,6 @@ class JLineWindow(
         val buffer = currentBuffer
         val width = this.width
         val desired = Math.abs(count)
-        val step = count / desired
         val end = buffer.size - 1
 
         val rangeEnd = minOf(end, scrollbackBottom + count)
@@ -126,15 +135,27 @@ class JLineWindow(
         searchResultLine = -1
 
         val wordWrap = settings[WORD_WRAP]
+        var toScroll = desired
         for (lineNr in range) {
             if (lineNr < 0) break
             if (lineNr >= buffer.size) break
 
             val line = buffer[lineNr]
-            val renderedLines = line.computeRenderedLines(width, wordWrap)
+            val renderedLines = line.computeRenderedLinesCount(width, wordWrap)
+            toScroll -= renderedLines - scrollbackOffset
+            if (toScroll < 0) {
+                // scroll within a wrapped line
+                break
+            }
+
+            ++scrollbackBottom
+            scrollbackOffset = 0
+
+            // finish scrolling past a wrapped line
+            if (toScroll == 0) break
         }
 
-        TODO()
+        scrollbackOffset = -toScroll
     }
 
     override fun scrollToBottom() {
@@ -152,83 +173,8 @@ internal fun FlavorableCharSequence.splitLinesInto(
     windowWidth: Int,
     wordWrap: Boolean
 ) {
-    val attributed = toAttributedString()
-    if (wordWrap) {
-        attributed.wordWrapInto(windowWidth, target)
-    } else {
-        target.addAll(
-            attributed.columnSplitLength(windowWidth)
-        )
+    forEachRenderedLine(windowWidth, wordWrap) { start, end ->
+        target.add(subSequence(start, end).toAttributedString())
     }
 }
 
-private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: MutableList<AttributedString>) {
-    val attrLength = length
-    var start = 0
-    var end = 0
-    var col = 0
-
-    // TODO refactor to share logic with computeRenderedLines above
-    while (end < attrLength) {
-        val cp = codePointAt(end)
-        val charWidth =
-            if (isHidden(end)) 0
-            else WCWidth.wcwidth(cp)
-
-        when {
-            cp == '\n'.toInt() -> {
-                out.add(subSequence(start, end))
-                start = end + 1
-                col = 0
-            }
-
-            col + charWidth > windowWidth -> {
-                // WRAP! search back for the previous word boundary (if necessary)
-                val atBoundary = end == attrLength - 1 || Character.isWhitespace(cp)
-                val boundary = when {
-                    (atBoundary && Character.isWhitespace(cp)) -> -1
-
-                    else -> findLastBefore(end) { Character.isWhitespace(it) }
-                }
-
-                if (boundary != -1 && boundary > start) {
-                    // found it!
-                    // end *after* the whitespace
-                    end = boundary + 1
-                    col =
-                        if (isHidden(end)) 0
-                        else WCWidth.wcwidth(codePointAt(end))
-
-                } else {
-                    // if we didn't find any usable boundary, just do a hard split
-                    // (or if this word ends RIGHT AT a boundary)
-                    col = charWidth
-                }
-
-                out.add(subSequence(start, end))
-                start = end
-            }
-
-            else -> col += charWidth
-        }
-
-        end += Character.charCount(cp)
-    }
-
-    out.add(subSequence(start, end))
-}
-
-inline fun CharSequence.findLastBefore(beforeIndex: Int, predicate: (Char) -> Boolean): Int {
-    var i = beforeIndex - 1
-    while (i >= 0) {
-
-        if (predicate(this[i])) {
-            // found it!
-            return i
-        }
-
-        --i
-    }
-
-    return -1
-}

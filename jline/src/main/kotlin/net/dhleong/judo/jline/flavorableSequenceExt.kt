@@ -13,7 +13,7 @@ fun FlavorableCharSequence.toAttributedString(
     }
 }.toAttributedString()
 
-fun FlavorableCharSequence.computeRenderedLines(
+fun FlavorableCharSequence.computeRenderedLinesCount(
     windowWidth: Int,
     wordWrap: Boolean
 ): Int {
@@ -24,7 +24,7 @@ fun FlavorableCharSequence.computeRenderedLines(
     return lines
 }
 
-inline fun FlavorableCharSequence.forEachRenderedLine(
+internal inline fun FlavorableCharSequence.forEachRenderedLine(
     windowWidth: Int,
     wordWrap: Boolean,
     block: (start: Int, end: Int) -> Unit

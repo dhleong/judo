@@ -38,6 +38,7 @@ class JLineDisplay(
             if (builder.length > width) {
                 throw IndexOutOfBoundsException("Wrote on line #$y past display width ($width)")
             }
+
             builder.setLength(width) // restore length
         }
     }

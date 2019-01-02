@@ -1,13 +1,12 @@
 package net.dhleong.judo.jline
 
+import assertk.Assert
 import assertk.assert
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
-import net.dhleong.judo.render.Flavor
-import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
-import org.junit.Ignore
+import net.dhleong.judo.render.*
 import org.junit.Test
 
 class JLineWindowTest {
@@ -75,41 +74,51 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore
     @Test fun `Scrolling in wrapped buffers`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
             captain mreynolds
             first mate zoe
         """.trimIndent())
-
-        val w = windowOf(buffer, 10, 3, wrap = true).apply {
-            scrollLines(1)
-        }
+        val w = windowOf(buffer, 10, 3, wrap = true)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""
+            |mreynolds_
             |first mate
             |zoe_______
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |captain___
+            |mreynolds_
+            |first mate
+        """.trimMargin())
+
+        w.scrollLines(1)
+        assert(w).hasScrollback(1) // should be at line 1 now
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |mreynolds_
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
             |captain___
         """.trimMargin())
-
-        w.scrollLines(1)
-        w.render(display, 0, 0)
-        assert(display).linesEqual("""
-            |__________
-            |first mate
-            |zoe_______
-        """.trimMargin())
-
-        w.scrollLines(1)
-        w.render(display, 0, 0)
-        assert(display).linesEqual("""
-            |__________
-            |__________
-            |first mate
-        """.trimMargin())
     }
+}
+
+private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
+    if (actual.getScrollback() == lines) return
+    expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }
 
 private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {

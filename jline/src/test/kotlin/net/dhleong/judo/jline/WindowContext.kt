@@ -14,7 +14,7 @@ class WindowContext(
 ) {
     fun FlavorableStringBuilder.hasRenderedLinesCount(count: Int) {
         assert(
-            computeRenderedLines(windowWidth, wordWrap),
+            computeRenderedLinesCount(windowWidth, wordWrap),
             describe("rendered lines count")
         ).isEqualTo(count)
     }
