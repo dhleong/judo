@@ -10,6 +10,9 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 
+/**
+ * @author dhleong
+ */
 class JLineWindow(
     ids: IdManager,
     settings: StateMap,
@@ -130,7 +133,8 @@ class JLineWindow(
     }
 
     override fun resize(width: Int, height: Int) {
-        TODO("not implemented")
+        this.width = width
+        this.height = height
     }
 
     override fun getScrollback(): Int = scrollbackBottom

@@ -4,10 +4,8 @@ import net.dhleong.judo.*
 import net.dhleong.judo.render.IJudoTabpage2
 import org.jline.terminal.Size
 import org.jline.terminal.TerminalBuilder
-import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.Display
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * @author dhleong
