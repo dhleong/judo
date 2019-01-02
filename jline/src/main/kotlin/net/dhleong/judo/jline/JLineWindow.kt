@@ -163,8 +163,28 @@ class JLineWindow(
         searchResultLine = -1
     }
 
-    override fun scrollToBufferLine(line: Int) {
-        TODO("not implemented")
+    override fun scrollToBufferLine(line: Int, offsetOnLine: Int) {
+        // TODO do better than this?
+
+        val buffer = currentBuffer
+        scrollbackBottom = buffer.size - 1 - line
+
+        var renderedLines = 0
+        var foundOnLine = -1
+        buffer[line].forEachRenderedLine(width, settings[WORD_WRAP]) { start, end ->
+            if (offsetOnLine in start..(end - 1)) {
+                foundOnLine = renderedLines
+            }
+
+            ++renderedLines
+        }
+
+        scrollbackOffset = when (foundOnLine) {
+            // not found? just go *somewhere* on the line
+            -1 -> 0
+
+            else -> renderedLines - 1 - foundOnLine
+        }
     }
 }
 

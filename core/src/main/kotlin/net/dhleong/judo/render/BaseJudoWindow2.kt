@@ -32,16 +32,18 @@ abstract class BaseJudoWindow2(
         val ignoreCase = true // TODO smartcase setting?
 
         val originalSearchResultLine = searchResultLine
-        if (word != lastSearchKeyword) {
-            lastSearchKeyword = word.toString()
+        val wordString = word.toString()
+        if (wordString != lastSearchKeyword) {
+            lastSearchKeyword = wordString
             searchResultLine = -1
         }
 
         val buffer = currentBuffer
         for (i in getScrollback() downTo 0) {
-            if (buffer[i].contains(word, ignoreCase = ignoreCase)) {
+            val index = buffer[i].indexOf(wordString, ignoreCase = ignoreCase)
+            if (index >= 0) {
                 searchResultLine = i
-                scrollToBufferLine(i)
+                scrollToBufferLine(i, offsetOnLine = index)
                 break
             }
         }

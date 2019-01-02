@@ -114,6 +114,38 @@ class JLineWindowTest {
             |captain___
         """.trimMargin())
     }
+
+    @Test fun `scrollToLine in wrapped buffer`() {
+        val display = JLineDisplay(10, 1)
+        val buffer = bufferOf("""
+            captain mreynolds
+            first mate zoe
+        """.trimIndent())
+        val w = windowOf(buffer, 10, 1, wrap = true)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |zoe_______
+        """.trimMargin())
+
+        w.scrollToBufferLine(line = 1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |first mate
+        """.trimMargin())
+
+        w.scrollToBufferLine(line = 0, offsetOnLine = 0)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |captain___
+        """.trimMargin())
+
+        w.scrollToBufferLine(line = 0, offsetOnLine = 8)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |mreynolds_
+        """.trimMargin())
+    }
 }
 
 private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
