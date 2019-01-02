@@ -8,13 +8,6 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 
-fun FlavorableCharSequence.toAttributedString(
-): AttributedString = AttributedStringBuilder(length).also { result ->
-    forEachChunk { startIndex, endIndex, flavor ->
-        result.append(subSequence(startIndex, endIndex), flavor.toAttributedStyle())
-    }
-}.toAttributedString()
-
 // from AttributedStyle source, since they're not public...
 private const val F_BOLD = 0x00000001
 private const val F_FAINT = 0x00000002

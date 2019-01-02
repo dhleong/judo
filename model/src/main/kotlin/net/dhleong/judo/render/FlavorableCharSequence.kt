@@ -6,9 +6,13 @@ package net.dhleong.judo.render
  */
 interface FlavorableCharSequence : CharSequence {
 
+    fun codePointAt(index: Int): Int
+
     operator fun plusAssign(other: FlavorableCharSequence)
 
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableCharSequence
+
+    fun isHidden(index: Int) = getFlavor(index).isHidden
 
     /**
      * Clear [Flavor] from the given range

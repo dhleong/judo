@@ -7,7 +7,7 @@ import org.jline.utils.AttributedStyle
 import org.junit.Assert.*
 import org.junit.Test
 
-class FlavorableExtKtTest {
+class FlavorExtKtTest {
     @Test fun `Single attribute conversion`() {
         assert(SimpleFlavor(isBold = true).toAttributedStyle())
             .isEqualTo(AttributedStyle.BOLD)

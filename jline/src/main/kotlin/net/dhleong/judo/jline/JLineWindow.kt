@@ -110,7 +110,31 @@ class JLineWindow(
     override fun getScrollback(): Int = scrollbackBottom
 
     override fun scrollLines(count: Int) {
-        TODO("not implemented")
+        val buffer = currentBuffer
+        val width = this.width
+        val desired = Math.abs(count)
+        val step = count / desired
+        val end = buffer.size - 1
+
+        val rangeEnd = minOf(end, scrollbackBottom + count)
+        val range =
+            if (count > 0) scrollbackBottom..rangeEnd
+            else scrollbackBottom downTo rangeEnd
+
+        // clear search result on scroll (?)
+        // TODO should we do better?
+        searchResultLine = -1
+
+        val wordWrap = settings[WORD_WRAP]
+        for (lineNr in range) {
+            if (lineNr < 0) break
+            if (lineNr >= buffer.size) break
+
+            val line = buffer[lineNr]
+            val renderedLines = line.computeRenderedLines(width, wordWrap)
+        }
+
+        TODO()
     }
 
     override fun scrollToBottom() {
@@ -144,6 +168,7 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: MutableLi
     var end = 0
     var col = 0
 
+    // TODO refactor to share logic with computeRenderedLines above
     while (end < attrLength) {
         val cp = codePointAt(end)
         val charWidth =
@@ -171,8 +196,8 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: MutableLi
                     // end *after* the whitespace
                     end = boundary + 1
                     col =
-                            if (isHidden(end)) 0
-                            else WCWidth.wcwidth(codePointAt(end))
+                        if (isHidden(end)) 0
+                        else WCWidth.wcwidth(codePointAt(end))
 
                 } else {
                     // if we didn't find any usable boundary, just do a hard split
@@ -193,7 +218,7 @@ private fun AttributedCharSequence.wordWrapInto(windowWidth: Int, out: MutableLi
     out.add(subSequence(start, end))
 }
 
-private inline fun CharSequence.findLastBefore(beforeIndex: Int, predicate: (Char) -> Boolean): Int {
+inline fun CharSequence.findLastBefore(beforeIndex: Int, predicate: (Char) -> Boolean): Int {
     var i = beforeIndex - 1
     while (i >= 0) {
 

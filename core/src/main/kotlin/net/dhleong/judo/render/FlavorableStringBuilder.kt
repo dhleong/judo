@@ -15,6 +15,8 @@ class FlavorableStringBuilder private constructor(
         arrayOfNulls(capacity)
     )
 
+    override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
+
     operator fun plusAssign(string: String) {
         ensureCapacity(myLength + string.length)
 

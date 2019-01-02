@@ -76,7 +76,40 @@ class JLineWindowTest {
     }
 
     @Ignore
-    @Test fun `Scrolling in wrapped buffers`() { TODO() }
+    @Test fun `Scrolling in wrapped buffers`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain mreynolds
+            first mate zoe
+        """.trimIndent())
+
+        val w = windowOf(buffer, 10, 3, wrap = true).apply {
+            scrollLines(1)
+        }
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |first mate
+            |zoe_______
+            |captain___
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |first mate
+            |zoe_______
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |first mate
+        """.trimMargin())
+    }
 }
 
 private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {
