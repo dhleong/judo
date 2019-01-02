@@ -39,12 +39,18 @@ abstract class BaseJudoWindow2(
         }
 
         val buffer = currentBuffer
-        for (i in getScrollback() downTo 0) {
+        val searchRange = when {
+            direction > 0 -> (buffer.size - getScrollback() - 1) downTo 0
+
+            else -> getScrollback() until buffer.size
+        }
+
+        for (i in searchRange) {
             val index = buffer[i].indexOf(wordString, ignoreCase = ignoreCase)
             if (index >= 0) {
                 searchResultLine = i
                 scrollToBufferLine(i, offsetOnLine = index)
-                break
+                return
             }
         }
 

@@ -7,6 +7,8 @@ import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedString
+import org.jline.utils.AttributedStringBuilder
+import org.jline.utils.AttributedStyle
 
 class JLineWindow(
     ids: IdManager,
@@ -50,7 +52,6 @@ class JLineWindow(
 
         // iterating from oldest to newest
         for (i in end..start) {
-//            val line =
             buffer[i].splitLinesInto(
                 renderWorkspace,
                 windowWidth = width,
@@ -80,6 +81,25 @@ class JLineWindow(
             }
         }
 
+        // highlight search results:
+        if (searchResultLine >= 0) {
+            val lineIndex = displayStart - searchResultLine
+            val original = renderWorkspace[lineIndex]
+            val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
+            if (wordStart >= 0) {
+                val wordEnd = wordStart + lastSearchKeyword.length
+                val word = original.substring(wordStart, wordEnd)
+
+                val new = AttributedStringBuilder(original.length)
+                new.append(original, 0, wordStart)
+                new.append(word, AttributedStyle.INVERSE)
+                new.append(original, wordEnd, original.length)
+                val newString = new.toAttributedString()
+
+                renderWorkspace[lineIndex] = newString
+            }
+        }
+
         var line = y + blankLinesNeeded
         for (i in displayStart until displayEnd) {
             display.withLine(x, line) {
@@ -93,10 +113,6 @@ class JLineWindow(
 
             ++line
         }
-
-        // TODO highlight search results:
-//        if (searchResultLine >= 0) {
-//        }
 
         if (isFocusable && isFocused) {
             display.withLine(x, line) {
@@ -123,7 +139,7 @@ class JLineWindow(
         val buffer = currentBuffer
         val width = this.width
         val desired = Math.abs(count)
-        val end = buffer.size - 1
+        val end = buffer.lastIndex
 
         val rangeEnd = minOf(end, scrollbackBottom + count)
         val range =
@@ -167,7 +183,7 @@ class JLineWindow(
         // TODO do better than this?
 
         val buffer = currentBuffer
-        scrollbackBottom = buffer.size - 1 - line
+        scrollbackBottom = buffer.lastIndex - line
 
         var renderedLines = 0
         var foundOnLine = -1

@@ -2,11 +2,16 @@ package net.dhleong.judo.jline
 
 import assertk.Assert
 import assertk.assert
+import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.render.*
+import org.jline.utils.AttributedStringBuilder
+import org.jline.utils.AttributedStyle
+import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -145,6 +150,41 @@ class JLineWindowTest {
         assert(display).linesEqual("""
             |mreynolds_
         """.trimMargin())
+    }
+
+    @Test fun `highlight search result in wrapped buffer`() {
+        val display = JLineDisplay(10, 1)
+        val buffer = bufferOf("""
+            captain mreynolds
+            first mate zoe
+        """.trimIndent())
+        val w = windowOf(buffer, 10, 1, wrap = true)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |zoe_______
+        """.trimMargin())
+
+        w.searchForKeyword("rey", 1)
+        w.render(display, 0, 0)
+        assert(w).hasScrollback(1)
+        assert(display).linesEqual("""
+            |mreynolds_
+        """.trimMargin())
+
+        val displayed = display.toAttributedStrings()
+        assert(displayed).hasSize(1)
+        assert(displayed[0].toAnsi()).isEqualTo(
+            AttributedStringBuilder().apply {
+                append("m")
+                append("rey", AttributedStyle.INVERSE)
+                append("nolds ")
+            }.toAttributedString().toAnsi()
+        )
+    }
+
+    @Ignore("TODO")
+    @Test fun `handle search with no result`() {
     }
 }
 
