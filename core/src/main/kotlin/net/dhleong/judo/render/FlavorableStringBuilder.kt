@@ -17,7 +17,8 @@ class FlavorableStringBuilder private constructor(
 
     override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
 
-    fun append(string: String, offset: Int, length: Int) {
+    fun append(string: String, offset: Int, end: Int) {
+        val length = end - offset
         ensureCapacity(myLength + length)
 
         string.toCharArray(chars, start + myLength, startIndex = offset)
@@ -32,14 +33,19 @@ class FlavorableStringBuilder private constructor(
         append(string, 0, string.length)
     }
 
-    fun append(other: FlavorableCharSequence, offset: Int, length: Int) {
+    fun append(other: FlavorableCharSequence, offset: Int, end: Int) {
+        val length = end - offset
         ensureCapacity(myLength + length)
 
         if (other is FlavorableStringBuilder) {
             System.arraycopy(other.chars, other.start + offset, chars, start + myLength, length)
             System.arraycopy(other.flavors, other.start + offset, flavors, start + myLength, length)
 
-            val newStartingFlavor = flavors[start + myLength - 1] + other.flavors[other.start + offset]
+            val oldFlavorIndex = start + myLength - 1
+            val oldFlavor =
+                if (oldFlavorIndex >= 0) flavors[oldFlavorIndex]
+                else null
+            val newStartingFlavor = oldFlavor + other.flavors[other.start + offset]
             if (newStartingFlavor != null) {
                 beginFlavor(newStartingFlavor, myLength)
             }

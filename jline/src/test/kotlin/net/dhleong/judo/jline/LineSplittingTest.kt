@@ -87,4 +87,18 @@ class LineSplittingTest {
             )
         }
     }
+
+    @Test fun `Split preserving whitespace`() {
+        val s = FlavorableStringBuilder.withDefaultFlavor(
+            "The quick red fox jumped over the lazy brown dog. The quick red fox jumped"
+        )
+        assertInWindow(width = 20, wordWrap = true, preserveWhitespace = true) {
+            s.hasRenderedLines(
+                "The quick red fox ",
+                "jumped over the lazy",
+                " brown dog. The ",
+                "quick red fox jumped"
+            )
+        }
+    }
 }

@@ -10,10 +10,9 @@ import net.dhleong.judo.render.FlavorableStringBuilder
  * @author dhleong
  */
 class TerminalInputLineHelper(
-    private val settings: StateMap
-) {
-
+    private val settings: StateMap,
     var windowWidth: Int = 0
+) {
 
     private val workspace = mutableListOf<FlavorableCharSequence>()
 
@@ -25,7 +24,6 @@ class TerminalInputLineHelper(
         val maxLines = settings[MAX_INPUT_LINES]
 
         val line = input.line
-        val cursor = input.cursorIndex
         if (line.length < maxLineWidth || maxLines == 1) {
             // convenient shortcut
             fitInputLineToWindow(input, output)
@@ -35,13 +33,16 @@ class TerminalInputLineHelper(
         workspace.clear()
 
         val wordWrap = settings[WORD_WRAP]
-        line.splitLinesInto(workspace, maxLineWidth, wordWrap)
+        line.splitLinesInto(
+            workspace,
+            maxLineWidth, wordWrap,
+            preserveWhitespace = true
+        )
         fitCursorInLines(input, workspace)
 
         if (input.cursorCol == maxLineWidth) {
             input.cursorRow += 1
             input.cursorCol = 0
-//            output = output.toMutableList().apply { add(AttributedString.EMPTY) }
             workspace.add(FlavorableStringBuilder.EMPTY)
         }
 
@@ -117,7 +118,7 @@ class TerminalInputLineHelper(
             cursorCol -= rowLen
         }
 
-        throw IllegalStateException("Couldn't fit cursor ${input.cursorIndex} in $lines")
+        throw IllegalStateException("Couldn't fit cursor ${input.cursorIndex} in ${lines.map { "\"$it\"" }}")
     }
 
     private fun fitInputLineToWindow(

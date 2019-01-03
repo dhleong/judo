@@ -221,9 +221,14 @@ internal fun FlavorableCharSequence.splitAttributedLinesInto(
 internal fun FlavorableCharSequence.splitLinesInto(
     target: MutableList<FlavorableCharSequence>,
     windowWidth: Int,
-    wordWrap: Boolean
+    wordWrap: Boolean,
+    preserveWhitespace: Boolean = false
 ) {
-    forEachRenderedLine(windowWidth, wordWrap) { start, end ->
+    forEachRenderedLine(
+        windowWidth,
+        wordWrap,
+        preserveWhitespace
+    ) { start, end ->
         target.add(subSequence(start, end))
     }
 }

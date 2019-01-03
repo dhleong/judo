@@ -2,6 +2,8 @@ package net.dhleong.judo.jline
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import assertk.assertions.support.show
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 
 /**
@@ -10,7 +12,8 @@ import net.dhleong.judo.render.FlavorableStringBuilder
  */
 class WindowContext(
     private val windowWidth: Int,
-    private val wordWrap: Boolean
+    private val wordWrap: Boolean,
+    private val preserveWhitespace: Boolean
 ) {
     fun FlavorableStringBuilder.hasRenderedLinesCount(count: Int) {
         assert(
@@ -21,7 +24,7 @@ class WindowContext(
 
     fun FlavorableStringBuilder.hasRenderedLines(vararg lines: String) {
         val actual = mutableListOf<String>()
-        forEachRenderedLine(windowWidth, wordWrap) { start, end ->
+        forEachRenderedLine(windowWidth, wordWrap, preserveWhitespace) { start, end ->
             actual += substring(start, end)
         }
         assert(
@@ -30,12 +33,17 @@ class WindowContext(
         ).isEqualTo(lines.toList())
     }
 
-    private fun describe(what: String) =
-        "In (width=$windowWidth, wrap=$wordWrap): $what of $this"
+    private fun FlavorableCharSequence.describe(what: String) =
+        "In (\nwidth=$windowWidth,\n wrap=$wordWrap,\nwhite=$preserveWhitespace\n): $what of ${show(this)}\n"
 }
 
 fun assertInWindow(
     width: Int,
     wordWrap: Boolean,
+    preserveWhitespace: Boolean = false,
     block: WindowContext.() -> Unit
-) = WindowContext(width, wordWrap = wordWrap).block()
+) = WindowContext(
+    width,
+    wordWrap = wordWrap,
+    preserveWhitespace = preserveWhitespace
+).block()

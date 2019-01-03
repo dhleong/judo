@@ -27,6 +27,7 @@ fun FlavorableCharSequence.computeRenderedLinesCount(
 internal inline fun FlavorableCharSequence.forEachRenderedLine(
     windowWidth: Int,
     wordWrap: Boolean,
+    preserveWhitespace: Boolean = false,
     block: (start: Int, end: Int) -> Unit
 ) {
     val len = length
@@ -67,7 +68,11 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
             }
 
             // word wrap right on a boundary
-            wordWrap && inWord && (i == len || Character.isWhitespace(codePointAt(i))) -> {
+            (
+                wordWrap
+                    && inWord
+                    && (i == len || Character.isWhitespace(codePointAt(i)))
+            ) -> {
                 block(lineStart, i)
                 lineStart = i
 
@@ -77,7 +82,12 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
 
             // new line with word wrap
             wordWrap && lastWordEnd > lineStart -> {
-                block(lineStart, lastWordEnd)
+                if (preserveWhitespace) {
+                    block(lineStart, lastWordStart)
+                } else {
+                    block(lineStart, lastWordEnd)
+                }
+
                 if (lastWordStart == lineStart) {
                     lineStart = i
 
@@ -107,7 +117,7 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
         }
 
         // if we word-wrapped on a boundary, try to skip any whitespace
-        if (foundLine && wordWrap && lineStart < len) {
+        if (!preserveWhitespace && foundLine && wordWrap && lineStart < len) {
             cp = codePointAt(lineStart)
             while (lineStart < len && Character.isWhitespace(cp)) {
                 val charCount = Character.charCount(cp)
