@@ -18,7 +18,7 @@ interface JudoRenderer2 : JudoRendererInfo, Closeable {
 
     var settings: StateMap
 
-    var currentTabpage: IJudoTabpage2?
+    var currentTabpage: IJudoTabpage2
 
     /**
      * Make sure this renderer can be used

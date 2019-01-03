@@ -1,7 +1,7 @@
 package net.dhleong.judo.jline.stacks
 
+import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
-import net.dhleong.judo.jline.JLineWindow
 import net.dhleong.judo.render.WINDOW_MIN_HEIGHT
 import org.jline.utils.AttributedString
 
@@ -63,7 +63,7 @@ class VerticalStack(parent: IStack, width: Int, height: Int)
         }
     }
 
-    override fun getYPositionOf(window: JLineWindow): Int {
+    override fun getYPositionOf(window: IJLineWindow): Int {
         var yOffset = 0
         for (row in contents) {
             val rowY = row.getYPositionOf(window)

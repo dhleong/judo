@@ -1,8 +1,8 @@
 package net.dhleong.judo.jline.stacks
 
+import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
 import net.dhleong.judo.jline.JLineTabpage
-import net.dhleong.judo.jline.JLineWindow
 
 /**
  * @author dhleong
@@ -18,12 +18,12 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
 
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
-    override fun stackWithWindow(predicate: (JLineWindow) -> Boolean) =
+    override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean) =
         child.stackWithWindow(predicate)
 
     override fun render(display: JLineDisplay, x: Int, y: Int) =
         child.render(display, x, y)
-    override fun getYPositionOf(window: JLineWindow): Int =
+    override fun getYPositionOf(window: IJLineWindow): Int =
         child.getYPositionOf(window)
     override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) {

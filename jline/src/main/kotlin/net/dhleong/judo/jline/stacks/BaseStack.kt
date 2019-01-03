@@ -1,6 +1,6 @@
 package net.dhleong.judo.jline.stacks
 
-import net.dhleong.judo.jline.JLineWindow
+import net.dhleong.judo.jline.IJLineWindow
 
 /**
  * @author dhleong
@@ -13,7 +13,7 @@ abstract class BaseStack(
 
     internal val contents = ArrayList<IStack>(4)
 
-    override fun stackWithWindow(predicate: (JLineWindow) -> Boolean): WindowStack? =
+    override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         contents.asSequence()
             .map { it.stackWithWindow(predicate) }
             .firstOrNull { it != null }

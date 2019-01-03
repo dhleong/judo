@@ -25,7 +25,7 @@ class JLineWindow(
     ids, settings,
     initialWidth, initialHeight, initialBuffer,
     isFocusable, statusLineOverlaysOutput
-) {
+), IJLineWindow {
 
     override var currentBuffer: IJudoBuffer2 = initialBuffer
     override var isFocused: Boolean = false
@@ -41,7 +41,7 @@ class JLineWindow(
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
-    fun render(display: JLineDisplay, x: Int, y: Int) {
+    override fun render(display: JLineDisplay, x: Int, y: Int) {
         val displayHeight =
             if (isFocusable && !statusLineOverlaysOutput) height - 1 // make room for status line
             else height

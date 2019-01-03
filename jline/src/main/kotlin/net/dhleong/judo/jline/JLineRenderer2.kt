@@ -2,9 +2,7 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.*
 import net.dhleong.judo.input.Key
-import net.dhleong.judo.render.FlavorableCharSequence
-import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.*
 import org.jline.terminal.*
 import org.jline.terminal.impl.DumbTerminal
 import org.jline.utils.Curses
@@ -28,6 +26,7 @@ internal const val ELLIPSIS = "…"
  * @author dhleong
  */
 class JLineRenderer2(
+    private val ids: IdManager,
     override var settings: StateMap,
     private val enableMouse: Boolean = false
 ) : JudoRenderer2 {
@@ -43,17 +42,14 @@ class JLineRenderer2(
 
     override val capabilities: EnumSet<JudoRendererInfo.Capabilities>
 
-    override val windowWidth: Int
-        get() = terminal.width
-    override val windowHeight: Int
-        get() = terminal.height
+    override var windowWidth: Int = terminal.width
+    override var windowHeight: Int = terminal.height
 
     override var onResized: OnResizedEvent? = null
 
-    override var currentTabpage: IJudoTabpage2?
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        set(value) {}
+    override lateinit var currentTabpage: IJudoTabpage2
 
+    private var renderSurface = JLineDisplay(0, 0)
     private var isLoading: Boolean = true
     private val input = InputLine()
     private val inputHelper = TerminalInputLineHelper(settings)
@@ -86,6 +82,15 @@ class JLineRenderer2(
         }
 
         terminal.flush()
+
+        // now, prepare the initial tabpage
+        val tabpageWidth = windowWidth
+        val tabpageHeight = windowHeight - 1 // save room for input line
+        val initialBuffer = JudoBuffer2(ids)
+        val window = JLinePrimaryWindow(ids, settings, initialBuffer, tabpageWidth, tabpageHeight)
+        currentTabpage = JLineTabpage(ids, settings, window)
+
+        // resize *after* initializing the tabpage
         resize()
 
         // register handlers for keystrokes that are done via escape sequences
@@ -133,7 +138,10 @@ class JLineRenderer2(
 
     override fun redraw() {
         inTransaction {
-            render()
+            // NOTE: render() is called for us at the end
+            // of inTransaction; calling it here would result
+            // in double rendering!
+//            render()
         }
     }
 
@@ -174,7 +182,13 @@ class JLineRenderer2(
     }
 
     private fun render() {
-        val display = JLineDisplay(windowWidth, windowHeight) // FIXME reuse?
+        if (terminal.width <= 0) {
+            // can't safely render.
+            // this should mostly occur in unit tests...
+            return
+        }
+
+        val display = renderSurface
 
         val cursor = if (isLoading) {
             display.withLine(0, 0) {
@@ -202,10 +216,10 @@ class JLineRenderer2(
 
     /** @return the cursor */
     internal fun render(display: JLineDisplay): Int {
+        renderedInput.clear()
+
         val tabpage = currentTabpage as? JLineTabpage
             ?: throw IllegalStateException("Current tabpage is not JLine: $currentTabpage")
-
-        tabpage.render(display)
 
         val win = tabpage.currentWindow
         val isCursorOnStatus = win.isFocusable && win.isFocused && win.statusCursor != -1
@@ -214,33 +228,59 @@ class JLineRenderer2(
             tabpage.currentWindow.isFocusable -> input.cursorIndex
             else -> 0
         }
+        val rawStatusCursor = when {
+            isCursorOnStatus -> win.statusCursor
+            else -> 0
+        }
 
-        renderedInput.clear()
+        val originalCursor = input.cursorIndex
+        input.cursorIndex = rawInputCursor
         inputHelper.fitInputLinesToWindow(input, renderedInput)
+        input.cursorIndex = originalCursor
 
-        val windowY = tabpage.getYPositionOf(win)
-        val windowX = 0 // TODO when we add vsplit support
+        val inputY = tabpage.height
+        for (i in renderedInput.indices) {
+            display.withLine(0, inputY + i) {
+                renderedInput[i].appendTo(this)
+            }
+        }
 
-        // FIXME: the input line(s) render differently...
-        return windowSize.cursorPos(
-            windowX + win.statusCursor,
-            windowY + win.height - 1
-        )
+        // render tabpage so we can resize it properly to take into account
+        // input size
+        tabpage.resize(windowWidth, windowHeight - renderedInput.size)
+        tabpage.render(display)
+
+        return if (isCursorOnStatus) {
+            val windowX = 0 // TODO when we add vsplit support
+            val windowY = tabpage.getYPositionOf(win)
+            val windowBottom = win.height + windowY
+            windowSize.cursorPos(
+                windowBottom - renderedInput.size,
+                windowX + rawStatusCursor
+            )
+        } else {
+            windowSize.cursorPos(
+                windowHeight - renderedInput.size + input.cursorRow,
+                input.cursorCol
+            )
+        }
     }
 
     private fun resize() {
         val size = terminal.size
         windowSize.copy(size)
 
-        val windowHeight = size.rows
-        val windowWidth = size.columns
+        windowHeight = size.rows
+        windowWidth = size.columns
         window.resize(windowHeight, windowWidth)
 
         updateSize()
     }
 
     internal fun updateSize() {
-        currentTabpage?.resize(windowWidth, windowHeight - 1)
+        currentTabpage.resize(windowWidth, windowHeight - 1)
+        renderSurface.resize(windowWidth, windowHeight)
+        inputHelper.windowWidth = windowWidth
         window.clear()
         onResized?.invoke()
     }

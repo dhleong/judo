@@ -12,7 +12,7 @@ import net.dhleong.judo.render.*
 class JLineTabpage(
     private val ids: IdManager,
     private val settings: StateMap,
-    private val initialWindow: JLineWindow
+    private val initialWindow: IJLineWindow
 ) : IJudoTabpage2 {
 
     override val id: Int = ids.newTabpage()

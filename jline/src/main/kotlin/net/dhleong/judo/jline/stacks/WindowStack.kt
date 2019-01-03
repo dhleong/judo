@@ -1,14 +1,14 @@
 package net.dhleong.judo.jline.stacks
 
+import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
-import net.dhleong.judo.jline.JLineWindow
 
 /**
  * @author dhleong
  */
 class WindowStack(
     override val parent: IStack,
-    val window: JLineWindow
+    val window: IJLineWindow
 ) : IStack {
     override val width: Int
         get() = window.width
@@ -21,7 +21,7 @@ class WindowStack(
     override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
 
-    override fun stackWithWindow(predicate: (JLineWindow) -> Boolean): WindowStack? =
+    override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         if (predicate(window)) this
         else null
 
@@ -29,7 +29,7 @@ class WindowStack(
         window.render(display, x, y)
     }
 
-    override fun getYPositionOf(window: JLineWindow) =
+    override fun getYPositionOf(window: IJLineWindow) =
         if (window == this.window) 0
         else -1
     override fun resize(width: Int, height: Int) =

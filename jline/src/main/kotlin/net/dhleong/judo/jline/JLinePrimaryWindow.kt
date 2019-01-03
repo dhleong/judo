@@ -18,7 +18,7 @@ class JLinePrimaryWindow(
     outputBuffer,
     initialWidth,
     initialHeight
-) {
+), IJLineWindow {
     override fun createBuffer(ids: IdManager): IJudoBuffer2 = JudoBuffer2(ids)
 
     override fun createWindow(
@@ -39,4 +39,8 @@ class JLinePrimaryWindow(
         statusLineOverlaysOutput
     )
 
+    override fun render(display: JLineDisplay, x: Int, y: Int) {
+        (outputWindow as IJLineWindow).render(display, x, y)
+        (promptWindow as IJLineWindow).render(display, x, y + outputWindow.height)
+    }
 }

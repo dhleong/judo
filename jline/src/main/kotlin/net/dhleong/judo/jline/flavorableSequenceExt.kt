@@ -6,12 +6,19 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.WCWidth
 
-fun FlavorableCharSequence.toAttributedString(
-): AttributedString = AttributedStringBuilder(length).also { result ->
+fun FlavorableCharSequence.toAttributedString(): AttributedString =
+    AttributedStringBuilder(length).also { result ->
+        appendTo(result)
+    }.toAttributedString()
+
+fun FlavorableCharSequence.appendTo(
+    builder: AttributedStringBuilder
+) {
     forEachChunk { startIndex, endIndex, flavor ->
-        result.append(subSequence(startIndex, endIndex), flavor.toAttributedStyle())
+        builder.append(subSequence(startIndex, endIndex), flavor.toAttributedStyle())
     }
-}.toAttributedString()
+}
+
 
 fun FlavorableCharSequence.computeRenderedLinesCount(
     windowWidth: Int,

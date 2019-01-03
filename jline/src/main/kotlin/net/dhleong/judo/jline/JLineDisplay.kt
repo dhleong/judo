@@ -3,17 +3,36 @@ package net.dhleong.judo.jline
 import org.jline.utils.AttributedStringBuilder
 
 class JLineDisplay(
-    val width: Int,
-    val height: Int
+    private var myWidth: Int,
+    private var myHeight: Int
 ) {
-    val lines: List<AttributedStringBuilder> = ArrayList<AttributedStringBuilder>(height).also {
-        for (i in 0 until height) {
-            it += AttributedStringBuilder(width).apply {
-                for (i in 0 until width) {
+
+    val width: Int
+        get() = myWidth
+    val height: Int
+        get() = myHeight
+
+    val lines: List<AttributedStringBuilder> = ArrayList<AttributedStringBuilder>(myHeight).also {
+        for (i in 0 until myHeight) {
+            it += AttributedStringBuilder(myWidth).apply {
+                for (i in 0 until myWidth) {
                     append(" ")
                 }
             }
         }
+    }
+
+    fun resize(windowWidth: Int, windowHeight: Int) {
+        for (i in myHeight until windowHeight) {
+            (lines as MutableList) += AttributedStringBuilder(windowWidth).apply {
+                for (i in 0 until windowWidth) {
+                    append(" ")
+                }
+            }
+        }
+
+        myWidth = windowWidth
+        myHeight = windowHeight
     }
 
     inline fun withLine(x: Int, y: Int, block: AttributedStringBuilder.() -> Unit) {
@@ -48,12 +67,13 @@ class JLineDisplay(
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other !is JLineDisplay) return false
-        if (width != other.width) return false
-        return lines == other.lines
+        if (myWidth != other.myWidth) return false
+        if (myHeight != other.myHeight) return false
+        return lines.take(myHeight) == other.lines.take(myHeight)
     }
 
     override fun hashCode(): Int {
-        var result = width
+        var result = myWidth
         result = 31 * result + lines.hashCode()
         return result
     }
