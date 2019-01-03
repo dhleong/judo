@@ -34,4 +34,26 @@ interface JudoRenderer2 : JudoRendererInfo, Closeable {
 
     fun redraw()
     fun setLoading(isLoading: Boolean)
+
+    /**
+     * Begin a series of updates that should eventually
+     * result in a [redraw]
+     */
+    fun beginUpdate()
+
+    /**
+     * Finish an update initiated by [beginUpdate]
+     */
+    fun finishUpdate()
+}
+
+inline fun JudoRenderer2.inTransaction(block: () -> Unit) {
+    try {
+        beginUpdate()
+
+        block()
+
+    } finally {
+        finishUpdate()
+    }
 }

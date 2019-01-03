@@ -55,7 +55,7 @@ class JLineWindow(
 
         // iterating from oldest to newest
         for (i in end..start) {
-            buffer[i].splitLinesInto(
+            buffer[i].splitAttributedLinesInto(
                 renderWorkspace,
                 windowWidth = width,
                 wordWrap = wordWrap
@@ -208,7 +208,7 @@ class JLineWindow(
     }
 }
 
-internal fun FlavorableCharSequence.splitLinesInto(
+internal fun FlavorableCharSequence.splitAttributedLinesInto(
     target: MutableList<AttributedString>,
     windowWidth: Int,
     wordWrap: Boolean
@@ -218,3 +218,12 @@ internal fun FlavorableCharSequence.splitLinesInto(
     }
 }
 
+internal fun FlavorableCharSequence.splitLinesInto(
+    target: MutableList<FlavorableCharSequence>,
+    windowWidth: Int,
+    wordWrap: Boolean
+) {
+    forEachRenderedLine(windowWidth, wordWrap) { start, end ->
+        target.add(subSequence(start, end))
+    }
+}

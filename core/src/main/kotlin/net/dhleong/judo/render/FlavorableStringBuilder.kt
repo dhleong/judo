@@ -17,25 +17,29 @@ class FlavorableStringBuilder private constructor(
 
     override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
 
-    operator fun plusAssign(string: String) {
-        ensureCapacity(myLength + string.length)
+    fun append(string: String, offset: Int, length: Int) {
+        ensureCapacity(myLength + length)
 
-        string.toCharArray(chars, start + myLength)
+        string.toCharArray(chars, start + myLength, startIndex = offset)
         if (isNotEmpty()) {
-            flavors.fill(flavors[start + myLength - 1], fromIndex = start + myLength)
+            flavors.fill(flavors[start + myLength - 1], fromIndex = start + offset + myLength)
         }
 
-        myLength += string.length
+        myLength += length
     }
 
-    override fun plusAssign(other: FlavorableCharSequence) {
-        ensureCapacity(myLength + other.length)
+    operator fun plusAssign(string: String) {
+        append(string, 0, string.length)
+    }
+
+    fun append(other: FlavorableCharSequence, offset: Int, length: Int) {
+        ensureCapacity(myLength + length)
 
         if (other is FlavorableStringBuilder) {
-            System.arraycopy(other.chars, other.start, chars, start + myLength, other.myLength)
-            System.arraycopy(other.flavors, other.start, flavors, start + myLength, other.myLength)
+            System.arraycopy(other.chars, other.start + offset, chars, start + myLength, length)
+            System.arraycopy(other.flavors, other.start + offset, flavors, start + myLength, length)
 
-            val newStartingFlavor = flavors[start + myLength - 1] + other.flavors[other.start]
+            val newStartingFlavor = flavors[start + myLength - 1] + other.flavors[other.start + offset]
             if (newStartingFlavor != null) {
                 beginFlavor(newStartingFlavor, myLength)
             }
@@ -43,7 +47,11 @@ class FlavorableStringBuilder private constructor(
             TODO("not implemented")
         }
 
-        myLength += other.length
+        myLength += length
+    }
+
+    override fun plusAssign(other: FlavorableCharSequence) {
+        append(other, 0, other.length)
     }
 
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
@@ -126,6 +134,8 @@ class FlavorableStringBuilder private constructor(
     }
 
     companion object {
+        val EMPTY: FlavorableCharSequence = fromString("")
+
         fun fromString(string: String) = FlavorableStringBuilder(string.length).also {
             it += string
         }

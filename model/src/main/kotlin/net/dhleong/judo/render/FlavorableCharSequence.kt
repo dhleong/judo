@@ -55,7 +55,6 @@ interface FlavorableCharSequence : CharSequence {
         startIndex: Int,
         endIndex: Int = startIndex + 1
     )
-
 }
 
 inline fun FlavorableCharSequence.forEachChunk(
