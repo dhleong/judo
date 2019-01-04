@@ -19,6 +19,8 @@ dependencies {
     compile project(':model')
 
     compile deps.kotlin
+    compile deps.coroutines
+    
     compile deps.guava
     compile deps.jline
     compile deps.jython

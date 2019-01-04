@@ -10,6 +10,7 @@ import org.apache.commons.net.telnet.TelnetNotificationHandler
 import org.apache.commons.net.telnet.TelnetOption
 import org.apache.commons.net.telnet.TelnetOptionHandler
 import org.apache.commons.net.telnet.WindowSizeOptionHandler
+import sun.net.NetworkClient.DEFAULT_CONNECT_TIMEOUT
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -18,7 +19,7 @@ class CommonsNetConnection(
     judo: IJudoCore,
     private val address: String, private val port: Int,
     private val echo: (String) -> Unit
-) : Connection() {
+) : BaseConnection() {
     class Factory(val debug: Boolean = false) : JudoConnection.Factory {
         override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
             return CommonsNetConnection(judo, address, port) { judo.echo(it) }.also {

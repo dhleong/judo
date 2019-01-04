@@ -1,13 +1,6 @@
 package net.dhleong.judo.net
 
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
-import java.io.OutputStreamWriter
-import java.io.Writer
+import java.io.*
 import kotlin.concurrent.thread
 
 /**
@@ -18,7 +11,7 @@ const val TELNET_IAC = 255.toByte()
 const val TELNET_SB = 250.toByte()
 const val TELNET_SE = 240.toByte()
 
-abstract class Connection : JudoConnection {
+abstract class BaseConnection : JudoConnection {
     /** in ms */
     val DEFAULT_CONNECT_TIMEOUT = 20000
 

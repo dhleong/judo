@@ -16,10 +16,10 @@ interface JudoConnection2 : Closeable {
     val isGmcpEnabled: Boolean
 
     var onError: ((IOException) -> Unit)?
-    var onDisconnect: ((JudoConnection) -> Unit)?
+    var onDisconnect: ((JudoConnection2) -> Unit)?
     var onEchoStateChanged: ((Boolean) -> Unit)?
 
-    fun send(line: String)
+    suspend fun send(line: String)
 
     fun setWindowSize(width: Int, height: Int)
 

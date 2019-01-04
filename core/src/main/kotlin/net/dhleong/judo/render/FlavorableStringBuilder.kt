@@ -60,8 +60,22 @@ class FlavorableStringBuilder private constructor(
         append(other, 0, other.length)
     }
 
+    /**
+     * Return a shallow copy of a subSequence of this Builder. Subsequent changes to
+     * this Builder *will* be reflected in the new instance; if you need a copy that
+     * won't change, use [toFlavorableString]
+     */
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
         FlavorableStringBuilder(chars, flavors, start + startIndex, endIndex - startIndex)
+
+    /**
+     * Return a deep copy of (a subsequence of) this Builder. Subsequent changes to this
+     * Builder will not be reflected in the new instance
+     */
+    fun toFlavorableString(startIndex: Int = 0, endIndex: Int = myLength): FlavorableCharSequence =
+        FlavorableStringBuilder(endIndex - startIndex).also {
+            it.append(this, startIndex, endIndex)
+        }
 
     override fun clearFlavor(startIndex: Int, endIndex: Int) {
         flavors.fill(Flavor.default, fromIndex = startIndex, toIndex = endIndex)
