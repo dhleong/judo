@@ -52,6 +52,8 @@ abstract class PrimaryJudoWindow2(
         statusLineOverlaysOutput = true
     )
 
+    private var promptHeight = 1
+
     abstract fun createBuffer(ids: IdManager): IJudoBuffer2
 
     abstract fun createWindow(
@@ -68,14 +70,16 @@ abstract class PrimaryJudoWindow2(
         promptWindow.updateStatusLine(line, cursor)
 
     override fun resize(width: Int, height: Int) {
-        val availableHeight = height - promptWindow.height
+        promptWindow.resize(width, promptHeight)
+
+        val availableHeight = height - promptHeight
         outputWindow.resize(width, availableHeight)
         this.width = width
         this.height = height
     }
 
     fun setPromptHeight(promptHeight: Int) {
-        promptWindow.resize(width, maxOf(1, promptHeight))
+        this.promptHeight = maxOf(1, promptHeight)
         resize(width, height)
     }
 

@@ -88,6 +88,7 @@ class JLineRenderer2(
         val tabpageHeight = windowHeight - 1 // save room for input line
         val initialBuffer = JudoBuffer2(ids)
         val window = JLinePrimaryWindow(ids, settings, initialBuffer, tabpageWidth, tabpageHeight)
+        window.isFocused = true
         currentTabpage = JLineTabpage(ids, settings, window)
 
         // resize *after* initializing the tabpage

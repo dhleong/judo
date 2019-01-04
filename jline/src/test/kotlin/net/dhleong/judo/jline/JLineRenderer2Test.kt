@@ -6,7 +6,6 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineRenderer2Test {
@@ -30,7 +29,6 @@ class JLineRenderer2Test {
         window = renderer.currentTabpage.currentWindow
     }
 
-    @Ignore
     @Test fun `Basic render`() {
         window.appendLine("Take my love")
         window.appendLine("Take my land")

@@ -19,6 +19,7 @@ class JLinePrimaryWindow(
     initialWidth,
     initialHeight
 ), IJLineWindow {
+
     override fun createBuffer(ids: IdManager): IJudoBuffer2 = JudoBuffer2(ids)
 
     override fun createWindow(
