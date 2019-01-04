@@ -35,7 +35,7 @@ class JLineRenderer2(
     private val window = Display(terminal, true)
     private val originalAttributes: Attributes
 
-    private val windowSize = Size(0, 0)
+    internal val windowSize = Size(0, 0)
 
     override val terminalType: String
         get() = terminal.type

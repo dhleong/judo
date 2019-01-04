@@ -1,6 +1,9 @@
 package net.dhleong.judo.jline
 
+import assertk.Assert
 import assertk.assert
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
@@ -23,6 +26,8 @@ class JLineRenderer2Test {
         renderer = JLineRenderer2(IdManager(), settings, enableMouse = false).apply {
             windowWidth = display.width
             windowHeight = display.height
+            windowSize.rows = display.height
+            windowSize.columns = display.width
             updateSize()
             setLoading(false)
         }
@@ -35,7 +40,7 @@ class JLineRenderer2Test {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("Test", 4)
 
-        renderer.render(display)
+        val cursor = renderer.render(display)
         assert(display).linesEqual("""
             |____________________
             |____________________
@@ -44,6 +49,17 @@ class JLineRenderer2Test {
             |<status>____________
             |Test________________
         """.trimMargin())
+        assert(cursor).isCursor(
+            row = 5,
+            col = 4
+        )
+    }
+
+    private fun Assert<Int>.isCursor(row: Int, col: Int) {
+        val actualCol = actual % (renderer.windowWidth + 1)
+        val actualRow = (actual - actualCol) / (renderer.windowWidth + 1)
+        if (row == actualRow && col == actualCol) return
+        expected("cursor pos ${show(row to col)} but was ${show(actualRow to actualCol)}")
     }
 }
 
