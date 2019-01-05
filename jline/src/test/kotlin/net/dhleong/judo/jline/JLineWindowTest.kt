@@ -9,7 +9,6 @@ import assertk.assertions.support.show
 import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
-import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
@@ -215,7 +214,7 @@ private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
 
 private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {
     contents.split("\n").forEach {
-        appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
+        appendLine(it)
     }
 }
 

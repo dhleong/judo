@@ -6,6 +6,35 @@ import org.junit.Test
 class LineSplittingTest {
     private val s = FlavorableStringBuilder.withDefaultFlavor("Captain Mal Reynolds")
 
+    @Test fun `Split lines ignores trailing new line`() {
+        val shorter = FlavorableStringBuilder.withDefaultFlavor("Its Zoe\n")
+        assertInWindow(width = 1, wordWrap = true) {
+            shorter.hasRenderedLines(
+                "I",
+                "t",
+                "s",
+                "Z",
+                "o",
+                "e"
+            )
+        }
+    }
+
+    @Test fun `Split lines handles trailing whitespace`() {
+        val shorter = FlavorableStringBuilder.withDefaultFlavor("Its Zoe  ")
+        assertInWindow(width = 1, wordWrap = true) {
+            shorter.hasRenderedLines(
+                "I",
+                "t",
+                "s",
+                "Z",
+                "o",
+                "e"
+            )
+        }
+    }
+
+
     @Test fun `Split lines with word wrap and width 1`() {
         val shorter = FlavorableStringBuilder.withDefaultFlavor("Its Zoe")
         assertInWindow(width = 1, wordWrap = true) {

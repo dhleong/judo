@@ -5,9 +5,18 @@ package net.dhleong.judo.render
  * applied to "spans" within the content.
  */
 interface FlavorableCharSequence : CharSequence {
+    val renderLength: Int
+        get() {
+            val len = length
+            return when {
+                (len > 0 && last() == '\n') -> len - 1
+                else -> len
+            }
+        }
 
     fun codePointAt(index: Int): Int
 
+    operator fun plusAssign(char: Char)
     operator fun plusAssign(other: FlavorableCharSequence)
 
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableCharSequence

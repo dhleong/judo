@@ -16,6 +16,7 @@ interface IJudoBuffer2 {
      * Append a whole line
      */
     fun appendLine(line: FlavorableCharSequence)
+    fun appendLine(line: String)
 
     fun clear()
     fun replaceLastLine(result: FlavorableCharSequence)

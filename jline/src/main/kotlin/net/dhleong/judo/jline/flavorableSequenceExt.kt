@@ -37,10 +37,21 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
     preserveWhitespace: Boolean = false,
     block: (start: Int, end: Int) -> Unit
 ) {
-    val len = length
+    var len = length
     if (len == 0) {
         block(0, 0)
         return
+    }
+
+    // trim off trailing whitespace
+    if (preserveWhitespace) {
+        if (this[len - 1] == '\n') {
+            --len
+        }
+    } else {
+        while (len > 0 && Character.isWhitespace(this[len - 1])) {
+            --len
+        }
     }
 
     var lineStart = 0

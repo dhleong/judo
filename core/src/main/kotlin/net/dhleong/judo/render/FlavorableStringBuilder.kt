@@ -43,6 +43,13 @@ class FlavorableStringBuilder private constructor(
         myLength += length
     }
 
+    override operator fun plusAssign(char: Char) {
+        append(char, when {
+            isEmpty() -> Flavor.default
+            else -> getFlavor(lastIndex)
+        })
+    }
+
     operator fun plusAssign(string: String) {
         append(string, 0, string.length)
     }
@@ -64,7 +71,7 @@ class FlavorableStringBuilder private constructor(
                 beginFlavor(newStartingFlavor, myLength)
             }
         } else {
-            TODO("not implemented")
+            TODO("support non-FSB-based char sequences?")
         }
 
         myLength += length

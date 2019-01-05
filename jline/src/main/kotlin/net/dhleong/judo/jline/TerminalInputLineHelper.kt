@@ -108,7 +108,7 @@ class TerminalInputLineHelper(
 
         val lastLine = lines.lastIndex
         for (row in lines.indices) {
-            val rowLen = lines[row].length
+            val rowLen = lines[row].renderLength
             if (cursorCol < rowLen || (row == lastLine && cursorCol == rowLen)) {
                 input.cursorRow = row
                 input.cursorCol = cursorCol
