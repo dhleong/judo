@@ -47,22 +47,39 @@ operator fun Flavor?.minus(other: Flavor?) =
 // TODO: we could implement Flavor as an inline class using a representation
 // like JLine's and be much more memory efficient...
 data class SimpleFlavor(
-    override val isBold: Boolean = false,
-    override val isFaint: Boolean = false,
-    override val isItalic: Boolean = false,
-    override val isUnderline: Boolean = false,
-    override val isBlink: Boolean = false,
-    override val isInverse: Boolean = false,
-    override val isConceal: Boolean = false,
-    override val isStrikeThrough: Boolean = false,
-    override val isHidden: Boolean = false,
+    override var isBold: Boolean = false,
+    override var isFaint: Boolean = false,
+    override var isItalic: Boolean = false,
+    override var isUnderline: Boolean = false,
+    override var isBlink: Boolean = false,
+    override var isInverse: Boolean = false,
+    override var isConceal: Boolean = false,
+    override var isStrikeThrough: Boolean = false,
+    override var isHidden: Boolean = false,
 
-    override val hasForeground: Boolean = false,
-    override val hasBackground: Boolean = false,
+    override var hasForeground: Boolean = false,
+    override var hasBackground: Boolean = false,
 
-    override val foreground: JudoColor = JudoColor.Default,
-    override val background: JudoColor = JudoColor.Default
+    override var foreground: JudoColor = JudoColor.Default,
+    override var background: JudoColor = JudoColor.Default
 ) : Flavor {
+    constructor(other: Flavor) : this(
+        isBold = other.isBold,
+        isFaint = other.isFaint,
+        isItalic = other.isItalic,
+        isUnderline = other.isUnderline,
+        isBlink = other.isBlink,
+        isInverse = other.isInverse,
+        isConceal = other.isConceal,
+        isStrikeThrough = other.isStrikeThrough,
+        isHidden = other.isHidden,
+
+        hasForeground = other.hasForeground,
+        hasBackground = other.hasBackground,
+
+        foreground = other.foreground,
+        background = other.background
+    )
 
     override operator fun minus(flavor: Flavor?): Flavor {
         if (this == flavor) return Flavor.default
@@ -93,5 +110,23 @@ data class SimpleFlavor(
                 background + other.background
             } ?: background
         )
+    }
+
+    fun reset() {
+        isBold = false
+        isFaint = false
+        isItalic = false
+        isUnderline = false
+        isBlink = false
+        isInverse = false
+        isConceal = false
+        isStrikeThrough = false
+        isHidden = false
+
+        hasForeground = false
+        hasBackground = false
+
+        foreground = JudoColor.Default
+        background = JudoColor.Default
     }
 }

@@ -2,6 +2,7 @@ package net.dhleong.judo.net
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.produce
@@ -40,6 +41,7 @@ abstract class BaseConnection2 : JudoConnection2, CoroutineScope {
         }
     }
 
+    @ExperimentalCoroutinesApi
     private val readTask = produce(Dispatchers.IO) {
         val buffer = CharArray(1024)
         val reader = input.bufferedReader()
@@ -63,6 +65,7 @@ abstract class BaseConnection2 : JudoConnection2, CoroutineScope {
 
     override fun forEachLine(onNewLine: (FlavorableCharSequence) -> Unit) {
         launch(Dispatchers.Main) {
+            @Suppress("EXPERIMENTAL_API_USAGE")
             val read = readTask.receive()
             onNewLine(read)
         }

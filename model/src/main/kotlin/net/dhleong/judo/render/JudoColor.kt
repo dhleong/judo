@@ -8,7 +8,7 @@ sealed class JudoColor {
 
     object Default : JudoColor()
 
-    class Simple(
+    data class Simple(
         val value: Color
     ) : JudoColor() {
         enum class Color(
@@ -25,13 +25,28 @@ sealed class JudoColor {
 
             // TODO bright colors
         }
+
+        companion object {
+            fun from(value: Int) = JudoColor.Simple(when (value) {
+                0 -> Color.BLACK
+                1 -> Color.RED
+                2 -> Color.GREEN
+                3 -> Color.YELLOW
+                4 -> Color.BLUE
+                5 -> Color.MAGENTA
+                6 -> Color.CYAN
+                7 -> Color.WHITE
+
+                else -> throw IllegalArgumentException()
+            })
+        }
     }
 
-    class High256(
+    data class High256(
         val value: Int
     ) : JudoColor() // TODO
 
-    class FullRGB(
+    data class FullRGB(
         val red: Int,
         val green: Int,
         val blue: Int

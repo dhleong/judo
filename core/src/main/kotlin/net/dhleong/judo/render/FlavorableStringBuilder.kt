@@ -17,20 +17,34 @@ class FlavorableStringBuilder private constructor(
 
     override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
 
+    fun append(char: Char, flavor: Flavor) {
+        ensureCapacity(myLength + 1)
+        chars[start + myLength] = char
+        flavors[start + myLength] = flavor
+        ++myLength
+    }
+
+    fun append(string: String, flavor: Flavor) {
+        appendImpl(string, 0, string.length, flavor)
+    }
     fun append(string: String, offset: Int, end: Int) {
+        appendImpl(string, offset, end, when {
+            isNotEmpty() -> flavors[start + myLength - 1]
+            else -> null
+        })
+    }
+    private fun appendImpl(string: String, offset: Int, end: Int, flavor: Flavor? = null) {
         val length = end - offset
         ensureCapacity(myLength + length)
 
         string.toCharArray(chars, start + myLength, startIndex = offset)
-        if (isNotEmpty()) {
-            flavors.fill(flavors[start + myLength - 1], fromIndex = start + offset + myLength)
-        }
+        flavors.fill(flavor, fromIndex = start + offset + myLength)
 
         myLength += length
     }
 
     operator fun plusAssign(string: String) {
-        append(string, 0, string.length)
+        appendImpl(string, 0, string.length, null)
     }
 
     fun append(other: FlavorableCharSequence, offset: Int, end: Int) {
@@ -58,6 +72,10 @@ class FlavorableStringBuilder private constructor(
 
     override fun plusAssign(other: FlavorableCharSequence) {
         append(other, 0, other.length)
+    }
+
+    operator fun set(index: Int, value: Char) {
+        chars[start + index] = value
     }
 
     /**
@@ -151,6 +169,11 @@ class FlavorableStringBuilder private constructor(
         start = 0
 
         // TODO fill the last flavor up to the capacity?
+    }
+
+    fun reset() {
+        start = 0
+        myLength = 0
     }
 
     companion object {
