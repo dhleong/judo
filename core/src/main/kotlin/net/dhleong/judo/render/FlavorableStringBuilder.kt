@@ -44,7 +44,7 @@ class FlavorableStringBuilder private constructor(
     }
 
     operator fun plusAssign(string: String) {
-        appendImpl(string, 0, string.length, null)
+        append(string, 0, string.length)
     }
 
     fun append(other: FlavorableCharSequence, offset: Int, end: Int) {
