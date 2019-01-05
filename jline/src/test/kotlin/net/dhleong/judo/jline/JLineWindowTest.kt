@@ -15,7 +15,6 @@ import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -187,8 +186,25 @@ class JLineWindowTest {
         )
     }
 
-    @Ignore("TODO")
     @Test fun `handle search with no result`() {
+        val display = JLineDisplay(24, 1)
+        val buffer = bufferOf("""
+            |captain mreynolds_______
+            |first mate zoe__________
+        """.trimMargin())
+        val w = windowOf(buffer, 24, 1, wrap = true)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |first mate zoe__________
+        """.trimMargin())
+
+        w.searchForKeyword("none", 1)
+        w.render(display, 0, 0)
+        assert(w).hasScrollback(0)
+        assert(display).linesEqual("""
+            |Pattern not found: none_
+        """.trimMargin())
     }
 }
 

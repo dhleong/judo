@@ -12,7 +12,6 @@ abstract class BaseJudoWindow2(
     protected val settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
-    initialBuffer: IJudoBuffer2,
     override val isFocusable: Boolean = false,
     val statusLineOverlaysOutput: Boolean = false
 ) : IJudoWindow2 {

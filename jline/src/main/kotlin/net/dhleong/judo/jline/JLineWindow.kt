@@ -26,7 +26,7 @@ class JLineWindow(
     statusLineOverlaysOutput: Boolean = false
 ) : BaseJudoWindow2(
     ids, settings,
-    initialWidth, initialHeight, initialBuffer,
+    initialWidth, initialHeight,
     isFocusable, statusLineOverlaysOutput
 ), IJLineWindow {
 
