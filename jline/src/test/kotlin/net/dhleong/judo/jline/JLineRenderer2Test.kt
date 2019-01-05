@@ -86,6 +86,26 @@ class JLineRenderer2Test {
             |____________________
         """.trimMargin())
     }
+
+    @Test fun `Scroll window after buffer append`() {
+        // changes to window or buffer should trigger a render
+
+        window.updateStatusLine("<status>")
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.appendLine("Take me where I")
+        window.appendLine("cannot stand")
+        window.appendLine("I don't care")
+        window.appendLine("I'm still free")
+        assert(display).linesEqual("""
+            |Take me where I_____
+            |cannot stand________
+            |I don't care________
+            |I'm still free______
+            |<status>____________
+            |____________________
+        """.trimMargin())
+    }
 }
 
 private fun IJudoWindow2.appendLine(line: String) {
