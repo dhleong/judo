@@ -79,7 +79,7 @@ class JLineTabpage(
     }
 
     override fun getYPositionOf(window: IJudoWindow2): Int =
-        rootStack.getYPositionOf(window as JLineWindow)
+        rootStack.getYPositionOf(window as IJLineWindow)
 
     override fun unsplit() {
         val newStack = WindowStack(rootStack, initialWindow)

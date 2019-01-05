@@ -6,8 +6,8 @@ import net.dhleong.judo.StateMap
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.PrimaryJudoWindow2
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineRenderer2Test {
@@ -16,7 +16,7 @@ class JLineRenderer2Test {
     lateinit var settings: StateMap
 
     lateinit var renderer: JLineRenderer2
-    lateinit var window: IJudoWindow2
+    lateinit var window: PrimaryJudoWindow2
 
     @Before fun setUp() {
         settings = StateMap()
@@ -37,7 +37,7 @@ class JLineRenderer2Test {
             updateSize()
             setLoading(false)
         }
-        window = renderer.currentTabpage.currentWindow
+        window = renderer.currentTabpage.currentWindow as PrimaryJudoWindow2
     }
 
     @Test fun `Basic render`() {
@@ -108,9 +108,53 @@ class JLineRenderer2Test {
         """.trimMargin())
     }
 
-    @Ignore
-    @Test fun `Handle prompts`() {
-        TODO("handle prompts")
+    @Test fun `Basic prompt rendering`() {
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.updateStatusLine("[prompt]    <status>")
+        window.setPromptHeight(2)
+        window.promptWindow.currentBuffer.set(listOf(
+            "[prompt1]", "[prompt2]"
+        ).map { FlavorableStringBuilder.withDefaultFlavor(it) })
+        window.resize(window.width, window.height)
+        renderer.updateInputLine("Test", 4)
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |Take my love________
+                |Take my land________
+                |[prompt1]___________
+                |[prompt]____<status>
+                |Test________________
+            """.trimMargin())
+            hasCursor(5, 4)
+        }
+    }
+
+    @Test fun `Cursor in status line`() {
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.setPromptHeight(2)
+        window.promptWindow.currentBuffer.set(listOf(
+            "[prompt1]",
+            "[prompt2]"
+        ).map { FlavorableStringBuilder.withDefaultFlavor(it) })
+        window.resize(window.width, window.height)
+        renderer.updateInputLine("Test", 4)
+        window.updateStatusLine(":cmdMode", 8)
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |Take my love________
+                |Take my land________
+                |[prompt1]___________
+                |:cmdMode____________
+                |Test________________
+            """.trimMargin())
+            hasCursor(4, 8)
+        }
     }
 }
 
