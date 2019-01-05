@@ -1,5 +1,6 @@
 package net.dhleong.judo.jline
 
+import net.dhleong.judo.JudoRenderer2
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
@@ -15,7 +16,7 @@ import org.jline.utils.AttributedStyle
  * @author dhleong
  */
 class JLineWindow(
-    private val renderer: JLineRenderer2,
+    private val renderer: JudoRenderer2,
     ids: IdManager,
     settings: StateMap,
     initialWidth: Int,
