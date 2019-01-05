@@ -115,6 +115,10 @@ class AnsiFlavorableStringReader {
         }
 
         if (!builder.isEmpty()) {
+            if (builder.last() == '\r') {
+                // normalize
+                builder[builder.lastIndex] = '\n'
+            }
             yield(builder.toFlavorableString())
             builder.fullReset()
         }

@@ -13,9 +13,41 @@ import org.junit.Test
  * @author dhleong
  */
 class AnsiFlavorableStringReaderTest {
-    @Ignore
-    @Test fun `Split lines`() {
-        TODO()
+    @Test fun `Split lines with single newline`() {
+        val reader = AnsiFlavorableStringReader()
+        val all = reader.feed("Take my\nlove\n")
+        assert(all.toStringsList()).isEqualTo(listOf(
+            "Take my\n",
+            "love\n"
+        ))
+    }
+
+    @Test fun `Split lines with crlf`() {
+        val reader = AnsiFlavorableStringReader()
+        val all = reader.feed("Take my\r\nlove\r\n")
+        assert(all.toStringsList()).isEqualTo(listOf(
+            // normalize to single \n:
+            "Take my\n",
+            "love\n"
+        ))
+    }
+
+    @Test fun `Split lines with lfcr`() {
+        val reader = AnsiFlavorableStringReader()
+        val all = reader.feed("Take my\n\rlove\n\r")
+        assert(all.toStringsList()).isEqualTo(listOf(
+            // normalize to single \n:
+            "Take my\n",
+            "love\n"
+        ))
+    }
+
+    @Test fun `Normalize linefeed to newline`() {
+        val reader = AnsiFlavorableStringReader()
+        val all = reader.feed("Take my love\r")
+        assert(all.toStringsList()).isEqualTo(listOf(
+            "Take my love\n"
+        ))
     }
 
     @Test fun `Combine Split ANSI`() {
@@ -46,7 +78,19 @@ class AnsiFlavorableStringReaderTest {
             }
         ))
     }
+
+    @Ignore
+    @Test fun `Trailing ansi`() {
+
+    }
+
+    @Ignore
+    @Test fun `Handle RGB and 256 colors`() {
+        TODO("also, whatever 90 and 100 mean")
+    }
 }
+
+private fun <T> Sequence<T>.toStringsList() = toList().map { it.toString() }
 
 private fun AnsiFlavorableStringReader.feed(chars: String) =
     feed(chars.toCharArray())
