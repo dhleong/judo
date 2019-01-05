@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
 import java.io.Closeable
 
@@ -19,6 +20,13 @@ interface JudoRenderer2 : JudoRendererInfo, Closeable {
     var settings: StateMap
 
     var currentTabpage: IJudoTabpage2
+
+    /**
+     * The Renderer is responsible for allocating Buffers,
+     * since writing to a Buffer may create work for the
+     * Renderer in order to present the new lines
+     */
+    fun createBuffer(): IJudoBuffer2
 
     /**
      * Make sure this renderer can be used

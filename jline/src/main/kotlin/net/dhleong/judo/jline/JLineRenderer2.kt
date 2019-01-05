@@ -9,6 +9,7 @@ import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
 import org.jline.terminal.Attributes
@@ -99,7 +100,7 @@ class JLineRenderer2(
         // now, prepare the initial tabpage
         val tabpageWidth = windowWidth
         val tabpageHeight = windowHeight - 1 // save room for input line
-        val initialBuffer = JLineBuffer2(this, ids)
+        val initialBuffer = createBuffer()
         val window = JLinePrimaryWindow(this, ids, settings, initialBuffer, tabpageWidth, tabpageHeight)
         window.isFocused = true
         currentTabpage = JLineTabpage(this, ids, settings, window)
@@ -136,6 +137,8 @@ class JLineRenderer2(
             throw IllegalArgumentException("Unsupported terminal type ${terminal.name}")
         }
     }
+
+    override fun createBuffer(): IJudoBuffer2 = JLineBuffer2(this, ids)
 
     override fun setCursorType(type: CursorType) {
         inTransaction {
