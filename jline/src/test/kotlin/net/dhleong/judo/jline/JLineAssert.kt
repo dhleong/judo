@@ -2,6 +2,8 @@ package net.dhleong.judo.jline
 
 import assertk.Assert
 import assertk.assertions.isEqualTo
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 
 /**
  * Assert that the lines in the display match those in the
@@ -18,4 +20,11 @@ fun Assert<JLineDisplay>.linesEqual(expected: String) {
     assert(asString).isEqualTo(
         expected.replace(" ", "_")
     )
+}
+
+fun Assert<JLineDisplay>.hasCursor(row: Int, col: Int) {
+    if (actual.cursorRow == row && actual.cursorCol == col) return
+    expected("cursor to be at ${show(row to col)} but was ${show(
+        actual.cursorRow to actual.cursorCol
+    )}")
 }

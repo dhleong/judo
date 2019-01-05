@@ -1,9 +1,7 @@
 package net.dhleong.judo.jline
 
-import assertk.Assert
+import assertk.all
 import assertk.assert
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
@@ -47,20 +45,22 @@ class JLineRenderer2Test {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("Test", 4)
 
-        // render with the internal method to get the cursor position
-        val cursor = renderer.render(display)
-        assert(display).linesEqual("""
-            |____________________
-            |____________________
-            |Take my love________
-            |Take my land________
-            |<status>____________
-            |Test________________
-        """.trimMargin())
-        assert(cursor).isCursor(
-            row = 5,
-            col = 4
-        )
+        renderer.render(display)
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |Take my love________
+                |Take my land________
+                |<status>____________
+                |Test________________
+            """.trimMargin())
+
+            hasCursor(
+                row = 5,
+                col = 4
+            )
+        }
     }
 
     @Test fun `Reactive render`() {
@@ -85,13 +85,6 @@ class JLineRenderer2Test {
             |<status>____________
             |____________________
         """.trimMargin())
-    }
-
-    private fun Assert<Int>.isCursor(row: Int, col: Int) {
-        val actualCol = actual % (renderer.windowWidth + 1)
-        val actualRow = (actual - actualCol) / (renderer.windowWidth + 1)
-        if (row == actualRow && col == actualCol) return
-        expected("cursor pos ${show(row to col)} but was ${show(actualRow to actualCol)}")
     }
 }
 

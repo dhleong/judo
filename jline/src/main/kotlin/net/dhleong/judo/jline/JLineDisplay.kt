@@ -12,10 +12,13 @@ class JLineDisplay(
     val height: Int
         get() = myHeight
 
+    var cursorRow: Int = 0
+    var cursorCol: Int = 0
+
     val lines: List<AttributedStringBuilder> = ArrayList<AttributedStringBuilder>(myHeight).also {
         for (i in 0 until myHeight) {
             it += AttributedStringBuilder(myWidth).apply {
-                for (i in 0 until myWidth) {
+                for (j in 0 until myWidth) {
                     append(" ")
                 }
             }
@@ -25,7 +28,7 @@ class JLineDisplay(
     fun resize(windowWidth: Int, windowHeight: Int) {
         for (i in myHeight until windowHeight) {
             (lines as MutableList) += AttributedStringBuilder(windowWidth).apply {
-                for (i in 0 until windowWidth) {
+                for (j in 0 until windowWidth) {
                     append(" ")
                 }
             }

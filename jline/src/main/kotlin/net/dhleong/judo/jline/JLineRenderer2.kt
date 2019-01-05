@@ -198,11 +198,12 @@ class JLineRenderer2(
     private fun render() {
         val display = renderSurface
 
-        val cursor = if (isLoading) {
+        if (isLoading) {
             display.withLine(0, 0) {
                 append("Loading...")
             }
-            windowSize.cursorPos(windowHeight - 1, 0)
+            display.cursorRow = windowHeight - 1
+            display.cursorCol = 0
         } else {
             render(display)
         }
@@ -214,7 +215,10 @@ class JLineRenderer2(
             return
         }
 
-        window.update(display.toAttributedStrings(), cursor)
+        window.update(display.toAttributedStrings(), windowSize.cursorPos(
+            display.cursorRow,
+            display.cursorCol
+        ))
         terminal.flush()
 
         try {
@@ -229,8 +233,7 @@ class JLineRenderer2(
         }
     }
 
-    /** @return the cursor */
-    internal fun render(display: JLineDisplay): Int {
+    internal fun render(display: JLineDisplay) {
         renderedInput.clear()
 
         val tabpage = currentTabpage as? JLineTabpage
@@ -265,19 +268,15 @@ class JLineRenderer2(
         tabpage.resize(windowWidth, windowHeight - renderedInput.size)
         tabpage.render(display)
 
-        return if (isCursorOnStatus) {
+        if (isCursorOnStatus) {
             val windowX = 0 // TODO when we add vsplit support
             val windowY = tabpage.getYPositionOf(win)
             val windowBottom = win.height + windowY
-            windowSize.cursorPos(
-                windowBottom - renderedInput.size,
-                windowX + rawStatusCursor
-            )
+            display.cursorRow = windowBottom - renderedInput.size
+            display.cursorCol = windowX + rawStatusCursor
         } else {
-            windowSize.cursorPos(
-                windowHeight - renderedInput.size + input.cursorRow,
-                input.cursorCol
-            )
+            display.cursorRow = windowHeight - renderedInput.size + input.cursorRow
+            display.cursorCol = input.cursorCol
         }
     }
 
