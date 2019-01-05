@@ -1,16 +1,29 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.*
+import net.dhleong.judo.CursorType
+import net.dhleong.judo.JudoRenderer2
+import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.OnResizedEvent
+import net.dhleong.judo.StateMap
+import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
-import net.dhleong.judo.render.*
-import org.jline.terminal.*
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IdManager
+import org.jline.terminal.Attributes
+import org.jline.terminal.MouseEvent
+import org.jline.terminal.Size
+import org.jline.terminal.Terminal
+import org.jline.terminal.TerminalBuilder
 import org.jline.terminal.impl.DumbTerminal
 import org.jline.utils.Curses
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
 import java.io.IOException
 import java.io.StringWriter
-import java.util.*
+import java.util.EnumSet
+import java.util.HashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 // ascii codes:
@@ -28,7 +41,8 @@ internal const val ELLIPSIS = "…"
 class JLineRenderer2(
     private val ids: IdManager,
     override var settings: StateMap,
-    private val enableMouse: Boolean = false
+    private val enableMouse: Boolean = false,
+    private val renderSurface: JLineDisplay = JLineDisplay(0, 0)
 ) : JudoRenderer2 {
 
     private val terminal = TerminalBuilder.terminal()!!
@@ -49,7 +63,6 @@ class JLineRenderer2(
 
     override lateinit var currentTabpage: IJudoTabpage2
 
-    private var renderSurface = JLineDisplay(0, 0)
     private var isLoading: Boolean = true
     private val input = InputLine()
     private val inputHelper = TerminalInputLineHelper(settings)
@@ -86,10 +99,10 @@ class JLineRenderer2(
         // now, prepare the initial tabpage
         val tabpageWidth = windowWidth
         val tabpageHeight = windowHeight - 1 // save room for input line
-        val initialBuffer = JudoBuffer2(ids)
-        val window = JLinePrimaryWindow(ids, settings, initialBuffer, tabpageWidth, tabpageHeight)
+        val initialBuffer = JLineBuffer2(this, ids)
+        val window = JLinePrimaryWindow(this, ids, settings, initialBuffer, tabpageWidth, tabpageHeight)
         window.isFocused = true
-        currentTabpage = JLineTabpage(ids, settings, window)
+        currentTabpage = JLineTabpage(this, ids, settings, window)
 
         // resize *after* initializing the tabpage
         resize()
@@ -183,12 +196,6 @@ class JLineRenderer2(
     }
 
     private fun render() {
-        if (terminal.width <= 0) {
-            // can't safely render.
-            // this should mostly occur in unit tests...
-            return
-        }
-
         val display = renderSurface
 
         val cursor = if (isLoading) {
@@ -198,6 +205,13 @@ class JLineRenderer2(
             windowSize.cursorPos(windowHeight - 1, 0)
         } else {
             render(display)
+        }
+
+        if (terminal.width <= 0) {
+            // can't safely render to the terminal.
+            // this should mostly occur in unit tests, so we
+            // do the rendering into the Display above as normal
+            return
         }
 
         window.update(display.toAttributedStrings(), cursor)

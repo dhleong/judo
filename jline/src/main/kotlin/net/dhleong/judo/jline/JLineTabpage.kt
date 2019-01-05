@@ -4,12 +4,17 @@ import net.dhleong.judo.StateMap
 import net.dhleong.judo.jline.stacks.RootStack
 import net.dhleong.judo.jline.stacks.VerticalStack
 import net.dhleong.judo.jline.stacks.WindowStack
-import net.dhleong.judo.render.*
+import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.PrimaryJudoWindow2
 
 /**
  * @author dhleong
  */
 class JLineTabpage(
+    private val renderer: JLineRenderer2,
     private val ids: IdManager,
     private val settings: StateMap,
     private val initialWindow: IJLineWindow
@@ -51,7 +56,7 @@ class JLineTabpage(
     override fun hsplit(rows: Int, buffer: IJudoBuffer2): IJudoWindow2 {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val newWindow = JLineWindow(ids, settings, parent.width, rows, buffer)
+        val newWindow = JLineWindow(renderer, ids, settings, parent.width, rows, buffer)
 
         if (parent is VerticalStack) {
             parent.add(WindowStack(parent, newWindow))

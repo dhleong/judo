@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.BaseJudoWindow2
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer2
@@ -14,6 +15,7 @@ import org.jline.utils.AttributedStyle
  * @author dhleong
  */
 class JLineWindow(
+    private val renderer: JLineRenderer2,
     ids: IdManager,
     settings: StateMap,
     initialWidth: Int,
@@ -128,8 +130,10 @@ class JLineWindow(
 
     override fun updateStatusLine(line: CharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
-        status = line.toString()
-        statusCursor = cursor
+        renderer.inTransaction {
+            status = line.toString()
+            statusCursor = cursor
+        }
     }
 
     override fun resize(width: Int, height: Int) {
@@ -139,7 +143,7 @@ class JLineWindow(
 
     override fun getScrollback(): Int = scrollbackBottom
 
-    override fun scrollLines(count: Int) {
+    override fun scrollLines(count: Int) = renderer.inTransaction {
         val buffer = currentBuffer
         val width = this.width
         val desired = Math.abs(count)
@@ -178,12 +182,12 @@ class JLineWindow(
         scrollbackOffset = -toScroll
     }
 
-    override fun scrollToBottom() {
+    override fun scrollToBottom() = renderer.inTransaction {
         scrollbackBottom = 0
         searchResultLine = -1
     }
 
-    override fun scrollToBufferLine(line: Int, offsetOnLine: Int) {
+    override fun scrollToBufferLine(line: Int, offsetOnLine: Int) = renderer.inTransaction {
         // TODO do better than this?
 
         val buffer = currentBuffer

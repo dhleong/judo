@@ -34,23 +34,32 @@ abstract class PrimaryJudoWindow2(
     override val statusCursor: Int
         get() = promptWindow.statusCursor
 
-    @Suppress("LeakingThis")
-    val outputWindow = createWindow(ids, settings,
-        initialWidth, initialHeight - 1,
-        outputBuffer,
-        isFocusable = false
-    )
+    // have to create lazy since the implementing class may depend
+    // on fields initialized by its constructor.
+    // NOTE: these should be init'd pretty quickly by the first render,
+    // so we shouldn't have to add synchronization overhead to the lazy
+    val outputWindow by lazy(LazyThreadSafetyMode.NONE) {
+        createWindow(
+            ids, settings,
+            initialWidth, initialHeight - 1,
+            outputBuffer,
+            isFocusable = false
+        )
+    }
 
-    @Suppress("LeakingThis")
-    val promptBuffer = createBuffer(ids)
+    private val promptBuffer by lazy(LazyThreadSafetyMode.NONE) {
+        createBuffer(ids)
+    }
 
-    @Suppress("LeakingThis")
-    val promptWindow = createWindow(ids, settings,
-        initialWidth, 1,
-        promptBuffer,
-        isFocusable = true,
-        statusLineOverlaysOutput = true
-    )
+    val promptWindow by lazy(LazyThreadSafetyMode.NONE) {
+        createWindow(
+            ids, settings,
+            initialWidth, 1,
+            promptBuffer,
+            isFocusable = true,
+            statusLineOverlaysOutput = true
+        )
+    }
 
     private var promptHeight = 1
 

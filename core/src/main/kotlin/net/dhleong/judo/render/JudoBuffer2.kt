@@ -2,8 +2,6 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.util.CircularArrayList
 
-private const val DEFAULT_SCROLLBACK_SIZE = 20_000
-
 open class JudoBuffer2(
     ids: IdManager,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
@@ -45,4 +43,7 @@ open class JudoBuffer2(
         newContents.forEach(this::appendLine)
     }
 
+    companion object {
+        const val DEFAULT_SCROLLBACK_SIZE = 20_000
+    }
 }

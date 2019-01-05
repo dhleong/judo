@@ -22,12 +22,19 @@ class JLineRenderer2Test {
     @Before fun setUp() {
         settings = StateMap()
 
-        display = JLineDisplay(20, 6)
-        renderer = JLineRenderer2(IdManager(), settings, enableMouse = false).apply {
-            windowWidth = display.width
-            windowHeight = display.height
-            windowSize.rows = display.height
-            windowSize.columns = display.width
+        val width = 20
+        val height = 6
+        display = JLineDisplay(0, 0)
+        renderer = JLineRenderer2(
+            IdManager(),
+            settings,
+            enableMouse = false,
+            renderSurface = display
+        ).apply {
+            windowWidth = width
+            windowHeight = height
+            windowSize.rows = height
+            windowSize.columns = width
             updateSize()
             setLoading(false)
         }
@@ -40,6 +47,7 @@ class JLineRenderer2Test {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("Test", 4)
 
+        // render with the internal method to get the cursor position
         val cursor = renderer.render(display)
         assert(display).linesEqual("""
             |____________________
@@ -53,6 +61,30 @@ class JLineRenderer2Test {
             row = 5,
             col = 4
         )
+    }
+
+    @Test fun `Reactive render`() {
+        // changes to window or buffer should trigger a render
+
+        window.updateStatusLine("<status>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |____________________
+            |<status>____________
+            |____________________
+        """.trimMargin())
+
+        window.appendLine("Take my love")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |Take my love________
+            |<status>____________
+            |____________________
+        """.trimMargin())
     }
 
     private fun Assert<Int>.isCursor(row: Int, col: Int) {

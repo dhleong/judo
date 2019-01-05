@@ -6,9 +6,13 @@ import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
-import net.dhleong.judo.render.*
+import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer2
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.junit.Ignore
@@ -195,9 +199,7 @@ private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
 
 private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {
     contents.split("\n").forEach {
-        appendLine(FlavorableStringBuilder.fromString(it).apply {
-            beginFlavor(Flavor.default, 0)
-        })
+        appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
     }
 }
 
@@ -208,6 +210,7 @@ private fun windowOf(
     focusable: Boolean = false,
     wrap: Boolean = false
 ) = JLineWindow(
+    mock {},
     IdManager(),
     StateMap().apply {
         this[WORD_WRAP] = wrap
