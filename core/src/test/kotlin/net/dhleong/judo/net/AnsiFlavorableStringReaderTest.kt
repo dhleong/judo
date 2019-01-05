@@ -8,7 +8,6 @@ import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.util.ansi
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -113,10 +112,34 @@ class AnsiFlavorableStringReaderTest {
         ))
     }
 
-    @Ignore
-    @Test fun `Handle RGB and 256 colors`() {
-        TODO("also, whatever 90 and 100 mean")
+    @Test fun `Handle 256 colors`() {
+        assert(
+            "${27.toChar()}[38;5;200;48;5;180m200color".ansiToFlavorable()
+        ).isEqualTo(
+            FlavorableStringBuilder(7).apply {
+                append("200color", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.High256(200),
+                    hasBackground = true,
+                    background = JudoColor.High256(180)
+                ))
+            }
+        )
     }
+
+    @Test fun `Handle RGB color`() {
+        assert(
+            "${27.toChar()}[38;2;250;50;20mRGB Color".ansiToFlavorable()
+        ).isEqualTo(
+            FlavorableStringBuilder(7).apply {
+                append("RGB Color", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.FullRGB(250, 50, 20)
+                ))
+            }
+        )
+    }
+
 
     private fun String.ansiToFlavorable(): FlavorableCharSequence =
         AnsiFlavorableStringReader().feed(this).toList().first()

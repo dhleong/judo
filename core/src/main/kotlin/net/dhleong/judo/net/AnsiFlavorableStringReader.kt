@@ -28,7 +28,7 @@ private const val ANSI_ESC = 27.toChar()
 class AnsiFlavorableStringReader {
 
     private var state = AnsiState.OFF
-    private val partialAnsi = CharArray(32)
+    private val partialAnsi = CharArray(64)
     private var partialLength = 0
 
     private var lastFlavor: Flavor = Flavor.default
@@ -174,24 +174,56 @@ internal fun ansiCharsToFlavor(
             }
             49 -> flavor.hasBackground = false
 
-            38, 48 -> {
-                TODO("rgb or 256 color")
+            38 -> {
+                val color = params.readHighColor() ?: return flavor
+                flavor.hasForeground = true
+                flavor.foreground = color
+            }
+            48 -> {
+                val color = params.readHighColor() ?: return flavor
+                flavor.hasBackground = true
+                flavor.background = color
             }
 
             in 90..97 -> {
                 flavor.hasForeground = true
                 flavor.foreground = JudoColor.Simple.from(p - 90 + 8)
-                TODO()
             }
             in 100..107 -> {
                 flavor.hasBackground = true
                 flavor.background = JudoColor.Simple.from(p - 100 + 8)
-                TODO()
             }
         }
     }
 
     return flavor
+}
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun Iterator<Int>.readHighColor(): JudoColor? {
+    if (!hasNext()) return null
+
+    val kind = next()
+    when (kind) {
+        2 -> {
+            // 24-bit rgb color
+            val r = next()
+            val g = next()
+            val b = next()
+            return JudoColor.FullRGB(
+                r, g, b
+            )
+        }
+
+        5 -> {
+            // 256 colors
+            if (hasNext()) {
+                return JudoColor.High256(next())
+            }
+        }
+    }
+
+    return null
 }
 
 private fun ansiParameters(ansi: CharArray, length: Int) = iterator {

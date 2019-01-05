@@ -23,7 +23,14 @@ sealed class JudoColor {
             CYAN(6),
             WHITE(7),
 
-            // TODO bright colors
+            BRIGHT_BLACK(8),
+            BRIGHT_RED(9),
+            BRIGHT_GREEN(10),
+            BRIGHT_YELLOW(11),
+            BRIGHT_BLUE(12),
+            BRIGHT_MAGENTA(13),
+            BRIGHT_CYAN(14),
+            BRIGHT_WHITE(15),
         }
 
         companion object {
@@ -37,6 +44,15 @@ sealed class JudoColor {
                 6 -> Color.CYAN
                 7 -> Color.WHITE
 
+                8 -> Color.BRIGHT_BLACK
+                9 -> Color.BRIGHT_RED
+                10 -> Color.BRIGHT_GREEN
+                11 -> Color.BRIGHT_YELLOW
+                12 -> Color.BRIGHT_BLUE
+                13 -> Color.BRIGHT_MAGENTA
+                14 -> Color.BRIGHT_CYAN
+                15 -> Color.BRIGHT_WHITE
+
                 else -> throw IllegalArgumentException()
             })
         }
@@ -44,7 +60,7 @@ sealed class JudoColor {
 
     data class High256(
         val value: Int
-    ) : JudoColor() // TODO
+    ) : JudoColor()
 
     data class FullRGB(
         val red: Int,
