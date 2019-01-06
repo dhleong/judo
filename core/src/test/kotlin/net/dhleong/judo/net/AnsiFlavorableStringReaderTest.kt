@@ -140,6 +140,18 @@ class AnsiFlavorableStringReaderTest {
         )
     }
 
+    @Test fun `Continue styled, empty line across newline`() {
+        val lineOne = "${ansi(1,1)}\r\n"
+        val lineTwo = "Take my love...\r\n"
+
+        val all = reader.feed(lineOne) +
+            reader.feed(lineTwo)
+
+        assert(all.toList()).isEqualTo(listOf(
+            "${ansi(1, 1)}\n".ansiToFlavorable(),
+            "${ansi(1, 1)}Take my love...\n".ansiToFlavorable()
+        ))
+    }
 
     private fun String.ansiToFlavorable(): FlavorableCharSequence =
         AnsiFlavorableStringReader().feed(this).toList().first()

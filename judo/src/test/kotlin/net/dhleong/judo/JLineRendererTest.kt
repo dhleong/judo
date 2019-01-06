@@ -3,14 +3,11 @@ package net.dhleong.judo
 import net.dhleong.judo.jline.JLineRenderer2
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.render.PrimaryJudoWindow2
 import net.dhleong.judo.util.stripAnsi
-import org.assertj.core.api.Assertions.assertThat
-import org.jline.utils.AttributedString
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
@@ -53,33 +50,6 @@ class JLineRendererTest {
     @After fun tearDown() {
         renderer.close()
     }
-
-    @Ignore
-    @Test fun fitInputLineToWindow_type_page3() {
-//        renderer.windowWidth = 12
-//
-//        renderer.typeAndFit("Take my love, take my lan",
-//            expected = "…my lan" to 7)
-//
-//        renderer.typeAndFit("Take my love, take my land",
-//            expected = "…my land" to 8)
-//
-//        renderer.typeAndFit("Take my love, take my land,",
-//            expected = "…my land," to 9)
-//
-//        renderer.typeAndFit("Take my love, take my land, ",
-//            expected = "…my land, " to 10)
-//
-//        renderer.typeAndFit("Take my love, take my land, t",
-//            expected = "…my land, t" to 11)
-//
-//        renderer.typeAndFit("Take my love, take my land, ta",
-//            expected = "…d, ta" to 6)
-//
-//        renderer.typeAndFit("Take my love, take my land, tak",
-//            expected = "…d, tak" to 7)
-    }
-
 
     @Ignore
     @Test fun catchSplitPrompts() {
@@ -169,35 +139,7 @@ class JLineRendererTest {
 //        assertThat(windowContents[3])
 //            .isEqualTo("${ansi(1,2)}Take me wher${ansi(0)}")
     }
-
-    @Ignore
-    @Test fun continueEmptyStyleAcrossLines() {
-//        val core = newJudoCore()
-//
-//        val lineOne = "${ansi(1,1)}\r\n"
-//        val lineTwo = "Take my love...\r\n"
-//
-//        core.onIncomingBuffer(lineOne.toCharArray(), lineOne.length)
-//        core.onIncomingBuffer(lineTwo.toCharArray(), lineTwo.length)
-//
-//        val window = core.renderer.currentTabpage!!.currentWindow
-//        val buffer = window.currentBuffer
-//        if (buffer[0].startsWith("ERROR")) {
-//            throw AssertionError(buffer.getAnsiContents().joinToString("\n"))
-//        }
-//
-//        assertThat(buffer.getAnsiContents()[1])
-//            .isEqualTo("${ansi(1,1)}Take my love...${ansi(0)}")
-    }
-
-    private fun newJudoCore() = JudoCore(
-        renderer, mapRenderer, settings,
-        connections = DummyConnectionFactory
-    )
 }
-
-fun IJudoBuffer.getAnsiContents(): List<String> =
-    (0..this.lastIndex).map { (this[it] as OutputLine).toAttributedString().toAnsi() }
 
 fun IJudoBuffer.getRawContents(): List<String> =
     (0..this.lastIndex).map { (this[it] as OutputLine).toAnsi() }
@@ -205,23 +147,3 @@ fun IJudoBuffer.getRawContents(): List<String> =
 fun IJudoBuffer.getStringContents(): List<String> =
     (0..this.lastIndex).map { stripAnsi(this[it]) }
 
-private fun JLineRenderer.typeAndFit(text: String, expected: Pair<String, Int>) {
-    updateInputLine(text, text.length)
-
-    val (line, cursor) = fitInputLineToWindow()
-    assertThat(line.toString() to cursor).isEqualTo(expected)
-}
-
-private fun JLineRenderer.typeMultiAndFit(text: String, expected: Pair<List<String>, Pair<Int, Int>>) {
-    updateInputLine(text, text.length)
-
-    val (lines, cursor) = fitInputLinesToWindow()
-    assertThat(lines.map { it.toString() } to cursor)
-        .isEqualTo(expected)
-}
-
-fun IJudoWindow.getDisplayStrings(): List<String> =
-    with(mutableListOf<CharSequence>()) {
-        getDisplayLines(this)
-        map { (it as AttributedString).toAnsi() }
-    }
