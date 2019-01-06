@@ -30,7 +30,7 @@ class TestableJudoRenderer(
     val outputLines: List<String>
         get() = (0..state.output.lastIndex).map { i ->
             // TODO ansi?
-            state.output[i].toString()
+            state.output[i].toString().removeSuffix("\n")
         }
 }
 

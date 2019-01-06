@@ -19,6 +19,8 @@ interface FlavorableCharSequence : CharSequence {
     operator fun plusAssign(char: Char)
     operator fun plusAssign(other: FlavorableCharSequence)
 
+    fun splitAtNewlines(destination: MutableList<FlavorableCharSequence>)
+
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableCharSequence
 
     fun isHidden(index: Int) = getFlavor(index).isHidden

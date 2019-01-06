@@ -787,8 +787,11 @@ class JudoCore(
         if (e is ScriptExecutionException) {
             renderer.inTransaction {
                 primaryWindow.currentBuffer.appendLine(
-                    "${prefix}ScriptExecutionException:\n${e.message}\n"
+                    "${prefix}ScriptExecutionException:\n"
                 )
+                e.message?.split("\n")?.forEach {
+                    primaryWindow.currentBuffer.appendLine(it)
+                }
                 e.stackTrace.map { "  $it" }.forEach {
                     primaryWindow.currentBuffer.appendLine(it)
                 }
@@ -798,7 +801,7 @@ class JudoCore(
 
         renderer.inTransaction {
             primaryWindow.currentBuffer.appendLine(
-                "$prefix${e.javaClass.name}: ${e.message}\n"
+                "$prefix${e.javaClass.name}: ${e.message}"
             )
             e.stackTrace.map { "  $it" }.forEach {
                 primaryWindow.currentBuffer.appendLine(it)

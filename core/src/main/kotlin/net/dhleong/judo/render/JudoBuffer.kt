@@ -86,7 +86,7 @@ class JudoBuffer(
         } else {
             // full line. split away!
             val split = splitCandidate.getDisplayOutputLines(windowWidthHint, wordWrap)
-            split.forEach(output::add)
+            split.forEach { output.add(it) }
         }
 
         return splitCandidate

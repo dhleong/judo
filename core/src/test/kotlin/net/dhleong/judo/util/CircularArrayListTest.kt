@@ -17,7 +17,7 @@ class CircularArrayListTest {
         assertThat(list.capacity).isEqualTo(4)
         assertThat(list.size).isEqualTo(0)
 
-        arrayOf(1, 2, 3, 4).forEach(list::add)
+        arrayOf(1, 2, 3, 4).forEach { list.add(it) }
         assertThat(list.capacity).isEqualTo(4)
         assertThat(list.size).isEqualTo(4)
 
@@ -27,7 +27,7 @@ class CircularArrayListTest {
         assertThat(list)
             .containsExactly(1, 2, 3, 4, 5)
 
-        arrayOf(6, 7, 8).forEach(list::add)
+        arrayOf(6, 7, 8).forEach { list.add(it) }
         assertThat(list.capacity).isEqualTo(8)
         assertThat(list.size).isEqualTo(8)
         assertThat(list)

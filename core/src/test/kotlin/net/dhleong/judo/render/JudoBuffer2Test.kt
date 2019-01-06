@@ -18,6 +18,17 @@ class JudoBuffer2Test {
         assert(b[0].toString()).isEqualTo("Take my love\n")
         assert(b[1].toString()).isEqualTo("Take my land\n")
     }
+
+    @Test fun `append() splits on newlines`() {
+        val b = JudoBuffer2(IdManager())
+        b.append("Take\nmy\nlove\n")
+
+        assert(b).hasLines(
+            "Take\n",
+            "my\n",
+            "love\n"
+        )
+    }
 }
 
 fun JudoBuffer2.append(text: String) =

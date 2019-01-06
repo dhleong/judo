@@ -20,7 +20,7 @@ open class JudoBuffer2(
 
     override fun append(text: FlavorableCharSequence) {
         if (contents.isEmpty() || contents.last().endsWith('\n')) {
-            contents.add(text)
+            text.splitAtNewlines(contents)
         } else {
             contents.last() += text
         }
@@ -30,7 +30,7 @@ open class JudoBuffer2(
         if (!line.endsWith('\n')) {
             line += '\n'
         }
-        contents.add(line)
+        line.splitAtNewlines(contents)
     }
 
     override fun appendLine(line: String) = appendLine(

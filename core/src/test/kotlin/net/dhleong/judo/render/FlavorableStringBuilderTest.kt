@@ -108,6 +108,36 @@ class FlavorableStringBuilderTest {
         assert(b.subSequence(0, 9)).hasToString("mreynolds")
         assert(b.subSequence(9, 9)).hasToString("")
     }
+
+    @Test fun `splitAtNewlines() handles the empty string`() {
+        val b = FlavorableStringBuilder.fromString("")
+        assert(b).splitsAtNewlinesToStrings(
+            ""
+        )
+    }
+
+    @Test fun `splitAtNewlines() handles the no-newline case`() {
+        val b = FlavorableStringBuilder.fromString("Take my love")
+        assert(b).splitsAtNewlinesToStrings(
+            "Take my love"
+        )
+    }
+
+    @Test fun `splitAtNewlines() handles the single-newline case`() {
+        val b = FlavorableStringBuilder.fromString("Take my love\n")
+        assert(b).splitsAtNewlinesToStrings(
+            "Take my love\n"
+        )
+    }
+
+    @Test fun `splitAtNewlines() includes the newlines`() {
+        val b = FlavorableStringBuilder.fromString("Take\nmy\nlove\n")
+        assert(b).splitsAtNewlinesToStrings(
+            "Take\n",
+            "my\n",
+            "love\n"
+        )
+    }
 }
 
 private fun Assert<FlavorableCharSequence>.hasFlavor(
@@ -129,4 +159,10 @@ private fun Assert<FlavorableCharSequence>.hasFlavor(
 
 private fun Assert<FlavorableCharSequence>.hasToString(string: String) {
     assert(actual.toString()).isEqualTo(string)
+}
+
+private fun Assert<FlavorableCharSequence>.splitsAtNewlinesToStrings(vararg strings: String) {
+    val split = mutableListOf<FlavorableCharSequence>()
+    actual.splitAtNewlines(split)
+    assert(split.map { it.toString() }).isEqualTo(strings.toList())
 }

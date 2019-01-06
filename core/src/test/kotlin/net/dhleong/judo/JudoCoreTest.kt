@@ -12,7 +12,6 @@ import java.io.File
 /**
  * @author dhleong
  */
-@Ignore("TODO: fix these tests")
 class JudoCoreTest {
 
     private var renderer = TestableJudoRenderer()
@@ -26,6 +25,19 @@ class JudoCoreTest {
         )
     }
 
+    @Test fun `echo() handles newlines`() {
+        judo.echo("\nTake my love,\n\nTake my land,\nTake me")
+        assertThat(renderer.outputLines)
+            .containsExactly(
+                "",
+                "Take my love,",
+                "",
+                "Take my land,",
+                "Take me"
+            )
+    }
+
+    @Ignore
     @Test fun appendOutput() {
         judo.appendOutput("\r\nTake my love,\r\n\r\nTake my land,\r\nTake me")
 
@@ -62,6 +74,7 @@ class JudoCoreTest {
             )
     }
 
+    @Ignore("TODO support ansi conversion in test")
     @Test fun appendOutput_fancy() {
 
         judo.appendOutput(
@@ -76,9 +89,10 @@ class JudoCoreTest {
             )
     }
 
+    @Ignore("TODO handle split lines from append() to incomplete line")
     @Test fun appendOutput_midPartial() {
-        judo.appendOutput("\n\rTake my love,\n\rTake my")
-        judo.appendOutput(" land,\n\rTake me where...\n\r")
+        judo.appendOutput("\nTake my love,\nTake my")
+        judo.appendOutput(" land,\nTake me where...\n")
         judo.appendOutput("I don't care, I'm still free")
 
         assertThat(renderer.outputLines)
@@ -91,6 +105,7 @@ class JudoCoreTest {
             )
     }
 
+    @Ignore
     @Test fun buildPromptWithAnsi() {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
         judo.onPrompt(0, prompt)

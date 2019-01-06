@@ -93,6 +93,25 @@ class FlavorableStringBuilder private constructor(
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
         FlavorableStringBuilder(chars, flavors, start + startIndex, endIndex - startIndex)
 
+    override fun splitAtNewlines(destination: MutableList<FlavorableCharSequence>) {
+        if (isEmpty()) {
+            destination.add(FlavorableStringBuilder.EMPTY)
+            return
+        }
+
+        var start = 0
+        for (i in indices) {
+            if (get(i) == '\n') {
+                destination.add(subSequence(start, i + 1))
+                start = i + 1
+            }
+        }
+
+        if (start < length) {
+            destination.add(subSequence(start, length))
+        }
+    }
+
     /**
      * Return a deep copy of (a subsequence of) this Builder. Subsequent changes to this
      * Builder will not be reflected in the new instance
