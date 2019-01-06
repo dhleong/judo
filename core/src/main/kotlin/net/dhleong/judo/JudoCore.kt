@@ -225,7 +225,7 @@ class JudoCore(
 
         val connection: JudoConnection2
         try {
-            connection = connections.create(address, port)
+            connection = connections.create(this, address, port)
             echo("Connected.")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")

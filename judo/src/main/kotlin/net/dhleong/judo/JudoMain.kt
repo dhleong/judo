@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.jline.JLineRenderer2
 import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.JudoConnection2
 import net.dhleong.judo.render.IdManager
 import java.io.File
@@ -37,20 +38,6 @@ fun main(args: Array<String>) {
     val renderer = JLineRenderer2(ids, settings)
     renderer.validate()
 
-    // FIXME update MapRenderer to use new JLineRenderer2
-//    val mapRenderer = DelegateJLineMapRenderer(renderer)
-    val mapRenderer: MapRenderer = Proxy.newProxyInstance(
-        MapRenderer::class.java.classLoader,
-        arrayOf(MapRenderer::class.java)
-    ) { _, _, _ -> TODO("JLineMapRenderer") } as MapRenderer
-
-    // FIXME implement JudoConnection2
-    val connections: JudoConnection2.Factory = object : JudoConnection2.Factory {
-        override fun create(address: String, port: Int): JudoConnection2 {
-            TODO("not implemented")
-        }
-    }
-
     // clean up after ourselves
     Runtime.getRuntime().addShutdownHook(object : Thread() {
         override fun run() {
@@ -68,6 +55,17 @@ fun main(args: Array<String>) {
         hasDebug -> DebugLevel.NORMAL
         else -> DebugLevel.OFF
     }
+
+    // FIXME update MapRenderer to use new JLineRenderer2
+//    val mapRenderer = DelegateJLineMapRenderer(renderer)
+    val mapRenderer: MapRenderer = Proxy.newProxyInstance(
+        MapRenderer::class.java.classLoader,
+        arrayOf(MapRenderer::class.java)
+    ) { _, _, _ -> TODO("JLineMapRenderer") } as MapRenderer
+
+    val connections: JudoConnection2.Factory = CommonsNetConnection.Factory(
+        debug = debugLevel.isEnabled
+    )
 
     val worldScriptFile = if (argsList.size == 1) {
         File(

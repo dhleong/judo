@@ -1,5 +1,6 @@
 package net.dhleong.judo.net
 
+import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.Closeable
 import java.io.IOException
@@ -9,7 +10,7 @@ import java.io.IOException
  */
 interface JudoConnection2 : Closeable {
     interface Factory {
-        fun create(address: String, port: Int): JudoConnection2
+        fun create(judo: IJudoCore, address: String, port: Int): JudoConnection2
     }
 
     val isMsdpEnabled: Boolean

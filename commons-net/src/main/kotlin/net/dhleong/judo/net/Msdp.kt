@@ -10,17 +10,6 @@ import java.lang.reflect.Modifier
 import java.nio.charset.Charset
 
 
-const val TELNET_TELOPT_MSDP = 69.toByte()
-
-const val MSDP_VAR = 1
-const val MSDP_VAL = 2
-
-const val MSDP_TABLE_OPEN = 3
-const val MSDP_TABLE_CLOSE = 4
-
-const val MSDP_ARRAY_OPEN = 5
-const val MSDP_ARRAY_CLOSE = 6
-
 private const val INITIAL_LIST = "COMMANDS"
 private val MSDP_LIST_COMMANDS = buildMsdpRequest("LIST", INITIAL_LIST)
 private const val MSDP_SUBNEGOTIATION_MAX_LENGTH = 8192
@@ -186,7 +175,8 @@ class MsdpReader() {
             if (byte == MSDP_VAL
                     || byte == MSDP_VAR
                     || byte == MSDP_ARRAY_CLOSE
-                    || byte == MSDP_TABLE_CLOSE) {
+                    || byte == MSDP_TABLE_CLOSE
+            ) {
                 break
             }
 

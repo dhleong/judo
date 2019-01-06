@@ -1,27 +1,25 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.JudoCore
-import net.dhleong.judo.JudoRendererInfo
 import org.apache.commons.net.telnet.EchoOptionHandler
 import org.apache.commons.net.telnet.SimpleOptionHandler
 import org.apache.commons.net.telnet.TelnetClient
 import org.apache.commons.net.telnet.TelnetNotificationHandler
 import org.apache.commons.net.telnet.TelnetOption
-import org.apache.commons.net.telnet.TelnetOptionHandler
 import org.apache.commons.net.telnet.WindowSizeOptionHandler
 import sun.net.NetworkClient.DEFAULT_CONNECT_TIMEOUT
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
-class CommonsNetConnection(
+class CommonsNetConnection private constructor(
     judo: IJudoCore,
-    private val address: String, private val port: Int,
+    private val address: String,
+    private val port: Int,
     private val echo: (String) -> Unit
-) : BaseConnection() {
-    class Factory(val debug: Boolean = false) : JudoConnection.Factory {
-        override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
+) : BaseConnection2() {
+    class Factory(val debug: Boolean = false) : JudoConnection2.Factory {
+        override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection2 {
             return CommonsNetConnection(judo, address, port) { judo.echo(it) }.also {
                 it.debug = debug
             }
@@ -110,16 +108,14 @@ class CommonsNetConnection(
         }
     }
 
-    override fun send(line: String) {
+    override suspend fun send(line: String) {
         if (isTelnetSubsequence(line)) {
             // hold commons.net's hand so it doesn't stomp on the
             // user's IAC codes
             val intArrayLength = line.length - 4 // IAC SE / IAC SB
             val asIntArray = IntArray(intArrayLength)
 
-            // NOTE: `until` creates an IntRange object, so we just
-            // do the -1 by hand for now
-            for (i in 2..line.length - 2 - 1) {
+            for (i in 2 until line.length - 2) {
                 asIntArray[i - 2] = line[i].toInt()
             }
 
@@ -181,75 +177,4 @@ class CommonsNetConnection(
 
 }
 
-class MttsTermTypeHandler(
-    private val info: JudoRendererInfo,
-    private val echoDebug: (String) -> Unit
-)
-    : TelnetOptionHandler(TelnetOption.TERMINAL_TYPE, false, false, true, false) {
-
-    private val MTTS_ANSI = 1
-    private val MTTS_VT100 = 2
-    private val MTTS_UTF8 = 4
-    private val MTTS_256COLOR = 8
-
-    private val TELNET_IS = 0.toByte()
-
-    private enum class State {
-        CLIENT_NAME,
-        TERM_TYPE,
-        MTTS_BITVECTOR
-    }
-
-    private var state = State.CLIENT_NAME
-
-    override fun answerSubnegotiation(suboptionData: IntArray?, suboptionLength: Int): IntArray {
-        val name = getNameForCurrentState()
-        advanceState()
-
-        echoDebug("## TELNET > IAC SB TTYPE IS $name")
-        return with(name.map { it.toInt() }.toMutableList()) {
-            TELNET_IAC
-            add(0, TelnetOption.TERMINAL_TYPE)
-            add(1, TELNET_IS.toInt())
-            toIntArray()
-        }
-    }
-
-    fun reset() {
-        state = State.CLIENT_NAME
-    }
-
-    private fun advanceState() {
-        state = when (state) {
-            State.CLIENT_NAME -> State.TERM_TYPE
-            else -> State.MTTS_BITVECTOR
-        }
-    }
-
-    private fun getNameForCurrentState(): String =
-        when (state) {
-            State.CLIENT_NAME -> JudoCore.CLIENT_NAME.toUpperCase()
-            State.TERM_TYPE -> info.terminalType
-            State.MTTS_BITVECTOR -> "MTTS ${buildBitVector()}"
-        }
-
-    private fun buildBitVector(): Int {
-        var vector = MTTS_ANSI // we always support ansi
-
-        if (info.capabilities.contains(JudoRendererInfo.Capabilities.UTF8)) {
-            vector += MTTS_UTF8
-        }
-
-        if (info.capabilities.contains(JudoRendererInfo.Capabilities.VT100)) {
-            vector += MTTS_VT100
-        }
-
-        if (info.capabilities.contains(JudoRendererInfo.Capabilities.COLOR_256)) {
-            vector += MTTS_256COLOR
-        }
-
-        return vector
-    }
-
-}
 

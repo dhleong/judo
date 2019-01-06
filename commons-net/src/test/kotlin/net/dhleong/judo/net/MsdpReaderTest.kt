@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
-import org.assertj.core.api.Assertions.assertThat
+import assertk.assert
+import assertk.assertions.isEqualTo
 import org.junit.Test
 
 /**
@@ -9,7 +10,7 @@ import org.junit.Test
 class MsdpReaderTest {
     @Test fun readStringValue() {
         val reader = reader(MSDP_VAL, "SERENITY")
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo("SERENITY")
     }
 
@@ -18,7 +19,7 @@ class MsdpReaderTest {
             MSDP_ARRAY_OPEN,
             MSDP_ARRAY_CLOSE
         )
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo(listOf<String>())
     }
 
@@ -29,7 +30,7 @@ class MsdpReaderTest {
             MSDP_VAL, "Frye",
             MSDP_ARRAY_CLOSE
         )
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo(listOf("Kaylee", "Frye"))
     }
 
@@ -44,7 +45,7 @@ class MsdpReaderTest {
                 MSDP_ARRAY_CLOSE,
             MSDP_ARRAY_CLOSE
         )
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo(listOf("Kaywinnet", listOf("Lee", "Frye")))
     }
 
@@ -58,7 +59,7 @@ class MsdpReaderTest {
             MSDP_TABLE_CLOSE
         )
 
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo(mapOf(
                 "Kaylee" to "Frye",
                 "Mal" to "Reynolds"
@@ -77,7 +78,7 @@ class MsdpReaderTest {
             MSDP_TABLE_CLOSE
         )
 
-        assertThat(reader.readObject())
+        assert(reader.readObject())
             .isEqualTo(mapOf(
                 "Kaywinnet" to mapOf("Lee" to "Frye")
             ))

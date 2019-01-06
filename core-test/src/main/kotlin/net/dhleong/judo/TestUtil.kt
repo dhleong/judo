@@ -11,7 +11,8 @@ inline fun <reified T> Proxy(): T {
             "Proxy<${T::class.java}>()"
         } else {
             throw UnsupportedOperationException(
-                "${method.name} is not implemented")
+                "${method.name} is not implemented"
+            )
         }
     }
 }
