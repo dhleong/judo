@@ -1,13 +1,13 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.net.JudoConnection.Companion.DEFAULT_CONNECT_TIMEOUT
 import org.apache.commons.net.telnet.EchoOptionHandler
 import org.apache.commons.net.telnet.SimpleOptionHandler
 import org.apache.commons.net.telnet.TelnetClient
 import org.apache.commons.net.telnet.TelnetNotificationHandler
 import org.apache.commons.net.telnet.TelnetOption
 import org.apache.commons.net.telnet.WindowSizeOptionHandler
-import sun.net.NetworkClient.DEFAULT_CONNECT_TIMEOUT
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream

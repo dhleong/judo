@@ -25,4 +25,8 @@ interface JudoConnection : Closeable {
     fun setWindowSize(width: Int, height: Int)
 
     fun forEachLine(onNewLine: (FlavorableCharSequence) -> Unit)
+
+    companion object {
+        const val DEFAULT_CONNECT_TIMEOUT = 20_000
+    }
 }
