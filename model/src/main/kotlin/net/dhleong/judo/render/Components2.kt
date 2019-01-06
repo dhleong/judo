@@ -77,7 +77,6 @@ interface IJudoTabpage2 {
     fun hsplit(percentage: Float, buffer: IJudoBuffer2): IJudoWindow2
     fun hsplit(rows: Int, buffer: IJudoBuffer2): IJudoWindow2
 
-    fun resize()
     fun resize(width: Int, height: Int)
 
     fun getYPositionOf(window: IJudoWindow2): Int

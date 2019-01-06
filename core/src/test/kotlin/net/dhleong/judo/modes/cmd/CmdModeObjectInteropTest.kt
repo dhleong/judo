@@ -1,19 +1,16 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.Assert
-import assertk.all
 import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
-import assertk.assertions.isNotSameAs
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.render.hasHeight
 import net.dhleong.judo.script.ScriptingEngine
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -22,7 +19,6 @@ import java.io.File
 /**
  * @author dhleong
  */
-@Ignore("TODO: testable renderer currently returns bogus dummies")
 @RunWith(Parameterized::class)
 class CmdModeObjectInteropTest(
     factory: ScriptingEngine.Factory
@@ -42,11 +38,14 @@ class CmdModeObjectInteropTest(
 
         assert(window).hasHeight(4)
 
-        val primary = judo.tabpage.currentWindow
-        assert(primary).all {
-            isNotSameAs(window)
-            hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
-        }
+        // NOTE: the tests below are no longer useful since core is no longer
+        // bundled with a functioning renderer:
+//        val primary = judo.tabpage.currentWindow
+//        assert(primary).all {
+//            isNotSameAs(window)
+//
+//            hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
+//        }
     }
 
     @Test fun `Prevent access to non-exposed methods`() {

@@ -138,8 +138,15 @@ class JLineWindow(
     }
 
     override fun resize(width: Int, height: Int) {
-        this.width = width
-        this.height = height
+        if (this.width == width && this.height == height) {
+            // nop
+            return
+        }
+
+        renderer.inTransaction {
+            this.width = width
+            this.height = height
+        }
     }
 
     override fun getScrollback(): Int = scrollbackBottom

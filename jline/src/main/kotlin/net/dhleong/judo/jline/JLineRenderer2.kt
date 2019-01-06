@@ -205,6 +205,10 @@ class JLineRenderer2(
 
     private fun render() {
         val display = renderSurface
+        if (display.width <= 0) {
+            // not sized yet
+            return
+        }
 
         if (isLoading) {
             display.withLine(0, 0) {
@@ -300,10 +304,13 @@ class JLineRenderer2(
     }
 
     internal fun updateSize() {
-        currentTabpage.resize(windowWidth, windowHeight - 1)
-        renderSurface.resize(windowWidth, windowHeight)
         inputHelper.windowWidth = windowWidth
+        renderSurface.resize(windowWidth, windowHeight)
         window.clear()
+
+        // resize the tabpage *last* so it can safely trigger a render
+        currentTabpage.resize(windowWidth, windowHeight - 1)
+
         onResized?.invoke()
     }
 

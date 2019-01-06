@@ -12,7 +12,9 @@ import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
@@ -47,8 +49,7 @@ class TestableJudoCore : IJudoCore by Proxy() {
     override val prompts = PromptManager()
 
     val ids = IdManager()
-    override val tabpage: IJudoTabpage2
-        get() = TODO("not implemented")
+    override val tabpage: IJudoTabpage2 = createTabpageMock(ids)
 
     private val buffer = InputBuffer()
     private val normalMode = NormalMode(
@@ -101,5 +102,41 @@ class TestableJudoCore : IJudoCore by Proxy() {
         sends.clear()
         maps.clear()
         raised.clear()
+    }
+}
+
+private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage2 by Proxy() {
+    private val windows = mutableMapOf<Int, IJudoWindow2>()
+    override val id: Int = ids.newTabpage()
+    override fun hsplit(rows: Int, buffer: IJudoBuffer2): IJudoWindow2 =
+        createWindowMock(ids, rows, buffer).also {
+            windows[it.id] = it
+        }
+
+    override fun findWindowById(id: Int): IJudoWindow2? = windows[id]
+
+    override var currentWindow: IJudoWindow2
+        get() = windows.values.first()
+        set(value) { TODO("not implemented") }
+}
+
+private fun createWindowMock(
+    ids: IdManager,
+    rows: Int,
+    buffer: IJudoBuffer2
+) = object : IJudoWindow2 by Proxy() {
+
+    override val id = ids.newWindow()
+
+    override var width = 0
+    override var height = rows
+
+    override var currentBuffer: IJudoBuffer2
+        get() = buffer
+        set(value) { TODO("not implemented") }
+
+    override fun resize(width: Int, height: Int) {
+        this.width = width
+        this.height = height
     }
 }

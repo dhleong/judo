@@ -147,7 +147,6 @@ class Jsr223Window(
 
     override fun resize(width: Int, height: Int) {
         window.resize(width, height)
-        tabpage.resize()
     }
 
 }

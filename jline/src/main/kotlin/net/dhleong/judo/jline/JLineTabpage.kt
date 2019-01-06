@@ -1,6 +1,7 @@
 package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.inTransaction
 import net.dhleong.judo.jline.stacks.RootStack
 import net.dhleong.judo.jline.stacks.VerticalStack
 import net.dhleong.judo.jline.stacks.WindowStack
@@ -71,11 +72,17 @@ class JLineTabpage(
         return newWindow
     }
 
-    override fun resize() = resize(width, height)
     override fun resize(width: Int, height: Int) {
-        rootStack.resize(width, height)
-        this.width = width
-        this.height = height
+        if (this.width == width && this.height == height) {
+            // nop
+            return
+        }
+
+        renderer.inTransaction {
+            rootStack.resize(width, height)
+            this.width = width
+            this.height = height
+        }
     }
 
     override fun getYPositionOf(window: IJudoWindow2): Int =

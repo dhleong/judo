@@ -405,7 +405,6 @@ private inline fun <reified T: Any, reified R> asPyFn(
 internal fun createPyWindow(tabpage: IJudoTabpage2, window: IJudoWindow2): PyObject {
     val resize = asPyFn<Int, Unit>("resize", 2) {
         window.resize(it[0], it[1])
-        tabpage.resize()
     }
 
     return object : PyObject() {

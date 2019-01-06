@@ -1,6 +1,7 @@
 package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
@@ -44,6 +45,10 @@ class JLinePrimaryWindow(
         isFocusable,
         statusLineOverlaysOutput
     )
+
+    override fun resize(width: Int, height: Int) = renderer.inTransaction {
+        super.resize(width, height)
+    }
 
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         (outputWindow as IJLineWindow).render(display, x, y)

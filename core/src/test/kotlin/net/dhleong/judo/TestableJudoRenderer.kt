@@ -32,6 +32,8 @@ class TestableJudoRenderer(
             // TODO ansi?
             state.output[i].toString().removeSuffix("\n")
         }
+
+    override fun createBuffer(): IJudoBuffer2 = JudoBuffer2(state.ids)
 }
 
 class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
