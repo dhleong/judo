@@ -93,22 +93,45 @@ class FlavorableStringBuilder private constructor(
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
         FlavorableStringBuilder(chars, flavors, start + startIndex, endIndex - startIndex)
 
-    override fun splitAtNewlines(destination: MutableList<FlavorableCharSequence>) {
-        if (isEmpty()) {
+    override fun splitAtNewlines(
+        destination: MutableList<FlavorableCharSequence>,
+        continueIncompleteLines: Boolean
+    ) {
+        if (!continueIncompleteLines && isEmpty()) {
             destination.add(FlavorableStringBuilder.EMPTY)
             return
         }
 
         var start = 0
         for (i in indices) {
-            if (get(i) == '\n') {
-                destination.add(subSequence(start, i + 1))
-                start = i + 1
-            }
+            if (get(i) != '\n') continue
+
+            concatOrAddSubSequenceTo(continueIncompleteLines, destination, start, i + 1)
+            start = i + 1
         }
 
         if (start < length) {
-            destination.add(subSequence(start, length))
+            concatOrAddSubSequenceTo(continueIncompleteLines, destination, start, length)
+        }
+    }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private fun concatOrAddSubSequenceTo(
+        continueIncompleteLines: Boolean,
+        destination: MutableList<FlavorableCharSequence>,
+        start: Int,
+        end: Int
+    ) {
+        val text = subSequence(start, end)
+        if (
+            continueIncompleteLines
+            && start == 0 // only the first line can continue a previous one
+            && !destination.isEmpty()
+            && !destination.last().endsWith('\n')
+        ) {
+            destination.last() += text
+        } else {
+            destination.add(text)
         }
     }
 

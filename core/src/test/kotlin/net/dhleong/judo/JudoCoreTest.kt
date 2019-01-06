@@ -89,7 +89,6 @@ class JudoCoreTest {
             )
     }
 
-    @Ignore("TODO handle split lines from append() to incomplete line")
     @Test fun appendOutput_midPartial() {
         judo.appendOutput("\nTake my love,\nTake my")
         judo.appendOutput(" land,\nTake me where...\n")

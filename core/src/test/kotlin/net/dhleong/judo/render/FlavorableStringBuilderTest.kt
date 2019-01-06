@@ -116,6 +116,13 @@ class FlavorableStringBuilderTest {
         )
     }
 
+    @Test fun `splitAtNewlines() handles only newline`() {
+        val b = FlavorableStringBuilder.fromString("\n")
+        assert(b).splitsAtNewlinesToStrings(
+            "\n"
+        )
+    }
+
     @Test fun `splitAtNewlines() handles the no-newline case`() {
         val b = FlavorableStringBuilder.fromString("Take my love")
         assert(b).splitsAtNewlinesToStrings(
@@ -136,6 +143,24 @@ class FlavorableStringBuilderTest {
             "Take\n",
             "my\n",
             "love\n"
+        )
+    }
+
+    @Test fun `splitAtNewlines() can continue a single line`() {
+        val b = FlavorableStringBuilder.fromString(" love")
+        assert(b).splitsAtNewlinesToStrings(
+            "Take my love",
+            continueLines = mutableListOf("Take my")
+        )
+    }
+
+    @Test fun `splitAtNewlines() can continue multiple lines`() {
+        val b = FlavorableStringBuilder.fromString("ke\nmy\nlove\n")
+        assert(b).splitsAtNewlinesToStrings(
+            "Take\n",
+            "my\n",
+            "love\n",
+            continueLines = mutableListOf("Ta")
         )
     }
 }
@@ -161,8 +186,13 @@ private fun Assert<FlavorableCharSequence>.hasToString(string: String) {
     assert(actual.toString()).isEqualTo(string)
 }
 
-private fun Assert<FlavorableCharSequence>.splitsAtNewlinesToStrings(vararg strings: String) {
-    val split = mutableListOf<FlavorableCharSequence>()
-    actual.splitAtNewlines(split)
+private fun Assert<FlavorableCharSequence>.splitsAtNewlinesToStrings(
+    vararg strings: String,
+    continueLines: MutableList<String>? = null
+) {
+    val split = continueLines?.map {
+        FlavorableStringBuilder.withDefaultFlavor(it) as FlavorableCharSequence
+    }?.toMutableList() ?: mutableListOf()
+    actual.splitAtNewlines(split, continueIncompleteLines = continueLines != null)
     assert(split.map { it.toString() }).isEqualTo(strings.toList())
 }

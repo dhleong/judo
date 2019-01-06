@@ -19,18 +19,14 @@ open class JudoBuffer2(
     override fun get(index: Int): FlavorableCharSequence = contents[index]
 
     override fun append(text: FlavorableCharSequence) {
-        if (contents.isEmpty() || contents.last().endsWith('\n')) {
-            text.splitAtNewlines(contents)
-        } else {
-            contents.last() += text
-        }
+        text.splitAtNewlines(contents, continueIncompleteLines = true)
     }
 
     override fun appendLine(line: FlavorableCharSequence) {
         if (!line.endsWith('\n')) {
             line += '\n'
         }
-        line.splitAtNewlines(contents)
+        line.splitAtNewlines(contents, continueIncompleteLines = false)
     }
 
     override fun appendLine(line: String) = appendLine(
