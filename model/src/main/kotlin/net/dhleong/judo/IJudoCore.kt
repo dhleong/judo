@@ -5,7 +5,7 @@ import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IMapManager
-import net.dhleong.judo.net.JudoConnection2
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage2
@@ -63,7 +63,7 @@ class StateMap() {
 interface IJudoCore {
 
     val aliases: IAliasManager
-    val connection: JudoConnection2?
+    val connection: JudoConnection?
     val events: IEventManager
     val logging: ILogManager
     val mapper: IMapManager

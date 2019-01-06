@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.Closeable
 import java.io.IOException
 
@@ -19,9 +20,9 @@ interface JudoConnection : Closeable {
     var onDisconnect: ((JudoConnection) -> Unit)?
     var onEchoStateChanged: ((Boolean) -> Unit)?
 
-    fun send(line: String)
+    suspend fun send(line: String)
 
     fun setWindowSize(width: Int, height: Int)
 
-    fun forEachLine(onNewLine: (CharArray, Int) -> Unit)
+    fun forEachLine(onNewLine: (FlavorableCharSequence) -> Unit)
 }

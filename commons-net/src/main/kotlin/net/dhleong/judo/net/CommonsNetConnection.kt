@@ -17,9 +17,9 @@ class CommonsNetConnection private constructor(
     private val address: String,
     private val port: Int,
     private val echo: (String) -> Unit
-) : BaseConnection2() {
-    class Factory(val debug: Boolean = false) : JudoConnection2.Factory {
-        override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection2 {
+) : BaseConnection() {
+    class Factory(val debug: Boolean = false) : JudoConnection.Factory {
+        override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
             return CommonsNetConnection(judo, address, port) { judo.echo(it) }.also {
                 it.debug = debug
             }

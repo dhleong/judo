@@ -3,7 +3,7 @@ package net.dhleong.judo
 import net.dhleong.judo.jline.JLineRenderer2
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.net.CommonsNetConnection
-import net.dhleong.judo.net.JudoConnection2
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.render.IdManager
 import java.io.File
 import java.lang.reflect.Proxy
@@ -63,7 +63,7 @@ fun main(args: Array<String>) {
         arrayOf(MapRenderer::class.java)
     ) { _, _, _ -> TODO("JLineMapRenderer") } as MapRenderer
 
-    val connections: JudoConnection2.Factory = CommonsNetConnection.Factory(
+    val connections: JudoConnection.Factory = CommonsNetConnection.Factory(
         debug = debugLevel.isEnabled
     )
 

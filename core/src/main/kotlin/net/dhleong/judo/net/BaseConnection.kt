@@ -1,59 +1,79 @@
 package net.dhleong.judo.net
 
-import java.io.BufferedReader
-import java.io.BufferedWriter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.launch
+import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.IOException
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.io.OutputStream
-import java.io.OutputStreamWriter
-import java.io.Writer
-import kotlin.concurrent.thread
+import kotlin.coroutines.CoroutineContext
 
 /**
  * @author dhleong
  */
-abstract class BaseConnection : JudoConnection {
-    /** in ms */
-    val DEFAULT_CONNECT_TIMEOUT = 20000
+abstract class BaseConnection : JudoConnection, CoroutineScope {
 
-    abstract val input: InputStream
-    abstract val output: OutputStream
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Default + job
+
+    protected abstract val input: InputStream
+    protected abstract val output: OutputStream
 
     override var onError: ((IOException) -> Unit)? = null
     override var onDisconnect: ((JudoConnection) -> Unit)? = null
     override var onEchoStateChanged: ((Boolean) -> Unit)? = null
 
-    private val writer: Writer by lazy { BufferedWriter(OutputStreamWriter(output)) }
-    private var readerThread: Thread? = null
-    protected var isClosed = false
-
-    override fun send(line: String) {
-        writer.write(line)
-        writer.write("\r\n")
-        writer.flush()
-    }
-
-    override fun forEachLine(onNewLine: (CharArray, Int) -> Unit) {
-        val reader = BufferedReader(InputStreamReader(input))
-        readerThread = thread(isDaemon = true) {
-            try {
-                val buffer = CharArray(1024)
-                while (!isClosed) {
-                    reader.ready()
-                    val read = reader.read(buffer)
-                    if (read == -1) {
-                        isClosed = true
-                        onDisconnect?.invoke(this)
-                        break
-                    } else if (read > 0) {
-                        onNewLine(buffer, read)
-                    }
-                }
-            } catch (e: IOException) {
-                onError?.invoke(e)
+    private val writeQueue = Channel<String>(capacity = 8)
+    private val writeTask = launch(Dispatchers.IO) {
+        val writer = output.writer()
+        for (packet in writeQueue) {
+            writer.apply {
+                write(packet)
+                write("\r\n")
+                flush()
             }
         }
     }
-}
 
+    @ExperimentalCoroutinesApi
+    private val readTask = produce(Dispatchers.IO) {
+        val buffer = CharArray(1024)
+        val reader = input.bufferedReader()
+        val helper = AnsiFlavorableStringReader()
+        while (job.isActive) {
+            val read = reader.read(buffer)
+            if (read == -1) {
+                onDisconnect?.invoke(this@BaseConnection)
+                break
+            } else if (read > 0) {
+                for (line in helper.feed(buffer, read)) {
+                    send(line)
+                }
+            }
+        }
+    }
+
+    override suspend fun send(line: String) {
+        writeQueue.send(line)
+    }
+
+    override fun forEachLine(onNewLine: (FlavorableCharSequence) -> Unit) {
+        launch(Dispatchers.Main) {
+            @Suppress("EXPERIMENTAL_API_USAGE")
+            val read = readTask.receive()
+            onNewLine(read)
+        }
+    }
+
+    override fun close() {
+        job.cancel()
+        writeTask.cancel()
+    }
+
+}

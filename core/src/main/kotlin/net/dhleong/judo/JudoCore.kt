@@ -31,7 +31,7 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
-import net.dhleong.judo.net.JudoConnection2
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
@@ -82,7 +82,7 @@ class JudoCore(
     scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
     val debug: DebugLevel = DebugLevel.OFF,
 //    private val connections: JudoConnection.Factory = CommonsNetConnection.Factory(debug.isEnabled)
-    private val connections: JudoConnection2.Factory
+    private val connections: JudoConnection.Factory
 ) : IJudoCore {
     companion object {
         const val CLIENT_NAME = BuildConfig.NAME
@@ -180,7 +180,7 @@ class JudoCore(
     internal var running = true
     internal var doEcho = true
 
-    override var connection: JudoConnection2? = null
+    override var connection: JudoConnection? = null
     private var lastConnect: Pair<String, Int>? = null
 
     private val statusLineWorkspace = IStringBuilder.create(128)
@@ -223,7 +223,7 @@ class JudoCore(
 
         lastConnect = address to port
 
-        val connection: JudoConnection2
+        val connection: JudoConnection
         try {
             connection = connections.create(this, address, port)
             echo("Connected.")
@@ -627,7 +627,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    @Synchronized internal fun onDisconnect(connection: JudoConnection2) {
+    @Synchronized internal fun onDisconnect(connection: JudoConnection) {
         doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect

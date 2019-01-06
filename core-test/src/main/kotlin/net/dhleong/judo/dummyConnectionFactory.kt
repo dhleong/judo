@@ -1,12 +1,12 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.net.JudoConnection2
+import net.dhleong.judo.net.JudoConnection
 
 /**
  * @author dhleong
  */
-object DummyConnectionFactory : JudoConnection2.Factory {
-    override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection2 {
+object DummyConnectionFactory : JudoConnection.Factory {
+    override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
         TODO("not implemented")
     }
 }
