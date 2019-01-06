@@ -12,11 +12,8 @@ import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.prompt.PromptManager
-import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer
-import net.dhleong.judo.render.JudoTabpage
-import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
 
@@ -50,13 +47,8 @@ class TestableJudoCore : IJudoCore by Proxy() {
     override val prompts = PromptManager()
 
     val ids = IdManager()
-    override var tabpage: IJudoTabpage = JudoTabpage(
-        ids, state,
-        PrimaryJudoWindow(ids, state,
-            JudoBuffer(ids),
-            42, 24
-        )
-    )
+    override val tabpage: IJudoTabpage2
+        get() = TODO("not implemented")
 
     private val buffer = InputBuffer()
     private val normalMode = NormalMode(

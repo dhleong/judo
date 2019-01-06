@@ -195,3 +195,10 @@ class FlavorableStringBuilder private constructor(
         }
     }
 }
+
+fun CharSequence.toFlavorable() = when (this) {
+    is FlavorableCharSequence -> this
+    else -> FlavorableStringBuilder(length).also { builder ->
+        builder += this.toString()
+    }
+}

@@ -9,9 +9,10 @@ import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.prompt.IPromptManager
-import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage
-import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
@@ -124,21 +125,21 @@ abstract class Jsr223ScriptingEngine(
     }
 
     override fun wrapWindow(
-        tabpage: IJudoTabpage,
-        window: IJudoWindow
+        tabpage: IJudoTabpage2,
+        window: IJudoWindow2
     ): IScriptWindow = Jsr223Window(tabpage, window)
 }
 
 class Jsr223Window(
-    private val tabpage: IJudoTabpage,
-    private val window: IJudoWindow
+    private val tabpage: IJudoTabpage2,
+    private val window: IJudoWindow2
 ) : IScriptWindow {
 
     override val id: Int = window.id
     override val width: Int = window.width
     override val height: Int = window.height
     override val buffer: IScriptBuffer
-        get() = Jsr223Buffer(window, window.currentBuffer)
+        get() = Jsr223Buffer(window.currentBuffer)
 
     override fun close() {
         tabpage.close(window)
@@ -152,8 +153,7 @@ class Jsr223Window(
 }
 
 class Jsr223Buffer(
-    private val window: IJudoWindow,
-    private val buffer: IJudoBuffer
+    private val buffer: IJudoBuffer2
 ) : IScriptBuffer {
     override val id: Int = buffer.id
 
@@ -161,7 +161,7 @@ class Jsr223Buffer(
         get() = buffer.size
 
     override fun append(line: String) {
-        buffer.appendLine(line, false, window.width, false)
+        buffer.appendLine(line)
     }
 
     override fun clear() {
@@ -169,7 +169,7 @@ class Jsr223Buffer(
     }
 
     override fun set(contents: List<String>) {
-        buffer.set(contents)
+        buffer.set(contents.toFlavorableList())
     }
 
 }

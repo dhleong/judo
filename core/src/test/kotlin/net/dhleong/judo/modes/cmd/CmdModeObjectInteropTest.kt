@@ -13,6 +13,7 @@ import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.render.hasHeight
 import net.dhleong.judo.script.ScriptingEngine
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -21,6 +22,7 @@ import java.io.File
 /**
  * @author dhleong
  */
+@Ignore("TODO: testable renderer currently returns bogus dummies")
 @RunWith(Parameterized::class)
 class CmdModeObjectInteropTest(
     factory: ScriptingEngine.Factory

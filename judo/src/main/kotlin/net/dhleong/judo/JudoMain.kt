@@ -1,6 +1,11 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.jline.JLineRenderer2
+import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.net.JudoConnection2
+import net.dhleong.judo.render.IdManager
 import java.io.File
+import java.lang.reflect.Proxy
 
 /**
  * @author dhleong
@@ -27,10 +32,24 @@ fun main(args: Array<String>) {
     val settings = StateMap()
 
     // make sure we can render
-    val renderer = JLineRenderer(settings)
+//    val renderer = JLineRenderer(settings)
+    val ids = IdManager()
+    val renderer = JLineRenderer2(ids, settings)
     renderer.validate()
 
-    val mapRenderer = DelegateJLineMapRenderer(renderer)
+    // FIXME update MapRenderer to use new JLineRenderer2
+//    val mapRenderer = DelegateJLineMapRenderer(renderer)
+    val mapRenderer: MapRenderer = Proxy.newProxyInstance(
+        MapRenderer::class.java.classLoader,
+        arrayOf(MapRenderer::class.java)
+    ) { _, _, _ -> TODO("JLineMapRenderer") } as MapRenderer
+
+    // FIXME implement JudoConnection2
+    val connections: JudoConnection2.Factory = object : JudoConnection2.Factory {
+        override fun create(address: String, port: Int): JudoConnection2 {
+            TODO("not implemented")
+        }
+    }
 
     // clean up after ourselves
     Runtime.getRuntime().addShutdownHook(object : Thread() {
@@ -64,6 +83,7 @@ fun main(args: Array<String>) {
         renderer,
         mapRenderer,
         settings,
+        connections = connections,
         userConfigDir = USER_CONFIG_DIR,
         userConfigFile = config.userConfigFile,
         scripting = config.engineFactory,

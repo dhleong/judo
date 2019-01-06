@@ -33,7 +33,7 @@ class IJudoWindowAssert(actual: IJudoWindow?)
     }
 }
 
-fun Assert<IJudoWindow>.hasHeight(expected: Int) {
+fun Assert<IJudoWindow2>.hasHeight(expected: Int) {
     if (actual.height == expected) return
     expected("height=${show(expected)} but was ${show(actual.height)}")
 }

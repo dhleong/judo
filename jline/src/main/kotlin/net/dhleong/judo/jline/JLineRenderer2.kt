@@ -1,5 +1,6 @@
 package net.dhleong.judo.jline
 
+import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.JudoRenderer2
 import net.dhleong.judo.JudoRendererInfo
@@ -44,7 +45,7 @@ class JLineRenderer2(
     override var settings: StateMap,
     private val enableMouse: Boolean = false,
     private val renderSurface: JLineDisplay = JLineDisplay(0, 0)
-) : JudoRenderer2 {
+) : JudoRenderer2, BlockingKeySource {
 
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
@@ -183,6 +184,10 @@ class JLineRenderer2(
         terminal.flush()
         terminal.attributes = originalAttributes
         terminal.close()
+    }
+
+    override fun readKey(): Key? {
+        TODO("not implemented")
     }
 
     override fun beginUpdate() {

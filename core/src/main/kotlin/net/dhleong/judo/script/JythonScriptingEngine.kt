@@ -12,9 +12,10 @@ import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.prompt.IPromptManager
-import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage
-import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternProcessingFlags
@@ -193,8 +194,8 @@ class JythonScriptingEngine : ScriptingEngine {
     }
 
     override fun wrapWindow(
-        tabpage: IJudoTabpage,
-        window: IJudoWindow
+        tabpage: IJudoTabpage2,
+        window: IJudoWindow2
     ) = createPyWindow(tabpage, window)
 
     override fun onPreReadFile(file: File, inputStream: InputStream) {
@@ -401,7 +402,7 @@ private inline fun <reified T: Any, reified R> asPyFn(
     }
 }
 
-internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
+internal fun createPyWindow(tabpage: IJudoTabpage2, window: IJudoWindow2): PyObject {
     val resize = asPyFn<Int, Unit>("resize", 2) {
         window.resize(it[0], it[1])
         tabpage.resize()
@@ -410,7 +411,7 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
     return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-                "buffer" -> createPyBuffer(window, window.currentBuffer) // cache?
+                "buffer" -> createPyBuffer(window.currentBuffer) // cache?
                 "height" -> Py.java2py(window.height)
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
@@ -426,15 +427,15 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
     }
 }
 
-internal fun createPyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
+internal fun createPyBuffer(buffer: IJudoBuffer2): PyObject {
     val append = asPyFn<String, Unit>("append", 1) {
-        buffer.appendLine(it[0], false, window.width, false)
+        buffer.appendLine(it[0])
     }
     val clear = asPyFn<Any, Unit>("clear") {
         buffer.clear()
     }
     val set = asPyFn<List<String>, Unit>("set", 1) {
-        buffer.set(it[0])
+        buffer.set(it[0].toFlavorableList())
     }
 
     return object : PyObject() {

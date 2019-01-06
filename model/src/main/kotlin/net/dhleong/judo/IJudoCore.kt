@@ -5,10 +5,10 @@ import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IMapManager
-import net.dhleong.judo.net.JudoConnection
+import net.dhleong.judo.net.JudoConnection2
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
-import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
 
@@ -63,7 +63,7 @@ class StateMap() {
 interface IJudoCore {
 
     val aliases: IAliasManager
-    val connection: JudoConnection?
+    val connection: JudoConnection2?
     val events: IEventManager
     val logging: ILogManager
     val mapper: IMapManager
@@ -72,7 +72,7 @@ interface IJudoCore {
     val triggers: ITriggerManager
     val state: StateMap
     val renderer: JudoRendererInfo
-    val tabpage: IJudoTabpage
+    val tabpage: IJudoTabpage2
 
     fun echo(vararg objects: Any?)
     /** not processed for triggers, etc. */
