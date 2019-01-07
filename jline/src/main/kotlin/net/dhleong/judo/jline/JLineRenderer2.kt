@@ -14,7 +14,6 @@ import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
 import org.jline.terminal.Attributes
-import org.jline.terminal.MouseEvent
 import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
@@ -23,9 +22,7 @@ import org.jline.utils.Curses
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
 import java.io.IOException
-import java.io.StringWriter
 import java.util.EnumSet
-import java.util.HashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 // ascii codes:
@@ -50,6 +47,7 @@ class JLineRenderer2(
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
     private val originalAttributes: Attributes
+    private val keySource: BlockingKeySource = JLineKeySource(terminal)
 
     internal val windowSize = Size(0, 0)
 
@@ -71,7 +69,6 @@ class JLineRenderer2(
     private val renderedInput = mutableListOf<FlavorableCharSequence>()
     private var cursorType: CursorType = CursorType.BLOCK
 
-    private val escapeSequenceHandlers = HashMap<Int, HashMap<Int, () -> Key?>>(8)
     private val transactionDepth = AtomicInteger(0)
 
     init {
@@ -108,21 +105,6 @@ class JLineRenderer2(
 
         // resize *after* initializing the tabpage
         resize()
-
-        // register handlers for keystrokes that are done via escape sequences
-        registerEscapeHandler(InfoCmp.Capability.key_mouse, this::readMouseEvent)
-        registerEscapeHandler(InfoCmp.Capability.key_btab) {
-            Key.parse("shift tab")
-        }
-        registerEscapeHandler(InfoCmp.Capability.key_down) {
-            Key.parse("down")
-        }
-        registerEscapeHandler(InfoCmp.Capability.key_up) {
-            Key.parse("up")
-        }
-        registerEscapeHandler(listOf(KEY_DELETE)) {
-            Key.parse("alt bs")
-        }
 
         // determine capabilities
         capabilities = EnumSet.of(JudoRendererInfo.Capabilities.UTF8)
@@ -186,9 +168,7 @@ class JLineRenderer2(
         terminal.close()
     }
 
-    override fun readKey(): Key? {
-        TODO("not implemented")
-    }
+    override fun readKey(): Key? = keySource.readKey()
 
     override fun beginUpdate() {
         transactionDepth.incrementAndGet()
@@ -330,52 +310,4 @@ class JLineRenderer2(
             e.printStackTrace()
         }
     }
-
-    private fun readMouseEvent(): Key? {
-        val event = terminal.readMouseEvent()
-        if (event.type == MouseEvent.Type.Wheel) {
-            return when(event.button) {
-                MouseEvent.Button.WheelUp -> Key.parse("PageUp")
-                MouseEvent.Button.WheelDown -> Key.parse("PageDown")
-
-                else -> null
-            }
-        }
-
-        return null
-    }
-
-    private fun registerEscapeHandler(key: InfoCmp.Capability, block: () -> Key?) {
-        val strokes = terminal.keystrokesFor(key) ?: return
-
-        if (strokes.length != 3) throw IllegalStateException("Expected $key to be a 3-char esc sequence")
-        if (strokes[0].toInt() != KEY_ESCAPE) throw IllegalStateException("Expected $key to be an esc sequence")
-
-        registerEscapeHandler(strokes.toCharArray().drop(1).map { it.toInt() }, block)
-    }
-
-    private fun registerEscapeHandler(strokes: List<Int>, block: () -> Key?) {
-        escapeSequenceHandlers.getOrPut(strokes[0]) { HashMap() }.let {
-            if (strokes.size == 2) {
-                it[strokes[1]] = block
-            } else {
-                it[KEY_TIMEOUT] = block
-            }
-        }
-    }
-}
-
-private fun Terminal.keystrokesFor(capability: InfoCmp.Capability): String? {
-    try {
-        val str = getStringCapability(capability)
-        if (str != null) {
-            val sw = StringWriter()
-            Curses.tputs(sw, str)
-            return sw.toString()
-        }
-    } catch (e: IOException) {
-        // Ignore
-    }
-
-    return null
 }
