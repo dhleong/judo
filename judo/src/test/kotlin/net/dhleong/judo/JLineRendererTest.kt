@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.jline.JLineRenderer2
+import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
@@ -21,7 +22,7 @@ import org.junit.Test
 class JLineRendererTest {
 
     lateinit var renderer: JLineRenderer2
-    lateinit var mapRenderer: JLineMapRenderer
+    lateinit var mapRenderer: MapRenderer
     lateinit var outputBuffer: JudoBuffer
     lateinit var window: PrimaryJudoWindow2
     lateinit var page: IJudoTabpage2

@@ -2,11 +2,12 @@ package net.dhleong.judo
 
 import net.dhleong.judo.jline.JLineRenderer2
 import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
+import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
 import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.render.IdManager
 import java.io.File
-import java.lang.reflect.Proxy
 
 /**
  * @author dhleong
@@ -56,12 +57,9 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
-    // FIXME update MapRenderer to use new JLineRenderer2
-//    val mapRenderer = DelegateJLineMapRenderer(renderer)
-    val mapRenderer: MapRenderer = Proxy.newProxyInstance(
-        MapRenderer::class.java.classLoader,
-        arrayOf(MapRenderer::class.java)
-    ) { _, _, _ -> TODO("JLineMapRenderer") } as MapRenderer
+    val mapRenderer: MapRenderer = DelegateMapRenderer(
+        SimpleBufferMapRenderer(renderer)
+    )
 
     val connections: JudoConnection.Factory = CommonsNetConnection.Factory(
         debug = debugLevel.isEnabled
