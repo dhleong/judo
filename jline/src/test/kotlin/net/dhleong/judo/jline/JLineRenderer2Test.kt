@@ -161,3 +161,7 @@ class JLineRenderer2Test {
 private fun IJudoWindow2.appendLine(line: String) {
     currentBuffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(line))
 }
+
+private fun IJudoWindow2.updateStatusLine(status: String, cursor: Int = -1) {
+    updateStatusLine(FlavorableStringBuilder.withDefaultFlavor(status), cursor)
+}

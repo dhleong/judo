@@ -3,6 +3,7 @@ package net.dhleong.judo.modes.cmd
 import assertk.assert
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.util.ansi
 import org.junit.Test
@@ -23,7 +24,7 @@ class CmdModePromptTest(
         assert(judo.echos).isEmpty()
         assert(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
-        val result = judo.prompts.process("Input(42)") { _, prompt ->
+        val result = judo.prompts.process("Input(42)".parseAnsi()) { _, prompt ->
             lastPrompt = prompt
         }
         assert(result).isEmpty()
@@ -39,7 +40,7 @@ class CmdModePromptTest(
         assert(judo.echos).isEmpty()
         assert(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
-        val result = judo.prompts.process("Input(${ansi(1,2)}42)") { _, prompt ->
+        val result = judo.prompts.process("Input(${ansi(1,2)}42)".parseAnsi()) { _, prompt ->
             lastPrompt = prompt
         }
         assert(result).isEmpty()

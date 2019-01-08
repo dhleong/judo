@@ -35,17 +35,18 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
+import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
-import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
 import java.io.File
 import java.io.FileOutputStream
@@ -183,7 +184,7 @@ class JudoCore(
     override var connection: JudoConnection? = null
     private var lastConnect: Pair<String, Int>? = null
 
-    private val statusLineWorkspace = IStringBuilder.create(128)
+    private val statusLineWorkspace = FlavorableStringBuilder(128)
 
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
@@ -498,7 +499,9 @@ class JudoCore(
         renderer.inTransaction {
             if (newMode is StatusBufferProvider) {
                 tabpage.currentWindow.updateStatusLine(
-                    newMode.renderStatusBuffer(), newMode.getCursor())
+                    newMode.renderStatusBuffer(),
+                    newMode.getCursor()
+                )
             } else {
                 updateInputLine()
             }
@@ -731,7 +734,10 @@ class JudoCore(
             updateInputLine()
 
             if (mode is StatusBufferProvider) {
-                tabpage.currentWindow.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
+                tabpage.currentWindow.updateStatusLine(
+                    mode.renderStatusBuffer(),
+                    mode.getCursor()
+                )
             } else {
                 updateStatusLine(mode)
             }
@@ -753,10 +759,10 @@ class JudoCore(
     }
 
     private fun updateStatusLine(mode: Mode) {
-        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode).toAnsiString())
+        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode))
     }
 
-    internal fun buildStatusLine(mode: Mode): IStringBuilder {
+    internal fun buildStatusLine(mode: Mode): FlavorableCharSequence {
         val modeIndicator = "[${mode.name.toUpperCase()}]"
         val availableCols = renderer.windowWidth - modeIndicator.length
         statusLineWorkspace.setLength(0)
@@ -768,11 +774,11 @@ class JudoCore(
         }
 
         for (i in statusLineWorkspace.length until availableCols) {
-            statusLineWorkspace.append(" ")
+            statusLineWorkspace += " "
         }
 
-        statusLineWorkspace.append(modeIndicator)
-        return statusLineWorkspace
+        statusLineWorkspace.append(modeIndicator, Flavor.default)
+        return statusLineWorkspace.toFlavorableString()
     }
 
     @Synchronized
@@ -831,7 +837,7 @@ class JudoCore(
         }
     }
 
-    private fun processAndStripPrompt(actualLine: CharSequence) {
+    private fun processAndStripPrompt(actualLine: FlavorableCharSequence) {
         val originalLength = actualLine.length
         val result = prompts.process(actualLine, this::onPrompt)
         if (result.length != originalLength) {
@@ -842,15 +848,14 @@ class JudoCore(
         }
     }
 
-    internal fun onPrompt(index: Int, prompt: CharSequence) {
+    internal fun onPrompt(index: Int, prompt: String) {
         if (parsedPrompts.lastIndex < index) {
             for (i in maxOf(0, parsedPrompts.lastIndex)..index) {
                 parsedPrompts.add(FlavorableStringBuilder.EMPTY)
             }
         }
 
-        // make sure prompt colors don't bleed
-        parsedPrompts[index] = prompt.toFlavorable()
+        parsedPrompts[index] = prompt.parseAnsi()
 
         renderer.inTransaction {
             primaryWindow.setPromptHeight(parsedPrompts.size)

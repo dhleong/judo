@@ -163,6 +163,42 @@ class FlavorableStringBuilderTest {
             continueLines = mutableListOf("Ta")
         )
     }
+
+    @Test fun `replace() at beginning`() {
+        val b = FlavorableStringBuilder.fromString("Took my love")
+        b.replace(0, 4, "Take")
+        assert(b).hasToString("Take my love")
+    }
+
+    @Test fun `replace() at beginning with more characters`() {
+        val b = FlavorableStringBuilder.fromString("Oh my love").apply {
+            beginFlavor(SimpleFlavor(isItalic = true), 2)
+            beginFlavor(SimpleFlavor(isBold = true), 0)
+        }
+
+        b.replace(0, 2, "Take")
+        assert(b).all {
+            hasToString("Take my love")
+
+            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 4)
+            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 4)
+        }
+    }
+
+    @Test fun `replace() at beginning with fewer characters`() {
+        val b = FlavorableStringBuilder.fromString("Take my love").apply {
+            beginFlavor(SimpleFlavor(isItalic = true), 4)
+            beginFlavor(SimpleFlavor(isBold = true), 0)
+        }
+
+        b.replace(0, 4, "Oh")
+        assert(b).all {
+            hasToString("Oh my love")
+
+            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 2)
+            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 2)
+        }
+    }
 }
 
 private fun Assert<FlavorableCharSequence>.hasFlavor(

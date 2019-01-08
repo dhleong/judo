@@ -75,7 +75,7 @@ abstract class PrimaryJudoWindow2(
         statusLineOverlaysOutput: Boolean = false
     ): IJudoWindow2
 
-    override fun updateStatusLine(line: CharSequence, cursor: Int) =
+    override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) =
         promptWindow.updateStatusLine(line, cursor)
 
     override fun resize(width: Int, height: Int) {

@@ -2,6 +2,8 @@ package net.dhleong.judo.trigger
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.asFlavorableBuilder
 import net.dhleong.judo.util.PatternSpec
 
 /**
@@ -23,8 +25,23 @@ class TriggerManager : ITriggerManager {
     }
 
 
-    override fun process(input: CharSequence) {
-        aliases.process(input)
+    override fun process(input: FlavorableCharSequence) {
+        val toProcess = input.asFlavorableBuilder()
+
+        // in general, it *should* have a newline
+        val hadNewline = input.endsWith('\n')
+        if (hadNewline) {
+            // don't process with trailing newlines
+            toProcess.setLength(input.length - 1)
+        }
+
+        aliases.process(toProcess)
+
+        if (hadNewline && toProcess.isNotEmpty()) {
+            // restore the newline
+            toProcess += '\n'
+        }
+
     }
 
     override fun undefine(inputSpec: String) {

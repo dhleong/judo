@@ -1,5 +1,7 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.net.AnsiFlavorableStringReader
+
 /**
  * @author dhleong
  */
@@ -14,6 +16,13 @@ class FlavorableStringBuilder private constructor(
         CharArray(capacity),
         arrayOfNulls(capacity)
     )
+
+    /**
+     * Deep copy constructor
+     */
+    constructor(other: FlavorableCharSequence) : this(other.length) {
+        append(other)
+    }
 
     override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
 
@@ -54,7 +63,7 @@ class FlavorableStringBuilder private constructor(
         append(string, 0, string.length)
     }
 
-    fun append(other: FlavorableCharSequence, offset: Int, end: Int) {
+    fun append(other: FlavorableCharSequence, offset: Int = 0, end: Int = other.length) {
         val length = end - offset
         ensureCapacity(myLength + length)
 
@@ -220,9 +229,65 @@ class FlavorableStringBuilder private constructor(
         // TODO fill the last flavor up to the capacity?
     }
 
+    fun replace(start: Int, end: Int, string: String) {
+        if (start < 0) throw IndexOutOfBoundsException()
+        if (start >= myLength) throw IndexOutOfBoundsException()
+        if (end < 0) throw IndexOutOfBoundsException()
+        if (end > myLength) throw IndexOutOfBoundsException()
+        if (end < start) throw IllegalArgumentException()
+
+        val toBeReplacedLen = end - start
+        val stringLen = string.length
+        val newLength = myLength + stringLen - toBeReplacedLen
+        ensureCapacity(newLength)
+
+        // move characters as appropriate
+        System.arraycopy(
+            chars, this.start + end,
+            chars,
+            this.start + start + stringLen,
+            myLength - end
+        )
+
+        // then flavor
+        System.arraycopy(
+            flavors,
+            this.start + end,
+            flavors,
+            this.start + start + stringLen,
+            myLength - end
+        )
+
+        // now copy in the replacement
+        string.toCharArray(
+            chars,
+            this.start + start,
+            0,
+            stringLen
+        )
+        myLength = newLength
+
+        // try to expand the flavor that was there
+        if (
+            stringLen > toBeReplacedLen
+            && start + toBeReplacedLen - 1 > 0
+        ) {
+            setFlavor(
+                // expand the existing flavor
+                flavors[this.start + start + toBeReplacedLen - 1] ?: Flavor.default,
+                startIndex = start,
+                endIndex = start + stringLen
+            )
+        }
+    }
+
     fun reset() {
         start = 0
         myLength = 0
+    }
+
+    fun setLength(newLength: Int) {
+        myLength = newLength
     }
 
     companion object {
@@ -243,4 +308,17 @@ fun CharSequence.toFlavorable() = when (this) {
     else -> FlavorableStringBuilder(length).also { builder ->
         builder += this.toString()
     }
+}
+
+fun FlavorableCharSequence.asFlavorableBuilder() = when (this) {
+    is FlavorableStringBuilder -> this
+    else -> FlavorableStringBuilder(length).also {
+        it.append(this)
+    }
+}
+
+fun String.parseAnsi(): FlavorableCharSequence {
+    // TODO avoid having to copy the char array?
+    val chars = toCharArray()
+    return AnsiFlavorableStringReader().feed(chars).first()
 }

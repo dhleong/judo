@@ -1,10 +1,10 @@
 package net.dhleong.judo.alias
 
-import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.net.toAnsi
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
-import org.jline.utils.AttributedCharSequence
 import java.util.EnumSet
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -113,11 +113,11 @@ class Alias(
     private val emptyStringArray = emptyArray<String>()
 
     /** @return True if we did anything */
-    fun apply(input: IStringBuilder): Boolean {
+    fun apply(input: FlavorableStringBuilder): Boolean {
         return parse(input) { it }
     }
 
-    fun parse(input: IStringBuilder, postProcess: (String) -> String): Boolean {
+    fun parse(input: FlavorableStringBuilder, postProcess: (String) -> String): Boolean {
         val matcher = spec.matcher(input)
         val groups = matcher.groups
 
@@ -131,7 +131,7 @@ class Alias(
         for (i in 0 until groups) {
             vars[i] = when {
                 PatternProcessingFlags.KEEP_COLOR in spec.flags -> {
-                    (input.slice(matcher.start(i), matcher.end(i)) as AttributedCharSequence)
+                    input.subSequence(matcher.start(i), matcher.end(i))
                         .toAnsi()
                 }
 

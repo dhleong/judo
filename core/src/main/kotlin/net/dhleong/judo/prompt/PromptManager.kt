@@ -2,7 +2,8 @@ package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.asFlavorableBuilder
 import net.dhleong.judo.util.PatternSpec
 
 /**
@@ -45,17 +46,35 @@ class PromptManager : IPromptManager {
         delegate.define(inputSpec, parser)
     }
 
-    override fun process(input: CharSequence, onPrompt: (index: Int, prompt: String) -> Unit): CharSequence {
+    override fun process(
+        input: FlavorableCharSequence,
+        onPrompt: (index: Int, prompt: String) -> Unit
+    ): FlavorableCharSequence {
+        val toProcess = input.asFlavorableBuilder()
 
-        // NOTE: I don't love the dependency on JLine in the core
-        //  here, but it seems to be the best way to process output
-        //  for prompts without losing the ansi stuff....
-        val withAnsi = IStringBuilder.from(input)
-
-        return delegate.process(withAnsi) { index, prompt ->
+        // in general, it *should* have a newline
+        val hadNewline = input.endsWith('\n')
+        if (hadNewline) {
+            // don't process with trailing newlines
+            toProcess.setLength(input.length - 1)
+        }
+        val result = delegate.process(toProcess) { index, prompt ->
             onPrompt(index, prompt)
             "" // always replace with empty string
         }
+
+        if (hadNewline) {
+            // restore the newline
+            toProcess += '\n'
+
+            if (result.isNotEmpty() && result !== toProcess) {
+                result += '\n'
+            }
+        }
+
+        return result
     }
 
 }
+
+

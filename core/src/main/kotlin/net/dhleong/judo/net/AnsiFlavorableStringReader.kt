@@ -16,7 +16,7 @@ private enum class AnsiState {
     OPEN,
 }
 
-private const val ANSI_ESC = 27.toChar()
+internal const val ANSI_ESC = 27.toChar()
 
 /**
  * Given sequences of ANSI text (IE from the network) produces

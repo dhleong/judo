@@ -1,6 +1,11 @@
 package net.dhleong.judo
 
+import assertk.assert
+import assertk.assertions.isEqualTo
+import net.dhleong.judo.net.AnsiFlavorableStringReader
+import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.hasLines
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
@@ -104,7 +109,29 @@ class JudoCoreTest {
             )
     }
 
-    @Ignore
+    @Test fun `Catch split prompts`() {
+        judo.prompts.define("HP: $1", "(hp: $1)")
+
+        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
+        val first = prompt.substring(0..8)
+        val second = prompt.substring(9..prompt.lastIndex)
+        assert("$first$second").isEqualTo(prompt)
+
+        val reader = AnsiFlavorableStringReader()
+        val sequences = reader.feed(first.toCharArray()) +
+            reader.feed(second.toCharArray())
+
+        for (s in sequences) {
+            judo.onIncomingBuffer(s)
+        }
+
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        assert(buffer).hasLines(
+            ""
+        )
+    }
+
+
     @Test fun buildPromptWithAnsi() {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
         judo.onPrompt(0, prompt)
@@ -112,7 +139,7 @@ class JudoCoreTest {
 
         val status = judo.buildStatusLine(fakeMode("Test"))
 
-        assertThat(status.toAnsiString()).isEqualTo(
+        assertThat(status.toAnsi()).isEqualTo(
             "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"
         )
     }

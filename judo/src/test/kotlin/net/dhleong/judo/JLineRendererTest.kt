@@ -53,44 +53,6 @@ class JLineRendererTest {
     }
 
     @Ignore
-    @Test fun catchSplitPrompts() {
-//        val judo = newJudoCore()
-//        judo.prompts.define("HP: $1", "(hp: $1)")
-//
-//        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
-//        val first = prompt.substring(0..8)
-//        val second = prompt.substring(9..prompt.lastIndex)
-//        assertThat("$first$second").isEqualTo(prompt)
-//
-//        judo.onIncomingBuffer(first.toCharArray(), first.length)
-//        judo.onIncomingBuffer(second.toCharArray(), second.length)
-//
-//        val buffer = judo.renderer.currentTabpage!!.currentWindow.currentBuffer
-//        assertThat(buffer.getAnsiContents())
-//            .containsExactly("")
-    }
-
-    @Ignore
-    @Test fun catchSplitPrompts_splitAnsi() {
-//
-//        val judo = newJudoCore()
-//        judo.prompts.define("HP: $1", "(hp: $1)")
-//
-//        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
-//        val first = prompt.substring(0..5)
-//        val second = prompt.substring(6..prompt.lastIndex)
-//        assertThat("$first$second").isEqualTo(prompt)
-//
-//        judo.onIncomingBuffer(first.toCharArray(), first.length)
-//        judo.onIncomingBuffer(second.toCharArray(), second.length)
-//
-//        val buffer = judo.renderer.currentTabpage!!.currentWindow.currentBuffer
-//        assertThat(buffer.getAnsiContents())
-//            .containsExactly("")
-    }
-
-
-    @Ignore
     @Test fun continueTrailingStyleAcrossSplitLines() {
 //        renderer.windowWidth = 12
 //        renderer.windowHeight = 7

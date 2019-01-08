@@ -1,5 +1,6 @@
 package net.dhleong.judo.alias
 
+import net.dhleong.judo.render.FlavorableStringBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
@@ -109,6 +110,8 @@ class AliasManagerTest {
             .isEqualTo("admire shiny awesome")
     }
 
-    private fun process(input: CharSequence): String =
-        aliases.process(input).toString()
+    private fun process(input: String): String =
+        aliases.process(
+            FlavorableStringBuilder.fromString(input)
+        ).toString()
 }

@@ -19,6 +19,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.script.JudoScriptInvocation
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.util.Clearable
@@ -133,7 +134,7 @@ abstract class BaseCmdMode(
         insertChar(key)
     }
 
-    override fun renderStatusBuffer(): String = ":$buffer"
+    override fun renderStatusBuffer() = FlavorableStringBuilder.withDefaultFlavor(":$buffer")
     override fun getCursor(): Int = buffer.cursor + 1
 
     fun load(pathToFile: String) {

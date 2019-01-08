@@ -57,7 +57,7 @@ interface IJudoWindow2 {
      */
     fun scrollToBufferLine(line: Int, offsetOnLine: Int = 0)
 
-    fun updateStatusLine(line: CharSequence, cursor: Int = -1)
+    fun updateStatusLine(line: FlavorableCharSequence, cursor: Int = -1)
     fun searchForKeyword(word: CharSequence, direction: Int)
 }
 

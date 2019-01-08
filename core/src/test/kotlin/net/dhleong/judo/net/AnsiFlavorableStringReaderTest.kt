@@ -152,12 +152,12 @@ class AnsiFlavorableStringReaderTest {
             "${ansi(1, 1)}Take my love...\n".ansiToFlavorable()
         ))
     }
-
-    private fun String.ansiToFlavorable(): FlavorableCharSequence =
-        AnsiFlavorableStringReader().feed(this).toList().first()
 }
 
 private fun <T> Sequence<T>.toStringsList() = toList().map { it.toString() }
 
 private fun AnsiFlavorableStringReader.feed(chars: String) =
     feed(chars.toCharArray())
+
+fun String.ansiToFlavorable(): FlavorableCharSequence =
+    AnsiFlavorableStringReader().feed(this).toList().first()

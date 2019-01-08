@@ -6,6 +6,7 @@ import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.BaseJudoWindow2
 import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedString
@@ -33,7 +34,7 @@ class JLineWindow(
     override var currentBuffer: IJudoBuffer2 = initialBuffer
     override var isFocused: Boolean = false
 
-    private var status: CharSequence = ""
+    private var status: FlavorableCharSequence = FlavorableStringBuilder.EMPTY
     override var statusCursor: Int = -1
 
     /** offset from end of output */
@@ -129,10 +130,10 @@ class JLineWindow(
         }
     }
 
-    override fun updateStatusLine(line: CharSequence, cursor: Int) {
+    override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         renderer.inTransaction {
-            status = line.toString()
+            status = line
             statusCursor = cursor
         }
     }
