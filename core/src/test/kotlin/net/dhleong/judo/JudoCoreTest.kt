@@ -10,7 +10,6 @@ import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 
@@ -42,20 +41,6 @@ class JudoCoreTest {
             )
     }
 
-    @Ignore
-    @Test fun appendOutput() {
-        judo.appendOutput("\r\nTake my love,\r\n\r\nTake my land,\r\nTake me")
-
-        assertThat(renderer.outputLines)
-            .containsExactly(
-                "",
-                "Take my love,",
-                "",
-                "Take my land,",
-                "Take me"
-            )
-    }
-
     @Test fun appendOutput_newlineOnly() {
         judo.appendOutput("\nTake my love,\nTake my land,\n\nTake me")
 
@@ -76,21 +61,6 @@ class JudoCoreTest {
             .containsExactly(
                 "Take my love, \r${0x27}[1;40m",
                 "Take my land,\r${0x27}[1;40m"
-            )
-    }
-
-    @Ignore("TODO support ansi conversion in test")
-    @Test fun appendOutput_fancy() {
-
-        judo.appendOutput(
-            "\n\r${0x27}[1;30m${0x27}[1;37mTake my love," +
-                "\n\r${0x27}[1;30m${0x27}[1;37mTake my land,")
-
-        assertThat(renderer.outputLines)
-            .containsExactly(
-                "",
-                "${0x27}[1;30m${0x27}[1;37mTake my love,",
-                "${0x27}[1;30m${0x27}[1;37mTake my land,"
             )
     }
 
