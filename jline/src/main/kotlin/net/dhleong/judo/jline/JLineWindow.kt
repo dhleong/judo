@@ -162,6 +162,11 @@ class JLineWindow(
 
     override fun scrollLines(count: Int) = renderer.inTransaction {
         val buffer = currentBuffer
+        if (buffer.size <= 0) {
+            // can't scroll within an empty or single-line buffer
+            return
+        }
+
         val width = this.width
         val desired = Math.abs(count)
         val end = buffer.lastIndex

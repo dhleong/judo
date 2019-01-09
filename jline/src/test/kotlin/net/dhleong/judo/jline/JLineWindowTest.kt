@@ -83,6 +83,7 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Ignore("TODO prevent scrolling past visible buffer content")
     @Test fun `Scrolling in wrapped buffers`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
@@ -116,6 +117,94 @@ class JLineWindowTest {
         """.trimMargin())
 
         w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+
+        // don't allow scrolling further
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+    }
+
+    @Ignore("TODO prevent scrolling past visible buffer content")
+    @Test fun `Prevent scrolling further than is possible`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain
+            reynolds
+        """.trimIndent())
+
+        val w = windowOf(buffer, 10, 3)
+        assert(w).hasScrollback(0)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |reynolds__
+        """.trimMargin())
+
+        w.scrollPages(1)
+        assert(w).hasScrollback(1)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+
+        // prevent scrolling any further (at least one line of content on screen)
+        w.scrollPages(1)
+        assert(w).hasScrollback(1)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+    }
+
+    @Ignore("TODO prevent scrolling past visible buffer content")
+    @Test fun `Prevent scrolling further than is possible when wrapped`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain reynolds
+        """.trimIndent())
+
+        val w = windowOf(buffer, 10, 3)
+        assert(w).hasScrollback(0)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |reynolds__
+        """.trimMargin())
+
+        w.scrollPages(1)
+        assert(w).hasScrollback(1)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+
+        // prevent scrolling any further (at least one line of content on screen)
+        w.scrollPages(1)
+        assert(w).hasScrollback(1)
+
         w.render(display, 0, 0)
         assert(display).linesEqual("""
             |__________
