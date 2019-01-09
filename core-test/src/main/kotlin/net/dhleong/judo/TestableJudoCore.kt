@@ -12,6 +12,8 @@ import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.prompt.PromptManager
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer2
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IJudoWindow2
@@ -120,11 +122,12 @@ private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage2 by Proxy(
         set(value) { TODO("not implemented") }
 }
 
-private fun createWindowMock(
+fun createWindowMock(
     ids: IdManager,
     rows: Int,
-    buffer: IJudoBuffer2
-) = object : IJudoWindow2 by Proxy() {
+    buffer: IJudoBuffer2,
+    isFocusable: Boolean = true
+) = object : IJudoWindow2 by DumbProxy() {
 
     override val id = ids.newWindow()
 
@@ -134,6 +137,14 @@ private fun createWindowMock(
     override var currentBuffer: IJudoBuffer2
         get() = buffer
         set(value) { TODO("not implemented") }
+
+    override val isFocusable: Boolean = isFocusable
+    override var isFocused: Boolean = isFocusable
+
+    override fun append(text: FlavorableCharSequence) = buffer.append(text)
+    override fun appendLine(line: FlavorableCharSequence) = buffer.appendLine(line)
+    override fun appendLine(line: String) =
+        buffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(line))
 
     override fun resize(width: Int, height: Int) {
         this.width = width

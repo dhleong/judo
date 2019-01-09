@@ -636,7 +636,7 @@ class JudoCore(
             // dump the parsed prompts for visual effect
             echo("")
             parsedPrompts.forEach {
-                primaryWindow.outputWindow.currentBuffer.appendLine(it)
+                primaryWindow.outputWindow.appendLine(it)
             }
             parsedPrompts.clear()
             primaryWindow.promptWindow.currentBuffer.clear()
@@ -792,25 +792,25 @@ class JudoCore(
 
         if (e is ScriptExecutionException) {
             renderer.inTransaction {
-                primaryWindow.currentBuffer.appendLine(
+                primaryWindow.appendLine(
                     "${prefix}ScriptExecutionException:\n"
                 )
                 e.message?.split("\n")?.forEach {
-                    primaryWindow.currentBuffer.appendLine(it)
+                    primaryWindow.appendLine(it)
                 }
                 e.stackTrace.map { "  $it" }.forEach {
-                    primaryWindow.currentBuffer.appendLine(it)
+                    primaryWindow.appendLine(it)
                 }
             }
             return
         }
 
         renderer.inTransaction {
-            primaryWindow.currentBuffer.appendLine(
+            primaryWindow.appendLine(
                 "$prefix${e.javaClass.name}: ${e.message}"
             )
             e.stackTrace.map { "  $it" }.forEach {
-                primaryWindow.currentBuffer.appendLine(it)
+                primaryWindow.appendLine(it)
             }
             e.cause?.let {
                 appendError(it, "Caused by: ", isRoot = false)
@@ -830,7 +830,7 @@ class JudoCore(
         process: Boolean = true
     ) {
         val buffer = primaryWindow.currentBuffer
-        buffer.append(output)
+        primaryWindow.append(output)
         if (process) {
             val actualLine = buffer[buffer.lastIndex]
             processOutput(actualLine)

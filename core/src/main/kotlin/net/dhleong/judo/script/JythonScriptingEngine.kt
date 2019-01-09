@@ -410,7 +410,7 @@ internal fun createPyWindow(tabpage: IJudoTabpage2, window: IJudoWindow2): PyObj
     return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-                "buffer" -> createPyBuffer(window.currentBuffer) // cache?
+                "buffer" -> createPyBuffer(window, window.currentBuffer) // cache?
                 "height" -> Py.java2py(window.height)
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
@@ -426,9 +426,12 @@ internal fun createPyWindow(tabpage: IJudoTabpage2, window: IJudoWindow2): PyObj
     }
 }
 
-internal fun createPyBuffer(buffer: IJudoBuffer2): PyObject {
+internal fun createPyBuffer(
+    window: IJudoWindow2,
+    buffer: IJudoBuffer2
+): PyObject {
     val append = asPyFn<String, Unit>("append", 1) {
-        buffer.appendLine(it[0])
+        window.appendLine(it[0])
     }
     val clear = asPyFn<Any, Unit>("clear") {
         buffer.clear()

@@ -7,12 +7,12 @@ import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.MapGrid
 import net.dhleong.judo.mapping.MapRenderer
-import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoAppendable
 import net.dhleong.judo.render.IJudoWindow2
 
 /**
  * Base class for [MapRenderer] implementations that
- * render a text-based map to a Buffer
+ * render a text-based map to an [IJudoAppendable]
  *
  * @author dhleong
  */
@@ -26,10 +26,9 @@ abstract class BufferMapRenderer(
     abstract val charsPerY: Int
 
     /**
-     * Append a text representation of the map grid
-     * to the buffer
+     * Append a text representation of the map grid to the [window]
      */
-    abstract fun appendGridInto(map: IJudoMap, grid: MapGrid, buffer: IJudoBuffer2)
+    abstract fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoAppendable)
 
     override fun renderMap(map: IJudoMap, window: IJudoWindow2?) {
         renderer.inTransaction {
@@ -42,7 +41,6 @@ abstract class BufferMapRenderer(
                     map,
                     mapGrid,
                     (window ?: renderer.currentTabpage.currentWindow)
-                        .currentBuffer
                 )
             }
         }

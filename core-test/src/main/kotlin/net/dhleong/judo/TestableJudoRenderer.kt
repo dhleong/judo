@@ -52,25 +52,16 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
             initialBuffer: IJudoBuffer2,
             isFocusable: Boolean,
             statusLineOverlaysOutput: Boolean
-        ): IJudoWindow2 = object : IJudoWindow2 by dumbProxy() {
-            override var currentBuffer: IJudoBuffer2
-                get() = initialBuffer
-                set(value) { TODO() }
-
-            override var isFocused: Boolean = true
-            override val isFocusable: Boolean = isFocusable
-        }
+        ): IJudoWindow2 = createWindowMock(ids, initialHeight, initialBuffer, isFocusable)
 
     }
-    val tabpage = object : IJudoTabpage2 by dumbProxy() {
+    val tabpage = object : IJudoTabpage2 by DumbProxy() {
         override var currentWindow: IJudoWindow2
             get() = primaryWindow
             set(value) { TODO() }
     }
     var inputLine: Pair<String, Int> = "" to 0
 }
-
-private inline fun <reified T> dumbProxy() = Proxy<T> { method, args -> null }
 
 private fun createRendererProxy(state: RendererState): JudoRenderer2 {
     return Proxy { method, args ->

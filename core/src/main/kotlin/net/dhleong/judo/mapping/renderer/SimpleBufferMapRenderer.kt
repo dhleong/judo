@@ -9,7 +9,7 @@ import net.dhleong.judo.mapping.MapGrid
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoAppendable
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
 
@@ -44,14 +44,14 @@ class SimpleBufferMapRenderer(
     private var currentRoomId: Int = -1
     private lateinit var currentGrid: MapGrid
 
-    override fun appendGridInto(map: IJudoMap, grid: MapGrid, buffer: IJudoBuffer2) {
+    override fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoAppendable) {
         currentGrid = grid
         currentRoomId = map.inRoom ?: map.lastRoom
 
         for (y in 0..(grid.height - 1)) {
-            buffer.appendLine(buildLineTop(y))
-            buffer.appendLine(buildLineCenter(y))
-            buffer.appendLine(buildLineBottom(y))
+            window.appendLine(buildLineTop(y))
+            window.appendLine(buildLineCenter(y))
+            window.appendLine(buildLineBottom(y))
         }
     }
 

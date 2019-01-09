@@ -139,7 +139,7 @@ class Jsr223Window(
     override val width: Int = window.width
     override val height: Int = window.height
     override val buffer: IScriptBuffer
-        get() = Jsr223Buffer(window.currentBuffer)
+        get() = Jsr223Buffer(window, window.currentBuffer)
 
     override fun close() {
         tabpage.close(window)
@@ -152,6 +152,7 @@ class Jsr223Window(
 }
 
 class Jsr223Buffer(
+    private val window: IJudoWindow2,
     private val buffer: IJudoBuffer2
 ) : IScriptBuffer {
     override val id: Int = buffer.id
@@ -160,7 +161,7 @@ class Jsr223Buffer(
         get() = buffer.size
 
     override fun append(line: String) {
-        buffer.appendLine(line)
+        window.appendLine(line)
     }
 
     override fun clear() {

@@ -9,11 +9,13 @@ import assertk.assertions.support.show
 import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
+import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -205,6 +207,51 @@ class JLineWindowTest {
             |Pattern not found: none_
         """.trimMargin())
     }
+
+    @Ignore("TODO maintain scrollback properly")
+    @Test fun `Maintain scrollback on append`() {
+        val display = JLineDisplay(42, 2)
+        val buffer = bufferOf("""
+            |Take My love
+            |Take my land
+            |Take me where I cannot stand
+        """.trimMargin())
+        val w = windowOf(buffer, 42, 2)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |Take my land______________________________
+            |Take me where I cannot stand______________
+        """.trimMargin())
+
+        // now resize the window to force wrapping
+        display.resize(6, 2)
+        w.resize(6, 2)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |nnot s
+            |tand__
+        """.trimMargin())
+
+        w.scrollPages(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |e wher
+            |e I ca
+        """.trimMargin())
+
+        w.append(FlavorableStringBuilder.withDefaultFlavor("PAR"))
+        w.append(FlavorableStringBuilder.withDefaultFlavor("TS\n"))
+        w.appendLine("LINES")
+
+        // since we're scrolled, we should stay
+        // where we are
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |e wher
+            |e I ca
+        """.trimMargin())
+    }
 }
 
 private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
@@ -214,7 +261,7 @@ private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
 
 private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {
     contents.split("\n").forEach {
-        appendLine(it)
+        appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
     }
 }
 

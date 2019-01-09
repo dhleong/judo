@@ -45,6 +45,14 @@ class JLineWindow(
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
+    override fun append(text: FlavorableCharSequence) = adjustingScrollingIfNecessary(text) {
+        super.append(text)
+    }
+
+    override fun appendLine(line: FlavorableCharSequence) = adjustingScrollingIfNecessary(line) {
+        super.appendLine(line)
+    }
+
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         val displayHeight =
             if (isFocusable && !statusLineOverlaysOutput) height - 1 // make room for status line
@@ -160,7 +168,7 @@ class JLineWindow(
 
         val rangeEnd = minOf(end, scrollbackBottom + count)
         val range =
-            if (count > 0) scrollbackBottom..rangeEnd
+            if (count > 0) rangeEnd downTo scrollbackBottom
             else scrollbackBottom downTo rangeEnd
 
         // clear search result on scroll (?)
@@ -178,6 +186,7 @@ class JLineWindow(
             toScroll -= renderedLines - scrollbackOffset
             if (toScroll < 0) {
                 // scroll within a wrapped line
+                toScroll = maxOf(-desired, toScroll)
                 break
             }
 
@@ -217,6 +226,42 @@ class JLineWindow(
             -1 -> 0
 
             else -> renderedLines - 1 - foundOnLine
+        }
+    }
+
+    private inline fun adjustingScrollingIfNecessary(
+        addedText: FlavorableCharSequence,
+        block: () -> Unit
+    ) {
+        val b = currentBuffer
+        val wordWrap = settings[WORD_WRAP]
+
+        val linesBefore = b.size
+        val lastLineRenderHeight = when {
+            b.size > 0 -> b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
+            else -> 0
+        }
+
+        block()
+
+        if (scrollbackBottom == 0 && scrollbackOffset == 0) {
+            // no need to maintain scroll position
+            return
+        }
+        if (linesBefore == 0) {
+            // could not have scrolled; quick reject
+            return
+        }
+
+        val linesAfter = b.size
+
+        if (linesBefore == linesAfter) {
+            // appending to last line
+            val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
+            scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
+        } else {
+            scrollbackBottom += linesAfter - linesBefore
+            scrollbackOffset = 0
         }
     }
 }

@@ -75,6 +75,10 @@ abstract class PrimaryJudoWindow2(
         statusLineOverlaysOutput: Boolean = false
     ): IJudoWindow2
 
+    override fun append(text: FlavorableCharSequence) = outputWindow.append(text)
+    override fun appendLine(line: FlavorableCharSequence) = outputWindow.appendLine(line)
+    override fun appendLine(line: String) = outputWindow.appendLine(line)
+
     override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) =
         promptWindow.updateStatusLine(line, cursor)
 

@@ -29,10 +29,6 @@ open class JudoBuffer2(
         line.splitAtNewlines(contents, continueIncompleteLines = false)
     }
 
-    override fun appendLine(line: String) = appendLine(
-        FlavorableStringBuilder.withDefaultFlavor(line)
-    )
-
     override fun clear() {
         contents.clear()
     }

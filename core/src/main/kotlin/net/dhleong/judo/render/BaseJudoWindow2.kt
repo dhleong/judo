@@ -23,6 +23,12 @@ abstract class BaseJudoWindow2(
     protected var lastSearchKeyword: String = ""
     protected var searchResultLine = -1
 
+    override fun append(text: FlavorableCharSequence) = currentBuffer.append(text)
+    override fun appendLine(line: FlavorableCharSequence) = currentBuffer.appendLine(line)
+    override fun appendLine(line: String) = appendLine(
+        FlavorableStringBuilder.withDefaultFlavor(line)
+    )
+
     override fun scrollPages(count: Int) {
         scrollLines(height * count)
     }

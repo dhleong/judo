@@ -1,12 +1,6 @@
 package net.dhleong.judo.render
 
-interface IJudoBuffer2 {
-    val id: Int
-    val size: Int
-    val lastIndex: Int
-
-    operator fun get(index: Int): FlavorableCharSequence
-
+interface IJudoAppendable {
     /**
      * Append text to the last line
      */
@@ -16,7 +10,14 @@ interface IJudoBuffer2 {
      * Append a whole line
      */
     fun appendLine(line: FlavorableCharSequence)
-    fun appendLine(line: String)
+}
+
+interface IJudoBuffer2 : IJudoAppendable {
+    val id: Int
+    val size: Int
+    val lastIndex: Int
+
+    operator fun get(index: Int): FlavorableCharSequence
 
     fun clear()
     fun replaceLastLine(result: FlavorableCharSequence)
@@ -24,7 +25,7 @@ interface IJudoBuffer2 {
     fun set(newContents: List<FlavorableCharSequence>)
 }
 
-interface IJudoWindow2 {
+interface IJudoWindow2 : IJudoAppendable {
     val id: Int
     val width: Int
     val height: Int
@@ -35,6 +36,11 @@ interface IJudoWindow2 {
 
     /** Must be -1 when cursor is not focused on status line */
     val statusCursor: Int
+
+    /**
+     * Common-use convenience
+     */
+    fun appendLine(line: String)
 
     fun resize(width: Int, height: Int)
 
