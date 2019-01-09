@@ -297,7 +297,6 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO maintain scrollback properly")
     @Test fun `Maintain scrollback on append`() {
         val display = JLineDisplay(42, 2)
         val buffer = bufferOf("""
@@ -339,6 +338,48 @@ class JLineWindowTest {
         assert(display).linesEqual("""
             |e wher
             |e I ca
+        """.trimMargin())
+    }
+
+    @Test fun `Maintain scrollback in offset on append`() {
+        val display = JLineDisplay(42, 2)
+        val buffer = JudoBuffer2(IdManager()).apply {
+            append(FlavorableStringBuilder.withDefaultFlavor("Take me where"))
+        }
+        assert(buffer.size).isEqualTo(1)
+        val w = windowOf(buffer, 42, 2)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________________________________________
+            |Take me where_____________________________
+        """.trimMargin())
+
+        // now resize the window to force wrapping
+        display.resize(7, 2)
+        w.resize(7, 2)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |Take me
+            | where_
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |_______
+            |Take me
+        """.trimMargin())
+
+        w.append(FlavorableStringBuilder.withDefaultFlavor(" I cannot "))
+        w.append(FlavorableStringBuilder.withDefaultFlavor("stand\n"))
+
+        // since we're scrolled, we should stay
+        // where we are
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |_______
+            |Take me
         """.trimMargin())
     }
 }

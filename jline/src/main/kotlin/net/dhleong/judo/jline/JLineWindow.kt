@@ -45,11 +45,11 @@ class JLineWindow(
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
-    override fun append(text: FlavorableCharSequence) = adjustingScrollingIfNecessary(text) {
+    override fun append(text: FlavorableCharSequence) = adjustingScrollingIfNecessary {
         super.append(text)
     }
 
-    override fun appendLine(line: FlavorableCharSequence) = adjustingScrollingIfNecessary(line) {
+    override fun appendLine(line: FlavorableCharSequence) = adjustingScrollingIfNecessary {
         super.appendLine(line)
     }
 
@@ -235,7 +235,6 @@ class JLineWindow(
     }
 
     private inline fun adjustingScrollingIfNecessary(
-        addedText: FlavorableCharSequence,
         block: () -> Unit
     ) {
         val b = currentBuffer
@@ -266,7 +265,6 @@ class JLineWindow(
             scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
         } else {
             scrollbackBottom += linesAfter - linesBefore
-            scrollbackOffset = 0
         }
     }
 }
