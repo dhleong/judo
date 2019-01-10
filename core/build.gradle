@@ -18,8 +18,9 @@ sourceCompatibility = 1.8
 dependencies {
     compile project(':model')
 
-    compile deps.kotlin
-    compile deps.coroutines
+    compile deps.kotlin.core
+    compile deps.kotlin.reflect
+    compile deps.kotlin.coroutines
     
     compile deps.guava
     compile deps.jline

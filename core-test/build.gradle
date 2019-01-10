@@ -15,7 +15,7 @@ sourceCompatibility = 1.8
 dependencies {
     compile project(':core')
 
-    compile deps.kotlin
+    compile deps.kotlin.core
     compile deps.test.assertk
 
     testCompile deps.test.junit
