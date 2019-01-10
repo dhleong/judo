@@ -55,7 +55,9 @@ abstract class BaseConnection : JudoConnection, CoroutineScope {
         launch(Dispatchers.Default + job) {
             while (job.isActive) {
                 @Suppress("EXPERIMENTAL_API_USAGE")
-                val read = readTask.receive()
+                val read = readTask.receiveOrNull()
+                    ?: return@launch // disconnected
+
                 onNewLine(read)
             }
         }
