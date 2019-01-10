@@ -164,12 +164,13 @@ class JLineWindow(
 
         val width = this.width
         val desired = Math.abs(count)
+        val step = count / desired
         val end = buffer.lastIndex
 
-        val rangeEnd = minOf(end, scrollbackBottom + count)
+        val rangeEnd = maxOf(0, minOf(end, scrollbackBottom + count))
         val range =
             if (count > 0) rangeEnd downTo scrollbackBottom
-            else scrollbackBottom downTo rangeEnd
+            else rangeEnd..scrollbackBottom
 
         // clear search result on scroll (?)
         // TODO should we do better?
@@ -190,13 +191,15 @@ class JLineWindow(
                 break
             }
 
-            if (scrollbackBottom + 1 > end) {
+            if (count > 0 && scrollbackBottom + 1 > end) {
                 // end of the buffer and still scrolling; cancel
+                break
+            } else if (count < 0 && scrollbackBottom - 1 < 0) {
                 break
             }
 
             toScroll -= consumableLines
-            ++scrollbackBottom
+            scrollbackBottom += step
             scrollbackOffset = 0
 
             // finish scrolling past a wrapped line
@@ -208,7 +211,7 @@ class JLineWindow(
             // out of visible range
             val line = buffer[end]
             val renderedLines = line.computeRenderedLinesCount(width, wordWrap)
-            scrollbackOffset = minOf(renderedLines - 1, toScroll)
+            scrollbackOffset = minOf(renderedLines - step, toScroll)
         }
     }
 

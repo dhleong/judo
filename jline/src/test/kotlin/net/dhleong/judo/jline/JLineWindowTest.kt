@@ -98,10 +98,21 @@ class JLineWindowTest {
 
         w.scrollLines(4)
         w.render(display, 0, 0)
+        assert(w).hasScrollback(4)
         assert(display).linesEqual("""
             |__________
             |__________
             |captain___
+        """.trimMargin())
+
+        // now scroll back
+        w.scrollLines(-4)
+        w.render(display, 0, 0)
+        assert(w).hasScrollback(0)
+        assert(display).linesEqual("""
+            |first_____
+            |mate______
+            |zoe_______
         """.trimMargin())
     }
 
@@ -152,6 +163,48 @@ class JLineWindowTest {
             |__________
             |__________
             |captain___
+        """.trimMargin())
+    }
+
+    @Test fun `Prevent scrolling behind end of buffer`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain
+            reynolds
+        """.trimIndent())
+        assert(buffer).hasSize(2)
+
+        val w = windowOf(buffer, 10, 3)
+        w.scrollPages(1)
+        assert(w).hasScrollback(1)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+
+        // scroll back
+        w.scrollPages(-1)
+        assert(w).hasScrollback(0)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |reynolds__
+        """.trimMargin())
+
+        // prevent scrolling any further (at least one line of content on screen)
+        w.scrollPages(-1)
+        assert(w).hasScrollback(0)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |captain___
+            |reynolds__
         """.trimMargin())
     }
 
