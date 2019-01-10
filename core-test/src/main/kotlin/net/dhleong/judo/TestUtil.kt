@@ -28,5 +28,5 @@ inline fun <reified T> Proxy(crossinline methodHandler: (method: Method, args: A
     } as T
 
 @Suppress("FunctionName")
-inline fun <reified T> DumbProxy() = Proxy<T> { method, args -> null }
+inline fun <reified T> DumbProxy() = Proxy<T> { _, _ -> null }
 

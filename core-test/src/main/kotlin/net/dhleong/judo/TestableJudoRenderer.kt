@@ -58,7 +58,7 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
     val tabpage = object : IJudoTabpage2 by DumbProxy() {
         override var currentWindow: IJudoWindow2
             get() = primaryWindow
-            set(value) { TODO() }
+            set(_) { TODO() }
     }
     var inputLine: Pair<String, Int> = "" to 0
 }

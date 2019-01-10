@@ -119,7 +119,7 @@ private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage2 by Proxy(
 
     override var currentWindow: IJudoWindow2
         get() = windows.values.first()
-        set(value) { TODO("not implemented") }
+        set(_) { TODO("not implemented") }
 }
 
 fun createWindowMock(
@@ -136,7 +136,7 @@ fun createWindowMock(
 
     override var currentBuffer: IJudoBuffer2
         get() = buffer
-        set(value) { TODO("not implemented") }
+        set(_) { TODO("not implemented") }
 
     override val isFocusable: Boolean = isFocusable
     override var isFocused: Boolean = isFocusable
