@@ -4,6 +4,8 @@ import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import org.jline.utils.AttributedCharSequence
+import org.jline.utils.AttributedStyle
 
 /**
  * Assert that the lines in the display match those in the
@@ -27,4 +29,10 @@ fun Assert<JLineDisplay>.hasCursor(row: Int, col: Int) {
     expected("cursor to be at ${show(row to col)} but was ${show(
         actual.cursorRow to actual.cursorCol
     )}")
+}
+
+fun Assert<AttributedCharSequence>.hasStyleAt(i: Int, style: AttributedStyle) {
+    val actualStyle = actual.styleAt(i)
+    if (actualStyle == style) return
+    expected("style at ${show(i)} = ${show(style)} but was ${show(actualStyle)}")
 }

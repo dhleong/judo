@@ -88,7 +88,7 @@ inline fun FlavorableCharSequence.forEachChunk(
             block(regionStart, i, lastFlavor)
 
             lastFlavor = thisFlavor
-            regionStart = i + 1
+            regionStart = i
         }
     }
 
