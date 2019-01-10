@@ -9,7 +9,7 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.message
 import assertk.assertions.support.expected
-import net.dhleong.judo.render.hasHeight
+import net.dhleong.judo.hasHeight
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith

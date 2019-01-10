@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.getDisplayStrings
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before

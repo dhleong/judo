@@ -18,6 +18,7 @@ dependencies {
     compile deps.kotlin
     compile deps.jline
 
+    testCompile project(':core-test')
     testCompile deps.test.junit
     testCompile deps.test.assertk
     testCompile deps.test.mockitok

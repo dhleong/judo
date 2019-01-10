@@ -1,8 +1,10 @@
-package net.dhleong.judo.render
+package net.dhleong.judo
 
 import assertk.Assert
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.IJudoWindow2
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.jline.utils.AttributedString

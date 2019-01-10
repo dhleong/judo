@@ -184,17 +184,23 @@ class JLineWindow(
         var toScroll = desired
         for (lineNr in range) {
             if (lineNr < 0) break
-            if (lineNr >= buffer.size) break
+            if (lineNr > end) break
 
             val line = buffer[lineNr]
             val renderedLines = line.computeRenderedLinesCount(width, wordWrap)
-            toScroll -= renderedLines - scrollbackOffset
-            if (toScroll < 0) {
+            val consumableLines = renderedLines - scrollbackOffset
+            if (toScroll - consumableLines < 0) {
                 // scroll within a wrapped line
-                toScroll = maxOf(-desired, toScroll)
+                scrollbackOffset = toScroll
                 break
             }
 
+            if (scrollbackBottom + 1 > end) {
+                // end of the buffer and still scrolling; cancel
+                break
+            }
+
+            toScroll -= consumableLines
             ++scrollbackBottom
             scrollbackOffset = 0
 
@@ -202,7 +208,13 @@ class JLineWindow(
             if (toScroll == 0) break
         }
 
-        scrollbackOffset = -toScroll
+        if (scrollbackBottom == end) {
+            // last buffer line; ensure we don't offset-scroll it
+            // out of visible range
+            val line = buffer[end]
+            val renderedLines = line.computeRenderedLinesCount(width, wordWrap)
+            scrollbackOffset = minOf(renderedLines - 1, toScroll)
+        }
     }
 
     override fun scrollToBottom() = renderer.inTransaction {

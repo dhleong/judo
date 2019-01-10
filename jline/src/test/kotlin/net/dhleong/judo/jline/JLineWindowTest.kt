@@ -9,13 +9,13 @@ import assertk.assertions.support.show
 import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -83,7 +83,28 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO prevent scrolling past visible buffer content")
+    @Test fun `Max scroll`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain
+            mreynolds
+            first
+            mate
+            zoe
+        """.trimIndent())
+        assert(buffer).hasSize(5)
+
+        val w = windowOf(buffer, 10, 3, wrap = true)
+
+        w.scrollLines(4)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |captain___
+        """.trimMargin())
+    }
+
     @Test fun `Scrolling in wrapped buffers`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
@@ -134,13 +155,13 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO prevent scrolling past visible buffer content")
-    @Test fun `Prevent scrolling further than is possible`() {
+    @Test fun `Prevent scrolling past visible buffer contents`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
             captain
             reynolds
         """.trimIndent())
+        assert(buffer).hasSize(2)
 
         val w = windowOf(buffer, 10, 3)
         assert(w).hasScrollback(0)
@@ -174,14 +195,13 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO prevent scrolling past visible buffer content")
-    @Test fun `Prevent scrolling further than is possible when wrapped`() {
+    @Test fun `Prevent scrolling past visible buffer content when wrapped`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
             captain reynolds
         """.trimIndent())
 
-        val w = windowOf(buffer, 10, 3)
+        val w = windowOf(buffer, 10, 3, wrap = true)
         assert(w).hasScrollback(0)
 
         w.render(display, 0, 0)
@@ -192,7 +212,7 @@ class JLineWindowTest {
         """.trimMargin())
 
         w.scrollPages(1)
-        assert(w).hasScrollback(1)
+        assert(w).hasScrollback(0)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""
@@ -203,7 +223,7 @@ class JLineWindowTest {
 
         // prevent scrolling any further (at least one line of content on screen)
         w.scrollPages(1)
-        assert(w).hasScrollback(1)
+        assert(w).hasScrollback(0)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""

@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.hasLines
 import org.junit.Test
 
 /**

@@ -1,9 +1,10 @@
-package net.dhleong.judo.render
+package net.dhleong.judo
 
 import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import net.dhleong.judo.render.IJudoBuffer2
 
 /**
  * @author dhleong
@@ -22,4 +23,9 @@ fun Assert<IJudoBuffer2>.hasLinesSomewhere(vararg expectedStrings: String) {
     }
 
     expected("buffer of ${show(actualStrings)} to contain the sequence: ${show(expectedStrings)}")
+}
+
+fun Assert<IJudoBuffer2>.hasSize(size: Int) {
+    if (actual.size == size) return
+    expected("size = ${show(size)} but was ${show(actual.size)}")
 }

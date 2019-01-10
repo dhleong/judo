@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.hasLines
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
