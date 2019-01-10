@@ -88,12 +88,11 @@ class JLineWindow(
         }
 
         for (i in 0 until blankLinesNeeded) {
-            display.withLine(x, y + i) {
-                // clear the line
-                for (j in 0 until width) {
-                    append(" ")
-                }
-            }
+            display.clearLine(
+                x, y + i,
+                fromRelativeX = 0,
+                toRelativeX = width
+            )
         }
 
         // highlight search results:
@@ -117,20 +116,16 @@ class JLineWindow(
 
         var line = y + blankLinesNeeded
         for (i in displayStart until displayEnd) {
-            display.withLine(x, line) {
-                append(renderWorkspace[i])
-
-                // fill remaining width with blank space
-                for (j in renderWorkspace[i].length until width) {
-                    append(" ")
-                }
+            val text = renderWorkspace[i]
+            display.withLine(x, line, lineWidth = width) {
+                append(text)
             }
 
             ++line
         }
 
         if (isFocusable && isFocused) {
-            display.withLine(x, line) {
+            display.withLine(x, line, lineWidth = width) {
                 append(status)
             }
         } else if (isFocusable && !statusLineOverlaysOutput) {

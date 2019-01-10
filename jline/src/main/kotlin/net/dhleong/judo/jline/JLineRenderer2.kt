@@ -123,17 +123,13 @@ class JLineRenderer2(
 
     override fun createBuffer(): IJudoBuffer2 = JLineBuffer2(this, ids)
 
-    override fun setCursorType(type: CursorType) {
-        inTransaction {
-            cursorType = type
-        }
+    override fun setCursorType(type: CursorType) = inTransaction {
+        cursorType = type
     }
 
-    override fun updateInputLine(line: String, cursor: Int) {
-        inTransaction {
-            input.line = FlavorableStringBuilder.withDefaultFlavor(line)
-            input.cursorIndex = cursor
-        }
+    override fun updateInputLine(line: String, cursor: Int) = inTransaction {
+        input.line = FlavorableStringBuilder.withDefaultFlavor(line)
+        input.cursorIndex = cursor
     }
 
     override fun redraw() {
@@ -250,8 +246,9 @@ class JLineRenderer2(
 
         val inputY = tabpage.height
         for (i in renderedInput.indices) {
-            display.withLine(0, inputY + i) {
-                renderedInput[i].appendTo(this)
+            val line = renderedInput[i]
+            display.withLine(0, inputY + i, lineWidth = windowWidth) {
+                line.appendTo(this)
             }
         }
 

@@ -88,6 +88,51 @@ class JLineRenderer2Test {
         """.trimMargin())
     }
 
+    @Test fun `Clean re-render of status`() {
+        window.updateStatusLine("<status>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |____________________
+            |<status>____________
+            |____________________
+        """.trimMargin())
+
+        window.updateStatusLine("<>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |____________________
+            |<>__________________
+            |____________________
+        """.trimMargin())
+    }
+
+    @Test fun `Clean re-render of input`() {
+        window.updateStatusLine("<status>")
+        renderer.updateInputLine("<input>", 0)
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |____________________
+            |<status>____________
+            |<input>_____________
+        """.trimMargin())
+
+        renderer.updateInputLine("<>", 0)
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________________
+            |____________________
+            |<status>____________
+            |<>__________________
+        """.trimMargin())
+    }
+
     @Test fun `Scroll window after buffer append`() {
         // changes to window or buffer should trigger a render
 

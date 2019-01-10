@@ -38,7 +38,23 @@ class JLineDisplay(
         myHeight = windowHeight
     }
 
-    inline fun withLine(x: Int, y: Int, block: AttributedStringBuilder.() -> Unit) {
+    fun clearLine(x: Int, y: Int, fromRelativeX: Int, toRelativeX: Int) {
+        withLine(x + fromRelativeX, y) {
+            for (j in 0 until (toRelativeX - fromRelativeX)) {
+                append(" ")
+            }
+        }
+    }
+
+    /**
+     * @param [lineWidth] if provided, the width of the line to be edited.
+     *  Any amount not filled by the [block] will be cleared
+     */
+    inline fun withLine(
+        x: Int, y: Int,
+        lineWidth: Int = -1,
+        block: AttributedStringBuilder.() -> Unit
+    ) {
         if (y >= width) throw IndexOutOfBoundsException(
             "Attempting to update non-existent column; windowWidth=$width; x=$x"
         )
@@ -55,10 +71,20 @@ class JLineDisplay(
                 builder.setLength(x)
             }
 
+            val lengthBefore = builder.length
             builder.block()
+            val lengthAfter = builder.length
 
             if (builder.length > width) {
                 throw IndexOutOfBoundsException("Wrote on line #$y past display width ($width)")
+            }
+
+            if (lineWidth > 0) {
+                clearLine(
+                    x, y,
+                    fromRelativeX = lengthAfter - lengthBefore,
+                    toRelativeX = lineWidth
+                )
             }
 
             builder.setLength(width) // restore length
