@@ -74,17 +74,10 @@ class JLineTabpage(
         return newWindow
     }
 
-    override fun resize(width: Int, height: Int) {
-        if (this.width == width && this.height == height) {
-            // nop
-            return
-        }
-
-        renderer.inTransaction {
-            this.width = width
-            this.height = height
-            rootStack.resize(width, height)
-        }
+    override fun resize(width: Int, height: Int) = renderer.inTransaction {
+        this.width = width
+        this.height = height
+        rootStack.resize(width, height)
     }
 
     override fun getYPositionOf(window: IJudoWindow2): Int =

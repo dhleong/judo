@@ -73,7 +73,6 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
-    @Ignore
     @Test fun `Close window from a single split`() {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
@@ -145,6 +144,7 @@ class JLineTabpageTest {
 
     @Ignore
     @Test fun `Resize a split`() {
+        renderer.forceResize(tabpage.width, 9)
         tabpage.resize(tabpage.width, 8)
 
         val buffer = JudoBuffer2(IdManager())

@@ -254,7 +254,7 @@ class JLineRenderer2(
 
         // render tabpage so we can resize it properly to take into account
         // input size
-        tabpage.resize(windowWidth, windowHeight - renderedInput.size)
+        tabpage.tryResize(windowWidth, windowHeight - renderedInput.size)
         tabpage.render(display)
 
         if (isCursorOnStatus) {
