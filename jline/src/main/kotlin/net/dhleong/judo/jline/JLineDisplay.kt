@@ -99,7 +99,9 @@ class JLineDisplay(
         }
     }
 
-    fun toAttributedStrings() = lines.map { it.toAttributedString() }
+    fun toAttributedStrings() =
+        lines.take(myHeight)
+            .map { it.toAttributedString() }
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true

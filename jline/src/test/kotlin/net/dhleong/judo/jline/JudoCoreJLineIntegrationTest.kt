@@ -1,6 +1,10 @@
 package net.dhleong.judo.jline
 
+import assertk.all
 import assertk.assert
+import assertk.assertions.each
+import assertk.assertions.hasLength
+import assertk.assertions.hasSize
 import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
@@ -59,23 +63,29 @@ class JudoCoreJLineIntegrationTest {
             |__[NORMAL]
             |__________
         """.trimMargin())
+
+        assert(display.toAttributedStrings()).all {
+            hasSize(4)
+            each {
+                it.hasLength(10)
+            }
+        }
     }
 
     @Test fun `Handle terminal height resize`() {
-        renderer.forceResize(20, 2)
         renderer.forceResize(20, 8)
-        renderer.forceResize(20, 4)
         renderer.forceResize(20, 2)
-        renderer.forceResize(20, 8)
         assert(display).linesEqual("""
-            |____________________
-            |____________________
-            |____________________
-            |____________________
-            |____________________
-            |____________________
             |____________[NORMAL]
             |____________________
         """.trimMargin())
+
+        assert(display.toAttributedStrings()).all {
+            hasSize(2)
+            each {
+                it.hasLength(20)
+            }
+        }
     }
 }
+
