@@ -31,6 +31,27 @@ fun FlavorableCharSequence.computeRenderedLinesCount(
     return lines
 }
 
+/**
+ * Returns the index of the chunk in which [offset] would
+ * appear if this sequence were split according to [windowWidth]
+ * and [wordWrap]
+ */
+fun FlavorableCharSequence.splitIndexOfOffset(
+    windowWidth: Int,
+    wordWrap: Boolean,
+    offset: Int
+): Int {
+    var index = 0
+    forEachRenderedLine(windowWidth, wordWrap) { startIndex, endIndex ->
+        if (offset in startIndex until endIndex) {
+            return index
+        }
+
+        ++index
+    }
+    return -1
+}
+
 internal inline fun FlavorableCharSequence.forEachRenderedLine(
     windowWidth: Int,
     wordWrap: Boolean,

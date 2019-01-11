@@ -22,6 +22,7 @@ abstract class BaseJudoWindow2(
 
     protected var lastSearchKeyword: String = ""
     protected var searchResultLine = -1
+    protected var searchResultOffset = -1
 
     override fun append(text: FlavorableCharSequence) = currentBuffer.append(text)
     override fun appendLine(line: FlavorableCharSequence) = currentBuffer.appendLine(line)
@@ -37,10 +38,12 @@ abstract class BaseJudoWindow2(
         val ignoreCase = true // TODO smartcase setting?
 
         val originalSearchResultLine = searchResultLine
+        val originalSearchResultOffset = searchResultOffset
         val wordString = word.toString()
         if (wordString != lastSearchKeyword) {
             lastSearchKeyword = wordString
             searchResultLine = -1
+            searchResultOffset = -1
         }
 
         val buffer = currentBuffer
@@ -51,9 +54,31 @@ abstract class BaseJudoWindow2(
         }
 
         for (i in searchRange) {
-            val index = buffer[i].indexOf(wordString, ignoreCase = ignoreCase)
+            val line = buffer[i]
+            val continueSearchOnLine = i == searchResultLine
+            val index = when {
+                direction > 0 -> line.lastIndexOf(
+                    wordString,
+                    ignoreCase = ignoreCase,
+                    startIndex = when {
+                        continueSearchOnLine -> searchResultOffset - 1
+                        else -> line.length
+                    }
+                )
+
+                else -> line.indexOf(
+                    wordString,
+                    ignoreCase = ignoreCase,
+                    startIndex = when {
+                        continueSearchOnLine -> searchResultOffset + 1
+                        else -> 0
+                    }
+                )
+            }
+
             if (index >= 0) {
                 searchResultLine = i
+                searchResultOffset = index
                 scrollToBufferLine(i, offsetOnLine = index)
                 return
             }
@@ -62,6 +87,7 @@ abstract class BaseJudoWindow2(
         // couldn't find anything; reset
         if (originalSearchResultLine != -1) {
             searchResultLine = originalSearchResultLine
+            searchResultOffset = originalSearchResultOffset
         }
 
         // TODO bell? echo?

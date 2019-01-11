@@ -65,8 +65,15 @@ class JLineWindow(
 
         renderWorkspace.clear()
 
+        val isSearching = searchResultLine > -1
+        var workspaceSearchIndex = -1
+
         // iterating from oldest to newest
         for (i in end..start) {
+            if (isSearching && i == searchResultLine) {
+                workspaceSearchIndex = renderWorkspace.size
+            }
+
             buffer[i].splitAttributedLinesInto(
                 renderWorkspace,
                 windowWidth = width,
@@ -96,21 +103,30 @@ class JLineWindow(
         }
 
         // highlight search results:
-        if (searchResultLine >= 0) {
-            val lineIndex = displayStart - searchResultLine
-            val original = renderWorkspace[lineIndex]
-            val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
-            if (wordStart >= 0) {
-                val wordEnd = wordStart + lastSearchKeyword.length
-                val word = original.substring(wordStart, wordEnd)
+        if (workspaceSearchIndex != -1) {
+            val fullLine = buffer[searchResultLine]
+            val splitIndex = fullLine.splitIndexOfOffset(
+                windowWidth = width,
+                wordWrap = wordWrap,
+                offset = searchResultOffset
+            )
+            val lineIndex = workspaceSearchIndex + splitIndex
 
-                val new = AttributedStringBuilder(original.length)
-                new.append(original, 0, wordStart)
-                new.append(word, AttributedStyle.INVERSE)
-                new.append(original, wordEnd, original.length)
-                val newString = new.toAttributedString()
+            if (lineIndex < renderWorkspace.size) {
+                val original = renderWorkspace[lineIndex]
+                val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
+                if (wordStart >= 0) {
+                    val wordEnd = wordStart + lastSearchKeyword.length
+                    val word = original.substring(wordStart, wordEnd)
 
-                renderWorkspace[lineIndex] = newString
+                    val new = AttributedStringBuilder(original.length)
+                    new.append(original, 0, wordStart)
+                    new.append(word, AttributedStyle.INVERSE)
+                    new.append(original, wordEnd, original.length)
+                    val newString = new.toAttributedString()
+
+                    renderWorkspace[lineIndex] = newString
+                }
             }
         }
 

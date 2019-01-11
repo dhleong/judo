@@ -17,7 +17,6 @@ import net.dhleong.judo.render.JudoBuffer2
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -320,18 +319,15 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO update search handling")
     @Test fun `Search in buffer`() {
         val display = JLineDisplay(12, 2)
         val buffer = bufferOf("""
-            captain mreynolds
-            first mate zoe
+            Take My love
+            Take my land
+            Take me where I cannot stand
         """.trimIndent())
         val w = windowOf(buffer, 12, 2)
 
-        w.appendLine("Take My love")
-        w.appendLine("Take my land")
-        w.appendLine("Take me where I cannot stand")
         w.render(display, 0, 0)
         assert(display).linesEqual("""
             |e I cannot s
@@ -340,22 +336,23 @@ class JLineWindowTest {
 
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assert(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
         """.trimMargin())
 
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        // NOTE: future work could make search avoid scrolling...
+        assert(display).ansiLinesEqual("""
+            |Take My love
             |Take ${ansi(inverse = true)}m${ansi(0)}y land
-            |Take me wher
         """.trimMargin())
 
         // step back
         w.searchForKeyword("m", direction = -1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assert(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
         """.trimMargin())
@@ -364,7 +361,7 @@ class JLineWindowTest {
         w.searchForKeyword("m", direction = 1)
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assert(display).ansiLinesEqual("""
             |____________
             |Take ${ansi(inverse = true)}M${ansi(0)}y love
         """.trimMargin())
@@ -468,7 +465,7 @@ class JLineWindowTest {
 
     @Test fun `Maintain scrollback in offset on append`() {
         val display = JLineDisplay(42, 2)
-        val buffer = JudoBuffer2(IdManager()).apply {
+        val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor("Take me where"))
         }
         assert(buffer.size).isEqualTo(1)
@@ -514,7 +511,8 @@ private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }
 
-private fun bufferOf(contents: String) = JudoBuffer2(IdManager()).apply {
+private fun emptyBuffer() = JudoBuffer2(IdManager())
+private fun bufferOf(contents: String) = emptyBuffer().apply {
     contents.split("\n").forEach {
         appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
     }
