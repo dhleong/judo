@@ -59,14 +59,16 @@ class JLineTabpage(
         val parent = currentStack.parent
         val newWindow = JLineWindow(renderer, ids, settings, parent.width, rows, buffer)
 
-        if (parent is VerticalStack) {
-            parent.add(WindowStack(parent, newWindow))
-        } else {
-            val newStack = VerticalStack(parent, width, height)
-            newStack.add(thisStack)
+        renderer.inTransaction {
+            if (parent is VerticalStack) {
+                parent.add(WindowStack(parent, newWindow))
+            } else {
+                val newStack = VerticalStack(parent, width, height)
+                newStack.add(thisStack)
 
-            newStack.add(WindowStack(newStack, newWindow))
-            parent.replace(thisStack, newStack)
+                newStack.add(WindowStack(newStack, newWindow))
+                parent.replace(thisStack, newStack)
+            }
         }
 
         return newWindow

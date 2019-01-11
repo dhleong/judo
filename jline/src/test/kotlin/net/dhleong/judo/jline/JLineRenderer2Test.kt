@@ -61,7 +61,7 @@ class JLineRenderer2Test {
     }
 
     @Test fun `Reactive render`() {
-        // changes to window or buffer should trigger a render
+        // changes to primary or buffer should trigger a render
 
         window.updateStatusLine("<status>")
         assert(display).linesEqual("""
@@ -154,7 +154,7 @@ class JLineRenderer2Test {
     }
 
     @Test fun `Scroll window after buffer append`() {
-        // changes to window or buffer should trigger a render
+        // changes to primary or buffer should trigger a render
 
         window.updateStatusLine("<status>")
         window.appendLine("Take my love")

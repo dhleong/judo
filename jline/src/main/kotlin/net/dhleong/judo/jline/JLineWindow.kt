@@ -246,7 +246,7 @@ class JLineWindow(
 
     private inline fun adjustingScrollingIfNecessary(
         block: () -> Unit
-    ) {
+    ) = renderer.inTransaction {
         val b = currentBuffer
         val wordWrap = settings[WORD_WRAP]
 

@@ -4,6 +4,7 @@ import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import net.dhleong.judo.render.IJudoWindow2
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedStyle
 
@@ -25,11 +26,28 @@ fun Assert<JLineDisplay>.linesEqual(expected: String) {
     )
 }
 
+fun Assert<JLineDisplay>.ansiLinesEqual(expected: String) {
+    val asString = actual.lines.take(actual.height)
+        .joinToString("\n") { it.toAnsi() }
+
+        // allow using underscore to visually indicate spaces
+        .replace(" ", "_")
+
+    assert(asString).isEqualTo(
+        expected.replace(" ", "_")
+    )
+}
+
 fun Assert<JLineDisplay>.hasCursor(row: Int, col: Int) {
     if (actual.cursorRow == row && actual.cursorCol == col) return
     expected("cursor to be at ${show(row to col)} but was ${show(
         actual.cursorRow to actual.cursorCol
     )}")
+}
+
+fun Assert<IJudoWindow2>.hasHeight(height: Int) {
+    if (actual.height == height) return
+    expected("height = ${show(height)} but was ${show(actual.height)}")
 }
 
 fun Assert<AttributedCharSequence>.hasStyleAt(i: Int, style: AttributedStyle) {

@@ -14,8 +14,10 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
+import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
+import org.junit.Ignore
 import org.junit.Test
 
 class JLineWindowTest {
@@ -318,6 +320,56 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Ignore("TODO update search handling")
+    @Test fun `Search in buffer`() {
+        val display = JLineDisplay(12, 2)
+        val buffer = bufferOf("""
+            captain mreynolds
+            first mate zoe
+        """.trimIndent())
+        val w = windowOf(buffer, 12, 2)
+
+        w.appendLine("Take My love")
+        w.appendLine("Take my land")
+        w.appendLine("Take me where I cannot stand")
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |e I cannot s
+            |tand________
+        """.trimMargin())
+
+        w.searchForKeyword("m", direction = 1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |Take my land
+            |Take ${ansi(inverse = true)}m${ansi(0)}e wher
+        """.trimMargin())
+
+        w.searchForKeyword("m", direction = 1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |Take ${ansi(inverse = true)}m${ansi(0)}y land
+            |Take me wher
+        """.trimMargin())
+
+        // step back
+        w.searchForKeyword("m", direction = -1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |Take my land
+            |Take ${ansi(inverse = true)}m${ansi(0)}e wher
+        """.trimMargin())
+
+        // go to next page
+        w.searchForKeyword("m", direction = 1)
+        w.searchForKeyword("m", direction = 1)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |____________
+            |Take ${ansi(inverse = true)}M${ansi(0)}y love
+        """.trimMargin())
+    }
+
     @Test fun `highlight search result in wrapped buffer`() {
         val display = JLineDisplay(10, 1)
         val buffer = bufferOf("""
@@ -385,7 +437,7 @@ class JLineWindowTest {
             |Take me where I cannot stand______________
         """.trimMargin())
 
-        // now resize the window to force wrapping
+        // now resize the primary to force wrapping
         display.resize(6, 2)
         w.resize(6, 2)
         w.render(display, 0, 0)
@@ -428,7 +480,7 @@ class JLineWindowTest {
             |Take me where_____________________________
         """.trimMargin())
 
-        // now resize the window to force wrapping
+        // now resize the primary to force wrapping
         display.resize(7, 2)
         w.resize(7, 2)
         w.render(display, 0, 0)
