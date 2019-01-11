@@ -79,9 +79,9 @@ class JLineTabpage(
         }
 
         renderer.inTransaction {
-            rootStack.resize(width, height)
             this.width = width
             this.height = height
+            rootStack.resize(width, height)
         }
     }
 

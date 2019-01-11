@@ -13,7 +13,8 @@ import org.jline.utils.AttributedStyle
  * to visually indicate them.
  */
 fun Assert<JLineDisplay>.linesEqual(expected: String) {
-    val asString = actual.lines.map { it.toString() }
+    val asString = actual.lines.take(actual.height)
+        .map { it.toString() }
         .joinToString("\n")
 
         // allow using underscore to visually indicate spaces

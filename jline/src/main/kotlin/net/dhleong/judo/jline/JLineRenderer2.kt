@@ -276,14 +276,17 @@ class JLineRenderer2(
         windowHeight = size.rows
         windowWidth = size.columns
         window.resize(windowHeight, windowWidth)
+        window.clear()
 
         updateSize()
     }
 
-    internal fun updateSize() {
+    internal fun updateSize() = inTransaction {
+        // NOTE: running this in a transaction is important to give our onResized
+        // handler a chance to re-render the status lines to fit the new window
+
         inputHelper.windowWidth = windowWidth
         renderSurface.resize(windowWidth, windowHeight)
-        window.clear()
 
         // resize the tabpage *last* so it can safely trigger a render
         currentTabpage.resize(windowWidth, windowHeight - 1)

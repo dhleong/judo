@@ -30,11 +30,7 @@ class JLineRenderer2Test {
             enableMouse = false,
             renderSurface = display
         ).apply {
-            windowWidth = width
-            windowHeight = height
-            windowSize.rows = height
-            windowSize.columns = width
-            updateSize()
+            forceResize(width, height)
             setLoading(false)
         }
         window = renderer.currentTabpage.currentWindow as PrimaryJudoWindow2
@@ -86,6 +82,30 @@ class JLineRenderer2Test {
             |<status>____________
             |____________________
         """.trimMargin())
+    }
+
+    @Test fun `Reactive resize`() {
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.updateStatusLine("<status>")
+        renderer.updateInputLine("Test", 4)
+
+        renderer.forceResize(12, 5)
+
+        assert(display).all {
+            linesEqual("""
+                |____________
+                |Take my love
+                |Take my land
+                |<status>____
+                |Test________
+            """.trimMargin())
+
+            hasCursor(
+                row = 4,
+                col = 4
+            )
+        }
     }
 
     @Test fun `Clean re-render of status`() {
@@ -201,6 +221,14 @@ class JLineRenderer2Test {
             hasCursor(4, 8)
         }
     }
+}
+
+fun JLineRenderer2.forceResize(width: Int, height: Int) {
+    windowWidth = width
+    windowHeight = height
+    windowSize.rows = height
+    windowSize.columns = width
+    updateSize()
 }
 
 private fun IJudoWindow2.updateStatusLine(status: String, cursor: Int = -1) {

@@ -39,6 +39,11 @@ class JLineDisplay(
     }
 
     fun clearLine(x: Int, y: Int, fromRelativeX: Int, toRelativeX: Int) {
+        if (x + fromRelativeX == toRelativeX) {
+            // nop
+            return
+        }
+
         withLine(x + fromRelativeX, y) {
             for (j in 0 until (toRelativeX - fromRelativeX)) {
                 append(" ")
@@ -55,7 +60,7 @@ class JLineDisplay(
         lineWidth: Int = -1,
         block: AttributedStringBuilder.() -> Unit
     ) {
-        if (y >= width) throw IndexOutOfBoundsException(
+        if (x >= width) throw IndexOutOfBoundsException(
             "Attempting to update non-existent column; windowWidth=$width; x=$x"
         )
         if (y >= height) throw IndexOutOfBoundsException(
@@ -76,7 +81,10 @@ class JLineDisplay(
             val lengthAfter = builder.length
 
             if (builder.length > width) {
-                throw IndexOutOfBoundsException("Wrote on line #$y past display width ($width)")
+                throw IndexOutOfBoundsException("""
+                    Wrote on line #$y past display width $width; lineWidth=$lineWidth; line:
+                    `$builder`
+                """.trimIndent())
             }
 
             if (lineWidth > 0) {
