@@ -716,8 +716,6 @@ class JudoCore(
     }
 
     internal fun processOutput(line: FlavorableCharSequence) {
-        logging.log(line)
-
         outputCompletions.process(line)
         triggers.process(line)
         processAndStripPrompt(line)
@@ -845,6 +843,11 @@ class JudoCore(
                 // we found a prompt! clean up the output
                 outputBuffer.replaceLastLine(result.toFlavorable())
             }
+        }
+
+        if (result.endsWith('\n')) {
+            // only log lines that have a newline
+            logging.log(result)
         }
     }
 

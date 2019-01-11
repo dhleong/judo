@@ -14,6 +14,16 @@ interface Flavor{
     val isStrikeThrough: Boolean
     val isHidden: Boolean
 
+    val hasStyle: Boolean
+        get() = isBold
+            || isFaint
+            || isItalic
+            || isUnderline
+            || isBlink
+            || isInverse
+            || isConceal
+            || isStrikeThrough
+
     val hasForeground: Boolean
     val hasBackground: Boolean
 

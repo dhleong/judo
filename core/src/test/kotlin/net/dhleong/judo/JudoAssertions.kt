@@ -1,15 +1,11 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.logging.AnsiStylist
-import net.dhleong.judo.logging.AnsiStylistAssert
 import net.dhleong.judo.render.IJudoWindow
 import org.assertj.core.api.Assertions.assertThat
 
 /**
  * @author dhleong
  */
-
-internal fun assertThat(actual: AnsiStylist) = AnsiStylistAssert(actual)
 
 fun assertThat(actual: IJudoWindow?) = IJudoWindowAssert(actual)
 

@@ -1,5 +1,6 @@
 package net.dhleong.judo.logging
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
@@ -56,9 +57,9 @@ class LogManager : ILogManager {
         output = null
     }
 
-    override fun log(rawOutputLine: CharSequence) {
+    override fun log(line: FlavorableCharSequence) {
         output?.let { out ->
-            formatter?.writeLine(rawOutputLine, out)
+            formatter?.writeLine(line, out)
         }
     }
 

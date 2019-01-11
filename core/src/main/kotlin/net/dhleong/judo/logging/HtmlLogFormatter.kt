@@ -1,8 +1,10 @@
 package net.dhleong.judo.logging
 
 import net.dhleong.judo.JudoCore
-import net.dhleong.judo.util.ESCAPE_CHAR
-import java.io.IOException
+import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.forEachChunk
 import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -59,13 +61,13 @@ $STYLES
           </head>
           <body>
             <pre>
-              <span>
+<span>
         """.trimIndent()
+    // NOTE: we put the <span> at the beginning of the line so the
+    // first line renders properly (living inside a <pre> as it does)
 
-    private val FOOTER =
-        """
-              </span>
-        """
+    private val FOOTER = """
+</span>"""
     // NOTE: if we print these in the footer, it breaks append mode;
     // omitting them makes it not quite proper HTML, but I don't think
     // any modern browsers care
@@ -76,72 +78,67 @@ $STYLES
 
     private val COLOR_256_BLOCKS = charArrayOf('0', '5', '8', 'B', 'D', 'F')
 
-    private val stylist = AnsiStylist()
-
     override fun writeHeader(out: Writer) {
         out.append(HEADER_FORMAT.format(dateFormatter.format(Date())))
     }
 
-    override fun writeLine(input: CharSequence, out: Writer) {
-        var i = 0
-        val end = input.length
-        while (i < end) {
-            val ch = input[i]
-            when (ch) {
-                ESCAPE_CHAR -> {
-                    i = stylist.readAnsi(input, i)
-                    out.append("</span><span")
-                    appendStyle(out)
-                    out.append(">")
-                }
-
-                '&' -> out.append("&amp;")
-                '<' -> out.append("&lt;")
-                '>' -> out.append("&gt;")
-
-                else -> out.append(ch)
+    override fun writeLine(input: FlavorableCharSequence, out: Writer) {
+        var lastStyle: Flavor = Flavor.default
+        input.forEachChunk { startIndex, endIndex, flavor ->
+            if (flavor != lastStyle) {
+                out.append("</span><span")
+                flavor.appendStyle(out)
+                out.append(">")
+                lastStyle = flavor
             }
 
-            ++i
-        }
+            for (i in startIndex until endIndex) {
+                val ch = input[i]
+                when (ch) {
+                    '&' -> out.append("&amp;")
+                    '<' -> out.append("&lt;")
+                    '>' -> out.append("&gt;")
 
-        out.append('\n')
+                    else -> out.append(ch)
+                }
+            }
+        }
     }
 
     override fun writeFooter(out: Writer) {
         out.append(FOOTER)
     }
 
-    internal fun appendStyle(out: Writer) {
-        val simpleFg = stylist.fg in 0..7
-        val simpleBg = stylist.bg in 0..7
-        if (stylist.hasStyle() || simpleFg || simpleBg) {
+    private fun Flavor.appendStyle(out: Writer) {
+        val simpleFg = hasForeground && foreground.isSimple
+        val simpleBg = hasBackground && background.isSimple
+        if (hasStyle || simpleFg || simpleBg) {
             out.write(" class=\"")
 
             var first = true
-            if (stylist.italic) first = writeClass(out, "i", first)
-            if (stylist.underline) first = writeClass(out, "u", first)
-            if (stylist.strikethrough) first = writeClass(out, "s", first)
+            if (isItalic) first = writeClass(out, "i", first)
+            if (isUnderline) first = writeClass(out, "u", first)
+            if (isStrikeThrough) first = writeClass(out, "s", first)
 
             if (simpleFg) first = writeClass(out, pickFgClass(), first)
-            if (simpleBg) writeClass(out, pickBgClass(), first)
+            if (simpleBg) writeClass(out, background.pickBgClass(), first)
 
             out.write("\"")
         }
 
-        val hasHexFg = stylist.fg < -1 || stylist.fg > 7
-        val hasHexBg = stylist.bg < -1 || stylist.bg > 7
+        val hasHexFg = hasForeground && !simpleFg
+        val hasHexBg = hasBackground && !simpleBg
         if (hasHexFg || hasHexBg) {
             out.write(" style=\"")
 
             if (hasHexFg) {
                 out.write("color: ")
-                writeIntColor(stylist.fg, out)
+                writeIntColor(foreground, out)
                 out.write(";")
             }
             if (hasHexBg) {
                 out.write("background-color: ")
-                writeIntColor(stylist.bg, out)
+                writeIntColor(background, out)
                 out.write(";")
             }
 
@@ -149,15 +146,26 @@ $STYLES
         }
     }
 
-    private fun pickBgClass(): String =
-        "b%d".format(
-            if (stylist.bg < 8) 40 + stylist.bg
-            else 50 + stylist.bg - 8
+    private fun JudoColor.pickBgClass(): String {
+        this as JudoColor.Simple
+        return "b%d".format(
+            if (value.ansi < 8) 40 + value.ansi
+            else 50 + value.ansi - 8
         )
+    }
 
-    private fun pickFgClass(): String =
-        (if (stylist.bold) "l%d"
-         else "d%d").format(stylist.fg)
+    private fun Flavor.pickFgClass(): String {
+        val color = foreground as JudoColor.Simple
+        val rawColor = when (val ansi = color.value.ansi) {
+            in 0 until 8 -> ansi
+            else -> ansi - 8
+        }
+
+        return when {
+            isBold -> "l%d"
+            else -> "d%d"
+        }.format(rawColor)
+    }
 
     private fun writeClass(out: Writer, className: String, first: Boolean): Boolean {
         if (!first) out.append(' ')
@@ -165,19 +173,17 @@ $STYLES
         return false
     }
 
-    fun writeIntColor(intColor: Int, out: Writer) {
-        when {
-            intColor < -1 -> {
+    private fun writeIntColor(color: JudoColor, out: Writer) {
+        when (color) {
+            is JudoColor.FullRGB -> {
                 // "true" color
-                val red = (intColor shr 16) and 0xFF
-                val green = (intColor shr 8) and 0xFF
-                val blue = intColor and 0xFF
-
-                writeRgb(red, green, blue, out)
+                writeRgb(color.red, color.green, color.blue, out)
             }
 
-            intColor < 16 -> // high intensity color
-                out.write(when (intColor) {
+            // high intensity color, necessarily; this won't be used
+            // if it's a normal simplea nsi color
+            is JudoColor.Simple ->
+                out.write(when (color.value.ansi) {
                     8 -> "#888"
                     9 -> "#F00"
                     10 -> "#0F0"
@@ -188,31 +194,32 @@ $STYLES
                     else -> "#FFF"
                 })
 
-            intColor < 232 -> {
-                // 256 color (actually, 216 colors):
-                // the red increases one "block" (see constant above) every 36 numbers;
-                // the green increases one "block" every 6 numbers;
-                // and blue increases each step (within each 6-block of green)
-                val color = intColor - 16
-                val redPart = color / 36
-                val greenPart = (color % 36) / 6
-                val bluePart = (color % 6)
+            is JudoColor.High256 -> {
+                val intColor = color.value
+                if (intColor < 232) {
+                    // 256 color (actually, 216 colors):
+                    // the red increases one "block" (see constant above) every 36 numbers;
+                    // the green increases one "block" every 6 numbers;
+                    // and blue increases each step (within each 6-block of green)
+                    val value216 = intColor - 16
+                    val redPart = value216 / 36
+                    val greenPart = (value216 % 36) / 6
+                    val bluePart = (value216 % 6)
 
-                out.apply {
-                    write("#")
-                    append(COLOR_256_BLOCKS[redPart])
-                    append(COLOR_256_BLOCKS[greenPart])
-                    append(COLOR_256_BLOCKS[bluePart])
+                    out.apply {
+                        write("#")
+                        append(COLOR_256_BLOCKS[redPart])
+                        append(COLOR_256_BLOCKS[greenPart])
+                        append(COLOR_256_BLOCKS[bluePart])
+                    }
+                } else {
+                    // grayscale from black to white in 24 steps (IE [0,23])
+                    // each one is ~10, but just multiplying by 10 doesn't get
+                    // us very bright at 255 (actually it's 230). So, we'll just
+                    // add 8 like on wikipedia
+                    val gray = (intColor - 232) * 10 + 8
+                    writeRgb(gray, gray, gray, out)
                 }
-            }
-
-            else -> {
-                // grayscale from black to white in 24 steps (IE [0,23])
-                // each one is ~10, but just multiplying by 10 doesn't get
-                // us very bright at 255 (actually it's 230). So, we'll just
-                // add 8 like on wikipedia
-                val gray = (intColor - 232) * 10 + 8
-                writeRgb(gray, gray, gray, out)
             }
         }
     }
@@ -230,163 +237,6 @@ $STYLES
     }
 }
 
-internal class AnsiStylist {
-    var fg = -1
-    var bg = -1
-    var bold = false
-    var faint = false
-    var italic = false
-    var underline = false
-    var strikethrough = false
+private val JudoColor.isSimple: Boolean
+    get() = this is JudoColor.Simple && this.value.ansi < 8
 
-    private val ansiWorkspace = StringBuilder()
-
-    // temporary state to avoid passing around args everywhere
-    // this makes us not threadsafe, but I can't imagine why
-    // we would ever need to be
-    private var offset = -1
-    private lateinit var input: CharSequence
-
-    fun hasStyle() = bold || faint || italic || underline || strikethrough
-
-    /**
-     * @return The new offset position
-     */
-    fun readAnsi(input: CharSequence, offset: Int): Int {
-        var i = offset
-        if (input[i++] != ESCAPE_CHAR) throw IllegalArgumentException("No escape sequence found")
-        if (input[i++] != '[') return i // just the
-
-        this.offset = i - 1 // start ON the [ for readNextIntPart to work
-        this.input = input
-
-        while (input[this.offset] != 'm') {
-            val number = readNextIntPart()
-            when (number) {
-                -1 -> return this.offset // unexpected end
-                0 -> reset()
-
-            // add flags
-                1 -> bold = true
-                2 -> faint = true
-                3 -> italic = true
-                4 -> underline = true
-//                        5 -> blink
-//                        7 -> inverse
-                9 -> strikethrough = true
-
-            // remove flags
-                21 -> bold = false
-                22 -> {
-                    bold = false
-                    faint = false
-                }
-                23 -> italic = false
-                24 -> underline = false
-                29 -> strikethrough = false
-
-            // basic colors
-                in 30..37 -> fg = (number - 30)
-                39 -> fg = -1
-
-                in 40..47 -> bg = (number - 40)
-                49 -> bg = -1
-
-            // fancy colors
-                38 -> fg = readColor()
-                48 -> bg = readColor()
-
-            // high-intensity colors
-                in 90..97 -> fg = (number - 90 + 8)
-                in 100..107 -> fg = (number - 100 + 8)
-            }
-        }
-
-        return this.offset
-    }
-
-    private fun readColor(): Int {
-        val int = readNextIntPart()
-        return when (int) {
-            -1 -> throw IOException("Unexpected end of sequence")
-
-            2 -> readTrueColor()
-            5 -> read256Color()
-
-            else -> throw IllegalArgumentException("Unexpected color type $int")
-        }
-    }
-
-    private fun readTrueColor(): Int {
-        val r = readNextIntPart()
-        val g = readNextIntPart()
-        val b = readNextIntPart()
-
-        if (r == -1 || g == -1 || b == -1) {
-            throw IOException("Unexpected end of sequence")
-        }
-
-        // NOTE: we don't actually use the alpha channel, and
-        // instead basically use it as a marker that we're using
-        // full rgb color; since -1 on a color means "none," we
-        // use FE instead of FF so #FFFFFF isn't interpreted as
-        // "no color"
-        return 0xFE shl 24 or (r shl 16) or (g shl 8) or b
-    }
-
-    private fun read256Color(): Int {
-        val color = readNextIntPart()
-        if (color == -1) throw IOException("Unexpected end of sequence")
-        return color
-    }
-
-    private fun readNextIntPart(): Int {
-        // NOTE: we should always start either on the opening `[`
-        // or a separating `;`
-        var i = offset + 1
-        val input = this.input
-        val end = input.length
-        while (i < end) {
-            val ch = input[i]
-            when (ch) {
-                'm', ';' -> {
-                    val number = ansiWorkspace.toInt()
-                    ansiWorkspace.setLength(0)
-
-                    // done!
-                    offset = i
-                    return number
-                }
-
-                else -> ansiWorkspace.append(ch)
-            }
-
-            ++i
-        }
-
-        return -1
-    }
-
-    fun reset() {
-        fg = -1
-        bg = -1
-        bold = false
-        faint = false
-        italic = false
-        underline = false
-        strikethrough = false
-    }
-}
-
-/**
- * Zero-allocation toInt for very simple integers
- */
-private fun CharSequence.toInt(): Int {
-    var int = 0
-
-    for (i in 0..lastIndex) {
-        int = (int * 10) + (this[i] - '0')
-    }
-
-    return int
-}
