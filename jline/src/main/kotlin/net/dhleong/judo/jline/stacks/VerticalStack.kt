@@ -2,8 +2,9 @@ package net.dhleong.judo.jline.stacks
 
 import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
-import net.dhleong.judo.render.WINDOW_MIN_HEIGHT
 import org.jline.utils.AttributedString
+
+const val WINDOW_MIN_HEIGHT = 2
 
 /**
  * @author dhleong
