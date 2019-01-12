@@ -2,13 +2,13 @@ package net.dhleong.judo.jline
 
 import assertk.assert
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.hasHeight
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoTabpage2
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer2
 import net.dhleong.judo.render.PrimaryJudoWindow2
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -142,10 +142,11 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
-    @Ignore
     @Test fun `Resize a split`() {
         renderer.forceResize(tabpage.width, 9)
-        tabpage.resize(tabpage.width, 8)
+        assert(tabpage).hasHeight(8)
+        assert(primary).hasHeight(8)
+        tabpage.resize(tabpage.width, 8) // should not be a problem
 
         val buffer = JudoBuffer2(IdManager())
         val window = tabpage.hsplit(2, buffer)
@@ -155,7 +156,6 @@ class JLineTabpageTest {
         assert(primary).hasHeight(5) // NOTE: separator!
 
         window.resize(window.width, 4)
-//        tabpage.resize()
 
         assert(window).hasHeight(4)
         assert(primary).hasHeight(3)

@@ -34,6 +34,7 @@ class VerticalStack(parent: IStack, width: Int, height: Int)
         }
 
         // insert at the top
+        // TODO vim has settings (and function args) for where to insert the new window...
         contents.add(0, item)
         resize(width, height)
     }

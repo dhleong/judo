@@ -4,7 +4,6 @@ import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
-import net.dhleong.judo.render.IJudoWindow2
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedStyle
 
@@ -43,11 +42,6 @@ fun Assert<JLineDisplay>.hasCursor(row: Int, col: Int) {
     expected("cursor to be at ${show(row to col)} but was ${show(
         actual.cursorRow to actual.cursorCol
     )}")
-}
-
-fun Assert<IJudoWindow2>.hasHeight(height: Int) {
-    if (actual.height == height) return
-    expected("height = ${show(height)} but was ${show(actual.height)}")
 }
 
 fun Assert<AttributedCharSequence>.hasStyleAt(i: Int, style: AttributedStyle) {

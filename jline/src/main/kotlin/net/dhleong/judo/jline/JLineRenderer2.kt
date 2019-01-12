@@ -2,7 +2,6 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
-import net.dhleong.judo.JudoRenderer2
 import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.OnResizedEvent
 import net.dhleong.judo.StateMap
@@ -42,7 +41,7 @@ class JLineRenderer2(
     override var settings: StateMap,
     private val enableMouse: Boolean = false,
     private val renderSurface: JLineDisplay = JLineDisplay(0, 0)
-) : JudoRenderer2, BlockingKeySource {
+) : IJLineRenderer, BlockingKeySource {
 
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
@@ -179,6 +178,13 @@ class JLineRenderer2(
         }
     }
 
+    override fun onWindowResized(window: JLineWindow) {
+        // TODO multiple tabpages?
+        currentTabpage.apply {
+            resize(width, height)
+        }
+    }
+
     private fun render() {
         val display = renderSurface
         if (display.width <= 0) {
@@ -221,7 +227,9 @@ class JLineRenderer2(
         }
     }
 
-    internal fun render(display: JLineDisplay) {
+    // NOTE: render is wrapped with [preventingTransactionRenders] to prevent
+    // triggering recursive render loops as a result of a necessary resize
+    internal fun render(display: JLineDisplay) = preventingTransactionRenders {
         renderedInput.clear()
 
         val tabpage = currentTabpage as? JLineTabpage
@@ -252,9 +260,8 @@ class JLineRenderer2(
             }
         }
 
-        // render tabpage so we can resize it properly to take into account
-        // input size
-        tabpage.tryResize(windowWidth, windowHeight - renderedInput.size)
+        // resize tabpage to properly to take into account input height
+        tabpage.resize(windowWidth, windowHeight - renderedInput.size)
         tabpage.render(display)
 
         if (isCursorOnStatus) {
@@ -308,6 +315,19 @@ class JLineRenderer2(
             }
         } catch (e: IOException) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Runs the block, preventing any [inTransaction] blocks from triggering
+     * a render at the end
+     */
+    private inline fun preventingTransactionRenders(block: () -> Unit) {
+        transactionDepth.incrementAndGet()
+        try {
+            block()
+        } finally {
+            transactionDepth.decrementAndGet()
         }
     }
 }

@@ -85,18 +85,6 @@ interface IJudoTabpage2 {
 
     fun resize(width: Int, height: Int)
 
-    /**
-     * Only performs a resize if the dimensions have actually changed
-     */
-    fun tryResize(width: Int, height: Int) {
-        if (this.width == width && this.height == height) {
-            // nop
-            return
-        }
-
-        resize(width, height)
-    }
-
     fun getYPositionOf(window: IJudoWindow2): Int
 
     fun unsplit()
