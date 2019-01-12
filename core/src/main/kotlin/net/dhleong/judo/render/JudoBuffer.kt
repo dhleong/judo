@@ -2,94 +2,47 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.util.CircularArrayList
 
-
-private const val DEFAULT_SCROLLBACK_SIZE = 20_000
-
-/**
- * @author dhleong
- */
-class JudoBuffer(
+open class JudoBuffer(
     ids: IdManager,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
 
-    override val id = ids.newBuffer()
+    override val id: Int = ids.newBuffer()
+
+    private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
 
     override val size: Int
-        get() = output.size
-
+        get() = contents.size
     override val lastIndex: Int
-        get() = output.lastIndex
+        get() = contents.lastIndex
 
-    private val output = CircularArrayList<OutputLine>(scrollbackSize)
+    override fun get(index: Int): FlavorableCharSequence = contents[index]
 
-    private var hadPartialLine = false
-
-    @Synchronized override fun appendLine(
-        line: CharSequence, isPartialLine: Boolean,
-        windowWidthHint: Int, wordWrap: Boolean
-    ): CharSequence {
-        val outputLine = line as? OutputLine ?: OutputLine(line)
-        val result = appendOutputLineInternal(outputLine, isPartialLine, windowWidthHint, wordWrap)
-        hadPartialLine = isPartialLine
-        return result
+    override fun append(text: FlavorableCharSequence) {
+        text.splitAtNewlines(contents, continueIncompleteLines = true)
     }
 
-    override fun get(index: Int): CharSequence = output[index]
-
-    @Synchronized override fun replaceLastLine(result: CharSequence) {
-        // TODO remove the line completely if empty?
-        // TODO split line?
-        output[output.lastIndex] = when (result) {
-            is OutputLine -> result
-            else -> OutputLine(result)
+    override fun appendLine(line: FlavorableCharSequence) {
+        if (!line.endsWith('\n')) {
+            line += '\n'
         }
+        line.splitAtNewlines(contents, continueIncompleteLines = false)
     }
 
-    @Synchronized override fun clear() {
-        output.clear()
+    override fun clear() {
+        contents.clear()
     }
 
-    override fun set(newContents: List<CharSequence>) {
-        output.clear()
-        @Suppress("LoopToCallChain") // no extra allocations, please
-        for (line in newContents) {
-            output.add(line as? OutputLine ?: OutputLine(line))
-        }
+    override fun replaceLastLine(result: FlavorableCharSequence) {
+        contents[contents.lastIndex] = result
     }
 
-    private fun appendOutputLineInternal(
-        line: OutputLine, isPartialLine: Boolean,
-        windowWidthHint: Int, wordWrap: Boolean
-    ): OutputLine {
-        val splitCandidate: OutputLine
-        if (hadPartialLine) {
-            hadPartialLine = false
-
-            // merge partial line
-            val original = output.removeLast()
-            original.append(line)
-
-            splitCandidate = original
-        } else {
-            // new line
-            if (output.isNotEmpty()) {
-                val previous = output.last()
-                line.setStyleHint(previous.getFinalStyle())
-            }
-            splitCandidate = line
-        }
-
-        if (isPartialLine) {
-            // never split partial lines right away
-            output.add(splitCandidate)
-        } else {
-            // full line. split away!
-            val split = splitCandidate.getDisplayOutputLines(windowWidthHint, wordWrap)
-            split.forEach(output::add)
-        }
-
-        return splitCandidate
+    override fun set(newContents: List<FlavorableCharSequence>) {
+        clear()
+        newContents.forEach(this::appendLine)
     }
 
+    companion object {
+        const val DEFAULT_SCROLLBACK_SIZE = 20_000
+    }
 }

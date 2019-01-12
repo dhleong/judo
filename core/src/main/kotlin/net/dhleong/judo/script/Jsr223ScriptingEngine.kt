@@ -146,7 +146,6 @@ class Jsr223Window(
 
     override fun resize(width: Int, height: Int) {
         window.resize(width, height)
-        tabpage.resize()
     }
 
 }
@@ -161,7 +160,7 @@ class Jsr223Buffer(
         get() = buffer.size
 
     override fun append(line: String) {
-        buffer.appendLine(line, false, window.width, false)
+        window.appendLine(line)
     }
 
     override fun clear() {
@@ -169,7 +168,7 @@ class Jsr223Buffer(
     }
 
     override fun set(contents: List<String>) {
-        buffer.set(contents)
+        buffer.set(contents.toFlavorableList())
     }
 
 }

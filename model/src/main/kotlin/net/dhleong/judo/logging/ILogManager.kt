@@ -1,5 +1,6 @@
 package net.dhleong.judo.logging
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.File
 
 /**
@@ -27,5 +28,5 @@ interface ILogManager {
      */
     fun unconfigure()
 
-    fun log(rawOutputLine: CharSequence)
+    fun log(line: FlavorableCharSequence)
 }

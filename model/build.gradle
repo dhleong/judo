@@ -13,9 +13,8 @@ apply plugin: 'kotlin'
 sourceCompatibility = 1.8
 
 dependencies {
-    compile deps.kotlin
+    compile deps.kotlin.core
 
     testCompile deps.test.junit
     testCompile deps.test.assertj
 }
-

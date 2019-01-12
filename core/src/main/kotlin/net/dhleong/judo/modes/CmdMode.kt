@@ -1,7 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.event.EventHandler
@@ -9,7 +9,6 @@ import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.script.JudoScriptDoc
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptingEngine
@@ -26,7 +25,7 @@ class CmdMode(
     judo: IJudoCore,
     private val ids: IdManager,
     inputBuffer: InputBuffer,
-    rendererInfo: JudoRendererInfo,
+    private val renderer: JudoRenderer,
     history: IInputHistory,
     private var completions: CompletionSource,
     userConfigDir: File,
@@ -34,7 +33,7 @@ class CmdMode(
     private val engineFactory: ScriptingEngine.Factory
 ) : BaseCmdMode(
     judo,
-    inputBuffer, rendererInfo,
+    inputBuffer, renderer,
     history,
     userConfigDir, userConfigFile
 ) {
@@ -758,7 +757,7 @@ class CmdMode(
         """.trimIndent() }
             }
         ) { arg: Any ->
-            val newBuffer = JudoBuffer(ids)
+            val newBuffer = renderer.createBuffer()
             engine.wrapWindow(
                 judo.tabpage,
                 if (arg is Int) judo.tabpage.hsplit(arg, newBuffer)

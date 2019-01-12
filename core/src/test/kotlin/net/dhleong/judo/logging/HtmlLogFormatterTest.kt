@@ -1,5 +1,6 @@
 package net.dhleong.judo.logging
 
+import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ESCAPE_CHAR
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -20,7 +21,7 @@ class HtmlLogFormatterTest {
 
     @Test fun entities() {
         val out = withStringWriter {
-            formatter.writeLine("<mreynolds>", it)
+            formatter.writeLine("<mreynolds>".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo("&lt;mreynolds&gt;")
@@ -28,7 +29,7 @@ class HtmlLogFormatterTest {
 
     @Test fun simpleColor() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[37;42mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[37;42mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -38,7 +39,7 @@ class HtmlLogFormatterTest {
 
     @Test fun color256_000() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;5;16mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;5;16mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -48,7 +49,7 @@ class HtmlLogFormatterTest {
 
     @Test fun color256_FFF() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;5;231mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;5;231mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -58,7 +59,7 @@ class HtmlLogFormatterTest {
 
     @Test fun color256_0FF() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;5;51mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;5;51mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -68,7 +69,7 @@ class HtmlLogFormatterTest {
 
     @Test fun grayScale_8() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;5;232mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;5;232mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -78,7 +79,7 @@ class HtmlLogFormatterTest {
 
     @Test fun grayScale_238() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;5;255mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;5;255mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -88,7 +89,7 @@ class HtmlLogFormatterTest {
 
     @Test fun trueColor() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[38;2;15;14;13mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(
@@ -98,7 +99,7 @@ class HtmlLogFormatterTest {
 
     @Test fun italicTrueColor() {
         val out = withStringWriter {
-            formatter.writeLine("$ESCAPE_CHAR[3;38;2;15;14;13mColor", it)
+            formatter.writeLine("$ESCAPE_CHAR[3;38;2;15;14;13mColor".parseAnsi(), it)
         }
 
         assertThat(out).isEqualTo(

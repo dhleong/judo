@@ -404,7 +404,6 @@ private inline fun <reified T: Any, reified R> asPyFn(
 internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
     val resize = asPyFn<Int, Unit>("resize", 2) {
         window.resize(it[0], it[1])
-        tabpage.resize()
     }
 
     return object : PyObject() {
@@ -426,15 +425,18 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
     }
 }
 
-internal fun createPyBuffer(window: IJudoWindow, buffer: IJudoBuffer): PyObject {
+internal fun createPyBuffer(
+    window: IJudoWindow,
+    buffer: IJudoBuffer
+): PyObject {
     val append = asPyFn<String, Unit>("append", 1) {
-        buffer.appendLine(it[0], false, window.width, false)
+        window.appendLine(it[0])
     }
     val clear = asPyFn<Any, Unit>("clear") {
         buffer.clear()
     }
     val set = asPyFn<List<String>, Unit>("set", 1) {
-        buffer.set(it[0])
+        buffer.set(it[0].toFlavorableList())
     }
 
     return object : PyObject() {

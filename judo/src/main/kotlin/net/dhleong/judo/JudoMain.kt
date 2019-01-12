@@ -1,5 +1,12 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.jline.JLineRenderer
+import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
+import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
+import net.dhleong.judo.net.CommonsNetConnection
+import net.dhleong.judo.net.JudoConnection
+import net.dhleong.judo.render.IdManager
 import java.io.File
 
 /**
@@ -27,10 +34,10 @@ fun main(args: Array<String>) {
     val settings = StateMap()
 
     // make sure we can render
-    val renderer = JLineRenderer(settings)
+//    val renderer = JLineRenderer(settings)
+    val ids = IdManager()
+    val renderer = JLineRenderer(ids, settings)
     renderer.validate()
-
-    val mapRenderer = DelegateJLineMapRenderer(renderer)
 
     // clean up after ourselves
     Runtime.getRuntime().addShutdownHook(object : Thread() {
@@ -50,6 +57,14 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
+    val mapRenderer: MapRenderer = DelegateMapRenderer(
+        SimpleBufferMapRenderer(renderer)
+    )
+
+    val connections: JudoConnection.Factory = CommonsNetConnection.Factory(
+        debug = debugLevel.isEnabled
+    )
+
     val worldScriptFile = if (argsList.size == 1) {
         File(
             argsList[0].replace("^~", USER_HOME)
@@ -64,6 +79,7 @@ fun main(args: Array<String>) {
         renderer,
         mapRenderer,
         settings,
+        connections = connections,
         userConfigDir = USER_CONFIG_DIR,
         userConfigFile = config.userConfigFile,
         scripting = config.engineFactory,

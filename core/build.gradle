@@ -18,16 +18,18 @@ sourceCompatibility = 1.8
 dependencies {
     compile project(':model')
 
-    compile deps.kotlin
+    compile deps.kotlin.core
+    compile deps.kotlin.reflect
+    compile deps.kotlin.coroutines
+    
     compile deps.guava
-    compile deps.jline
     compile deps.jython
     compile deps.moshi
-    compile deps.commonsNet
 
     testCompile deps.test.junit
     testCompile deps.test.assertj
     testCompile deps.test.assertk
+    testCompile project(':core-test')
 }
 
 buildConfig {

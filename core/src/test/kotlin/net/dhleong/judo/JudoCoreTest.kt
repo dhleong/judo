@@ -1,6 +1,10 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.render.OutputLine
+import assertk.assert
+import assertk.assertions.isEqualTo
+import net.dhleong.judo.net.AnsiFlavorableStringReader
+import net.dhleong.judo.net.toAnsi
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
@@ -18,12 +22,14 @@ class JudoCoreTest {
 
     @Before fun setUp() {
         renderer.output.clear()
-        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
+        judo = JudoCore(
+            renderer, renderer.mapRenderer, StateMap(),
+            connections = DummyConnectionFactory
+        )
     }
 
-    @Test fun appendOutput() {
-        judo.appendOutput("\r\nTake my love,\r\n\r\nTake my land,\r\nTake me")
-
+    @Test fun `echo() handles newlines`() {
+        judo.echo("\nTake my love,\n\nTake my land,\nTake me")
         assertThat(renderer.outputLines)
             .containsExactly(
                 "",
@@ -57,23 +63,9 @@ class JudoCoreTest {
             )
     }
 
-    @Test fun appendOutput_fancy() {
-
-        judo.appendOutput(
-            "\n\r${0x27}[1;30m${0x27}[1;37mTake my love," +
-                "\n\r${0x27}[1;30m${0x27}[1;37mTake my land,")
-
-        assertThat(renderer.outputLines)
-            .containsExactly(
-                "",
-                "${0x27}[1;30m${0x27}[1;37mTake my love,",
-                "${0x27}[1;30m${0x27}[1;37mTake my land,"
-            )
-    }
-
     @Test fun appendOutput_midPartial() {
-        judo.appendOutput("\n\rTake my love,\n\rTake my")
-        judo.appendOutput(" land,\n\rTake me where...\n\r")
+        judo.appendOutput("\nTake my love,\nTake my")
+        judo.appendOutput(" land,\nTake me where...\n")
         judo.appendOutput("I don't care, I'm still free")
 
         assertThat(renderer.outputLines)
@@ -86,6 +78,29 @@ class JudoCoreTest {
             )
     }
 
+    @Test fun `Catch split prompts`() {
+        judo.prompts.define("HP: $1", "(hp: $1)")
+
+        val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
+        val first = prompt.substring(0..8)
+        val second = prompt.substring(9..prompt.lastIndex)
+        assert("$first$second").isEqualTo(prompt)
+
+        val reader = AnsiFlavorableStringReader()
+        val sequences = reader.feed(first.toCharArray()) +
+            reader.feed(second.toCharArray())
+
+        for (s in sequences) {
+            judo.onIncomingBuffer(s)
+        }
+
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        assert(buffer).hasLines(
+            ""
+        )
+    }
+
+
     @Test fun buildPromptWithAnsi() {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
         judo.onPrompt(0, prompt)
@@ -93,7 +108,7 @@ class JudoCoreTest {
 
         val status = judo.buildStatusLine(fakeMode("Test"))
 
-        assertThat(status.toAnsiString()).isEqualTo(
+        assertThat(status.toAnsi()).isEqualTo(
             "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"
         )
     }
@@ -184,15 +199,15 @@ class JudoCoreTest {
             def my_trigger(my, love): echo('triggered!')
             """.trimIndent())
 
-        val buffer = "take my love\r\n".toCharArray()
-        judo.onIncomingBuffer(buffer, buffer.size)
+        val buffer = "take my love\r\n"
+        judo.onIncomingBuffer(FlavorableStringBuilder.withDefaultFlavor(buffer))
         assertThat(renderer.outputLines)
             .contains("TypeError: my_trigger() takes exactly 2 arguments (1 given)")
     }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =
-    appendOutput(OutputLine(buffer))
+    appendOutput(FlavorableStringBuilder.withDefaultFlavor(buffer))
 
 private fun fakeMode(name: String): Mode =
     object : Mode by Proxy() {

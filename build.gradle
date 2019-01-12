@@ -20,7 +20,8 @@ task clean(type: Delete) {
 }
 
 ext.vs = [
-    kotlin: '1.3.10',
+    kotlin: '1.3.11',
+    coroutines: '1.0.1',
 
     commonsNet: '3.6',
     guava: '22.0',
@@ -30,7 +31,11 @@ ext.vs = [
 ]
 
 ext.deps = [
-    kotlin: "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${vs.kotlin}",
+    kotlin: [
+        core: "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${vs.kotlin}",
+        reflect: "org.jetbrains.kotlin:kotlin-reflect:${vs.kotlin}",
+        coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:${vs.coroutines}",
+    ],
 
     commonsNet: "commons-net:commons-net:${vs.commonsNet}",
 
@@ -44,6 +49,7 @@ ext.deps = [
     test: [
         assertj: 'org.assertj:assertj-core:2.4.1',
         assertk: 'com.willowtreeapps.assertk:assertk-jvm:0.12',
+        mockitok: 'com.nhaarman:mockito-kotlin:1.5.0',
         junit: 'junit:junit:4.12',
     ],
 ]

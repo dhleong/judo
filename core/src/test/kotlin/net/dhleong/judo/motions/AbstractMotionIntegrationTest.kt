@@ -1,10 +1,10 @@
 package net.dhleong.judo.motions
 
+import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.assertThat
-import net.dhleong.judo.render.getAnsiContents
 import org.junit.After
 import org.junit.Before
 
@@ -16,11 +16,14 @@ abstract class AbstractMotionIntegrationTest {
     lateinit var judo: JudoCore
 
     @Before fun setUp() {
-        judo = JudoCore(renderer, renderer.mapRenderer, StateMap())
+        judo = JudoCore(
+            renderer, renderer.mapRenderer, StateMap(),
+            connections = DummyConnectionFactory
+        )
     }
 
     @After fun tearDown() {
         // if not empty, it contained errors
-        assertThat(renderer.output.getAnsiContents()).isEmpty()
+        assertThat(renderer.outputLines).isEmpty()
     }
 }

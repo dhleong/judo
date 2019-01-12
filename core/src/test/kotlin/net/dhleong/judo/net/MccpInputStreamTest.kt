@@ -1,8 +1,6 @@
 package net.dhleong.judo.net
 
 import net.dhleong.judo.assertThat
-import org.apache.commons.net.telnet.TelnetNotificationHandler
-import org.apache.commons.net.telnet.TelnetOption
 import org.junit.Before
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -44,8 +42,8 @@ class MccpInputStreamTest {
         assertThat(read).containsExactly(
             TELNET_IAC.toUInt(),
             TELNET_SB.toUInt(),
-            TelnetOption.TERMINAL_TYPE,
-            TelnetNotificationHandler.RECEIVED_DO,
+            TELNET_TELOPT_TERMINAL_TYPE.toUInt(),
+            TELNET_DO.toUInt(),
             TELNET_IAC.toUInt(),
             TELNET_SE.toUInt())
     }
@@ -63,8 +61,8 @@ class MccpInputStreamTest {
         // we have room for the output
         assertThat(stream.readByte()).isEqualTo(TELNET_IAC)
         assertThat(stream.readByte()).isEqualTo(TELNET_SB)
-        assertThat(stream.readByte()).isEqualTo(TelnetOption.TERMINAL_TYPE.toByte())
-        assertThat(stream.readByte()).isEqualTo(TelnetNotificationHandler.RECEIVED_DO.toByte())
+        assertThat(stream.readByte()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
+        assertThat(stream.readByte()).isEqualTo(TELNET_DO)
         assertThat(stream.readByte()).isEqualTo(TELNET_IAC)
         assertThat(stream.readByte()).isEqualTo(TELNET_SE)
 

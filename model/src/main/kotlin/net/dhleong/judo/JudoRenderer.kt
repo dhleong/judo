@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import java.io.Closeable
 import java.util.EnumSet
@@ -56,9 +57,14 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
 
     var settings: StateMap
 
-    var currentTabpage: IJudoTabpage?
+    var currentTabpage: IJudoTabpage
 
-    fun inTransaction(block: () -> Unit)
+    /**
+     * The Renderer is responsible for allocating Buffers,
+     * since writing to a Buffer may create work for the
+     * Renderer in order to present the new lines
+     */
+    fun createBuffer(): IJudoBuffer
 
     /**
      * Make sure this renderer can be used
@@ -74,4 +80,26 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
 
     fun redraw()
     fun setLoading(isLoading: Boolean)
+
+    /**
+     * Begin a series of updates that should eventually
+     * result in a [redraw]
+     */
+    fun beginUpdate()
+
+    /**
+     * Finish an update initiated by [beginUpdate]
+     */
+    fun finishUpdate()
+}
+
+inline fun JudoRenderer.inTransaction(block: () -> Unit) {
+    try {
+        beginUpdate()
+
+        block()
+
+    } finally {
+        finishUpdate()
+    }
 }

@@ -1,4 +1,7 @@
 include 'judo'
 include 'core'
+include 'core-test'
 include 'model'
+include 'jline'
+include 'commons-net'
 

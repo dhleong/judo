@@ -1,6 +1,7 @@
 package net.dhleong.judo.prompt
 
 import net.dhleong.judo.alias.AliasProcesser
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
@@ -20,7 +21,10 @@ interface IPromptManager : Clearable<String> {
     fun define(inputSpec: PatternSpec, outputSpec: String)
     fun define(inputSpec: PatternSpec, parser: AliasProcesser)
 
-    fun process(input: CharSequence, onPrompt: (index: Int, prompt: String) -> Unit): CharSequence
+    fun process(
+        input: FlavorableCharSequence,
+        onPrompt: (index: Int, prompt: String) -> Unit
+    ): FlavorableCharSequence
 
     val size: Int
 }

@@ -1,27 +1,31 @@
 package net.dhleong.judo.render
 
-/**
- * @author dhleong
- */
-interface IJudoBuffer {
+interface IJudoAppendable {
+    /**
+     * Append text to the last line
+     */
+    fun append(text: FlavorableCharSequence)
+
+    /**
+     * Append a whole line
+     */
+    fun appendLine(line: FlavorableCharSequence)
+}
+
+interface IJudoBuffer : IJudoAppendable {
     val id: Int
     val size: Int
     val lastIndex: Int
 
-    operator fun get(index: Int): CharSequence
-
-    fun appendLine(
-        line: CharSequence, isPartialLine: Boolean,
-        windowWidthHint: Int, wordWrap: Boolean
-    ): CharSequence
+    operator fun get(index: Int): FlavorableCharSequence
 
     fun clear()
-    fun replaceLastLine(result: CharSequence)
+    fun replaceLastLine(result: FlavorableCharSequence)
 
-    fun set(newContents: List<CharSequence>)
+    fun set(newContents: List<FlavorableCharSequence>)
 }
 
-interface IJudoWindow {
+interface IJudoWindow : IJudoAppendable {
     val id: Int
     val width: Int
     val height: Int
@@ -33,12 +37,14 @@ interface IJudoWindow {
     /** Must be -1 when cursor is not focused on status line */
     val statusCursor: Int
 
-    fun appendLine(line: CharSequence, isPartialLine: Boolean): CharSequence
-
-    fun getDisplayLines(lines: MutableList<CharSequence>)
-    fun getScrollback(): Int
+    /**
+     * Common-use convenience
+     */
+    fun appendLine(line: String)
 
     fun resize(width: Int, height: Int)
+
+    fun getScrollback(): Int
 
     /**
      * @param count Number of lines to scroll, where a POSITIVE number
@@ -52,7 +58,12 @@ interface IJudoWindow {
     fun scrollPages(count: Int)
     fun scrollToBottom()
 
-    fun updateStatusLine(line: CharSequence, cursor: Int = -1)
+    /**
+     * Scroll such that the given line in this window's [IJudoBuffer] is visible
+     */
+    fun scrollToBufferLine(line: Int, offsetOnLine: Int = 0)
+
+    fun updateStatusLine(line: FlavorableCharSequence, cursor: Int = -1)
     fun searchForKeyword(word: CharSequence, direction: Int)
 }
 
@@ -72,22 +83,10 @@ interface IJudoTabpage {
     fun hsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow
     fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow
 
-    fun resize()
     fun resize(width: Int, height: Int)
 
-    fun getDisplayLines(lines: MutableList<CharSequence>)
     fun getYPositionOf(window: IJudoWindow): Int
 
     fun unsplit()
     fun close(window: IJudoWindow)
-}
-
-class IdManager {
-    private var nextBufferId = 0
-    private var nextTabpageId = 0
-    private var nextWindowId = 0
-
-    fun newBuffer() = ++nextBufferId
-    fun newTabpage() = ++nextTabpageId
-    fun newWindow() = ++nextWindowId
 }

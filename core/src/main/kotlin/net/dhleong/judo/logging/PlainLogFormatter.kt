@@ -1,7 +1,6 @@
 package net.dhleong.judo.logging
 
-import net.dhleong.judo.render.OutputLine
-import net.dhleong.judo.util.stripAnsi
+import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.Writer
 
 /**
@@ -10,10 +9,7 @@ import java.io.Writer
 class PlainLogFormatter : BasePlainTextFormatter() {
     override val format = ILogManager.Format.PLAIN
 
-    override fun writeLine(input: CharSequence, out: Writer) {
-        out.appendln(
-            (input as? OutputLine)?.toAttributedString()
-                ?: stripAnsi(input)
-        )
+    override fun writeLine(input: FlavorableCharSequence, out: Writer) {
+        out.appendln(input)
     }
 }

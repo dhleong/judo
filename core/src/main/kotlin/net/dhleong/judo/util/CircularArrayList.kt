@@ -6,7 +6,8 @@ import java.util.ConcurrentModificationException
  * Size-limited FIFO array-list
  * @author dhleong
  */
-class CircularArrayList<E> : Collection<E> {
+class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
+
     private val MAX_SIZE_INCREMENT = 2048
 
     private val maxCapacity: Int
@@ -44,25 +45,38 @@ class CircularArrayList<E> : Collection<E> {
     override val size: Int
         get() = actualSize
 
-    fun add(element: E) {
+    override fun add(element: E): Boolean {
         ensureCapacity(actualSize + 1)
         array[end] = element
 
         ++end
+        return true
     }
 
-    fun clear() {
+    override fun clear() {
         actualSize = 0
         start = 0
         end = 0
     }
 
+    override fun add(index: Int, element: E) {
+        throw UnsupportedOperationException()
+    }
+
+    override fun removeAt(index: Int): E {
+        throw UnsupportedOperationException()
+    }
+
     @Suppress("UNCHECKED_CAST")
-    operator fun get(index: Int): E =
+    override operator fun get(index: Int): E =
         array[actualIndexOf(index)] as E
 
-    operator fun set(index: Int, value: E) {
-        array[actualIndexOf(index)] = value
+    @Suppress("UNCHECKED_CAST")
+    override operator fun set(index: Int, element: E): E {
+        val actual = actualIndexOf(index)
+        val old = array[actual]
+        array[actual] = element
+        return old as E
     }
 
     override fun contains(element: E): Boolean =
@@ -73,12 +87,12 @@ class CircularArrayList<E> : Collection<E> {
 
     override fun isEmpty(): Boolean = size == 0
 
-    override fun iterator(): Iterator<E> {
+    override fun iterator(): MutableIterator<E> {
         val iteratorStart = start
         val iteratorSize = actualSize
         var pointer = 0
 
-        return object : Iterator<E> {
+        return object : Iterator<E>, MutableIterator<E> {
             override fun hasNext(): Boolean = pointer < actualSize
 
             override fun next(): E {
@@ -87,6 +101,10 @@ class CircularArrayList<E> : Collection<E> {
                 }
 
                 return get(pointer++)
+            }
+
+            override fun remove() {
+                throw UnsupportedOperationException()
             }
         }
     }

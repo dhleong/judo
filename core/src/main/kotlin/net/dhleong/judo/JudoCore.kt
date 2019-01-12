@@ -1,5 +1,7 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcessingException
 import net.dhleong.judo.complete.DEFAULT_STOP_WORDS
@@ -29,24 +31,23 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
-import net.dhleong.judo.net.CommonsNetConnection
-import net.dhleong.judo.net.Connection
 import net.dhleong.judo.net.JudoConnection
+import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
+import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer
-import net.dhleong.judo.render.JudoTabpage
-import net.dhleong.judo.render.OutputLine
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.parseAnsi
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
-import net.dhleong.judo.util.IStringBuilder
 import net.dhleong.judo.util.InputHistory
-import net.dhleong.judo.util.ansi
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -80,7 +81,9 @@ class JudoCore(
     userConfigDir: File = File(".judo"),
     userConfigFile: File = File(userConfigDir, "init.py"),
     scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
-    val debug: DebugLevel = DebugLevel.OFF
+    val debug: DebugLevel = DebugLevel.OFF,
+//    private val connections: JudoConnection.Factory = CommonsNetConnection.Factory(debug.isEnabled)
+    private val connections: JudoConnection.Factory
 ) : IJudoCore {
     companion object {
         const val CLIENT_NAME = BuildConfig.NAME
@@ -98,7 +101,7 @@ class JudoCore(
 
     internal val undo = UndoManager()
 
-    private val parsedPrompts = ArrayList<IStringBuilder>(2)
+    private val parsedPrompts = ArrayList<FlavorableCharSequence>(2)
 
     internal val buffer = InputBuffer(registers, undo)
     internal val cmdBuffer = InputBuffer()
@@ -178,32 +181,21 @@ class JudoCore(
     internal var running = true
     internal var doEcho = true
 
-    override var connection: Connection? = null
+    override var connection: JudoConnection? = null
     private var lastConnect: Pair<String, Int>? = null
 
-    private val statusLineWorkspace = IStringBuilder.create(128)
+    private val statusLineWorkspace = FlavorableStringBuilder(128)
 
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
     private val outputBuffer: IJudoBuffer
     private val primaryWindow: PrimaryJudoWindow
-    override val tabpage: IJudoTabpage
+    override val tabpage: IJudoTabpage = renderer.currentTabpage
 
     init {
-        val rendererTabpage = renderer.currentTabpage
-        if (rendererTabpage != null) {
-            // NOTE: this should only happen in tests
-            tabpage = rendererTabpage
-            primaryWindow = tabpage.currentWindow as PrimaryJudoWindow
-            outputBuffer = primaryWindow.outputWindow.currentBuffer
-        } else {
-            outputBuffer = JudoBuffer(ids)
-            primaryWindow = PrimaryJudoWindow(
-                ids, settings, outputBuffer,
-                renderer.windowWidth, renderer.windowHeight - 1)
-            tabpage = JudoTabpage(ids, settings, primaryWindow)
-        }
+        primaryWindow = tabpage.currentWindow as PrimaryJudoWindow
+        outputBuffer = primaryWindow.outputWindow.currentBuffer
 
         primaryWindow.isFocused = true
         renderer.currentTabpage = tabpage
@@ -213,7 +205,7 @@ class JudoCore(
                 updateStatusLine(currentMode)
                 updateInputLine()
 
-                rendererTabpage?.currentWindow?.let {
+                tabpage.currentWindow.let {
                     mapper.resize(width = it.width)
                 }
             }
@@ -228,20 +220,18 @@ class JudoCore(
 
     override fun connect(address: String, port: Int) {
         disconnect()
-        appendOutput(OutputLine("Connecting to $address:$port... "))
+        doEcho(false, "Connecting to $address:$port... ")
 
         lastConnect = address to port
 
-        val connection: Connection
+        val connection: JudoConnection
         try {
-            connection = CommonsNetConnection(this, address, port) { string -> echo(string) }
-            connection.debug = debug.isEnabled
+            connection = connections.create(this, address, port)
             echo("Connected.")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")
             return
         }
-
 
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
@@ -262,17 +252,8 @@ class JudoCore(
             disconnect()
             onDisconnect(connection)
         }
-        connection.forEachLine { buffer, count ->
-            if (debug == DebugLevel.ALL) {
-                FileOutputStream(debugLogFile, true).use { os ->
-                    os.bufferedWriter().use {
-                        it.write(buffer, 0, count)
-                        it.write("{PACKET_BOUNDARY}")
-                    }
-                }
-            }
-
-            onIncomingBuffer(buffer, count)
+        connection.forEachLine { buffer ->
+            onIncomingBuffer(buffer)
         }
 
         this.connection = connection
@@ -302,7 +283,9 @@ class JudoCore(
 
     private fun doEcho(process: Boolean, asString: String) {
         // TODO colors?
-        appendOutput(OutputLine("${ansi(0)}$asString\n"), process = process)
+        appendOutput(FlavorableStringBuilder.withDefaultFlavor(
+            "$asString\n"
+        ), process = process)
 
         if (debug.isEnabled) {
             debugLogFile.appendText("\n## ECHO: $asString\n")
@@ -453,7 +436,7 @@ class JudoCore(
             }
         }
 
-        if (doEcho && connection?.isTelnetSubsequence(toSend) != true) {
+        if (doEcho && !isTelnetSubsequence(toSend)) {
             // always output what we sent
             // except... don't echo if the server has told us not to
             // (EG: passwords)
@@ -473,8 +456,10 @@ class JudoCore(
         if (doSend) {
             mapper.maybeCommand(toSend)
 
-            connection?.let {
-                it.send(toSend)
+            connection?.let { conn ->
+                GlobalScope.launch {
+                    conn.send(toSend)
+                }
                 return
             }
 
@@ -514,7 +499,9 @@ class JudoCore(
         renderer.inTransaction {
             if (newMode is StatusBufferProvider) {
                 tabpage.currentWindow.updateStatusLine(
-                    newMode.renderStatusBuffer(), newMode.getCursor())
+                    newMode.renderStatusBuffer(),
+                    newMode.getCursor()
+                )
             } else {
                 updateInputLine()
             }
@@ -649,10 +636,10 @@ class JudoCore(
             // dump the parsed prompts for visual effect
             echo("")
             parsedPrompts.forEach {
-                primaryWindow.outputWindow.appendLine(it, isPartialLine = false)
+                primaryWindow.outputWindow.appendLine(it)
             }
             parsedPrompts.clear()
-            primaryWindow.promptBuffer.clear()
+            primaryWindow.promptWindow.currentBuffer.clear()
             tabpage.unsplit()
 
             echo("Disconnected from $connection")
@@ -728,15 +715,10 @@ class JudoCore(
         }
     }
 
-    internal fun processOutput(line: OutputLine) {
-        logging.log(line)
-
-        // convert to AttributedString before processing
-        // so we can ignore ANSI stuff when matching
-        val attributed = line.toAttributedString()
-        outputCompletions.process(attributed)
-        triggers.process(attributed)
-        processAndStripPrompt(attributed)
+    internal fun processOutput(line: FlavorableCharSequence) {
+        outputCompletions.process(line)
+        triggers.process(line)
+        processAndStripPrompt(line)
     }
 
     private fun activateMode(mode: Mode) {
@@ -750,14 +732,17 @@ class JudoCore(
             updateInputLine()
 
             if (mode is StatusBufferProvider) {
-                tabpage.currentWindow.updateStatusLine(mode.renderStatusBuffer(), mode.getCursor())
+                tabpage.currentWindow.updateStatusLine(
+                    mode.renderStatusBuffer(),
+                    mode.getCursor()
+                )
             } else {
                 updateStatusLine(mode)
             }
         }
     }
 
-    private fun updateInputLine() {
+    private fun updateInputLine() = renderer.inTransaction {
         if (!doEcho) {
             renderer.updateInputLine("", 0)
             return
@@ -772,10 +757,10 @@ class JudoCore(
     }
 
     private fun updateStatusLine(mode: Mode) {
-        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode).toAnsiString())
+        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode))
     }
 
-    internal fun buildStatusLine(mode: Mode): IStringBuilder {
+    internal fun buildStatusLine(mode: Mode): FlavorableCharSequence {
         val modeIndicator = "[${mode.name.toUpperCase()}]"
         val availableCols = renderer.windowWidth - modeIndicator.length
         statusLineWorkspace.setLength(0)
@@ -786,12 +771,12 @@ class JudoCore(
             statusLineWorkspace.append(partialPrompt)
         }
 
-        for (i in statusLineWorkspace.length..availableCols-1) {
-            statusLineWorkspace.append(" ")
+        for (i in statusLineWorkspace.length until availableCols) {
+            statusLineWorkspace += " "
         }
 
-        statusLineWorkspace.append(modeIndicator)
-        return statusLineWorkspace
+        statusLineWorkspace.append(modeIndicator, Flavor.default)
+        return statusLineWorkspace.toFlavorableString()
     }
 
     @Synchronized
@@ -805,17 +790,26 @@ class JudoCore(
 
         if (e is ScriptExecutionException) {
             renderer.inTransaction {
-                appendOutput(OutputLine("${prefix}ScriptExecutionException:\n${e.message}\n"), process = false)
-                e.stackTrace.map { "  $it" }
-                    .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
+                primaryWindow.appendLine(
+                    "${prefix}ScriptExecutionException:\n"
+                )
+                e.message?.split("\n")?.forEach {
+                    primaryWindow.appendLine(it)
+                }
+                e.stackTrace.map { "  $it" }.forEach {
+                    primaryWindow.appendLine(it)
+                }
             }
             return
         }
 
         renderer.inTransaction {
-            appendOutput(OutputLine("$prefix${e.javaClass.name}: ${e.message}\n"), process = false)
-            e.stackTrace.map { "  $it" }
-                .forEach { primaryWindow.appendLine(it, isPartialLine = false) }
+            primaryWindow.appendLine(
+                "$prefix${e.javaClass.name}: ${e.message}"
+            )
+            e.stackTrace.map { "  $it" }.forEach {
+                primaryWindow.appendLine(it)
+            }
             e.cause?.let {
                 appendError(it, "Caused by: ", isRoot = false)
             }
@@ -823,84 +817,52 @@ class JudoCore(
     }
 
     /** NOTE: public for testing only */
-    fun onIncomingBuffer(buffer: CharArray, count: Int) {
-        renderer.inTransaction {
-            val line = OutputLine(buffer, 0, count)
-
-            redirectErrors("ERROR: ") {
-                appendOutput(line)
-            }
+    fun onIncomingBuffer(line: FlavorableCharSequence) = renderer.inTransaction {
+        redirectErrors("ERROR: ") {
+            appendOutput(line)
         }
     }
 
-    @Synchronized internal fun appendOutput(buffer: OutputLine, process: Boolean = true) {
-        val count = buffer.length
-        renderer.inTransaction {
-            var lastLineEnd = 0
-
-            for (i in 0 until count) {
-                if (i >= lastLineEnd) {
-                    val char = buffer[i]
-                    if (!(char == '\n' || char == '\r')) continue
-
-                    val opposite =
-                        if (char == '\n') '\r'
-                        else '\n'
-
-                    if (char == '\r' && (i + 1 >= count || buffer[i + 1] != opposite)) {
-                        // carriage return is apparently occasionally
-                        // sent by itself, but not intended to indicate
-                        // an actual new line (what?)
-                        continue
-                    }
-
-                    val actualLine = primaryWindow.appendLine(
-                        buffer.subSequence(lastLineEnd, i),
-                        isPartialLine = false
-                    ) as OutputLine
-                    if (process) processOutput(actualLine)
-
-                    lastLineEnd = if (i + 1 < count && buffer[i + 1] == opposite) {
-                        i + 2
-                    } else {
-                        i + 1
-                    }
-                }
-            }
-
-            if (lastLineEnd < count) {
-                primaryWindow.appendLine(
-                    buffer.subSequence(lastLineEnd, count),
-                    isPartialLine = true
-                )
-            }
+    @Synchronized internal fun appendOutput(
+        output: FlavorableCharSequence,
+        process: Boolean = true
+    ) {
+        val buffer = primaryWindow.currentBuffer
+        primaryWindow.append(output)
+        if (process) {
+            val actualLine = buffer[buffer.lastIndex]
+            processOutput(actualLine)
         }
     }
 
-    private fun processAndStripPrompt(actualLine: CharSequence) {
+    private fun processAndStripPrompt(actualLine: FlavorableCharSequence) {
         val originalLength = actualLine.length
         val result = prompts.process(actualLine, this::onPrompt)
         if (result.length != originalLength) {
             renderer.inTransaction {
                 // we found a prompt! clean up the output
-                outputBuffer.replaceLastLine(result)
+                outputBuffer.replaceLastLine(result.toFlavorable())
             }
+        }
+
+        if (result.endsWith('\n')) {
+            // only log lines that have a newline
+            logging.log(result)
         }
     }
 
-    internal fun onPrompt(index: Int, prompt: CharSequence) {
+    internal fun onPrompt(index: Int, prompt: String) {
         if (parsedPrompts.lastIndex < index) {
             for (i in maxOf(0, parsedPrompts.lastIndex)..index) {
-                parsedPrompts.add(IStringBuilder.EMPTY)
+                parsedPrompts.add(FlavorableStringBuilder.EMPTY)
             }
         }
 
-        // make sure prompt colors don't bleed
-        parsedPrompts[index] = IStringBuilder.from(prompt)
+        parsedPrompts[index] = prompt.parseAnsi()
 
         renderer.inTransaction {
             primaryWindow.setPromptHeight(parsedPrompts.size)
-            primaryWindow.promptBuffer.set(parsedPrompts)
+            primaryWindow.promptWindow.currentBuffer.set(parsedPrompts)
             updateStatusLine(currentMode)
         }
     }

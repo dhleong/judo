@@ -7,7 +7,12 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
+import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.script.ScriptingEngine
+import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.ansi
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -88,7 +93,7 @@ class CmdModeTriggerTest(
             """.trimIndent()
         })
 
-        judo.triggers.process("cool ${ansi(1,2)}st${ansi(1,3)}or${ansi(1,4)}y")
+        judo.triggers.process(`cool story`())
         assert(judo.echos).containsExactly("awesome story")
     }
 
@@ -106,7 +111,7 @@ class CmdModeTriggerTest(
             """.trimIndent()
         })
 
-        judo.triggers.process("cool ${ansi(1,2)}st${ansi(1,3)}or${ansi(1,4)}y")
+        judo.triggers.process(`cool story`())
         assert(judo.echos).hasSize(1)
         assert(judo.echos[0] as String).isEqualTo(
             "awesome ${ansi(1,2)}st${ansi(fg=3)}or${ansi(fg=4)}y${ansi(0)}")
@@ -176,4 +181,28 @@ class CmdModeTriggerTest(
         assert(judo.sends).isEmpty()
         assert(judo.echos).containsExactly("awesome", "awesome")
     }
+
+    private fun `cool story`() = FlavorableStringBuilder(64).apply {
+        append("cool ", Flavor.default)
+        append("st", SimpleFlavor(
+            isBold = true,
+            hasForeground = true,
+            foreground = JudoColor.Simple.from(2)
+        ))
+        append("or", SimpleFlavor(
+            isBold = true,
+            hasForeground = true,
+            foreground = JudoColor.Simple.from(3)
+        ))
+        append("y", SimpleFlavor(
+            isBold = true,
+            hasForeground = true,
+            foreground = JudoColor.Simple.from(4)
+        ))
+
+    }
 }
+
+fun TriggerManager.process(string: String) = process(FlavorableStringBuilder.withDefaultFlavor(
+    string + "\n"
+))

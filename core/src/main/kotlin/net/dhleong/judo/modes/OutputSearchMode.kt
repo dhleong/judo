@@ -11,6 +11,7 @@ import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.render.FlavorableStringBuilder
 
 val KEY_LAST_SEARCH_STRING = StateKind<CharSequence>("net.dhleong.judo.modes.search.lastSearch")
 
@@ -83,7 +84,7 @@ class OutputSearchMode(
         suggester.reset()
     }
 
-    override fun renderStatusBuffer(): String = "/$buffer"
+    override fun renderStatusBuffer() = FlavorableStringBuilder.withDefaultFlavor("/$buffer")
     override fun getCursor(): Int = buffer.cursor + 1
 
     private fun exitMode() {

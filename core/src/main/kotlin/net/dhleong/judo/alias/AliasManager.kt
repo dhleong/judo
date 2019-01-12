@@ -1,6 +1,7 @@
 package net.dhleong.judo.alias
 
-import net.dhleong.judo.util.IStringBuilder
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.util.PatternSpec
 
 private const val MAX_ITERATIONS = 50
@@ -45,8 +46,8 @@ class AliasManager : IAliasManager {
         aliases.add(alias)
     }
 
-    override fun process(input: CharSequence): CharSequence {
-        val builder = IStringBuilder.from(input)
+    override fun process(input: FlavorableCharSequence): FlavorableCharSequence {
+        val builder = FlavorableStringBuilder(input)
 
         // keep looping as long as *some* alias was applied,
         //  in case there was a recursive alias
@@ -63,6 +64,12 @@ class AliasManager : IAliasManager {
         return builder
     }
 
+    /**
+     * NOTE: in most cases, aliases will be processing user input, which shouldn't
+     * ever need to be flavored. So, we provide this convenience to handle that common case
+     */
+    fun process(string: String) = process(FlavorableStringBuilder.fromString(string))
+
     override fun undefine(inputSpec: String) {
         aliases.removeIf { it.original == inputSpec }
     }
@@ -72,8 +79,11 @@ class AliasManager : IAliasManager {
     /**
      * Non-recursive processing that supports a postProcess step
      */
-    fun process(input: CharSequence, postProcess: (Int, String) -> String): CharSequence {
-        val builder = IStringBuilder.from(input)
+    fun process(
+        input: FlavorableCharSequence,
+        postProcess: (Int, String) -> String
+    ): FlavorableCharSequence {
+        val builder = FlavorableStringBuilder(input)
         aliases.forEachIndexed { index, alias ->
             alias.parse(builder) { postProcess(index, it) }
         }

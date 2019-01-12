@@ -1,5 +1,6 @@
 package net.dhleong.judo.trigger
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
@@ -16,7 +17,7 @@ interface ITriggerManager : Clearable<String> {
     fun define(inputSpec: String, parser: TriggerProcessor)
     fun define(inputSpec: PatternSpec, parser: TriggerProcessor)
 
-    fun process(input: CharSequence)
+    fun process(input: FlavorableCharSequence)
 
     fun undefine(inputSpec: String)
 }
