@@ -23,7 +23,6 @@ dependencies {
     compile deps.kotlin.coroutines
     
     compile deps.guava
-    compile deps.jline
     compile deps.jython
     compile deps.moshi
 
