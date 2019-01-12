@@ -1,12 +1,12 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.mapping.MapRenderer
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.PrimaryJudoWindow
 
 /**
  * @author dhleong
@@ -14,7 +14,7 @@ import net.dhleong.judo.render.PrimaryJudoWindow2
 
 class TestableJudoRenderer(
     private val state: RendererState = RendererState()
-) : JudoRenderer2 by createRendererProxy(state) {
+) : JudoRenderer by createRendererProxy(state) {
 
     var settableWindowWidth: Int
         get() = state.windowWidth
@@ -25,7 +25,7 @@ class TestableJudoRenderer(
 
     val mapRenderer: MapRenderer = Proxy { _, _ -> }
 
-    val output: JudoBuffer2
+    val output: JudoBuffer
         get() = state.output
     val outputLines: List<String>
         get() = (0..state.output.lastIndex).map { i ->
@@ -33,37 +33,37 @@ class TestableJudoRenderer(
             state.output[i].toString().removeSuffix("\n")
         }
 
-    override fun createBuffer(): IJudoBuffer2 = JudoBuffer2(state.ids)
+    override fun createBuffer(): IJudoBuffer = JudoBuffer(state.ids)
 }
 
 class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
 
     val settings = StateMap()
     val ids = IdManager()
-    val output = JudoBuffer2(ids)
-    val primaryWindow = object : PrimaryJudoWindow2(ids, settings, output, windowWidth, windowHeight) {
-        override fun createBuffer(ids: IdManager): IJudoBuffer2 = JudoBuffer2(ids)
+    val output = JudoBuffer(ids)
+    val primaryWindow = object : PrimaryJudoWindow(ids, settings, output, windowWidth, windowHeight) {
+        override fun createBuffer(ids: IdManager): IJudoBuffer = JudoBuffer(ids)
 
         override fun createWindow(
             ids: IdManager,
             settings: StateMap,
             initialWidth: Int,
             initialHeight: Int,
-            initialBuffer: IJudoBuffer2,
+            initialBuffer: IJudoBuffer,
             isFocusable: Boolean,
             statusLineOverlaysOutput: Boolean
-        ): IJudoWindow2 = createWindowMock(ids, initialHeight, initialBuffer, isFocusable)
+        ): IJudoWindow = createWindowMock(ids, initialHeight, initialBuffer, isFocusable)
 
     }
-    val tabpage = object : IJudoTabpage2 by DumbProxy() {
-        override var currentWindow: IJudoWindow2
+    val tabpage = object : IJudoTabpage by DumbProxy() {
+        override var currentWindow: IJudoWindow
             get() = primaryWindow
             set(_) { TODO() }
     }
     var inputLine: Pair<String, Int> = "" to 0
 }
 
-private fun createRendererProxy(state: RendererState): JudoRenderer2 {
+private fun createRendererProxy(state: RendererState): JudoRenderer {
     return Proxy { method, args ->
         when (method.name) {
 

@@ -1,11 +1,11 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.JudoRenderer2
+import net.dhleong.judo.JudoRenderer
 
 /**
  * Additional capabilities for a JLine-based renderer
  * @author dhleong
  */
-interface IJLineRenderer : JudoRenderer2 {
+interface IJLineRenderer : JudoRenderer {
     fun onWindowResized(window: JLineWindow)
 }

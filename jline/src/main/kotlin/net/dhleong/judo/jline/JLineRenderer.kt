@@ -9,8 +9,8 @@ import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
 import org.jline.terminal.Attributes
 import org.jline.terminal.Size
@@ -36,7 +36,7 @@ internal const val ELLIPSIS = "…"
 /**
  * @author dhleong
  */
-class JLineRenderer2(
+class JLineRenderer(
     private val ids: IdManager,
     override var settings: StateMap,
     private val enableMouse: Boolean = false,
@@ -60,7 +60,7 @@ class JLineRenderer2(
 
     override var onResized: OnResizedEvent? = null
 
-    override lateinit var currentTabpage: IJudoTabpage2
+    override lateinit var currentTabpage: IJudoTabpage
 
     private var isLoading: Boolean = true
     private val input = InputLine()
@@ -120,7 +120,7 @@ class JLineRenderer2(
         }
     }
 
-    override fun createBuffer(): IJudoBuffer2 = JLineBuffer2(this, ids)
+    override fun createBuffer(): IJudoBuffer = JLineBuffer(this, ids)
 
     override fun setCursorType(type: CursorType) = inTransaction {
         cursorType = type

@@ -1,8 +1,8 @@
 package net.dhleong.judo.script
 
 import net.dhleong.judo.alias.AliasProcesser
-import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
 import java.io.File
@@ -77,7 +77,7 @@ interface ScriptingEngine {
             toScript(fromJavaArray[i])
         }
 
-    fun wrapWindow(tabpage: IJudoTabpage2, window: IJudoWindow2): Any
+    fun wrapWindow(tabpage: IJudoTabpage, window: IJudoWindow): Any
 
     /** Called just before a script file is reloaded */
     fun onPreReload() {}

@@ -21,7 +21,7 @@ class JudoCoreJLineIntegrationTest {
     lateinit var display: JLineDisplay
     lateinit var settings: StateMap
 
-    lateinit var renderer: JLineRenderer2
+    lateinit var renderer: JLineRenderer
     private lateinit var judo: JudoCore
 
     @Before fun setUp() {
@@ -30,7 +30,7 @@ class JudoCoreJLineIntegrationTest {
 
         settings = StateMap()
         display = JLineDisplay(0, 0)
-        renderer = JLineRenderer2(
+        renderer = JLineRenderer(
             IdManager(),
             settings,
             enableMouse = false,

@@ -3,16 +3,16 @@ package net.dhleong.judo.jline
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
+import net.dhleong.judo.render.JudoBuffer
 
 /**
  * @author dhleong
  */
-class JLineBuffer2(
-    private val renderer: JLineRenderer2,
+class JLineBuffer(
+    private val renderer: JLineRenderer,
     ids: IdManager,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
-) : JudoBuffer2(
+) : JudoBuffer(
     ids,
     scrollbackSize
 ) {

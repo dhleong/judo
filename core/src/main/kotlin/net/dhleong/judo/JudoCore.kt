@@ -38,10 +38,10 @@ import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
@@ -75,7 +75,7 @@ internal val UNRECORDED_KEY_CODES = arrayOf(
 )
 
 class JudoCore(
-    override val renderer: JudoRenderer2,
+    override val renderer: JudoRenderer,
     mapRenderer: MapRenderer,
     settings: StateMap,
     userConfigDir: File = File(".judo"),
@@ -189,12 +189,12 @@ class JudoCore(
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
-    private val outputBuffer: IJudoBuffer2
-    private val primaryWindow: PrimaryJudoWindow2
-    override val tabpage: IJudoTabpage2 = renderer.currentTabpage
+    private val outputBuffer: IJudoBuffer
+    private val primaryWindow: PrimaryJudoWindow
+    override val tabpage: IJudoTabpage = renderer.currentTabpage
 
     init {
-        primaryWindow = tabpage.currentWindow as PrimaryJudoWindow2
+        primaryWindow = tabpage.currentWindow as PrimaryJudoWindow
         outputBuffer = primaryWindow.outputWindow.currentBuffer
 
         primaryWindow.isFocused = true

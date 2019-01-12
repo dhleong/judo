@@ -5,26 +5,26 @@ import net.dhleong.judo.inTransaction
 import net.dhleong.judo.jline.stacks.RootStack
 import net.dhleong.judo.jline.stacks.VerticalStack
 import net.dhleong.judo.jline.stacks.WindowStack
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.PrimaryJudoWindow
 
 /**
  * @author dhleong
  */
 class JLineTabpage(
-    private val renderer: JLineRenderer2,
+    private val renderer: JLineRenderer,
     private val ids: IdManager,
     private val settings: StateMap,
     private val initialWindow: IJLineWindow
-) : IJudoTabpage2 {
+) : IJudoTabpage {
 
     override val id: Int = ids.newTabpage()
     override var width: Int = initialWindow.width
     override var height: Int = initialWindow.height
-    override var currentWindow: IJudoWindow2 = initialWindow
+    override var currentWindow: IJudoWindow = initialWindow
 
     private val rootStack = RootStack(this).apply {
         child = WindowStack(this, initialWindow)
@@ -35,26 +35,26 @@ class JLineTabpage(
         rootStack.render(display, 0, 0)
     }
 
-    override fun findWindowById(id: Int): IJudoWindow2? =
+    override fun findWindowById(id: Int): IJudoWindow? =
         rootStack.stackWithWindow { it.id == id }?.window
 
-    override fun findWindowByBufferId(id: Int): IJudoWindow2? =
+    override fun findWindowByBufferId(id: Int): IJudoWindow? =
         rootStack.stackWithWindow { it.currentBuffer.id == id }?.window
 
-    override fun vsplit(percentage: Float, buffer: IJudoBuffer2): IJudoWindow2 {
+    override fun vsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         TODO("not implemented")
     }
 
-    override fun vsplit(cols: Int, buffer: IJudoBuffer2): IJudoWindow2 {
+    override fun vsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow {
         TODO("not implemented")
     }
 
-    override fun hsplit(percentage: Float, buffer: IJudoBuffer2): IJudoWindow2 {
+    override fun hsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         val containerHeight = currentStack.parent.height
         return hsplit(containerHeight * percentage, buffer)
     }
 
-    override fun hsplit(rows: Int, buffer: IJudoBuffer2): IJudoWindow2 {
+    override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow {
         val thisStack = currentStack
         val parent = currentStack.parent
         val newWindow = JLineWindow(renderer, ids, settings, parent.width, rows, buffer)
@@ -80,7 +80,7 @@ class JLineTabpage(
         rootStack.resize(width, height)
     }
 
-    override fun getYPositionOf(window: IJudoWindow2): Int =
+    override fun getYPositionOf(window: IJudoWindow): Int =
         rootStack.getYPositionOf(window as IJLineWindow)
 
     override fun unsplit() {
@@ -91,8 +91,8 @@ class JLineTabpage(
         rootStack.resize(width, height)
     }
 
-    override fun close(window: IJudoWindow2) {
-        if (window is PrimaryJudoWindow2) {
+    override fun close(window: IJudoWindow) {
+        if (window is PrimaryJudoWindow) {
             throw IllegalArgumentException("You cannot close the primary window!")
         }
 

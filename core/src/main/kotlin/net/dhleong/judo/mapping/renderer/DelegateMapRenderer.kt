@@ -2,7 +2,7 @@ package net.dhleong.judo.mapping.renderer
 
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.MapRenderer
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 
 /**
  * Abstracts Map rendering across multiple potential
@@ -18,7 +18,7 @@ class DelegateMapRenderer(
         delegate.resize(width, height)
     }
 
-    override fun renderMap(map: IJudoMap, window: IJudoWindow2?) {
+    override fun renderMap(map: IJudoMap, window: IJudoWindow?) {
         delegate.renderMap(map, window)
     }
 

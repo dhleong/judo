@@ -11,9 +11,9 @@ import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
+import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -506,12 +506,12 @@ class JLineWindowTest {
     }
 }
 
-private fun Assert<IJudoWindow2>.hasScrollback(lines: Int) {
+private fun Assert<IJudoWindow>.hasScrollback(lines: Int) {
     if (actual.getScrollback() == lines) return
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }
 
-private fun emptyBuffer() = JudoBuffer2(IdManager())
+private fun emptyBuffer() = JudoBuffer(IdManager())
 private fun bufferOf(contents: String) = emptyBuffer().apply {
     contents.split("\n").forEach {
         appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
@@ -519,7 +519,7 @@ private fun bufferOf(contents: String) = emptyBuffer().apply {
 }
 
 private fun windowOf(
-    buffer: JudoBuffer2,
+    buffer: JudoBuffer,
     width: Int,
     height: Int,
     focusable: Boolean = false,

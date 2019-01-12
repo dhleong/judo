@@ -7,7 +7,7 @@ import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.event.EVENT_GMCP_ENABLED
 import net.dhleong.judo.event.EVENT_MSDP_ENABLED
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 import java.io.File
 
 /**
@@ -64,7 +64,7 @@ class MapManager(
         init()
     }
 
-    override fun render(intoWindow: IJudoWindow2?) {
+    override fun render(intoWindow: IJudoWindow?) {
         current?.let {
             mapRenderer.renderMap(it, intoWindow)
         }

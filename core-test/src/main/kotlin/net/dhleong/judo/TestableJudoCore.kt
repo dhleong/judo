@@ -14,9 +14,9 @@ import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
@@ -51,7 +51,7 @@ class TestableJudoCore : IJudoCore by Proxy() {
     override val prompts = PromptManager()
 
     val ids = IdManager()
-    override val tabpage: IJudoTabpage2 = createTabpageMock(ids)
+    override val tabpage: IJudoTabpage = createTabpageMock(ids)
 
     private val buffer = InputBuffer()
     private val normalMode = NormalMode(
@@ -107,17 +107,17 @@ class TestableJudoCore : IJudoCore by Proxy() {
     }
 }
 
-private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage2 by Proxy() {
-    private val windows = mutableMapOf<Int, IJudoWindow2>()
+private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage by Proxy() {
+    private val windows = mutableMapOf<Int, IJudoWindow>()
     override val id: Int = ids.newTabpage()
-    override fun hsplit(rows: Int, buffer: IJudoBuffer2): IJudoWindow2 =
+    override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow =
         createWindowMock(ids, rows, buffer).also {
             windows[it.id] = it
         }
 
-    override fun findWindowById(id: Int): IJudoWindow2? = windows[id]
+    override fun findWindowById(id: Int): IJudoWindow? = windows[id]
 
-    override var currentWindow: IJudoWindow2
+    override var currentWindow: IJudoWindow
         get() = windows.values.first()
         set(_) { TODO("not implemented") }
 }
@@ -125,16 +125,16 @@ private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage2 by Proxy(
 fun createWindowMock(
     ids: IdManager,
     rows: Int,
-    buffer: IJudoBuffer2,
+    buffer: IJudoBuffer,
     isFocusable: Boolean = true
-) = object : IJudoWindow2 by DumbProxy() {
+) = object : IJudoWindow by DumbProxy() {
 
     override val id = ids.newWindow()
 
     override var width = 0
     override var height = rows
 
-    override var currentBuffer: IJudoBuffer2
+    override var currentBuffer: IJudoBuffer
         get() = buffer
         set(_) { TODO("not implemented") }
 

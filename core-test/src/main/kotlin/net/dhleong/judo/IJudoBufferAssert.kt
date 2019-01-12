@@ -4,16 +4,16 @@ import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
-import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoBuffer
 
 /**
  * @author dhleong
  */
-fun Assert<IJudoBuffer2>.hasLines(vararg expectedStrings: String) {
+fun Assert<IJudoBuffer>.hasLines(vararg expectedStrings: String) {
     val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
     assert(actualStrings, "buffer lines").isEqualTo(expectedStrings.toList())
 }
-fun Assert<IJudoBuffer2>.hasLinesSomewhere(vararg expectedStrings: String) {
+fun Assert<IJudoBuffer>.hasLinesSomewhere(vararg expectedStrings: String) {
     val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
     val firstIndex = actualStrings.indexOf(expectedStrings[0])
     if (firstIndex != -1) {
@@ -25,7 +25,7 @@ fun Assert<IJudoBuffer2>.hasLinesSomewhere(vararg expectedStrings: String) {
     expected("buffer of ${show(actualStrings)} to contain the sequence: ${show(expectedStrings)}")
 }
 
-fun Assert<IJudoBuffer2>.hasSize(size: Int) {
+fun Assert<IJudoBuffer>.hasSize(size: Int) {
     if (actual.size == size) return
     expected("size = ${show(size)} but was ${show(actual.size)}")
 }

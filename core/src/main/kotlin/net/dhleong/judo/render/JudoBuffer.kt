@@ -2,10 +2,10 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.util.CircularArrayList
 
-open class JudoBuffer2(
+open class JudoBuffer(
     ids: IdManager,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
-) : IJudoBuffer2 {
+) : IJudoBuffer {
 
     override val id: Int = ids.newBuffer()
 

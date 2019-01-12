@@ -1,6 +1,6 @@
 package net.dhleong.judo.mapping
 
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 import java.io.File
 
 /**
@@ -55,7 +55,7 @@ interface IMapManagerPublic {
      * Render the current map
      */
     fun render() = render(null)
-    fun render(intoWindow: IJudoWindow2?)
+    fun render(intoWindow: IJudoWindow?)
 
     fun resize(width: Int = -1, height: Int = -1)
 

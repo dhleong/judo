@@ -4,19 +4,19 @@ import assertk.all
 import assertk.assert
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
 import org.junit.Test
 
-class JLineRenderer2Test {
+class JLineRendererTest {
 
     lateinit var display: JLineDisplay
     lateinit var settings: StateMap
 
-    lateinit var renderer: JLineRenderer2
-    lateinit var window: PrimaryJudoWindow2
+    lateinit var renderer: JLineRenderer
+    lateinit var window: PrimaryJudoWindow
 
     @Before fun setUp() {
         settings = StateMap()
@@ -24,7 +24,7 @@ class JLineRenderer2Test {
         val width = 20
         val height = 6
         display = JLineDisplay(0, 0)
-        renderer = JLineRenderer2(
+        renderer = JLineRenderer(
             IdManager(),
             settings,
             enableMouse = false,
@@ -33,7 +33,7 @@ class JLineRenderer2Test {
             forceResize(width, height)
             setLoading(false)
         }
-        window = renderer.currentTabpage.currentWindow as PrimaryJudoWindow2
+        window = renderer.currentTabpage.currentWindow as PrimaryJudoWindow
     }
 
     @Test fun `Basic render`() {
@@ -223,7 +223,7 @@ class JLineRenderer2Test {
     }
 }
 
-fun JLineRenderer2.forceResize(width: Int, height: Int) {
+fun JLineRenderer.forceResize(width: Int, height: Int) {
     windowWidth = width
     windowHeight = height
     windowSize.rows = height
@@ -231,6 +231,6 @@ fun JLineRenderer2.forceResize(width: Int, height: Int) {
     updateSize()
 }
 
-private fun IJudoWindow2.updateStatusLine(status: String, cursor: Int = -1) {
+private fun IJudoWindow.updateStatusLine(status: String, cursor: Int = -1) {
     updateStatusLine(FlavorableStringBuilder.withDefaultFlavor(status), cursor)
 }

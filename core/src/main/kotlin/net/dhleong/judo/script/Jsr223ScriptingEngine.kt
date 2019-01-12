@@ -9,10 +9,9 @@ import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.prompt.IPromptManager
-import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
-import net.dhleong.judo.render.IJudoTabpage2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
@@ -125,14 +124,14 @@ abstract class Jsr223ScriptingEngine(
     }
 
     override fun wrapWindow(
-        tabpage: IJudoTabpage2,
-        window: IJudoWindow2
+        tabpage: IJudoTabpage,
+        window: IJudoWindow
     ): IScriptWindow = Jsr223Window(tabpage, window)
 }
 
 class Jsr223Window(
-    private val tabpage: IJudoTabpage2,
-    private val window: IJudoWindow2
+    private val tabpage: IJudoTabpage,
+    private val window: IJudoWindow
 ) : IScriptWindow {
 
     override val id: Int = window.id
@@ -152,8 +151,8 @@ class Jsr223Window(
 }
 
 class Jsr223Buffer(
-    private val window: IJudoWindow2,
-    private val buffer: IJudoBuffer2
+    private val window: IJudoWindow,
+    private val buffer: IJudoBuffer
 ) : IScriptBuffer {
     override val id: Int = buffer.id
 

@@ -8,7 +8,7 @@ import net.dhleong.judo.mapping.JudoRoom
 import net.dhleong.judo.mapping.MapGrid
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
+import net.dhleong.judo.render.JudoBuffer
 import org.junit.Before
 import org.junit.Test
 
@@ -17,7 +17,7 @@ import org.junit.Test
  */
 class SimpleBufferMapRendererTest {
     val ids = IdManager()
-    val buffer = JudoBuffer2(ids)
+    val buffer = JudoBuffer(ids)
 
     lateinit var renderer: SimpleBufferMapRenderer
     lateinit var roadColor: Flavor

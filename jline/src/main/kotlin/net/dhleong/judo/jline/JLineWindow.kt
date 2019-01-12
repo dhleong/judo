@@ -3,10 +3,10 @@ package net.dhleong.judo.jline
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
-import net.dhleong.judo.render.BaseJudoWindow2
+import net.dhleong.judo.render.BaseJudoWindow
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoBuffer2
+import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
@@ -21,16 +21,16 @@ class JLineWindow(
     settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
-    initialBuffer: IJudoBuffer2,
+    initialBuffer: IJudoBuffer,
     isFocusable: Boolean = false,
     statusLineOverlaysOutput: Boolean = false
-) : BaseJudoWindow2(
+) : BaseJudoWindow(
     ids, settings,
     initialWidth, initialHeight,
     isFocusable, statusLineOverlaysOutput
 ), IJLineWindow {
 
-    override var currentBuffer: IJudoBuffer2 = initialBuffer
+    override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
 
     private var status: FlavorableCharSequence = FlavorableStringBuilder.EMPTY

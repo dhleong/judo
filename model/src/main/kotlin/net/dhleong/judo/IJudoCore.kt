@@ -8,7 +8,7 @@ import net.dhleong.judo.mapping.IMapManager
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
-import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
 
@@ -72,7 +72,7 @@ interface IJudoCore {
     val triggers: ITriggerManager
     val state: StateMap
     val renderer: JudoRendererInfo
-    val tabpage: IJudoTabpage2
+    val tabpage: IJudoTabpage
 
     fun echo(vararg objects: Any?)
     /** not processed for triggers, etc. */

@@ -2,22 +2,22 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.inTransaction
-import net.dhleong.judo.render.IJudoBuffer2
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoBuffer
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.PrimaryJudoWindow
 
 /**
  * @author dhleong
  */
 class JLinePrimaryWindow(
-    private val renderer: JLineRenderer2,
+    private val renderer: JLineRenderer,
     ids: IdManager,
     settings: StateMap,
-    outputBuffer: IJudoBuffer2,
+    outputBuffer: IJudoBuffer,
     initialWidth: Int,
     initialHeight: Int
-) : PrimaryJudoWindow2(
+) : PrimaryJudoWindow(
     ids,
     settings,
     outputBuffer,
@@ -25,17 +25,17 @@ class JLinePrimaryWindow(
     initialHeight
 ), IJLineWindow {
 
-    override fun createBuffer(ids: IdManager): IJudoBuffer2 = renderer.createBuffer()
+    override fun createBuffer(ids: IdManager): IJudoBuffer = renderer.createBuffer()
 
     override fun createWindow(
         ids: IdManager,
         settings: StateMap,
         initialWidth: Int,
         initialHeight: Int,
-        initialBuffer: IJudoBuffer2,
+        initialBuffer: IJudoBuffer,
         isFocusable: Boolean,
         statusLineOverlaysOutput: Boolean
-    ): IJudoWindow2 = JLineWindow(
+    ): IJudoWindow = JLineWindow(
         renderer,
         ids,
         settings,

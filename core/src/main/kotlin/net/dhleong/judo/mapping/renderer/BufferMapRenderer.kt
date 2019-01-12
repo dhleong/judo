@@ -1,6 +1,6 @@
 package net.dhleong.judo.mapping.renderer
 
-import net.dhleong.judo.JudoRenderer2
+import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_HEIGHT
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
@@ -8,7 +8,7 @@ import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.MapGrid
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.IJudoAppendable
-import net.dhleong.judo.render.IJudoWindow2
+import net.dhleong.judo.render.IJudoWindow
 
 /**
  * Base class for [MapRenderer] implementations that
@@ -17,7 +17,7 @@ import net.dhleong.judo.render.IJudoWindow2
  * @author dhleong
  */
 abstract class BufferMapRenderer(
-    protected val renderer: JudoRenderer2,
+    protected val renderer: JudoRenderer,
     protected var mapGrid: MapGrid
 ) : MapRenderer {
 
@@ -30,7 +30,7 @@ abstract class BufferMapRenderer(
      */
     abstract fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoAppendable)
 
-    override fun renderMap(map: IJudoMap, window: IJudoWindow2?) {
+    override fun renderMap(map: IJudoMap, window: IJudoWindow?) {
         renderer.inTransaction {
             map.currentRoom?.let { room ->
                 mapGrid.buildAround(map, room)

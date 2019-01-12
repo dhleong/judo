@@ -7,13 +7,13 @@ import net.dhleong.judo.StateMap
  * containing the primary output buffer for a Connection, and
  * one containing prompts extracted for that Connection.
  */
-abstract class PrimaryJudoWindow2(
+abstract class PrimaryJudoWindow(
     ids: IdManager,
     settings: StateMap,
-    outputBuffer: IJudoBuffer2,
+    outputBuffer: IJudoBuffer,
     initialWidth: Int,
     initialHeight: Int
-) : IJudoWindow2 {
+) : IJudoWindow {
 
     override val id = ids.newWindow()
     override var width = initialWidth
@@ -25,7 +25,7 @@ abstract class PrimaryJudoWindow2(
         }
     override val isFocusable = true // primary window is ALWAYS focusable
 
-    override var currentBuffer: IJudoBuffer2
+    override var currentBuffer: IJudoBuffer
         get() = outputWindow.currentBuffer
         set(value) {
             outputWindow.currentBuffer = value
@@ -63,17 +63,17 @@ abstract class PrimaryJudoWindow2(
 
     private var promptHeight = 1
 
-    abstract fun createBuffer(ids: IdManager): IJudoBuffer2
+    abstract fun createBuffer(ids: IdManager): IJudoBuffer
 
     abstract fun createWindow(
         ids: IdManager,
         settings: StateMap,
         initialWidth: Int,
         initialHeight: Int,
-        initialBuffer: IJudoBuffer2,
+        initialBuffer: IJudoBuffer,
         isFocusable: Boolean = false,
         statusLineOverlaysOutput: Boolean = false
-    ): IJudoWindow2
+    ): IJudoWindow
 
     override fun append(text: FlavorableCharSequence) = outputWindow.append(text)
     override fun appendLine(line: FlavorableCharSequence) = outputWindow.appendLine(line)

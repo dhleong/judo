@@ -1,13 +1,10 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.render.IJudoWindow
 import org.assertj.core.api.Assertions.assertThat
 
 /**
  * @author dhleong
  */
-
-fun assertThat(actual: IJudoWindow?) = IJudoWindowAssert(actual)
 
 // imports for convenience:
 fun <T> assertThat(actual: List<T>) = assertThat(actual)!!

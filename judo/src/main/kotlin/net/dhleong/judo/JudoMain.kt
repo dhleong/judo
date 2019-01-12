@@ -1,6 +1,6 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.jline.JLineRenderer2
+import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
 import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
@@ -36,7 +36,7 @@ fun main(args: Array<String>) {
     // make sure we can render
 //    val renderer = JLineRenderer(settings)
     val ids = IdManager()
-    val renderer = JLineRenderer2(ids, settings)
+    val renderer = JLineRenderer(ids, settings)
     renderer.validate()
 
     // clean up after ourselves

@@ -8,9 +8,9 @@ import org.junit.Test
 /**
  * @author dhleong
  */
-class JudoBuffer2Test {
+class JudoBufferTest {
     @Test fun `append() respects newlines`() {
-        val b = JudoBuffer2(IdManager())
+        val b = JudoBuffer(IdManager())
         b.append("Take my")
         b.append(" love\n")
         b.append("Take my")
@@ -21,7 +21,7 @@ class JudoBuffer2Test {
     }
 
     @Test fun `append() splits on newlines`() {
-        val b = JudoBuffer2(IdManager())
+        val b = JudoBuffer(IdManager())
         b.append("Take\nmy\nlove\n")
 
         assert(b).hasLines(
@@ -32,5 +32,5 @@ class JudoBuffer2Test {
     }
 }
 
-fun JudoBuffer2.append(text: String) =
+fun JudoBuffer.append(text: String) =
     append(FlavorableStringBuilder.withDefaultFlavor(text))

@@ -3,18 +3,18 @@ package net.dhleong.judo.render
 import net.dhleong.judo.StateMap
 
 /**
- * Core, non-rendering-dependent [IJudoWindow2] implementations
+ * Core, non-rendering-dependent [IJudoWindow] implementations
  *
  * @author dhleong
  */
-abstract class BaseJudoWindow2(
+abstract class BaseJudoWindow(
     ids: IdManager,
     protected val settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
     override val isFocusable: Boolean = false,
     val statusLineOverlaysOutput: Boolean = false
-) : IJudoWindow2 {
+) : IJudoWindow {
 
     override val id = ids.newWindow()
     override var width: Int = initialWidth

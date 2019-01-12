@@ -4,10 +4,10 @@ import assertk.assert
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoTabpage2
+import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
-import net.dhleong.judo.render.JudoBuffer2
-import net.dhleong.judo.render.PrimaryJudoWindow2
+import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
 import org.junit.Test
 
@@ -19,9 +19,9 @@ class JLineTabpageTest {
     lateinit var display: JLineDisplay
     lateinit var settings: StateMap
 
-    lateinit var renderer: JLineRenderer2
-    lateinit var primary: PrimaryJudoWindow2
-    lateinit var tabpage: IJudoTabpage2
+    lateinit var renderer: JLineRenderer
+    lateinit var primary: PrimaryJudoWindow
+    lateinit var tabpage: IJudoTabpage
 
     @Before fun setUp() {
         settings = StateMap()
@@ -29,7 +29,7 @@ class JLineTabpageTest {
         val width = 12
         val height = 7
         display = JLineDisplay(0, 0)
-        renderer = JLineRenderer2(
+        renderer = JLineRenderer(
             IdManager(),
             settings,
             enableMouse = false,
@@ -39,7 +39,7 @@ class JLineTabpageTest {
             setLoading(false)
         }
         tabpage = renderer.currentTabpage
-        primary = tabpage.currentWindow as PrimaryJudoWindow2
+        primary = tabpage.currentWindow as PrimaryJudoWindow
     }
 
     @Test fun `Render hsplit window`() {
@@ -55,7 +55,7 @@ class JLineTabpageTest {
             |____________
         """.trimMargin())
 
-        val buffer = JudoBuffer2(IdManager())
+        val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -78,7 +78,7 @@ class JLineTabpageTest {
         primary.updateStatusLine("[status]")
         assert(primary).hasHeight(6)
 
-        val buffer = JudoBuffer2(IdManager())
+        val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -101,7 +101,7 @@ class JLineTabpageTest {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
 
-        val buffer = JudoBuffer2(IdManager())
+        val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -148,7 +148,7 @@ class JLineTabpageTest {
         assert(primary).hasHeight(8)
         tabpage.resize(tabpage.width, 8) // should not be a problem
 
-        val buffer = JudoBuffer2(IdManager())
+        val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -165,7 +165,7 @@ class JLineTabpageTest {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
 
-        val buffer = JudoBuffer2(IdManager())
+        val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -190,6 +190,6 @@ class JLineTabpageTest {
     }
 }
 
-private fun PrimaryJudoWindow2.updateStatusLine(line: String) {
+private fun PrimaryJudoWindow.updateStatusLine(line: String) {
     updateStatusLine(FlavorableStringBuilder.withDefaultFlavor(line))
 }

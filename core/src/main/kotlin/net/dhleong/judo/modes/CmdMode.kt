@@ -1,7 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
-import net.dhleong.judo.JudoRenderer2
+import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.event.EventHandler
@@ -25,7 +25,7 @@ class CmdMode(
     judo: IJudoCore,
     private val ids: IdManager,
     inputBuffer: InputBuffer,
-    private val renderer: JudoRenderer2,
+    private val renderer: JudoRenderer,
     history: IInputHistory,
     private var completions: CompletionSource,
     userConfigDir: File,
