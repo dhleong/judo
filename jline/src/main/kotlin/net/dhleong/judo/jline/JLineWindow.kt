@@ -53,11 +53,19 @@ class JLineWindow(
     }
 
     override fun render(display: JLineDisplay, x: Int, y: Int) {
+        // synchronize on the buffer to protect against concurrent
+        // modification
+        val buffer = currentBuffer
+        synchronized(buffer) {
+            renderWith(buffer, display, x, y)
+        }
+    }
+
+    private fun renderWith(buffer: IJudoBuffer, display: JLineDisplay, x: Int, y: Int) {
         val displayHeight =
             if (isFocusable && !statusLineOverlaysOutput) height - 1 // make room for status line
             else height
 
-        val buffer = currentBuffer
         val wordWrap = settings[WORD_WRAP]
         val start = buffer.lastIndex - scrollbackBottom
         val end = maxOf(0, start - displayHeight)

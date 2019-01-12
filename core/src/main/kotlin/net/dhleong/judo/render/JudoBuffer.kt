@@ -18,10 +18,12 @@ open class JudoBuffer(
 
     override fun get(index: Int): FlavorableCharSequence = contents[index]
 
+    @Synchronized
     override fun append(text: FlavorableCharSequence) {
         text.splitAtNewlines(contents, continueIncompleteLines = true)
     }
 
+    @Synchronized
     override fun appendLine(line: FlavorableCharSequence) {
         if (!line.endsWith('\n')) {
             line += '\n'
@@ -29,14 +31,17 @@ open class JudoBuffer(
         line.splitAtNewlines(contents, continueIncompleteLines = false)
     }
 
+    @Synchronized
     override fun clear() {
         contents.clear()
     }
 
+    @Synchronized
     override fun replaceLastLine(result: FlavorableCharSequence) {
         contents[contents.lastIndex] = result
     }
 
+    @Synchronized
     override fun set(newContents: List<FlavorableCharSequence>) {
         clear()
         newContents.forEach(this::appendLine)

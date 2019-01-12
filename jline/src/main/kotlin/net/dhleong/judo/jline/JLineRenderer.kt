@@ -185,6 +185,7 @@ class JLineRenderer(
         }
     }
 
+    @Synchronized
     private fun render() {
         val display = renderSurface
         if (display.width <= 0) {
