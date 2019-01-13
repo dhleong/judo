@@ -218,7 +218,10 @@ private inline fun Iterator<Int>.readHighColor(): JudoColor? {
         5 -> {
             // 256 colors
             if (hasNext()) {
-                return JudoColor.High256(next())
+                return when (val color = next()) {
+                    in 0..15 -> JudoColor.Simple.from(color)
+                    else -> JudoColor.High256(color)
+                }
             }
         }
     }

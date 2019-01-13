@@ -127,6 +127,23 @@ class AnsiFlavorableStringReaderTest {
         )
     }
 
+    @Test fun `Read lower-256 colors as Simple`() {
+        assert(
+            "${27.toChar()}[38;5;15mW${27.toChar()}[38;5;7mw".ansiToFlavorable()
+        ).isEqualTo(
+            FlavorableStringBuilder(7).apply {
+                append("W", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_WHITE)
+                ))
+                append("w", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
+                ))
+            }
+        )
+    }
+
     @Test fun `Handle RGB color`() {
         assert(
             "${27.toChar()}[38;2;250;50;20mRGB Color".ansiToFlavorable()
