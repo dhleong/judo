@@ -35,10 +35,11 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
         }
     }
 
-    override fun callableToFunction1(fromScript: Any): (Any) -> Any? {
+    override fun callableToFunction1(fromScript: Any): (Any?) -> Any? {
         return { arg ->
             (engine as Invocable).invokeMethod(
-                fromScript, "call", fromScript, toScript(arg)
+                fromScript, "call", fromScript,
+                arg?.let { toScript(it) }
             )
         }
     }

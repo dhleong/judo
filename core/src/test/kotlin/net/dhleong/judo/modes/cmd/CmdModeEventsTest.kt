@@ -59,6 +59,32 @@ class CmdModeEventsTest(
             .containsExactly("awesome colder")
     }
 
+    @Test fun `event() with single null argument`() {
+        mode.execute(when (scriptType()) {
+            SupportedScriptTypes.PY -> """
+                @event("cool")
+                def handleEvent(ev):
+                    echo("awesome %s" % ev)
+            """.trimIndent()
+
+            SupportedScriptTypes.JS -> """
+                event('cool', function(ev) {
+                    echo("awesome " + ev);
+                });
+            """.trimIndent()
+        })
+
+        assert(judo.events.has("cool")).isTrue()
+
+        val nullName = when (scriptType()) {
+            SupportedScriptTypes.PY -> "None"
+            else -> "null"
+        }
+        judo.events.raise("cool")
+        assert(judo.echos)
+            .containsExactly("awesome $nullName")
+    }
+
     @Test fun `event() with destructuring`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """

@@ -42,7 +42,7 @@ interface ScriptingEngine {
 
     fun callableToAliasProcessor(fromScript: Any): AliasProcesser
     fun <R> callableToFunction0(fromScript: Any): Function0<R>
-    fun callableToFunction1(fromScript: Any): Function1<Any, Any?>
+    fun callableToFunction1(fromScript: Any): Function1<Any?, Any?>
     fun callableToFunctionN(fromScript: Any): Function1<Array<Any>, Any?>
 
     /**

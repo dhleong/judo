@@ -133,7 +133,7 @@ class CmdMode(
             1 -> {
                 val fn1 = engine.callableToFunction1(handlerFromScript)
                 object : EventHandler {
-                    override fun invoke(arg: Any?) { fn1(arg!!) }
+                    override fun invoke(arg: Any?) { fn1(arg) }
                 }
             }
 
