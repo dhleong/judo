@@ -8,7 +8,6 @@ import assertk.assertions.support.show
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.render.IJudoBuffer
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -23,7 +22,6 @@ class BufferSearcherTest {
         searcher = BufferSearcher()
     }
 
-    @Ignore
     @Test fun `Forward and backward`() {
         buffer = bufferOf("""
             Take my love
