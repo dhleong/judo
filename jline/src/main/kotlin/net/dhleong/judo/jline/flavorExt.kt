@@ -1,11 +1,7 @@
 package net.dhleong.judo.jline
 
 import net.dhleong.judo.render.Flavor
-import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.JudoColor
-import net.dhleong.judo.render.forEachChunk
-import org.jline.utils.AttributedString
-import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 
 // from AttributedStyle source, since they're not public...
@@ -21,7 +17,7 @@ private const val F_FOREGROUND = 0x00000100
 private const val F_BACKGROUND = 0x00000200
 private const val F_HIDDEN = 0x00000400
 
-fun Flavor.toAttributedStyle() = createAttributedStyle(
+fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
     0 or isBold.toFlag(F_BOLD)
         or isFaint.toFlag(F_FAINT)
         or isItalic.toFlag(F_ITALIC)
@@ -38,14 +34,20 @@ fun Flavor.toAttributedStyle() = createAttributedStyle(
     // TODO do this without these extra allocations?
     var style = base
     if (hasForeground) {
-        style = style.foreground(
-            foreground.toAnsiInt()
-        )
+        val c = foreground.toAnsiInt()
+        style = if (c == 0) {
+            style.foregroundDefault()
+        } else {
+            style.foreground(c)
+        }
     }
     if (hasBackground) {
-        style = style.background(
-            background.toAnsiInt()
-        )
+        val c = background.toAnsiInt()
+        style = if (c == 0) {
+            style.backgroundDefault()
+        } else {
+            style.background(c)
+        }
     }
 
     style
@@ -63,7 +65,7 @@ private val styleFactory by lazy(LazyThreadSafetyMode.NONE) {
     }
 }
 
-fun createAttributedStyle(styleInt: Int) = styleFactory(
+fun createAttributedStyle(styleInt: Int): AttributedStyle = styleFactory(
     styleInt,
     styleInt
 )
@@ -73,8 +75,13 @@ private inline fun Boolean.toFlag(flagValue: Int): Int =
     if (this) flagValue
     else 0
 
-private fun JudoColor.toAnsiInt(): Int = when (this) {
+internal fun JudoColor.toAnsiInt(): Int = when (this) {
     is JudoColor.Simple -> value.ansi
-    else -> TODO("ansi conversion of $this")
+    is JudoColor.High256 -> value
+    is JudoColor.FullRGB -> {
+        // convert to 256 colors (this is what JLine does)
+        16 + (red shr 3) * 36 + (green shr 3) * 6 + (blue shr 3)
+    }
+    JudoColor.Default -> 0
 }
 
