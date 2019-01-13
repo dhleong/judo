@@ -76,7 +76,14 @@ class AnsiFlavorableStringReader {
 
                 state == AnsiState.OPEN -> {
                     if (c == 'm') {
-                        lastFlavor = ansiCharsToFlavor(lastFlavor, partialAnsi, partialLength)
+                        lastFlavor = try {
+                            ansiCharsToFlavor(lastFlavor, partialAnsi, partialLength)
+                        } catch (e: IllegalStateException) {
+                            throw IllegalStateException(
+                                "Error parsing ANSI flavor sequence: `${String(partialAnsi, 0, partialLength)}` ($partialLength)",
+                                e
+                            )
+                        }
                         partialLength = 0
                         state = AnsiState.OFF
                     } else if (c !in '0'..'9' && c != ';') {
@@ -213,17 +220,16 @@ internal fun ansiCharsToFlavor(
     return flavor
 }
 
-@Suppress("NOTHING_TO_INLINE")
-private inline fun Iterator<Int>.readHighColor(): JudoColor? {
+private fun Iterator<Int>.readHighColor(): JudoColor? {
     if (!hasNext()) return null
 
     val kind = next()
     when (kind) {
         2 -> {
             // 24-bit rgb color
-            val r = next()
-            val g = next()
-            val b = next()
+            val r = next256()
+            val g = next256()
+            val b = next256()
             return JudoColor.FullRGB(
                 r, g, b
             )
@@ -232,7 +238,7 @@ private inline fun Iterator<Int>.readHighColor(): JudoColor? {
         5 -> {
             // 256 colors
             if (hasNext()) {
-                return when (val color = next()) {
+                return when (val color = next256()) {
                     in 0..15 -> JudoColor.Simple.from(color)
                     else -> JudoColor.High256(color)
                 }
@@ -243,10 +249,16 @@ private inline fun Iterator<Int>.readHighColor(): JudoColor? {
     return null
 }
 
+private fun Iterator<Int>.next256(): Int = next().also {
+    if (it !in 0..255) {
+        throw IllegalStateException("Expected value in 0..255 but was $it")
+    }
+}
+
 private fun ansiParameters(ansi: CharArray, length: Int) = iterator {
     var start = 0
     do {
-        val end = ansi.indexOf(';', start).let {
+        val end = ansi.indexOf(';', start, length).let {
             if (it == -1) length
             else it
         }
@@ -258,8 +270,8 @@ private fun ansiParameters(ansi: CharArray, length: Int) = iterator {
     } while (end < length)
 }
 
-private fun CharArray.indexOf(needle: Char, start: Int): Int {
-    for (i in start until size) {
+private fun CharArray.indexOf(needle: Char, start: Int, end: Int): Int {
+    for (i in start until end) {
         if (this[i] == needle) {
             return i
         }

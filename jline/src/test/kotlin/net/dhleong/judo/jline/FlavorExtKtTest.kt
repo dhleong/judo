@@ -1,5 +1,6 @@
 package net.dhleong.judo.jline
 
+import assertk.all
 import assertk.assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
@@ -36,6 +37,24 @@ class FlavorExtKtTest {
         val flavorable = ansi.parseAnsi()
         val parsedForeground = flavorable.getFlavor(0).foreground
         assert(parsedForeground).isInstanceOf(JudoColor.High256::class.java)
+    }
+
+    @Test fun `256 color conversion`() {
+        val originalFlavor = SimpleFlavor(background = JudoColor.High256(
+            235
+        ), hasBackground = true)
+        val style = originalFlavor.toAttributedStyle()
+
+        val ansi = AttributedStringBuilder()
+            .append("text", style)
+            .toAnsi(terminalWith256Colors())
+
+        val flavorable = ansi.parseAnsi()
+        val parsed = flavorable.getFlavor(0).background
+        assert(parsed).all {
+            isInstanceOf(JudoColor.High256::class.java)
+            isEqualTo(JudoColor.High256(235))
+        }
     }
 
     private fun terminalWith256Colors(): Terminal = mock {
