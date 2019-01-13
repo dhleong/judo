@@ -17,7 +17,7 @@ private const val MSDP_SUBNEGOTIATION_MAX_LENGTH = 8192
 class MsdpHandler(
     private val judo: IJudoCore,
     private val isDebug: () -> Boolean,
-    private val echoDebug: (String) -> Unit
+    private val printDebug: (String) -> Unit
 ) : TelnetOptionHandler(
     TELNET_TELOPT_MSDP.toInt(),
     false,
@@ -78,7 +78,7 @@ class MsdpHandler(
             val value = varReader.readObject()
 
             if (isDebug()) {
-                echoDebug("## TELNET < MSDP VAR: $name <- $value")
+                printDebug("## TELNET < MSDP VAR: $name <- $value")
             }
 
             var gotCommands = false
@@ -91,7 +91,7 @@ class MsdpHandler(
 
             judo.onMainThread {
                 if (isDebug()) {
-                    echoDebug("# MSDP: SET($name) = $value")
+                    printDebug("# MSDP: SET($name) = $value")
                 }
 
                 judo.events.raise("MSDP", arrayOf(name, value))
@@ -106,14 +106,14 @@ class MsdpHandler(
                 if (it < 10) ' '.toByte()
                 else it.toByte()
             }.toByteArray().toString(Charset.defaultCharset()).trim()
-            echoDebug("## TELNET < MSDP: $asString")
+            printDebug("## TELNET < MSDP: $asString")
         }
 
         return null
     }
 
     override fun startSubnegotiationRemote(): IntArray {
-        echoDebug("## TELNET > IAC SB MSDP MSDP_VAR 'LIST' MSDP_VAL '$INITIAL_LIST' IAC SE")
+        printDebug("## TELNET > IAC SB MSDP MSDP_VAR 'LIST' MSDP_VAL '$INITIAL_LIST' IAC SE")
         return MSDP_LIST_COMMANDS
     }
 }

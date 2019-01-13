@@ -36,7 +36,18 @@ class AnsiFlavorableStringReader {
         it.beginFlavor(Flavor.default, 0)
     }
 
-    fun feed(chars: CharArray, available: Int = chars.size): Sequence<FlavorableCharSequence> = sequence {
+    fun reset() {
+        state = AnsiState.OFF
+        partialLength = 0
+        lastFlavor = Flavor.default
+        builder.reset()
+    }
+
+    fun feed(
+        chars: CharArray,
+        start: Int = 0,
+        available: Int = chars.size
+    ): Sequence<FlavorableCharSequence> = sequence {
         var buffer = when {
             partialLength > 0 -> partialAnsi
             else -> chars
@@ -48,7 +59,10 @@ class AnsiFlavorableStringReader {
             else -> available
         }
 
-        var i = 0
+        var i = when {
+            partialLength > 0 -> 0
+            else -> start
+        }
         while (i < limit) {
             val c = buffer[i]
             when {
@@ -110,7 +124,7 @@ class AnsiFlavorableStringReader {
             if (++i >= limit && buffer === partialAnsi) {
                 buffer = chars
                 limit = available
-                i = 0
+                i = start
             }
         }
 

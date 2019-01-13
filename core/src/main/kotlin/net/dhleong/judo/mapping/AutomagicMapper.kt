@@ -94,7 +94,7 @@ class AutomagicMapper(
             }
         } else {
             state = State.NONE
-            judo.echoRaw("No way to automap using $vars")
+            judo.printRaw("No way to automap using $vars")
         }
     }
 
@@ -106,7 +106,7 @@ class AutomagicMapper(
     fun onGmcpRoom(room: Map<String, Any>) {
         if ("num" !in room || "exits" !in room) {
             state = State.NONE
-            judo.echoRaw("No way to automap using $room")
+            judo.printRaw("No way to automap using $room")
             sendGmcp("Core.Supports.Remove",
                 arrayOf("Room", "Room.Info"))
             return
@@ -132,7 +132,7 @@ class AutomagicMapper(
 
     fun onRoom(vnum: Int, name: String, exits: Map<String, Any>) {
         if (judo.state[DEBUG_AUTOMAGIC]) {
-            judo.echoRaw("onRoom($vnum, $name) $exits")
+            judo.printRaw("onRoom($vnum, $name) $exits")
         }
 
         val strategy = mapStrategy

@@ -28,8 +28,8 @@ class JudoCoreTest {
         )
     }
 
-    @Test fun `echo() handles newlines`() {
-        judo.echo("\nTake my love,\n\nTake my land,\nTake me")
+    @Test fun `print() handles newlines`() {
+        judo.print("\nTake my love,\n\nTake my land,\nTake me")
         assertThat(renderer.outputLines)
             .containsExactly(
                 "",
@@ -196,7 +196,7 @@ class JudoCoreTest {
             """
             import re
             @trigger(re.compile("(take.*)"))
-            def my_trigger(my, love): echo('triggered!')
+            def my_trigger(my, love): print('triggered!')
             """.trimIndent())
 
         val buffer = "take my love\r\n"

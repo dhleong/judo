@@ -16,11 +16,11 @@ class CommonsNetConnection private constructor(
     judo: IJudoCore,
     private val address: String,
     private val port: Int,
-    private val echo: (String) -> Unit
+    private val print: (String) -> Unit
 ) : BaseConnection() {
     class Factory(val debug: Boolean = false) : JudoConnection.Factory {
         override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
-            return CommonsNetConnection(judo, address, port) { judo.echo(it) }.also {
+            return CommonsNetConnection(judo, address, port) { judo.print(it) }.also {
                 it.debug = debug
             }
         }
@@ -43,7 +43,7 @@ class CommonsNetConnection private constructor(
         }
 
     private val client = TelnetClient()
-    private val socketFactory = MccpHandlingSocketFactory(echo)
+    private val socketFactory = MccpHandlingSocketFactory(print)
 
     private val gmcp: GmcpHandler
     private val msdp: MsdpHandler
@@ -61,22 +61,22 @@ class CommonsNetConnection private constructor(
         input = MsdpHandler.wrap(client.inputStream)
         output = client.outputStream
 
-        val echoDebug = { text: String ->
+        val printDebug = { text: String ->
             if (debug) {
-                echo(text)
+                print(text)
             }
         }
 
-        val mtts = MttsTermTypeHandler(judo.renderer, echoDebug)
-        msdp = MsdpHandler(judo, { debug }, echoDebug)
-        gmcp = GmcpHandler(judo, { debug }, echoDebug)
+        val mtts = MttsTermTypeHandler(judo.renderer, printDebug)
+        msdp = MsdpHandler(judo, { debug }, printDebug)
+        gmcp = GmcpHandler(judo, { debug }, printDebug)
         client.addOptionHandler(mtts)
         client.addOptionHandler(EchoOptionHandler(false, false, false, true))
         client.addOptionHandler(gmcp)
         client.addOptionHandler(msdp)
         client.addOptionHandler(SimpleOptionHandler(TELNET_TELOPT_MCCP2.toInt(), false, false, true, true))
         client.registerNotifHandler { negotiation_code, option_code ->
-            echoDebug("## TELNET < ${stringify(negotiation_code)} ${stringifyOption(option_code)}")
+            printDebug("## TELNET < ${stringify(negotiation_code)} ${stringifyOption(option_code)}")
 
             when (option_code) {
                 TelnetOption.ECHO -> {

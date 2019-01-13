@@ -19,13 +19,13 @@ class CmdModeEventsTest(
     @Test fun `event() with function0`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
-                |def handleEvent(): echo("awesome")
+                |def handleEvent(): print("awesome")
                 |event('cool', handleEvent)
             """.trimMargin()
 
             SupportedScriptTypes.JS -> """
                 event('cool', function handleEvent() {
-                    echo("awesome");
+                    print("awesome");
                 });
             """.trimIndent()
         })
@@ -33,7 +33,7 @@ class CmdModeEventsTest(
         assert(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", "cold")
-        assert(judo.echos)
+        assert(judo.prints)
             .containsExactly("awesome")
     }
 
@@ -42,12 +42,12 @@ class CmdModeEventsTest(
             SupportedScriptTypes.PY -> """
                 @event("cool")
                 def handleEvent(ev):
-                    echo("awesome %s" % ev)
+                    print("awesome %s" % ev)
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
                 event('cool', function(ev) {
-                    echo("awesome " + ev);
+                    print("awesome " + ev);
                 });
             """.trimIndent()
         })
@@ -55,7 +55,7 @@ class CmdModeEventsTest(
         assert(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", "colder")
-        assert(judo.echos)
+        assert(judo.prints)
             .containsExactly("awesome colder")
     }
 
@@ -64,12 +64,12 @@ class CmdModeEventsTest(
             SupportedScriptTypes.PY -> """
                 @event("cool")
                 def handleEvent(ev):
-                    echo("awesome %s" % ev)
+                    print("awesome %s" % ev)
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
                 event('cool', function(ev) {
-                    echo("awesome " + ev);
+                    print("awesome " + ev);
                 });
             """.trimIndent()
         })
@@ -81,7 +81,7 @@ class CmdModeEventsTest(
             else -> "null"
         }
         judo.events.raise("cool")
-        assert(judo.echos)
+        assert(judo.prints)
             .containsExactly("awesome $nullName")
     }
 
@@ -90,12 +90,12 @@ class CmdModeEventsTest(
             SupportedScriptTypes.PY -> """
                 @event("cool")
                 def handleEvent(key, val):
-                    echo("awesome %s:%s" % (key, val))
+                    print("awesome %s:%s" % (key, val))
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
                 event('cool', function(key, val) {
-                    echo("awesome " + key + ":" + val);
+                    print("awesome " + key + ":" + val);
                 });
             """.trimIndent()
         })
@@ -103,7 +103,7 @@ class CmdModeEventsTest(
         assert(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", arrayOf("cold", "colder"))
-        assert(judo.echos)
+        assert(judo.prints)
             .containsExactly("awesome cold:colder")
     }
 

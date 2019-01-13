@@ -29,27 +29,27 @@ class CmdModeTriggerTest(
     @Test fun `trigger() basic`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
-                |def handleTrigger(): echo("awesome")
+                |def handleTrigger(): print("awesome")
                 |trigger('cool', handleTrigger)
             """.trimMargin()
 
             SupportedScriptTypes.JS -> """
                 trigger('cool', function handleTrigger() {
-                    echo("awesome");
+                    print("awesome");
                 });
             """.trimIndent()
         })
         assert(judo.triggers.hasTriggerFor("cool")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.echos).containsExactly("awesome")
+        assert(judo.prints).containsExactly("awesome")
     }
 
     @Test fun `trigger() as decorator`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
-                |def handleTrigger(): echo("awesome")
+                |def handleTrigger(): print("awesome")
             """.trimMargin()
 
             SupportedScriptTypes.JS -> return
@@ -57,7 +57,7 @@ class CmdModeTriggerTest(
         assert(judo.triggers.hasTriggerFor("cool")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.echos).containsExactly("awesome")
+        assert(judo.prints).containsExactly("awesome")
     }
 
     @Test fun `trigger() with regex`() {
@@ -65,55 +65,55 @@ class CmdModeTriggerTest(
             SupportedScriptTypes.PY -> """
             import re
             @trigger(re.compile('cool(.*)'))
-            def handleTrigger(thing): echo("awesome%s" % thing)
+            def handleTrigger(thing): print("awesome%s" % thing)
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
                 trigger(/cool(.*)/, function(thing) {
-                    echo("awesome" + thing);
+                    print("awesome" + thing);
                 });
             """.trimIndent()
         })
 
         judo.triggers.process("cool story bro")
-        assert(judo.echos).containsExactly("awesome story bro")
+        assert(judo.prints).containsExactly("awesome story bro")
     }
 
     @Test fun `trigger() strips color by default`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool $1')
-                |def handleTrigger(thing): echo("awesome %s" % thing)
+                |def handleTrigger(thing): print("awesome %s" % thing)
             """.trimMargin()
 
             SupportedScriptTypes.JS -> """
                 trigger('cool $1', function(thing) {
-                    echo("awesome " + thing);
+                    print("awesome " + thing);
                 });
             """.trimIndent()
         })
 
         judo.triggers.process(`cool story`())
-        assert(judo.echos).containsExactly("awesome story")
+        assert(judo.prints).containsExactly("awesome story")
     }
 
     @Test fun `trigger(_, 'color') preserves ANSI`() {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool $1', 'color')
-                |def handleTrigger(thing): echo("awesome %s" % thing)
+                |def handleTrigger(thing): print("awesome %s" % thing)
             """.trimMargin()
 
             SupportedScriptTypes.JS -> """
                 trigger('cool $1', 'color', function(thing) {
-                    echo("awesome " + thing);
+                    print("awesome " + thing);
                 });
             """.trimIndent()
         })
 
         judo.triggers.process(`cool story`())
-        assert(judo.echos).hasSize(1)
-        assert(judo.echos[0] as String).isEqualTo(
+        assert(judo.prints).hasSize(1)
+        assert(judo.prints[0] as String).isEqualTo(
             "awesome ${ansi(1,2)}st${ansi(fg=3)}or${ansi(fg=4)}y${ansi(0)}")
     }
 
@@ -121,19 +121,19 @@ class CmdModeTriggerTest(
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool.')
-                |def handleTrigger(): echo("awesome.")
+                |def handleTrigger(): print("awesome.")
             """.trimMargin()
 
             SupportedScriptTypes.JS -> """
                 trigger('cool.', function() {
-                    echo("awesome.");
+                    print("awesome.");
                 });
             """.trimIndent()
         })
         assert(judo.triggers.hasTriggerFor("cool.")).isTrue()
 
         judo.triggers.process("cool.")
-        assert(judo.echos).containsExactly("awesome.")
+        assert(judo.prints).containsExactly("awesome.")
     }
 
     @Test fun `trigger() supports multiple decorators`() {
@@ -141,7 +141,7 @@ class CmdModeTriggerTest(
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
                 |@trigger('shiny')
-                |def handleTrigger(): echo("awesome")
+                |def handleTrigger(): print("awesome")
             """.trimMargin()
 
             // no decorator support:
@@ -151,10 +151,10 @@ class CmdModeTriggerTest(
         assert(judo.triggers.hasTriggerFor("shiny")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.echos).containsExactly("awesome")
+        assert(judo.prints).containsExactly("awesome")
 
         judo.triggers.process("this is shiny")
-        assert(judo.echos).containsExactly("awesome", "awesome")
+        assert(judo.prints).containsExactly("awesome", "awesome")
     }
 
     @Test fun `trigger() and alias() decorators stack`() {
@@ -162,7 +162,7 @@ class CmdModeTriggerTest(
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
                 |@alias('shiny')
-                |def handleTriggerOrAlias(): echo("awesome")
+                |def handleTriggerOrAlias(): print("awesome")
             """.trimMargin()
 
             // no decorators
@@ -175,11 +175,11 @@ class CmdModeTriggerTest(
         assert(judo.aliases.hasAliasFor("shiny")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.echos).containsExactly("awesome")
+        assert(judo.prints).containsExactly("awesome")
 
         judo.send("shiny", fromMap = false)
         assert(judo.sends).isEmpty()
-        assert(judo.echos).containsExactly("awesome", "awesome")
+        assert(judo.prints).containsExactly("awesome", "awesome")
     }
 
     private fun `cool story`() = FlavorableStringBuilder(64).apply {

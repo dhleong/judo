@@ -21,7 +21,7 @@ class CmdModePromptTest(
     @Test fun prompt() {
         mode.execute(fnCall("prompt", "^Input($1)", "prompt $1>"))
 
-        assert(judo.echos).isEmpty()
+        assert(judo.prints).isEmpty()
         assert(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
         val result = judo.prompts.process("Input(42)".parseAnsi()) { _, prompt ->
@@ -37,7 +37,7 @@ class CmdModePromptTest(
             "^Input($1)", "color", "prompt $1>"
         ))
 
-        assert(judo.echos).isEmpty()
+        assert(judo.prints).isEmpty()
         assert(judo.prompts.size).isEqualTo(1)
         var lastPrompt: String? = null
         val result = judo.prompts.process("Input(${ansi(1,2)}42)".parseAnsi()) { _, prompt ->

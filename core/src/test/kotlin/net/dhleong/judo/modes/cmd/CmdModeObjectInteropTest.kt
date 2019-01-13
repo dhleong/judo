@@ -27,14 +27,14 @@ class CmdModeObjectInteropTest(
     @Test fun `hsplit() returns an object supporting resize()`() {
         mode.execute("""
             newWin = hsplit(20)
-            echo(newWin.id)
-            echo(newWin.buffer)
+            print(newWin.id)
+            print(newWin.buffer)
             newWin.buffer.append("test")
             newWin.resize(newWin.width, 4)
             """.trimIndent())
 
-        assert(judo.echos).isNotEmpty()
-        val window = judo.tabpage.findWindowById(judo.echos[0] as Int)!!
+        assert(judo.prints).isNotEmpty()
+        val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
 
         assert(window).hasHeight(4)
 
@@ -74,15 +74,15 @@ class CmdModeObjectInteropTest(
 
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
-                echo(judo.mapper.current is not None)
+                print(judo.mapper.current is not None)
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
-                echo(judo.mapper.current !== null)
+                print(judo.mapper.current !== null)
             """.trimIndent()
         })
 
-        assert(judo.echos).containsExactly(true)
+        assert(judo.prints).containsExactly(true)
         file.delete()
     }
 

@@ -12,7 +12,7 @@ import java.io.EOFException
 class GmcpHandler(
     private val judo: IJudoCore,
     private val isDebug: () -> Boolean,
-    private val echoDebug: (String) -> Unit
+    private val printDebug: (String) -> Unit
 ) : TelnetOptionHandler(
     TELNET_TELOPT_GMCP,
     false,
@@ -77,7 +77,7 @@ class GmcpHandler(
 
         judo.onMainThread {
             if (isDebug()) {
-                echoDebug("# GMCP: `$packageName` = `$data`")
+                printDebug("# GMCP: `$packageName` = `$data`")
             }
 
             judo.events.raise("GMCP", arrayOf(packageName, data))
@@ -88,7 +88,7 @@ class GmcpHandler(
     }
 
     override fun startSubnegotiationRemote(): IntArray? {
-        echoDebug("## TELNET > IAC SB GMCP Core.Hello ...")
+        printDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 
         isGmcpEnabled = true
 

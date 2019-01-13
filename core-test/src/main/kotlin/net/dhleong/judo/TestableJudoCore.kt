@@ -35,7 +35,7 @@ class TestableJudoCore : IJudoCore by Proxy() {
         }
     }
 
-    val echos = ArrayList<Any?>()
+    val prints = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<List<Any>>()
     val raised = ArrayList<Pair<String, Any?>>()
@@ -91,16 +91,16 @@ class TestableJudoCore : IJudoCore by Proxy() {
         }
     }
 
-    override fun echo(vararg objects: Any?) {
-        objects.forEach { echos.add(it) }
+    override fun print(vararg objects: Any?) {
+        objects.forEach { prints.add(it) }
     }
 
-    override fun echoRaw(vararg objects: Any?) {
-        objects.forEach { echos.add(it) }
+    override fun printRaw(vararg objects: Any?) {
+        objects.forEach { prints.add(it) }
     }
 
     fun clearTestable() {
-        echos.clear()
+        prints.clear()
         sends.clear()
         maps.clear()
         raised.clear()

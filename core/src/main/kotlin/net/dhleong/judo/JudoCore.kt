@@ -220,14 +220,14 @@ class JudoCore(
 
     override fun connect(address: String, port: Int) {
         disconnect()
-        doEcho(false, "Connecting to $address:$port... ")
+        doPrint(false, "Connecting to $address:$port... ")
 
         lastConnect = address to port
 
         val connection: JudoConnection
         try {
             connection = connections.create(this, address, port)
-            echo("Connected.")
+            print("Connected.")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")
             return
@@ -239,7 +239,7 @@ class JudoCore(
             this.doEcho = doEcho
 
             if (debug.isEnabled) {
-                echo("## TELNET doEcho($doEcho)")
+                print("## TELNET doPrint($doEcho)")
             }
         }
         connection.onError = {
@@ -271,20 +271,25 @@ class JudoCore(
         }
     }
 
-    override fun echo(vararg objects: Any?) {
+    override fun print(vararg objects: Any?) {
+        // FIXME support Flavorable
         val asString = objects.joinToString(" ")
-        doEcho(true, asString)
+        doPrint(true, asString)
     }
 
-    override fun echoRaw(vararg objects: Any?) {
+    override fun printRaw(vararg objects: Any?) {
+        // FIXME support Flavorable
         val asString = objects.joinToString(" ")
-        doEcho(false, asString)
+        doPrint(false, asString)
     }
 
-    private fun doEcho(process: Boolean, asString: String) {
+    private fun doPrint(process: Boolean, asString: String) {
         // TODO colors?
         appendOutput(FlavorableStringBuilder.withDefaultFlavor(
-            "$asString\n"
+            when {
+                asString.endsWith('\n') -> asString
+                else -> "$asString\n"
+            }
         ), process = process)
 
         if (debug.isEnabled) {
@@ -378,7 +383,7 @@ class JudoCore(
                 throw IllegalArgumentException("$mode does not support mapping")
             }
 
-            echoRaw(modeObj.userMappings)
+            printRaw(modeObj.userMappings)
             return
         }
 
@@ -438,9 +443,9 @@ class JudoCore(
 
         if (doEcho && !isTelnetSubsequence(toSend)) {
             // always output what we sent
-            // except... don't echo if the server has told us not to
+            // except... don't print if the server has told us not to
             // (EG: passwords)
-            echo(toSend) // TODO color?
+            print(toSend) // TODO color?
         }
 
         if (!fromMap && !text.isEmpty()) {
@@ -468,7 +473,7 @@ class JudoCore(
     }
 
     override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
-//        echo("## feedKey($stroke)")
+//        print("## feedKey($stroke)")
         when (stroke.keyCode) {
             Key.CODE_ESCAPE -> {
                 // reset the current register
@@ -634,7 +639,7 @@ class JudoCore(
         doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect
-            echo("")
+            print("")
             parsedPrompts.forEach {
                 primaryWindow.outputWindow.appendLine(it)
             }
@@ -642,7 +647,7 @@ class JudoCore(
             primaryWindow.promptWindow.currentBuffer.clear()
             tabpage.unsplit()
 
-            echo("Disconnected from $connection")
+            print("Disconnected from $connection")
             updateStatusLine(currentMode)
 
             // stop logging

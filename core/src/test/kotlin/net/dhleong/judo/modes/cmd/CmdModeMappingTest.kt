@@ -28,12 +28,12 @@ class CmdModeMappingTest(
         val fnDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
                 function action() {
-                    echo("mapped!");
+                    print("mapped!");
                 }
             """.trimIndent()
 
             SupportedScriptTypes.PY -> """
-                def action(): echo("mapped!")
+                def action(): print("mapped!")
             """.trimIndent()
         }
         mode.execute(fnDef)
@@ -41,7 +41,7 @@ class CmdModeMappingTest(
 
         judo.feedKey(Key.ofChar('a'))
 
-        assert(judo.echos).containsExactly("mapped!")
+        assert(judo.prints).containsExactly("mapped!")
     }
 
     @Test fun `createMap creates custom mode maps`() {

@@ -119,12 +119,12 @@ class CmdModeAliasTest(
         val fnDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
                 function handleAlias(arg) {
-                    echo(arg.trim());
+                    print(arg.trim());
                 }
             """.trimIndent()
 
             SupportedScriptTypes.PY -> """
-                def handleAlias(arg): echo(arg.strip())
+                def handleAlias(arg): print(arg.strip())
             """.trimIndent()
         }
 
@@ -139,7 +139,7 @@ class CmdModeAliasTest(
 
         assert(judo.aliases.process("keep flyin'").toString())
             .isEmpty()
-        assert(judo.echos).containsExactly("flyin'")
+        assert(judo.prints).containsExactly("flyin'")
     }
 
     @Test fun `alias() with Python-only Regex`() {
@@ -157,12 +157,12 @@ class CmdModeAliasTest(
         mode.execute("""
             |import re
             |@alias(re.compile(r'(?L)^cool(.*)'))
-            |def handleAlias(arg): echo(arg.strip())
+            |def handleAlias(arg): print(arg.strip())
             """.trimMargin())
 
         assert(judo.aliases.process("cool cool story bro").toString())
             .isEmpty()
-        assert(judo.echos).containsExactly("cool story bro")
+        assert(judo.prints).containsExactly("cool story bro")
     }
 
 }

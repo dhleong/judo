@@ -273,12 +273,12 @@ class CmdMode(
         )
 
         registerFn<Unit>(
-            "echo",
+            "print",
             doc {
                 usage { withVarArgs() }
                 body { "Print some output to the screen locally." }
             }
-        ) { args: Array<Any> -> judo.echo(*args) }
+        ) { args: Array<Any> -> judo.print(*args) }
 
         registerFn<String?>(
             "input",

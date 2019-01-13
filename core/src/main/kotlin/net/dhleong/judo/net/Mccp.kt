@@ -88,7 +88,7 @@ class MccpInputStream(val socket: MccpHandlingSocket, delegate: InputStream): In
 
     private fun debug(text: String) {
         if (socket.mccp.debug) {
-            socket.mccp.echo(text)
+            socket.mccp.print(text)
         }
     }
 }
@@ -112,7 +112,7 @@ class MccpHandlingSocket : Socket {
     override fun getInputStream(): InputStream = mccpInputStream
 }
 
-class MccpHandlingSocketFactory(internal val echo: (String) -> Unit) : SocketFactory() {
+class MccpHandlingSocketFactory(internal val print: (String) -> Unit) : SocketFactory() {
 
     var debug = false
 

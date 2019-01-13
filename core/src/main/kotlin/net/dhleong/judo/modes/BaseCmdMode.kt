@@ -140,7 +140,7 @@ abstract class BaseCmdMode(
     fun load(pathToFile: String) {
         val file = File(pathToFile)
         readFile(file)
-        judo.echo("Loaded $file")
+        judo.print("Loaded $file")
     }
 
     fun logToFile(path: String, options: String = "append plain") {
@@ -198,34 +198,34 @@ abstract class BaseCmdMode(
             judo.tabpage.unsplit()
 
             readFile(it)
-            judo.echo("Reloaded $it")
+            judo.print("Reloaded $it")
             return
         }
 
-        judo.echo("No files read; nothing to reload")
+        judo.print("No files read; nothing to reload")
     }
 
     protected fun config(args: Array<Any>) =
         when (args.size) {
-            1 -> echoSettingValue(args[0] as String)
+            1 -> printSettingValue(args[0] as String)
             2 -> {
                 val settingName = args[0] as String
                 config(settingName, args[1])
-                echoSettingValue(settingName)
+                printSettingValue(settingName)
             }
 
             else -> {
-                judo.echo("Settings")
-                judo.echo("========")
+                judo.print("Settings")
+                judo.print("========")
 
                 ALL_SETTINGS
                     .filter { it.value.description.isNotEmpty() }
                     .map { it.key }
-                    .forEach(this::echoSettingValue)
+                    .forEach(this::printSettingValue)
             }
         }
 
-    private fun echoSettingValue(settingName: String) =
+    private fun printSettingValue(settingName: String) =
         withSetting(settingName) { setting ->
             val value = judo.state[setting]
             val isDefaultFlag =
@@ -236,7 +236,7 @@ abstract class BaseCmdMode(
                 if (value is String) """"$value""""
                 else value
 
-            judo.echo("${setting.userName} = $valueDisp$isDefaultFlag")
+            judo.print("${setting.userName} = $valueDisp$isDefaultFlag")
         }
 
     private fun config(settingName: String, value: Any) {
@@ -274,8 +274,8 @@ abstract class BaseCmdMode(
     private fun handleNoArgListingCommand(command: String): Boolean =
         when (command) {
             "alias" -> {
-                judo.echoRaw()
-                judo.echoRaw(judo.aliases)
+                judo.printRaw()
+                judo.printRaw(judo.aliases)
                 true
             }
 
@@ -285,26 +285,26 @@ abstract class BaseCmdMode(
             }
 
             "cmap" -> {
-                judo.echoRaw()
+                judo.printRaw()
                 judo.printMappings("cmd")
                 true
             }
 
             "imap" -> {
-                judo.echoRaw()
+                judo.printRaw()
                 judo.printMappings("insert")
                 true
             }
 
             "nmap" -> {
-                judo.echoRaw()
+                judo.printRaw()
                 judo.printMappings("normal")
                 true
             }
 
             "trigger" -> {
-                judo.echoRaw()
-                judo.echoRaw(judo.triggers)
+                judo.printRaw()
+                judo.printRaw(judo.triggers)
                 true
             }
 
@@ -329,7 +329,7 @@ abstract class BaseCmdMode(
         if (colWidth >= rendererInfo.windowWidth) {
             // super small renderer (whaaat?)
             // just be lazy
-            commands.forEach { judo.echoRaw(it) }
+            commands.forEach { judo.printRaw(it) }
             return
         }
 
@@ -347,23 +347,23 @@ abstract class BaseCmdMode(
             if (word >= cols) {
                 // end of the line; dump it and start over
                 word = 0
-                judo.echoRaw(line.toString())
+                judo.printRaw(line.toString())
                 line.setLength(0)
             }
         }
 
         if (line.isNotEmpty()) {
-            judo.echoRaw(line.toString())
+            judo.printRaw(line.toString())
         }
     }
 
     internal fun showHelp(command: String) {
         registeredVars[command]?.let { help ->
-            help.formatHelp().forEach { judo.echoRaw(it) }
+            help.formatHelp().forEach { judo.printRaw(it) }
             return
         }
 
-        judo.echoRaw("No such command: $command")
+        judo.printRaw("No such command: $command")
     }
 
     private fun exitMode() {

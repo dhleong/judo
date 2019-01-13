@@ -14,6 +14,7 @@ import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.modes.CmdMode
+import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,16 +30,16 @@ class CmdModeCoreTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun echo() {
-        mode.execute("echo('test', 2)")
+    @Test fun print() {
+        mode.execute("print('test', 2)")
 
-        assert(judo.echos).containsExactly("test", 2)
+        assert(judo.prints).containsExactly("test", 2)
     }
 
     @Test fun globals() {
-        mode.execute("echo(MYJUDORC)")
+        mode.execute("print(MYJUDORC)")
 
-        assert(judo.echos).containsExactly(mode.userConfigFile.absolutePath)
+        assert(judo.prints).containsExactly(mode.userConfigFile.absolutePath)
     }
 
     @Test fun `var definitions are shared across execute() calls`() {
@@ -48,10 +49,10 @@ class CmdModeCoreTest(
             """.trimIndent())
 
         mode.execute("""
-            echo(value)
+            print(value)
             """.trimIndent())
 
-        assert(judo.echos).containsExactly("magic")
+        assert(judo.prints).containsExactly("magic")
     }
 
     @Test fun `Complain with unexpected number of args`() {
@@ -100,27 +101,32 @@ class CmdModeCoreTest(
         assert(judo.state[WORD_WRAP]).isEqualTo(true)
     }
 
-    @Test fun `config('setting') echoes its value`() {
+    @Test fun `config('setting') prints its value`() {
         assert(WORD_WRAP !in judo.state).isTrue()
 
         mode.execute(fnCall("config", "wordwrap"))
-        assert(judo.echos).containsExactly("wordwrap = true (default)")
-        judo.echos.clear()
+        assert(judo.prints).containsExactly("wordwrap = true (default)")
+        judo.prints.clear()
 
         mode.execute(fnCall("config", "wordwrap", false))
-        assert(judo.echos).containsExactly("wordwrap = false")
+        assert(judo.prints).containsExactly("wordwrap = false")
     }
 
     @Test fun `Don't allow builtins to get overridden`() {
-        mode.execute(when (scriptType()) {
-            SupportedScriptTypes.PY -> "def echo(): pass"
+        try {
+            mode.execute(when (scriptType()) {
+                SupportedScriptTypes.PY -> "def print(): pass"
 
-            // Javascript doesn't seem to have a way to protect against this...
-            SupportedScriptTypes.JS -> return
-        })
+                // Javascript doesn't seem to have a way to protect against this...
+                SupportedScriptTypes.JS -> return
+            })
+        } catch (e: ScriptExecutionException) {
+            // an error in the attempt is also acceptable
+            return
+        }
 
-        mode.execute(fnCall("echo", "magic"))
-        assert(judo.echos)
+        mode.execute(fnCall("print", "magic"))
+        assert(judo.prints)
             .containsExactly("magic")
     }
 
@@ -196,13 +202,13 @@ class CmdModeCoreTest(
 
         mode.showHelp()
 
-        assert(judo.echos)
+        assert(judo.prints)
             .startsWith("alias           cmap            ")
     }
 
     @Test fun `Render help for vars`() {
         mode.showHelp("judo")
-        assert(judo.echos)
+        assert(judo.prints)
             .startsWith(
                 "judo",
                 "===="

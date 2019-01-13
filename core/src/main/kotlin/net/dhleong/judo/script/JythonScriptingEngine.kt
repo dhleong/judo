@@ -29,7 +29,9 @@ import org.python.core.PyModule
 import org.python.core.PyObject
 import org.python.core.PyObjectDerived
 import org.python.core.PyStringMap
+import org.python.core.PyTuple
 import org.python.core.PyType
+import org.python.core.StdoutWrapper
 import org.python.core.adapter.PyObjectAdapter
 import org.python.modules.sre.MatchObject
 import org.python.modules.sre.PatternObject
@@ -59,6 +61,8 @@ class JythonScriptingEngine : ScriptingEngine {
     private val keepModules = HashSet<String>() // FIXME TODO initialize this
     private val globals = PyGlobals()
 
+    private lateinit var printFn: (Array<Any?>) -> Unit
+
     init {
         InterfaceAdapter.init()
 
@@ -72,9 +76,71 @@ class JythonScriptingEngine : ScriptingEngine {
         val modules = python.systemState.modules as PyStringMap
         modules.__setitem__("judo", asModule)
 
-        // don't override our input()!!
+        // don't override our input() or print()!!
         val builtins = modules.__getitem__("__builtin__")
         builtins.dict.__setitem__("input", globals.__getitem__("input"))
+        builtins.dict.__setitem__("print", globals.__getitem__("print"))
+
+        // the above doesn't seem to do it for print(), so we just wrap stdout
+//        python.setOut(object : Writer(Any()) {
+//            private val buffer = AnsiFlavorableStringReader()
+//
+//            override fun write(cbuf: CharArray, off: Int, len: Int) {
+//                for (line in buffer.feed(cbuf, off, len)) {
+//                    printFn(arrayOf(line))
+//                }
+//            }
+//
+//            override fun flush() {
+//                buffer.reset()
+//            }
+//
+//            override fun close() { /* nop */ }
+//        })
+
+        val out = object : StdoutWrapper() {
+            override fun myFile(): PyObject? = null
+
+            override fun flush() { /* nop */ }
+            override fun flushLine() { /* nop */ }
+
+            override fun write(s: String?) {
+                printFn(arrayOf(s))
+            }
+
+            override fun println(o: PyObject?) {
+                if (o == null) {
+                    return printFn(emptyArray())
+                }
+
+                printFn(when (o) {
+                    is PyTuple -> o.map { maybeToJava(it) }.toTypedArray()
+
+                    else -> arrayOf(maybeToJava(o))
+                })
+            }
+
+            override fun println(o: String?) {
+                printFn(arrayOf(o))
+            }
+
+            override fun print(args: Array<out PyObject>?, sep: PyObject?, end: PyObject?) {
+                if (args == null) {
+                    printFn(emptyArray())
+                    return
+                }
+
+                printFn(Array(args.size) { toJava(it) })
+            }
+        }
+        python.setOut(out)
+
+        // hacks because the global StdoutWrapper converts everything to a string
+        // before passing it to the one set above
+        Py::class.java.getDeclaredField("stdout").apply {
+            isAccessible = true
+            set(null, out)
+        }
 
         modules.keys().asIterable().forEach {
             keepModules.add(it.asString())
@@ -88,6 +154,10 @@ class JythonScriptingEngine : ScriptingEngine {
             }
 
             is JudoScriptingEntity.Function<*> -> {
+                if (entity.name == "print") {
+                    @Suppress("UNCHECKED_CAST")
+                    printFn = entity.fn as (Array<Any?>) -> Unit
+                }
                 globals[entity.name] = entity.toPyFn()
             }
         }
@@ -121,6 +191,8 @@ class JythonScriptingEngine : ScriptingEngine {
     override fun toJava(fromScript: Any): Any =
         (fromScript as? PyObject)?.__tojava__(Any::class.java)
             ?: fromScript
+
+    private fun maybeToJava(fromScript: Any?) = fromScript?.let { toJava(it) }
 
     override fun callableArgsCount(fromScript: Any): Int {
         val pyHandler = fromScript as PyFunction

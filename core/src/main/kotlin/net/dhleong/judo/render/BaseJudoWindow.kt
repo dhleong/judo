@@ -46,7 +46,7 @@ abstract class BaseJudoWindow(
         )
 
         if (!found) {
-            // TODO bell? echo?
+            // TODO bell? print?
             buffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(
                 "Pattern not found: $word"
             ))

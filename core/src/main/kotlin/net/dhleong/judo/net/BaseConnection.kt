@@ -83,7 +83,7 @@ abstract class BaseConnection : JudoConnection, CoroutineScope {
                     onDisconnect?.invoke(this@BaseConnection)
                     break
                 } else if (read > 0) {
-                    for (line in helper.feed(buffer, read)) {
+                    for (line in helper.feed(buffer, available = read)) {
                         send(line)
                     }
                 }

@@ -7,7 +7,7 @@ import org.apache.commons.net.telnet.TelnetOptionHandler
 
 class MttsTermTypeHandler(
     private val info: JudoRendererInfo,
-    private val echoDebug: (String) -> Unit
+    private val printDebug: (String) -> Unit
 ) : TelnetOptionHandler(
     TelnetOption.TERMINAL_TYPE,
     false,
@@ -28,7 +28,7 @@ class MttsTermTypeHandler(
         val name = getNameForCurrentState()
         advanceState()
 
-        echoDebug("## TELNET > IAC SB TTYPE IS $name")
+        printDebug("## TELNET > IAC SB TTYPE IS $name")
         return with(name.map { it.toInt() }.toMutableList()) {
             TELNET_IAC
             add(0, TelnetOption.TERMINAL_TYPE)
