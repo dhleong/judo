@@ -82,22 +82,6 @@ class JythonScriptingEngine : ScriptingEngine {
         builtins.dict.__setitem__("print", globals.__getitem__("print"))
 
         // the above doesn't seem to do it for print(), so we just wrap stdout
-//        python.setOut(object : Writer(Any()) {
-//            private val buffer = AnsiFlavorableStringReader()
-//
-//            override fun write(cbuf: CharArray, off: Int, len: Int) {
-//                for (line in buffer.feed(cbuf, off, len)) {
-//                    printFn(arrayOf(line))
-//                }
-//            }
-//
-//            override fun flush() {
-//                buffer.reset()
-//            }
-//
-//            override fun close() { /* nop */ }
-//        })
-
         val out = object : StdoutWrapper() {
             override fun myFile(): PyObject? = null
 
