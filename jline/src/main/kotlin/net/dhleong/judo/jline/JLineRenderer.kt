@@ -66,6 +66,7 @@ class JLineRenderer(
     private val input = InputLine()
     private val inputHelper = TerminalInputLineHelper(settings)
     private val renderedInput = mutableListOf<FlavorableCharSequence>()
+    private var lastInputLinesCount = 0
     private var cursorType: CursorType = CursorType.BLOCK
 
     private val transactionDepth = AtomicInteger(0)
@@ -209,6 +210,14 @@ class JLineRenderer(
             // do the rendering into the Display above as normal
             return
         }
+
+        if (lastInputLinesCount > renderedInput.size) {
+            // NOTE: for whatever reason, when we the number of input lines goes down,
+            // the rendering gets messed up if we don't reset first; increasing the count
+            // seems to work just fine.
+            window.clear()
+        }
+        lastInputLinesCount = renderedInput.size
 
         window.update(display.toAttributedStrings(), windowSize.cursorPos(
             display.cursorRow,
