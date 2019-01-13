@@ -9,6 +9,8 @@ import assertk.assertions.support.show
 import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.bufferOf
+import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
@@ -509,13 +511,6 @@ class JLineWindowTest {
 private fun Assert<IJudoWindow>.hasScrollback(lines: Int) {
     if (actual.getScrollback() == lines) return
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
-}
-
-private fun emptyBuffer() = JudoBuffer(IdManager())
-private fun bufferOf(contents: String) = emptyBuffer().apply {
-    contents.split("\n").forEach {
-        appendLine(FlavorableStringBuilder.withDefaultFlavor(it))
-    }
 }
 
 private fun windowOf(

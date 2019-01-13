@@ -72,12 +72,12 @@ class JLineWindow(
 
         renderWorkspace.clear()
 
-        val isSearching = searchResultLine > -1
+        val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
 
         // iterating from oldest to newest
         for (i in end..start) {
-            if (isSearching && i == searchResultLine) {
+            if (isSearching && i == search.resultLine) {
                 workspaceSearchIndex = renderWorkspace.size
             }
 
@@ -111,19 +111,19 @@ class JLineWindow(
 
         // highlight search results:
         if (workspaceSearchIndex != -1) {
-            val fullLine = buffer[searchResultLine]
+            val fullLine = buffer[search.resultLine]
             val splitIndex = fullLine.splitIndexOfOffset(
                 windowWidth = width,
                 wordWrap = wordWrap,
-                offset = searchResultOffset
+                offset = search.resultOffset
             )
             val lineIndex = workspaceSearchIndex + splitIndex
 
             if (lineIndex < renderWorkspace.size) {
                 val original = renderWorkspace[lineIndex]
-                val wordStart = original.indexOf(lastSearchKeyword, ignoreCase = true)
+                val wordStart = original.indexOf(search.lastKeyword, ignoreCase = true)
                 if (wordStart >= 0) {
-                    val wordEnd = wordStart + lastSearchKeyword.length
+                    val wordEnd = wordStart + search.lastKeyword.length
                     val word = original.substring(wordStart, wordEnd)
 
                     val new = AttributedStringBuilder(original.length)
@@ -198,7 +198,7 @@ class JLineWindow(
 
         // clear search result on scroll (?)
         // TODO should we do better?
-        searchResultLine = -1
+        search.reset()
 
         val wordWrap = settings[WORD_WRAP]
         var toScroll = desired
@@ -241,7 +241,7 @@ class JLineWindow(
 
     override fun scrollToBottom() = renderer.inTransaction {
         scrollbackBottom = 0
-        searchResultLine = -1
+        search.reset()
     }
 
     override fun scrollToBufferLine(line: Int, offsetOnLine: Int) = renderer.inTransaction {

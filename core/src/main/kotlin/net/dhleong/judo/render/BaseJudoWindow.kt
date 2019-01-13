@@ -1,6 +1,7 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.search.BufferSearcher
 
 /**
  * Core, non-rendering-dependent [IJudoWindow] implementations
@@ -20,9 +21,7 @@ abstract class BaseJudoWindow(
     override var width: Int = initialWidth
     override var height: Int = initialHeight
 
-    protected var lastSearchKeyword: String = ""
-    protected var searchResultLine = -1
-    protected var searchResultOffset = -1
+    protected val search = BufferSearcher()
 
     override fun append(text: FlavorableCharSequence) = currentBuffer.append(text)
     override fun appendLine(line: FlavorableCharSequence) = currentBuffer.appendLine(line)
@@ -37,63 +36,24 @@ abstract class BaseJudoWindow(
     override fun searchForKeyword(word: CharSequence, direction: Int) {
         val ignoreCase = true // TODO smartcase setting?
 
-        val originalSearchResultLine = searchResultLine
-        val originalSearchResultOffset = searchResultOffset
-        val wordString = word.toString()
-        if (wordString != lastSearchKeyword) {
-            lastSearchKeyword = wordString
-            searchResultLine = -1
-            searchResultOffset = -1
-        }
-
         val buffer = currentBuffer
-        val searchRange = when {
-            direction > 0 -> (buffer.size - getScrollback() - 1) downTo 0
+        val found = search.searchForKeyword(
+            buffer,
+            getScrollback(),
+            word,
+            direction,
+            ignoreCase
+        )
 
-            else -> getScrollback() until buffer.size
+        if (!found) {
+            // TODO bell? echo?
+            buffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(
+                "Pattern not found: $word"
+            ))
+            return
         }
 
-        for (i in searchRange) {
-            val line = buffer[i]
-            val continueSearchOnLine = i == searchResultLine
-            val index = when {
-                direction > 0 -> line.lastIndexOf(
-                    wordString,
-                    ignoreCase = ignoreCase,
-                    startIndex = when {
-                        continueSearchOnLine -> searchResultOffset - 1
-                        else -> line.length
-                    }
-                )
-
-                else -> line.indexOf(
-                    wordString,
-                    ignoreCase = ignoreCase,
-                    startIndex = when {
-                        continueSearchOnLine -> searchResultOffset + 1
-                        else -> 0
-                    }
-                )
-            }
-
-            if (index >= 0) {
-                searchResultLine = i
-                searchResultOffset = index
-                scrollToBufferLine(i, offsetOnLine = index)
-                return
-            }
-        }
-
-        // couldn't find anything; reset
-        if (originalSearchResultLine != -1) {
-            searchResultLine = originalSearchResultLine
-            searchResultOffset = originalSearchResultOffset
-        }
-
-        // TODO bell? echo?
-        buffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(
-            "Pattern not found: $word"
-        ))
+        scrollToBufferLine(search.resultLine, offsetOnLine = search.resultOffset)
     }
 
 }
