@@ -245,14 +245,45 @@ class JLineWindow(
     }
 
     override fun scrollToBufferLine(line: Int, offsetOnLine: Int) = renderer.inTransaction {
-        // TODO do better than this?
-
         val buffer = currentBuffer
+        val wordWrap = settings[WORD_WRAP]
+
+        // is the line actually visible already?
+        val lastVisibleLine = buffer.lastIndex - scrollbackBottom
+        val firstPossiblyVisibleLine = maxOf(0, lastVisibleLine - height + 1)
+        if (line >= firstPossiblyVisibleLine) {
+            // it's *possible*, but let's take into account wrapped lines
+            var lines = height + scrollbackOffset
+            for (i in lastVisibleLine downTo firstPossiblyVisibleLine) {
+                val renderedLines = buffer[i].computeRenderedLinesCount(width, wordWrap)
+                if (i == line) {
+                    // now check against the offset
+                    val actualIndex = buffer[i].splitIndexOfOffset(width, wordWrap, offsetOnLine)
+                    val linesNeededToSeeOffset = renderedLines - actualIndex
+
+                    val isPastWindow = i == lastVisibleLine
+                        && actualIndex >= renderedLines - scrollbackOffset
+                    if (isPastWindow) {
+                        // shortcut out
+                        break
+                    }
+
+                    if (lines >= linesNeededToSeeOffset) {
+                        // huzzah!
+                        return@inTransaction
+                    }
+                }
+
+                lines -= renderedLines
+                if (lines <= 0) break
+            }
+        }
+
         scrollbackBottom = buffer.lastIndex - line
 
         var renderedLines = 0
         var foundOnLine = -1
-        buffer[line].forEachRenderedLine(width, settings[WORD_WRAP]) { start, end ->
+        buffer[line].forEachRenderedLine(width, wordWrap) { start, end ->
             if (offsetOnLine in start..(end - 1)) {
                 foundOnLine = renderedLines
             }

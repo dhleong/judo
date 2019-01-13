@@ -343,12 +343,12 @@ class JLineWindowTest {
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
         """.trimMargin())
 
+        // NOTE: we avoid scrolling here since it's on the same page
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        // NOTE: future work could make search avoid scrolling...
         assert(display).ansiLinesEqual("""
-            |Take My love
             |Take ${ansi(inverse = true)}m${ansi(0)}y land
+            |Take me wher
         """.trimMargin())
 
         // step back

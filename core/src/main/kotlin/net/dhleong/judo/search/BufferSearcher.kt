@@ -50,7 +50,10 @@ class BufferSearcher {
             reset()
         }
 
-        val searchStart = buffer.lastIndex - windowScrollback
+        val searchStart = when {
+            searchResultLine != -1 -> searchResultLine
+            else -> buffer.lastIndex - windowScrollback
+        }
         val searchRange = when {
             direction > 0 -> searchStart downTo 0
 
