@@ -253,6 +253,10 @@ class JLineRenderer(
         inputHelper.fitInputLinesToWindow(input, renderedInput)
         input.cursorIndex = originalCursor
 
+        // resize tabpage to properly to take into account input height
+        tabpage.resize(windowWidth, windowHeight - renderedInput.size)
+        tabpage.render(display)
+
         val inputY = tabpage.height
         for (i in renderedInput.indices) {
             val line = renderedInput[i]
@@ -260,10 +264,6 @@ class JLineRenderer(
                 line.appendTo(this)
             }
         }
-
-        // resize tabpage to properly to take into account input height
-        tabpage.resize(windowWidth, windowHeight - renderedInput.size)
-        tabpage.render(display)
 
         if (isCursorOnStatus) {
             val windowX = 0 // TODO when we add vsplit support

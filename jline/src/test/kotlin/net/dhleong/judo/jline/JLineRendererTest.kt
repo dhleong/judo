@@ -2,7 +2,9 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import net.dhleong.judo.MAX_INPUT_LINES
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
@@ -55,6 +57,33 @@ class JLineRendererTest {
 
             hasCursor(
                 row = 5,
+                col = 4
+            )
+        }
+    }
+
+    @Test fun `Render wrapped input line`() {
+        settings[WORD_WRAP] = true
+        settings[MAX_INPUT_LINES] = 3
+
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.updateStatusLine("<status>")
+        renderer.updateInputLine("Take me where I cannot stand", 4)
+
+        renderer.render(display)
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |Take my love________
+                |Take my land________
+                |<status>____________
+                |Take me where I_____
+                |cannot stand________
+            """.trimMargin())
+
+            hasCursor(
+                row = 4,
                 col = 4
             )
         }
