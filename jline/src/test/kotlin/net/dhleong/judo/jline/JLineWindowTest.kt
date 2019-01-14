@@ -16,6 +16,8 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
+import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -37,6 +39,36 @@ class JLineWindowTest {
             |__________
             |mreynolds_
             |zoe_______
+        """.trimMargin())
+    }
+
+    @Test fun `Render with width-filled backgrounds`() {
+        val display = JLineDisplay(10, 2)
+        val buffer = bufferOf(
+            FlavorableStringBuilder(10).apply {
+                append("zoe ", SimpleFlavor(
+                    hasBackground = true,
+                    background = JudoColor.Simple.from(1)
+                ))
+                append("w", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple.from(2)
+                ))
+            },
+            FlavorableStringBuilder(10).apply {
+                append("wash", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple.from(1)
+                ))
+            }
+        )
+
+        windowOf(buffer, 10, 2)
+            .render(display, 0, 0)
+
+        assert(display).ansiLinesEqual("""
+            |${ansi(bg = 1)}zoe_${ansi(fg = 2, bg = 9)}w_____${ansi(0)}
+            |${ansi(fg = 1)}wash______${ansi(0)}
         """.trimMargin())
     }
 

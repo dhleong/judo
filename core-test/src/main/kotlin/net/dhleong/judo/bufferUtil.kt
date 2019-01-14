@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
@@ -14,3 +15,6 @@ fun bufferOf(contents: String) = emptyBuffer().apply {
     }
 }
 
+fun bufferOf(vararg lines: FlavorableCharSequence) = emptyBuffer().apply {
+    set(lines.toList())
+}

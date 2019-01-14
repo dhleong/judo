@@ -1,6 +1,7 @@
 package net.dhleong.judo.jline
 
 import org.jline.utils.AttributedStringBuilder
+import org.jline.utils.AttributedStyle
 
 class JLineDisplay(
     private var myWidth: Int,
@@ -88,11 +89,23 @@ class JLineDisplay(
             }
 
             if (lineWidth > 0) {
+                // JLine doesn't automatically set the "current" style,
+                // so... do it for them
+                if (lengthAfter > lengthBefore) {
+                    builder.style(
+                        builder.styleAt(builder.lastIndex)
+                    )
+                }
+
                 clearLine(
                     x, y,
                     fromRelativeX = lengthAfter - lengthBefore,
                     toRelativeX = lineWidth
                 )
+
+                if (lengthAfter > lengthBefore) {
+                    builder.style(AttributedStyle.DEFAULT)
+                }
             }
 
             builder.setLength(width) // restore length
