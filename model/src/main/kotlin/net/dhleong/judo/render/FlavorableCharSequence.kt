@@ -18,6 +18,7 @@ interface FlavorableCharSequence : CharSequence {
 
     operator fun plusAssign(char: Char)
     operator fun plusAssign(other: FlavorableCharSequence)
+    operator fun plus(string: String): FlavorableCharSequence
 
     fun splitAtNewlines(
         destination: MutableList<FlavorableCharSequence>,

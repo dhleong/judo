@@ -31,6 +31,7 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
+import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
@@ -271,29 +272,44 @@ class JudoCore(
         }
     }
 
-    override fun print(vararg objects: Any?) {
-        // FIXME support Flavorable
-        val asString = objects.joinToString(" ")
-        doPrint(true, asString)
-    }
+    override fun print(vararg objects: Any?) = printArray(true, objects)
+    override fun printRaw(vararg objects: Any?) = printArray(false, objects)
 
-    override fun printRaw(vararg objects: Any?) {
-        // FIXME support Flavorable
-        val asString = objects.joinToString(" ")
-        doPrint(false, asString)
-    }
+    private val printAnsiParser = AnsiFlavorableStringReader()
+    private fun printArray(process: Boolean, objects: Array<out Any?>) {
+        val joined = FlavorableStringBuilder(16)
 
-    private fun doPrint(process: Boolean, asString: String) {
-        // TODO colors?
-        appendOutput(FlavorableStringBuilder.withDefaultFlavor(
-            when {
-                asString.endsWith('\n') -> asString
-                else -> "$asString\n"
+        var first = true
+        for (o in objects) {
+            if (first) first = false
+            else joined += " "
+
+            when (o) {
+                is FlavorableCharSequence -> joined += o
+                is String -> {
+                    val chars = o.toCharArray()
+                    printAnsiParser.reset()
+                    for (fcs in printAnsiParser.feed(chars)) {
+                        joined += fcs
+                    }
+                }
+                else -> joined += o.toString()
             }
-        ), process = process)
+        }
+
+        doPrint(process, joined)
+    }
+
+    private fun doPrint(process: Boolean, asString: String) =
+        doPrint(process, FlavorableStringBuilder.withDefaultFlavor(asString))
+    private fun doPrint(process: Boolean, flavorable: FlavorableCharSequence) {
+        appendOutput(when {
+            flavorable.endsWith('\n') -> flavorable
+            else -> flavorable + "\n"
+        }, process = process)
 
         if (debug.isEnabled) {
-            debugLogFile.appendText("\n## ECHO: $asString\n")
+            debugLogFile.appendText("\n## ECHO: $flavorable\n")
         }
     }
 

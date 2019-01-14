@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import net.dhleong.judo.mapping.MapRenderer
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
@@ -29,8 +30,11 @@ class TestableJudoRenderer(
         get() = state.output
     val outputLines: List<String>
         get() = (0..state.output.lastIndex).map { i ->
-            // TODO ansi?
             state.output[i].toString().removeSuffix("\n")
+        }
+    val flavoredOutputLines: List<FlavorableCharSequence>
+        get() = (0..state.output.lastIndex).map { i ->
+            state.output[i].removeSuffix("\n") as FlavorableCharSequence
         }
 
     override fun createBuffer(): IJudoBuffer = JudoBuffer(state.ids)

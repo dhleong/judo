@@ -10,7 +10,7 @@ class FlavorableStringBuilder private constructor(
     private var flavors: Array<Flavor?>,
     private var start: Int = 0,
     private var myLength: Int = 0
-): FlavorableCharSequence {
+): FlavorableCharSequence, Appendable {
 
     constructor(capacity: Int) : this(
         CharArray(capacity),
@@ -20,17 +20,34 @@ class FlavorableStringBuilder private constructor(
     /**
      * Deep copy constructor
      */
-    constructor(other: FlavorableCharSequence) : this(other.length) {
+    constructor(
+        other: FlavorableCharSequence,
+        capacity: Int = other.length
+    ) : this(capacity) {
         append(other)
     }
 
     override fun codePointAt(index: Int) = Character.codePointAt(chars, index)
+
+    override fun append(c: Char): Appendable = apply {
+        this += c
+    }
 
     fun append(char: Char, flavor: Flavor) {
         ensureCapacity(myLength + 1)
         chars[start + myLength] = char
         flavors[start + myLength] = flavor
         ++myLength
+    }
+
+    override fun append(csq: CharSequence?) = append(csq, 0, csq?.length ?: 0)
+    override fun append(csq: CharSequence?, start: Int, end: Int) = apply {
+        csq ?: throw IllegalArgumentException()
+        if (csq is FlavorableCharSequence) {
+            append(csq, start, end)
+        } else {
+            append(csq.toString(), start, end)
+        }
     }
 
     fun append(string: String, flavor: Flavor) {
@@ -51,6 +68,11 @@ class FlavorableStringBuilder private constructor(
 
         myLength += length
     }
+
+    override fun plus(string: String): FlavorableCharSequence =
+        FlavorableStringBuilder(this, this.length + string.length).also {
+            it += string
+        }
 
     override operator fun plusAssign(char: Char) {
         append(char, when {

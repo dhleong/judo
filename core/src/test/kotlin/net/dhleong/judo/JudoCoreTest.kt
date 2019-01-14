@@ -1,10 +1,12 @@
 package net.dhleong.judo
 
 import assertk.assert
+import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
@@ -38,6 +40,19 @@ class JudoCoreTest {
                 "Take my land,",
                 "Take me"
             )
+    }
+
+    @Test fun `print() handles ansi codes in strings`() {
+        judo.print("${ansi(1)}Mal ${ansi(3)}Reynolds")
+        assert(renderer.outputLines).containsExactly(
+            "Mal Reynolds"
+        )
+        assert(renderer.flavoredOutputLines).containsExactly(
+            FlavorableStringBuilder(16).apply {
+                append("Mal ", SimpleFlavor(isBold = true))
+                append("Reynolds", SimpleFlavor(isBold = true, isItalic = true))
+            }
+        )
     }
 
     @Test fun appendOutput_newlineOnly() {
