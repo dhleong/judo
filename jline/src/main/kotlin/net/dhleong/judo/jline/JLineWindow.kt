@@ -121,13 +121,18 @@ class JLineWindow(
 
             if (lineIndex < renderWorkspace.size) {
                 val original = renderWorkspace[lineIndex]
-                val wordStart = original.indexOf(search.lastKeyword, ignoreCase = true)
-                if (wordStart >= 0) {
-                    val wordEnd = wordStart + search.lastKeyword.length
-                    val word = original.substring(wordStart, wordEnd)
+                val offsetOnLine = fullLine.splitOffsetOfOffset(
+                    windowWidth = width,
+                    wordWrap = wordWrap,
+                    offset = search.resultOffset
+                )
+
+                if (offsetOnLine >= 0) {
+                    val wordEnd = offsetOnLine + search.lastKeyword.length
+                    val word = original.substring(offsetOnLine, wordEnd)
 
                     val new = AttributedStringBuilder(original.length)
-                    new.append(original, 0, wordStart)
+                    new.append(original, 0, offsetOnLine)
                     new.append(word, AttributedStyle.INVERSE)
                     new.append(original, wordEnd, original.length)
                     val newString = new.toAttributedString()

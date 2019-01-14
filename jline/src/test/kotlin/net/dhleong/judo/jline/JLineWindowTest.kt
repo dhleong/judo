@@ -2,7 +2,6 @@ package net.dhleong.judo.jline
 
 import assertk.Assert
 import assertk.assert
-import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
@@ -421,14 +420,65 @@ class JLineWindowTest {
             |mreynolds_
         """.trimMargin())
 
-        val displayed = display.toAttributedStrings()
-        assert(displayed).hasSize(1)
-        assert(displayed[0].toAnsi()).isEqualTo(
-            AttributedStringBuilder().apply {
+        assert(display).ansiLinesEqual(
+            buildAnsi {
                 append("m")
                 append("rey", AttributedStyle.INVERSE)
                 append("nolds ")
-            }.toAttributedString().toAnsi()
+            }
+        )
+    }
+
+    @Test fun `highlight correct search result of multiple on line`() {
+        val display = JLineDisplay(26, 1)
+        val buffer = bufferOf("""
+            take my love, take my land
+        """.trimIndent())
+        val w = windowOf(buffer, 26, 1)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            take my love, take my land
+        """.trimIndent())
+
+        w.searchForKeyword("e", 1)
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual(
+            buildAnsi {
+                append("take my love, tak")
+                append("e", AttributedStyle.INVERSE)
+                append(" my land")
+            }
+        )
+
+        w.searchForKeyword("e", 1)
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual(
+            buildAnsi {
+                append("take my lov")
+                append("e", AttributedStyle.INVERSE)
+                append(", take my land")
+            }
+        )
+
+        w.searchForKeyword("e", 1)
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual(
+            buildAnsi {
+                append("tak")
+                append("e", AttributedStyle.INVERSE)
+                append(" my love, take my land")
+            }
+        )
+
+        w.searchForKeyword("e", -1)
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual(
+            buildAnsi {
+                append("take my lov")
+                append("e", AttributedStyle.INVERSE)
+                append(", take my land")
+            }
         )
     }
 
@@ -539,6 +589,12 @@ class JLineWindowTest {
         """.trimMargin())
     }
 }
+
+private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =
+    AttributedStringBuilder()
+        .apply(block)
+        .toAttributedString()
+        .toAnsi()
 
 private fun Assert<IJudoWindow>.hasScrollback(lines: Int) {
     if (actual.getScrollback() == lines) return

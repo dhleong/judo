@@ -52,6 +52,24 @@ fun FlavorableCharSequence.splitIndexOfOffset(
     return -1
 }
 
+/**
+ * Given an [offset] into this sequence, return the
+ * offset into the chunk on which [offset] would
+ * ultimately be rendered
+ */
+fun FlavorableCharSequence.splitOffsetOfOffset(
+    windowWidth: Int,
+    wordWrap: Boolean,
+    offset: Int
+): Int {
+    forEachRenderedLine(windowWidth, wordWrap) { startIndex, endIndex ->
+        if (offset in startIndex until endIndex) {
+            return offset - startIndex
+        }
+    }
+    return -1
+}
+
 internal inline fun FlavorableCharSequence.forEachRenderedLine(
     windowWidth: Int,
     wordWrap: Boolean,
