@@ -34,19 +34,17 @@ fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
     // TODO do this without these extra allocations?
     var style = base
     if (hasForeground) {
-        val c = foreground.toAnsiInt()
-        style = if (c == 0) {
+        style = if (foreground is JudoColor.Default) {
             style.foregroundDefault()
         } else {
-            style.foreground(c)
+            style.foreground(foreground.toAnsiInt())
         }
     }
     if (hasBackground) {
-        val c = background.toAnsiInt()
-        style = if (c == 0) {
+        style = if (background is JudoColor.Default) {
             style.backgroundDefault()
         } else {
-            style.background(c)
+            style.background(background.toAnsiInt())
         }
     }
 
@@ -82,6 +80,6 @@ internal fun JudoColor.toAnsiInt(): Int = when (this) {
         // convert to 256 colors (this is what JLine does)
         16 + (red shr 3) * 36 + (green shr 3) * 6 + (blue shr 3)
     }
-    JudoColor.Default -> 0
+    JudoColor.Default -> throw IllegalArgumentException("Don't use toAnsiInt with JudoColor.Default")
 }
 
