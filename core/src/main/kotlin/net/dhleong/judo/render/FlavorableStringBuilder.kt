@@ -9,7 +9,8 @@ class FlavorableStringBuilder private constructor(
     private var chars: CharArray,
     private var flavors: Array<Flavor?>,
     private var start: Int = 0,
-    private var myLength: Int = 0
+    private var myLength: Int = 0,
+    private var expandedTab: String = "  "
 ): FlavorableCharSequence, Appendable {
 
     constructor(capacity: Int) : this(
@@ -34,6 +35,11 @@ class FlavorableStringBuilder private constructor(
     }
 
     fun append(char: Char, flavor: Flavor) {
+        if (char == '\t') {
+            append(expandedTab, flavor)
+            return
+        }
+
         ensureCapacity(myLength + 1)
         chars[start + myLength] = char
         flavors[start + myLength] = flavor
@@ -59,14 +65,30 @@ class FlavorableStringBuilder private constructor(
             else -> null
         })
     }
+    fun append(string: String, offset: Int, end: Int, flavor: Flavor) {
+        appendImpl(string, offset, end, flavor)
+    }
     private fun appendImpl(string: String, offset: Int, end: Int, flavor: Flavor? = null) {
         val length = end - offset
         ensureCapacity(myLength + length)
 
-        string.toCharArray(chars, start + myLength, startIndex = offset)
-        flavors.fill(flavor, fromIndex = start + offset + myLength)
+        val appendStart = start + myLength
+        string.toCharArray(chars, appendStart, startIndex = offset)
+        flavors.fill(flavor, fromIndex = appendStart)
 
         myLength += length
+
+        var i = appendStart
+        val appendEnd = appendStart + length
+        while (i < appendEnd) {
+            if (chars[i] == '\t') {
+                replace(i, i + 1, expandedTab)
+                i += expandedTab.length
+            } else {
+                ++i
+            }
+        }
+
     }
 
     override fun plus(string: String): FlavorableCharSequence =

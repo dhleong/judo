@@ -18,7 +18,7 @@ class JLineDisplay(
 
     val lines: List<AttributedStringBuilder> = ArrayList<AttributedStringBuilder>(myHeight).also {
         for (i in 0 until myHeight) {
-            it += AttributedStringBuilder(myWidth).apply {
+            it += newBuilder(myWidth).apply {
                 for (j in 0 until myWidth) {
                     append(" ")
                 }
@@ -28,7 +28,7 @@ class JLineDisplay(
 
     fun resize(windowWidth: Int, windowHeight: Int) {
         for (i in myHeight until windowHeight) {
-            (lines as MutableList) += AttributedStringBuilder(windowWidth).apply {
+            (lines as MutableList) += newBuilder(windowWidth).apply {
                 for (j in 0 until windowWidth) {
                     append(" ")
                 }
@@ -115,6 +115,10 @@ class JLineDisplay(
     fun toAttributedStrings() =
         lines.take(myHeight)
             .map { it.toAttributedString() }
+
+    private fun newBuilder(windowWidth: Int) = AttributedStringBuilder(windowWidth).apply {
+        tabs(2)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true

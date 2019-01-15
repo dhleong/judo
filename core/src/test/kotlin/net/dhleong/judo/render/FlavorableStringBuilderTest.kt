@@ -24,6 +24,26 @@ class FlavorableStringBuilderTest {
         }
     }
 
+    @Test fun `Append subsequence with flavor`() {
+        val b = FlavorableStringBuilder(1).apply {
+            append("bla bla mal reynolds", 8, 20, SimpleFlavor(isBold = true))
+        }
+
+        assert(b).all {
+            hasToString("mal reynolds")
+            hasFlavor(SimpleFlavor(isBold = true))
+        }
+    }
+
+    @Test fun `Expand tabs`() {
+        val b = FlavorableStringBuilder(16).apply {
+            this += "mal\treynolds"
+        }
+        assert(b).all {
+            hasToString("mal  reynolds")
+        }
+    }
+
     @Test fun `Continue old flavor if not otherwise specified in append (String)`() {
         val b = FlavorableStringBuilder.fromString("Mal")
         b.beginFlavor(SimpleFlavor(isBold = true), 0)
