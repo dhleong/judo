@@ -125,9 +125,9 @@ nnoremap('gs', doSave)
 
 #### Differences from Vim
 
-In particular, modifier keys currently must written as eg: `<ctrl w>`
-instead of `<ctrl-w>` or `<c-w>`. This may change in the future.
-For more, see [Vim Compat][4].
+Since Judo's first priority is to be a MU\* client, and *not* to edit text,
+there are naturally some differences with Vim. For a full list,
+see [Vim Compat][4].
 
 
 ## Events
