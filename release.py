@@ -7,6 +7,7 @@ import re
 import hashlib
 from collections import OrderedDict
 
+# pylint: disable=unused-wildcard-import,wildcard-import
 try:
     from hostage import *
 except ImportError:
@@ -26,16 +27,16 @@ latestTag = git.Tag.latest()
 
 def sha256(filePath, blockSize=65536):
     # borrowed from: https://gist.github.com/rji/b38c7238128edf53a181
-    sha256 = hashlib.sha256()
+    sha = hashlib.sha256()
     with open(filePath, 'rb') as f:
         for block in iter(lambda: f.read(blockSize), b''):
-            sha256.update(block)
-    return sha256.hexdigest()
+            sha.update(block)
+    return sha.hexdigest()
 
 def formatIssue(issue):
     return "- {title} (#{number})\n".format(
-            number=issue.number,
-            title=issue.title)
+        number=issue.number,
+        title=issue.title)
 
 def buildLabeled(labelsToTitles):
     """Given a set of (label, title) tuples, produces an
@@ -54,13 +55,13 @@ def buildDefaultNotes(_):
         return ''
 
     logParams = {
-            'path': latestTag.name + "..HEAD",
-            'grep': ["Fix #", "Fixes #", "Closes #"],
-            'pretty': "format:- %s"}
+        'path': latestTag.name + "..HEAD",
+        'grep': ["Fix #", "Fixes #", "Closes #"],
+        'pretty': "format:- %s"}
     logParams["invertGrep"] = True
     msgs = git.Log(**logParams).output()
 
-    contents = ''
+    notesContents = ''
 
     lastReleaseDate = latestTag.get_created_date()
     if lastReleaseDate.tzinfo:
@@ -90,18 +91,18 @@ def buildDefaultNotes(_):
 
     for labeledIssueInfo in labeled.itervalues():
         if labeledIssueInfo['content']:
-            contents += "\n**{title}**:\n{content}".format(**labeledIssueInfo)
+            notesContents += "\n**{title}**:\n{content}".format(**labeledIssueInfo)
 
-    if msgs: contents += "\n**Notes**:\n" + msgs
-    return contents.strip()
+    if msgs: notesContents += "\n**Notes**:\n" + msgs
+    return notesContents.strip()
 
 #
 # Verify
 #
 
 version = verify(File("build.gradle")
-        .filtersTo(RegexFilter("version: '(.*)'"))
-        ).valueElse(echoAndDie("No version!?"))
+                 .filtersTo(RegexFilter("version: '(.*)'"))
+                ).valueElse(echoAndDie("No version!?"))
 versionTag = git.Tag(version)
 
 verify(versionTag.exists())\
@@ -178,6 +179,6 @@ verify(formulaFile).write(newContents, commitMessage=commit)
 
 notes.delete()
 
-print("Done! Published %s" % version)
+print "Done! Published %s" % version
 
 # flake8: noqa
