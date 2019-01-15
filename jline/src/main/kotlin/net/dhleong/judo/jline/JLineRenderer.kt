@@ -277,8 +277,8 @@ class JLineRenderer(
         if (isCursorOnStatus) {
             val windowX = 0 // TODO when we add vsplit support
             val windowY = tabpage.getYPositionOf(win)
-            val windowBottom = win.height + windowY
-            display.cursorRow = windowBottom - renderedInput.size
+            val windowBottom = windowY + win.height - 1
+            display.cursorRow = windowBottom
             display.cursorCol = windowX + rawStatusCursor
         } else {
             display.cursorRow = windowHeight - renderedInput.size + input.cursorRow

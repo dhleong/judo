@@ -250,6 +250,28 @@ class JLineRendererTest {
             hasCursor(4, 8)
         }
     }
+
+    @Test fun `Cursor in status line with wrapped input`() {
+        settings[WORD_WRAP] = true
+        settings[MAX_INPUT_LINES] = 2
+        window.appendLine("Take my love")
+        window.appendLine("Take my land")
+        window.resize(window.width, window.height)
+        renderer.updateInputLine("Take me where I cannot stand", 4)
+        window.updateStatusLine(":cmdMode", 8)
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |Take my love________
+                |Take my land________
+                |:cmdMode____________
+                |Take me where I_____
+                |cannot stand________
+            """.trimMargin())
+            hasCursor(3, 8)
+        }
+    }
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {
