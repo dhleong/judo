@@ -272,6 +272,23 @@ class JLineRendererTest {
             hasCursor(3, 8)
         }
     }
+
+    @Test fun `Render ellipsized input`() {
+        window.updateStatusLine("<status>")
+        renderer.updateInputLine("Take me where I cannot stand", 28)
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |<status>____________
+                |…re I cannot stand__
+            """.trimMargin())
+            hasCursor(5, 18)
+        }
+    }
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {

@@ -6,6 +6,8 @@ import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 
+private val ELLIPSIS = FlavorableStringBuilder.withDefaultFlavor("…")
+
 /**
  * @author dhleong
  */

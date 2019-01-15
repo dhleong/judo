@@ -31,8 +31,6 @@ const val KEY_DELETE = 127
 // this is returned by read() when it times out
 const val KEY_TIMEOUT = -2
 
-internal const val ELLIPSIS = "…"
-
 /**
  * @author dhleong
  */
