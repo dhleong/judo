@@ -181,7 +181,7 @@ class JudoCoreTest {
         judo.send("take land", fromMap = false)
         assertThat(history.size).isEqualTo(2)
 
-        judo.onDisconnect(Proxy())
+        judo.onDisconnect(DumbProxy())
 
         assertThat(tmpFile)
             .exists()
