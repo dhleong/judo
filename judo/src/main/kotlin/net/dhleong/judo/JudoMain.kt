@@ -50,6 +50,7 @@ fun main(args: Array<String>) {
 
     val argsList = args.toMutableList()
     val hasDebug = argsList.remove("--debug")
+    val hasNetDebug = argsList.remove("--debug=net")
     val hasAllDebug = argsList.remove("--debug=all")
     val debugLevel = when {
         hasAllDebug -> DebugLevel.ALL
@@ -62,7 +63,8 @@ fun main(args: Array<String>) {
     )
 
     val connections: JudoConnection.Factory = CommonsNetConnection.Factory(
-        debug = debugLevel.isEnabled
+        debug = debugLevel.isEnabled,
+        logRaw = hasNetDebug
     )
 
     val worldScriptFile = if (argsList.size == 1) {

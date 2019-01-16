@@ -669,6 +669,13 @@ class JudoCore(
             // stop logging
             logging.unconfigure()
 
+            // ensure the connection gets a chance to clean up
+            try {
+                connection.close()
+            } catch (e: IOException) {
+                // ignore
+            }
+
             onMainThread {
                 events.raise("DISCONNECTED")
                 events.clear()

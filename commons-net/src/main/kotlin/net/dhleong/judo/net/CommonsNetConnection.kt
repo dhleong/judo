@@ -16,11 +16,15 @@ class CommonsNetConnection private constructor(
     judo: IJudoCore,
     private val address: String,
     private val port: Int,
+    logRaw: Boolean = false,
     private val print: (String) -> Unit
-) : BaseConnection() {
-    class Factory(val debug: Boolean = false) : JudoConnection.Factory {
+) : BaseConnection(logRaw) {
+    class Factory(
+        private val debug: Boolean = false,
+        private val logRaw: Boolean = false
+    ) : JudoConnection.Factory {
         override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
-            return CommonsNetConnection(judo, address, port) { judo.print(it) }.also {
+            return CommonsNetConnection(judo, address, port, logRaw = logRaw) { judo.print(it) }.also {
                 it.debug = debug
             }
         }

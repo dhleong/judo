@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.launch
 import net.dhleong.judo.render.FlavorableCharSequence
+import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -18,7 +19,9 @@ import kotlin.coroutines.CoroutineContext
 /**
  * @author dhleong
  */
-abstract class BaseConnection : JudoConnection, CoroutineScope {
+abstract class BaseConnection(
+    debug: Boolean
+) : JudoConnection, CoroutineScope {
 
     private val job = Job()
     override val coroutineContext: CoroutineContext
@@ -45,6 +48,12 @@ abstract class BaseConnection : JudoConnection, CoroutineScope {
 
     private lateinit var readTask: ReceiveChannel<FlavorableCharSequence>
 
+    private val debugStream = if (debug) {
+        File("net-debug.txt")
+            .outputStream()
+            .bufferedWriter()
+    } else null
+
     override suspend fun send(line: String) {
         writeQueue.send(line)
     }
@@ -64,6 +73,10 @@ abstract class BaseConnection : JudoConnection, CoroutineScope {
     }
 
     override fun close() {
+        debugStream?.apply {
+            flush()
+            close()
+        }
         job.cancel()
         writeTask.cancel()
     }
@@ -83,6 +96,9 @@ abstract class BaseConnection : JudoConnection, CoroutineScope {
                     onDisconnect?.invoke(this@BaseConnection)
                     break
                 } else if (read > 0) {
+
+                    debugStream?.write(buffer, 0, read)
+
                     for (line in helper.feed(buffer, available = read)) {
                         send(line)
                     }
