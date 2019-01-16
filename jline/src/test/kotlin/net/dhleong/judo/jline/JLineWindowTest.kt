@@ -588,6 +588,30 @@ class JLineWindowTest {
             |Take me
         """.trimMargin())
     }
+
+    @Test fun `Don't squash significant whitespace`() {
+        // see #62
+        val display = JLineDisplay(10, 1)
+        val buffer = emptyBuffer().apply {
+            append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
+                append("  ", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple.from(2)
+                ))
+                append("  ", SimpleFlavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple.from(4)
+                ))
+            })
+        }
+        assert(buffer.size).isEqualTo(1)
+        val w = windowOf(buffer, 10, 1)
+
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual("""
+            |.${ansi(fg=2)}__${ansi(fg=4)}_______${ansi(0)}
+        """.trimMargin())
+    }
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =

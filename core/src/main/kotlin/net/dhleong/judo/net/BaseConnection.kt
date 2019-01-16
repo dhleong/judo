@@ -97,7 +97,10 @@ abstract class BaseConnection(
                     break
                 } else if (read > 0) {
 
-                    debugStream?.write(buffer, 0, read)
+                    debugStream?.apply {
+                        write(buffer, 0, read)
+                        flush()
+                    }
 
                     for (line in helper.feed(buffer, available = read)) {
                         send(line)

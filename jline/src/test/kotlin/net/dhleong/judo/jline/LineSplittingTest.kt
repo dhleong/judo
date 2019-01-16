@@ -34,7 +34,6 @@ class LineSplittingTest {
         }
     }
 
-
     @Test fun `Split lines with word wrap and width 1`() {
         val shorter = FlavorableStringBuilder.withDefaultFlavor("Its Zoe")
         assertInWindow(width = 1, wordWrap = true) {

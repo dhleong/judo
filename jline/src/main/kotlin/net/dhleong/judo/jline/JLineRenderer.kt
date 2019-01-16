@@ -141,8 +141,11 @@ class JLineRenderer(
 
     override fun setLoading(isLoading: Boolean) {
         if (this.isLoading != isLoading) {
-            this.isLoading = isLoading
-            render()
+            inTransaction {
+                this.isLoading = isLoading
+                // NOTE the end of inTransaction will trigger a render
+                // (if appropriate)
+            }
         }
     }
 

@@ -82,15 +82,9 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
         return
     }
 
-    // trim off trailing whitespace
-    if (preserveWhitespace) {
-        if (this[len - 1] == '\n') {
-            --len
-        }
-    } else {
-        while (len > 0 && Character.isWhitespace(this[len - 1])) {
-            --len
-        }
+    // trim off trailing newline
+    if (this[len - 1] == '\n') {
+        --len
     }
 
     var lineStart = 0
@@ -180,7 +174,9 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
                 val charCount = Character.charCount(cp)
                 lineStart += charCount
                 i += charCount
-                cp = codePointAt(lineStart)
+                if (lineStart < len) {
+                    cp = codePointAt(lineStart)
+                }
             }
         }
     }
