@@ -303,7 +303,7 @@ class JLineRenderer(
 
         val echoLines = echoWindow.measureRenderedLines(win.width)
         if (echoLines > 1) {
-            renderEcho(display, echoLines)
+            renderEcho(display, echoLines, renderedInput.size)
             return
         }
 
@@ -326,7 +326,11 @@ class JLineRenderer(
         }
     }
 
-    private fun renderEcho(display: JLineDisplay, echoLines: Int) {
+    private fun renderEcho(
+        display: JLineDisplay,
+        echoLines: Int,
+        renderedInputLines: Int
+    ) {
         // prepare to draw the "Press ENTER" prompt
         echoPromptWorkspace.clear()
         val wordWrap = settings[WORD_WRAP]
@@ -339,8 +343,13 @@ class JLineRenderer(
         val actualHeight = minOf(echoLines, windowHeight)
         echoWindow.resize(windowWidth, actualHeight)
 
-        // FIXME actually displace the original output by echoLines
-        // so new output can be seen
+        // actually displace the originally-rendered content so new
+        // output, etc. can be seen; note however that we *overlay* the input line,
+        // since this is a blocking mode, so take that into account
+        val scrollAmount = actualHeight + continueLineHeight - renderedInputLines
+        if (scrollAmount > 0) {
+            display.scroll(scrollAmount)
+        }
 
         echoWindow.render(display, 0, windowHeight - actualHeight - continueLineHeight)
 
@@ -352,7 +361,7 @@ class JLineRenderer(
         }
 
         display.cursorRow = windowHeight - 1
-        display.cursorCol = 0
+        display.cursorCol = minOf(windowWidth - 1, echoPromptWorkspace.last().length)
     }
 
     private fun resize() {

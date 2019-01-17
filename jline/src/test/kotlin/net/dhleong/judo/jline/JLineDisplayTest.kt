@@ -53,5 +53,26 @@ class JLineDisplayTest {
             isInstanceOf(IndexOutOfBoundsException::class.java)
         }
     }
+
+    @Test fun `Scroll display`() {
+        val display = JLineDisplay(10, 3)
+        display.withLine(0, 0) { append("mreynolds") }
+        display.withLine(0, 1) { append("zoe") }
+        display.withLine(0, 2) { append("itskaylee") }
+
+        assert(display).linesEqual("""
+            |mreynolds_
+            |zoe_______
+            |itskaylee_
+        """.trimMargin())
+
+        display.scroll(2)
+
+        // resize since we don't are about the "gone" 2 rows
+        display.resize(10, 1)
+        assert(display).linesEqual("""
+            |itskaylee_
+        """.trimMargin())
+    }
 }
 
