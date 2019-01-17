@@ -612,6 +612,30 @@ class JLineWindowTest {
             |.${ansi(fg=2)}__${ansi(fg=4)}_______${ansi(0)}
         """.trimMargin())
     }
+
+    @Test fun `Render trailing Flavor`() {
+        // see #62
+        val display = JLineDisplay(10, 1)
+        val buffer = emptyBuffer().apply {
+            append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
+                append("  ", SimpleFlavor(
+                    hasBackground = true,
+                    background = JudoColor.Simple.from(2)
+                ))
+                trailingFlavor = SimpleFlavor(
+                    hasBackground = true,
+                    background = JudoColor.Simple.from(5)
+                )
+            })
+        }
+        assert(buffer.size).isEqualTo(1)
+        val w = windowOf(buffer, 10, 1)
+
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual("""
+            |.${ansi(bg=2)}__${ansi(bg=5)}_______${ansi(0)}
+        """.trimMargin())
+    }
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =

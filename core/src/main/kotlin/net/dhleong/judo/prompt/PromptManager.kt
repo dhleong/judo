@@ -53,11 +53,7 @@ class PromptManager : IPromptManager {
         val toProcess = input.asFlavorableBuilder()
 
         // in general, it *should* have a newline
-        val hadNewline = input.endsWith('\n')
-        if (hadNewline) {
-            // don't process with trailing newlines
-            toProcess.setLength(input.length - 1)
-        }
+        val hadNewline = input.removeTrailingNewline()
         val result = delegate.process(toProcess) { index, prompt ->
             onPrompt(index, prompt)
             "" // always replace with empty string

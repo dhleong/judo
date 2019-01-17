@@ -10,6 +10,7 @@ class FlavorableStringBuilder private constructor(
     private var flavors: Array<Flavor?>,
     private var start: Int = 0,
     private var myLength: Int = 0,
+    override var trailingFlavor: Flavor? = null,
     private var expandedTab: String = "  "
 ): FlavorableCharSequence, Appendable {
 
@@ -60,7 +61,14 @@ class FlavorableStringBuilder private constructor(
         appendImpl(string, 0, string.length, flavor)
     }
     fun append(string: String, offset: Int, end: Int) {
+        val trailingFlavor = this.trailingFlavor
         appendImpl(string, offset, end, when {
+            trailingFlavor != null -> trailingFlavor.also {
+                if (end - offset > 1 || string[offset] != '\n') {
+                    // consume trailing flavor
+                    this.trailingFlavor = null
+                }
+            }
             isNotEmpty() -> flavors[start + myLength - 1]
             else -> null
         })
@@ -97,7 +105,13 @@ class FlavorableStringBuilder private constructor(
         }
 
     override operator fun plusAssign(char: Char) {
+        val trailingFlavor = this.trailingFlavor
         append(char, when {
+            trailingFlavor != null -> trailingFlavor.also {
+                if (char != '\n') {
+                    this.trailingFlavor = null
+                }
+            }
             isEmpty() -> Flavor.default
             else -> getFlavor(lastIndex)
         })
@@ -128,6 +142,7 @@ class FlavorableStringBuilder private constructor(
         }
 
         myLength += length
+        trailingFlavor = other.trailingFlavor
     }
 
     override fun plusAssign(other: FlavorableCharSequence) {
@@ -144,7 +159,13 @@ class FlavorableStringBuilder private constructor(
      * won't change, use [toFlavorableString]
      */
     override fun subSequence(startIndex: Int, endIndex: Int): FlavorableStringBuilder =
-        FlavorableStringBuilder(chars, flavors, start + startIndex, endIndex - startIndex)
+        FlavorableStringBuilder(
+            chars, flavors,
+            start + startIndex,
+            endIndex - startIndex,
+            trailingFlavor = trailingFlavor,
+            expandedTab = expandedTab
+        )
 
     override fun splitAtNewlines(
         destination: MutableList<FlavorableCharSequence>,
@@ -166,6 +187,19 @@ class FlavorableStringBuilder private constructor(
         if (start < length) {
             concatOrAddSubSequenceTo(continueIncompleteLines, destination, start, length)
         }
+    }
+
+    override fun removeTrailingNewline(): Boolean {
+        if (isEmpty() || last() != '\n') {
+            return false
+        }
+
+        val newlineIndex = --myLength
+        if (trailingFlavor != null) {
+            trailingFlavor = flavors[start + newlineIndex]
+        }
+
+        return true
     }
 
     @Suppress("NOTHING_TO_INLINE")
@@ -192,10 +226,33 @@ class FlavorableStringBuilder private constructor(
      * Return a deep copy of (a subsequence of) this Builder. Subsequent changes to this
      * Builder will not be reflected in the new instance
      */
-    fun toFlavorableString(startIndex: Int = 0, endIndex: Int = myLength): FlavorableCharSequence =
-        FlavorableStringBuilder(endIndex - startIndex).also {
-            it.append(this, startIndex, endIndex)
+    fun toFlavorableString(
+        startIndex: Int = 0,
+        endIndex: Int = myLength,
+        trailingFlavor: Flavor? = null
+    ): FlavorableCharSequence = FlavorableStringBuilder(endIndex - startIndex).also {
+
+        it.append(this, startIndex, endIndex)
+
+        if (trailingFlavor != null) {
+            // provided an explicit candidate; use it if it's not
+            // already our last flavor
+            var index = it.lastIndex
+            if (it.chars[index] == '\n') {
+                --index
+            }
+            if (index > 0 && it.flavors[index] != trailingFlavor) {
+                it.trailingFlavor = trailingFlavor
+            }
+        } else if (endIndex == myLength && this.trailingFlavor != null) {
+            it.trailingFlavor = this.trailingFlavor
+        } else {
+            it.trailingFlavor = this.trailingFlavor ?: when {
+                isNotEmpty() && last() == '\n' -> flavors[start + myLength - 1]
+                else -> null
+            }
         }
+    }
 
     override fun clearFlavor(startIndex: Int, endIndex: Int) {
         flavors.fill(Flavor.default, fromIndex = startIndex, toIndex = endIndex)

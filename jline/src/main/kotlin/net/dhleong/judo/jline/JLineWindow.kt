@@ -345,7 +345,9 @@ internal fun FlavorableCharSequence.splitAttributedLinesInto(
     wordWrap: Boolean
 ) {
     forEachRenderedLine(windowWidth, wordWrap) { start, end ->
-        target.add(subSequence(start, end).toAttributedString())
+        target.add(subSequence(start, end).toAttributedString(
+            widthForTrailingFlavor = windowWidth
+        ))
     }
 }
 

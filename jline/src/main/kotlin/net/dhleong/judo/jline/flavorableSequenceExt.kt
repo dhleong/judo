@@ -6,10 +6,27 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.WCWidth
 
-fun FlavorableCharSequence.toAttributedString(): AttributedString =
-    AttributedStringBuilder(length).also { result ->
-        appendTo(result)
-    }.toAttributedString()
+fun FlavorableCharSequence.toAttributedString(
+    widthForTrailingFlavor: Int = -1
+): AttributedString = AttributedStringBuilder(
+    // NOTE JLine 3.5.1 has an error where appending to a 0-capacity
+    // Builder will hang forever; we also may need room to handle
+    // trailing flavor anyway, so... add 1
+    length + 1
+).also { result ->
+    appendTo(result)
+
+    // if there's no room for the trailing flavor... it doesn't matter,
+    // because it wouldn't be seen anyway
+    if (
+        widthForTrailingFlavor > 0
+        && result.length < widthForTrailingFlavor
+    ) {
+        trailingFlavor?.let { flavor ->
+            result.append(" ", flavor.toAttributedStyle())
+        }
+    }
+}.toAttributedString()
 
 fun FlavorableCharSequence.appendTo(
     builder: AttributedStringBuilder

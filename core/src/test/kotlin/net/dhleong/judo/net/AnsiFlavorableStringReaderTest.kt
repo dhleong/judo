@@ -1,11 +1,19 @@
 package net.dhleong.judo.net
 
+import assertk.all
 import assertk.assert
+import assertk.assertions.hasLength
+import assertk.assertions.hasSize
+import assertk.assertions.hasToString
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.doesNotHaveTrailingFlavor
+import net.dhleong.judo.render.hasFlavor
+import net.dhleong.judo.render.hasTrailingFlavor
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
 import org.junit.Before
@@ -103,7 +111,7 @@ class AnsiFlavorableStringReaderTest {
         ))
     }
 
-    @Test fun `Trailing ansi`() {
+    @Test fun `Continue trailing ansi`() {
         val all = reader.feed("${ansi(1,6)}Take my ${ansi(1, 2)}") +
             reader.feed("love")
 
@@ -111,6 +119,62 @@ class AnsiFlavorableStringReaderTest {
             "${ansi(1, 6)}Take my ".parseAnsi(),
             "${ansi(1, 2)}love".parseAnsi()
         ))
+    }
+
+    @Test fun `Store trailing ansi`() {
+        val all = (
+            reader.feed("${ansi(1,6)}Take my ${ansi(1, 2)}\n") +
+            reader.feed("love")
+        ).toList()
+
+        val trailingFlavor = SimpleFlavor(
+            isBold = true,
+            hasForeground = true,
+            foreground = JudoColor.Simple.from(2)
+        )
+
+        assert(all).hasSize(2)
+        assert(all[0]).all {
+            hasFlavor(trailingFlavor, atIndex = 10)
+            hasTrailingFlavor(trailingFlavor)
+            hasToString("Take my \n")
+        }
+
+        assert(all[1]).all {
+            doesNotHaveTrailingFlavor()
+            hasFlavor(trailingFlavor)
+            hasToString("love")
+        }
+    }
+
+    @Test fun `Trailing ANSI storage 2`() {
+        val raw = "\u001B[48;5;234m  \u001B[0;38;5;007;48;5;000m\r\u001B[38;5;000;48;5;232m"
+        assert(raw.parseAnsi()).all {
+            hasLength(4)
+            hasTrailingFlavor(SimpleFlavor(
+                hasForeground = true,
+                foreground = JudoColor.Simple.from(7),
+                hasBackground = true,
+                background = JudoColor.Simple.from(0)
+            ))
+        }
+    }
+
+    @Test fun `Process sequence with Trailing ANSI`() {
+        val original = "\u001B[48;5;234m  \u001B[0;38;5;007;48;5;000m\r\u001B[38;5;000;48;5;232m".parseAnsi()
+        val processed = PromptManager()
+            .process(original) { _, _ ->
+                /* nop */
+            }
+        assert(processed).all {
+            hasLength(4)
+            hasTrailingFlavor(SimpleFlavor(
+                hasForeground = true,
+                foreground = JudoColor.Simple.from(7),
+                hasBackground = true,
+                background = JudoColor.Simple.from(0)
+            ))
+        }
     }
 
     @Test fun `Handle 256 colors`() {

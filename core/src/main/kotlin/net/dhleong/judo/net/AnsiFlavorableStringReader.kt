@@ -140,7 +140,11 @@ class AnsiFlavorableStringReader {
                 // normalize
                 builder[builder.lastIndex] = '\n'
             }
-            yield(builder.toFlavorableString())
+            val trailing = when {
+                builder.last() != '\n' -> lastFlavor
+                else -> null
+            }
+            yield(builder.toFlavorableString(trailingFlavor = trailing))
             builder.fullReset()
         }
     }

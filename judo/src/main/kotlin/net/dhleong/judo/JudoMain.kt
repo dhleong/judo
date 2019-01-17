@@ -34,7 +34,6 @@ fun main(args: Array<String>) {
     val settings = StateMap()
 
     // make sure we can render
-//    val renderer = JLineRenderer(settings)
     val ids = IdManager()
     val renderer = JLineRenderer(ids, settings)
     renderer.validate()

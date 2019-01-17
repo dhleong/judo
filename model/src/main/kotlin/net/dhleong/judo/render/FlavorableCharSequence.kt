@@ -30,6 +30,13 @@ interface FlavorableCharSequence : CharSequence {
     fun isHidden(index: Int) = getFlavor(index).isHidden
 
     /**
+     * Get the "trailing" Flavor, if any. Trailing flavor is mostly
+     * useful when trying to fill the rest of a line with some flavor,
+     * but there's no "trailing" text to attach it to
+     */
+    val trailingFlavor: Flavor?
+
+    /**
      * Clear [Flavor] from the given range
      */
     fun clearFlavor(
@@ -70,6 +77,8 @@ interface FlavorableCharSequence : CharSequence {
         startIndex: Int,
         endIndex: Int = startIndex + 1
     )
+
+    fun removeTrailingNewline(): Boolean
 }
 
 inline fun FlavorableCharSequence.forEachChunk(

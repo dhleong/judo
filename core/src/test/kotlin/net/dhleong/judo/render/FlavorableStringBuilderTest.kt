@@ -1,12 +1,9 @@
 package net.dhleong.judo.render
 
-import assertk.Assert
 import assertk.all
 import assertk.assert
 import assertk.assertions.hasLength
-import assertk.assertions.isEqualTo
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
+import assertk.assertions.hasToString
 import org.junit.Test
 
 class FlavorableStringBuilderTest {
@@ -221,34 +218,3 @@ class FlavorableStringBuilderTest {
     }
 }
 
-private fun Assert<FlavorableCharSequence>.hasFlavor(
-    flavor: Flavor,
-    atIndex: Int = 0,
-    untilIndex: Int = actual.length
-) {
-    for (i in atIndex until untilIndex) {
-        val thisFlavor = actual.getFlavor(i)
-        if (thisFlavor != flavor) {
-            expected(
-                "from ${show(atIndex)} until ${show(untilIndex)} ${show(flavor)};" +
-                "\n encountered at ${show(i)}: ${show(thisFlavor)}"
-            )
-            return
-        }
-    }
-}
-
-private fun Assert<FlavorableCharSequence>.hasToString(string: String) {
-    assert(actual.toString()).isEqualTo(string)
-}
-
-private fun Assert<FlavorableCharSequence>.splitsAtNewlinesToStrings(
-    vararg strings: String,
-    continueLines: MutableList<String>? = null
-) {
-    val split = continueLines?.map {
-        FlavorableStringBuilder.withDefaultFlavor(it) as FlavorableCharSequence
-    }?.toMutableList() ?: mutableListOf()
-    actual.splitAtNewlines(split, continueIncompleteLines = continueLines != null)
-    assert(split.map { it.toString() }).isEqualTo(strings.toList())
-}

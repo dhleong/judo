@@ -28,12 +28,9 @@ class TriggerManager : ITriggerManager {
     override fun process(input: FlavorableCharSequence) {
         val toProcess = input.asFlavorableBuilder()
 
-        // in general, it *should* have a newline
-        val hadNewline = input.endsWith('\n')
-        if (hadNewline) {
-            // don't process with trailing newlines
-            toProcess.setLength(input.length - 1)
-        }
+        // in general, it *should* have a newline;
+        // don't process with trailing newlines
+        val hadNewline = input.removeTrailingNewline()
 
         aliases.process(toProcess)
 
