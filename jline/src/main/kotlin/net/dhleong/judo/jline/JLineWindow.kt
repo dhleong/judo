@@ -354,6 +354,19 @@ class JLineWindow(
             scrollbackBottom += linesAfter - linesBefore
         }
     }
+
+    fun measureRenderedLines(width: Int): Int {
+        val buffer = currentBuffer
+        val wordWrap = settings[WORD_WRAP]
+
+        var lines = 0
+        for (i in 0..buffer.lastIndex) {
+            val line = buffer[i]
+            lines += line.computeRenderedLinesCount(width, wordWrap)
+        }
+
+        return lines
+    }
 }
 
 internal fun FlavorableCharSequence.splitAttributedLinesInto(

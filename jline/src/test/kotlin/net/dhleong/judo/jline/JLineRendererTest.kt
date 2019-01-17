@@ -342,19 +342,38 @@ class JLineRendererTest {
         }
     }
 
-    @Ignore("TODO: Multi-line echo()")
     @Test fun `Multi-line echo()`() {
         window.appendLine("Mal Reynolds")
         window.updateStatusLine("<status>")
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
-        window.scrollPages(1)
 
         // reset to previously-set status
+        // FIXME you should be able to see <status> and the buffer content (see Ignore'd test below)
         assert(display).all {
             linesEqual("""
                 |____________________
                 |____________________
+                |Take my love________
+                |Take my land________
+                |Press ENTER or type_
+                |command to continue_
+            """.trimMargin())
+        }
+    }
+
+    @Ignore("TODO: switch to this from other Multi-line echo test")
+    @Test fun `Fancy Multi-line echo()`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
+
+        // reset to previously-set status
+        // FIXME you should be able to see <status> and the buffer content
+        assert(display).all {
+            linesEqual("""
                 |____________________
+                |Mal Reynolds________
+                |<status>____________
                 |Take my love________
                 |Take my land________
                 |Press enter to cont…

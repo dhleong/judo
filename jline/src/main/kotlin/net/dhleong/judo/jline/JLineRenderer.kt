@@ -5,6 +5,7 @@ import net.dhleong.judo.CursorType
 import net.dhleong.judo.JudoRendererInfo
 import net.dhleong.judo.OnResizedEvent
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.EchoType
@@ -18,6 +19,7 @@ import org.jline.terminal.Size
 import org.jline.terminal.Terminal
 import org.jline.terminal.TerminalBuilder
 import org.jline.terminal.impl.DumbTerminal
+import org.jline.utils.AttributedString
 import org.jline.utils.Curses
 import org.jline.utils.Display
 import org.jline.utils.InfoCmp
@@ -67,6 +69,13 @@ class JLineRenderer(
     private val renderedInput = mutableListOf<FlavorableCharSequence>()
     private var lastInputLinesCount = 0
     private var cursorType: CursorType = CursorType.BLOCK
+
+    private val echoWindow = JLineWindow(
+        this, ids, settings,
+        windowWidth, windowHeight,
+        createBuffer()
+    )
+    private val echoPromptWorkspace = mutableListOf<AttributedString>()
 
     private val transactionDepth = AtomicInteger(0)
 
@@ -132,18 +141,26 @@ class JLineRenderer(
     }
 
     override fun echo(text: FlavorableCharSequence) = inTransaction {
-        val lines = text.count { it == '\n' }
-        if (lines <= 1) {
+        if (
+            echoWindow.currentBuffer.size == 0
+            && text.computeRenderedLinesCount(windowWidth, settings[WORD_WRAP]) <= 1
+        ) {
             // TODO this should get cleared on scroll, etc.
             currentTabpage.currentWindow.updateStatusLine(text)
+
+            // put in the buffer in case there's another echo in this transaction
+            echoWindow.appendLine(text)
+
             EchoType.TRANSIENT
         } else {
-            TODO("multi-line/BLOCKING echo")
+            echoWindow.appendLine(text)
+            EchoType.BLOCKING
         }
     }
 
-    override fun clearEcho() {
-        TODO("not implemented")
+    override fun clearEcho() = inTransaction {
+        echoWindow.currentBuffer.clear()
+        echoWindow.scrollToBottom()
     }
 
     override fun redraw() {
@@ -184,7 +201,10 @@ class JLineRenderer(
     override fun readKey(): Key? = keySource.readKey()
 
     override fun beginUpdate() {
-        transactionDepth.incrementAndGet()
+        val initialDepth = transactionDepth.getAndIncrement()
+        if (initialDepth == 0) {
+            clearEcho()
+        }
     }
 
     override fun finishUpdate() {
@@ -280,6 +300,38 @@ class JLineRenderer(
         tabpage.render(display)
 
         val inputY = tabpage.height
+
+        val echoLines = echoWindow.measureRenderedLines(win.width)
+        if (echoLines > 1) {
+            // prepare to draw the "Press ENTER" prompt
+            echoPromptWorkspace.clear()
+            val wordWrap = settings[WORD_WRAP]
+            val continueLine = FlavorableStringBuilder.withDefaultFlavor(
+                "Press ENTER or type command to continue"
+            )
+            continueLine.splitAttributedLinesInto(echoPromptWorkspace, windowWidth, wordWrap)
+            val continueLineHeight = echoPromptWorkspace.size
+
+            val actualHeight = minOf(echoLines, windowHeight)
+            echoWindow.resize(windowWidth, actualHeight)
+
+            // FIXME actually displace the original output by echoLines
+            // so new output can be seen
+
+            echoWindow.render(display, 0, windowHeight - actualHeight - continueLineHeight)
+
+            var line = windowHeight - continueLineHeight
+            for (continueLinePart in echoPromptWorkspace) {
+                display.withLine(0, line++, lineWidth = windowWidth) {
+                    append(continueLinePart)
+                }
+            }
+
+            display.cursorRow = windowHeight - 1
+            display.cursorCol = 0
+            return
+        }
+
         for (i in renderedInput.indices) {
             val line = renderedInput[i]
             display.withLine(0, inputY + i, lineWidth = windowWidth) {
