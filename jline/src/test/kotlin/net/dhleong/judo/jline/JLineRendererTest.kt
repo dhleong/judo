@@ -361,6 +361,26 @@ class JLineRendererTest {
             )
         }
     }
+
+    @Test fun `Forced Multi-line echo()`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my\nlove"))
+
+        assert(display).all {
+            linesEqual("""
+                |Mal Reynolds________
+                |<status>____________
+                |Take my ____________
+                |love________________
+                |Press ENTER or type_
+                |command to continue_
+            """.trimMargin())
+            hasCursor(
+                5, 19
+            )
+        }
+    }
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {

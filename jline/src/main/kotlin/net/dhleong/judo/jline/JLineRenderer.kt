@@ -141,19 +141,19 @@ class JLineRenderer(
     }
 
     override fun echo(text: FlavorableCharSequence) = inTransaction {
+        // always put in the buffer in case there's another echo
+        // in this transaction
+        echoWindow.appendLine(text)
+
         if (
-            echoWindow.currentBuffer.size == 0
+            echoWindow.currentBuffer.size <= 1
             && text.computeRenderedLinesCount(windowWidth, settings[WORD_WRAP]) <= 1
         ) {
             // TODO this should get cleared on scroll, etc.
             currentTabpage.currentWindow.updateStatusLine(text)
 
-            // put in the buffer in case there's another echo in this transaction
-            echoWindow.appendLine(text)
-
             EchoType.TRANSIENT
         } else {
-            echoWindow.appendLine(text)
             EchoType.BLOCKING
         }
     }
