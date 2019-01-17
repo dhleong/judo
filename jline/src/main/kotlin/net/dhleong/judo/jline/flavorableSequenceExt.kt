@@ -156,7 +156,7 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
                     block(lineStart, lastWordEnd)
                 }
 
-                if (lastWordStart == lineStart) {
+                if (lastWordStart == lineStart || lastWordStart < lastWordEnd) {
                     lineStart = i
 
                     newWidth - windowWidth

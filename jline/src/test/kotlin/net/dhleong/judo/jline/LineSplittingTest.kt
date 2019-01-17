@@ -116,6 +116,18 @@ class LineSplittingTest {
         }
     }
 
+    @Test fun `Split lines with word wrap right on whitespace`() {
+        val s = FlavorableStringBuilder.withDefaultFlavor(
+            "Press ENTER or type command to continue"
+        )
+        assertInWindow(width = 20, wordWrap = true) {
+            s.hasRenderedLines(
+                "Press ENTER or type",
+                "command to continue"
+            )
+        }
+    }
+
     @Test fun `Split preserving whitespace`() {
         val s = FlavorableStringBuilder.withDefaultFlavor(
             "The quick red fox jumped over the lazy brown dog. The quick red fox jumped"
