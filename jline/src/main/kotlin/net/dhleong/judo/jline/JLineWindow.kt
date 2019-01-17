@@ -174,7 +174,7 @@ class JLineWindow(
     override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         renderer.inTransaction {
-            status.line = line
+            status.line = line.removeSuffix("\n") as FlavorableCharSequence
             status.cursorIndex = cursor
 
             // also set this since that's where statusCursor comes from;

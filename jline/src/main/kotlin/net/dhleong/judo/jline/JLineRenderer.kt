@@ -303,32 +303,7 @@ class JLineRenderer(
 
         val echoLines = echoWindow.measureRenderedLines(win.width)
         if (echoLines > 1) {
-            // prepare to draw the "Press ENTER" prompt
-            echoPromptWorkspace.clear()
-            val wordWrap = settings[WORD_WRAP]
-            val continueLine = FlavorableStringBuilder.withDefaultFlavor(
-                "Press ENTER or type command to continue"
-            )
-            continueLine.splitAttributedLinesInto(echoPromptWorkspace, windowWidth, wordWrap)
-            val continueLineHeight = echoPromptWorkspace.size
-
-            val actualHeight = minOf(echoLines, windowHeight)
-            echoWindow.resize(windowWidth, actualHeight)
-
-            // FIXME actually displace the original output by echoLines
-            // so new output can be seen
-
-            echoWindow.render(display, 0, windowHeight - actualHeight - continueLineHeight)
-
-            var line = windowHeight - continueLineHeight
-            for (continueLinePart in echoPromptWorkspace) {
-                display.withLine(0, line++, lineWidth = windowWidth) {
-                    append(continueLinePart)
-                }
-            }
-
-            display.cursorRow = windowHeight - 1
-            display.cursorCol = 0
+            renderEcho(display, echoLines)
             return
         }
 
@@ -349,6 +324,35 @@ class JLineRenderer(
             display.cursorRow = windowHeight - renderedInput.size + input.cursorRow
             display.cursorCol = input.cursorCol
         }
+    }
+
+    private fun renderEcho(display: JLineDisplay, echoLines: Int) {
+        // prepare to draw the "Press ENTER" prompt
+        echoPromptWorkspace.clear()
+        val wordWrap = settings[WORD_WRAP]
+        val continueLine = FlavorableStringBuilder.withDefaultFlavor(
+            "Press ENTER or type command to continue"
+        )
+        continueLine.splitAttributedLinesInto(echoPromptWorkspace, windowWidth, wordWrap)
+        val continueLineHeight = echoPromptWorkspace.size
+
+        val actualHeight = minOf(echoLines, windowHeight)
+        echoWindow.resize(windowWidth, actualHeight)
+
+        // FIXME actually displace the original output by echoLines
+        // so new output can be seen
+
+        echoWindow.render(display, 0, windowHeight - actualHeight - continueLineHeight)
+
+        var line = windowHeight - continueLineHeight
+        for (continueLinePart in echoPromptWorkspace) {
+            display.withLine(0, line++, lineWidth = windowWidth) {
+                append(continueLinePart)
+            }
+        }
+
+        display.cursorRow = windowHeight - 1
+        display.cursorCol = 0
     }
 
     private fun resize() {
