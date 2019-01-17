@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
@@ -77,7 +78,16 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      */
     fun setCursorType(type: CursorType)
 
-    fun echo(text: FlavorableCharSequence)
+    /**
+     * Write text (possibly multiple lines) to the "echo" buffer.
+     * In a transaction, multiple echoes may be combined into a
+     * single write, but in general subsequent [echo] calls will
+     * replace earlier calls.
+     *
+     * A [EchoType.BLOCKING] echo may be cleared with [clearEcho]
+     */
+    fun echo(text: FlavorableCharSequence): EchoType
+    fun clearEcho()
 
     fun updateInputLine(line: String, cursor: Int)
 
@@ -96,13 +106,13 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
     fun finishUpdate()
 }
 
-inline fun JudoRenderer.inTransaction(block: () -> Unit) {
-    try {
-        beginUpdate()
+inline fun <R> JudoRenderer.inTransaction(
+    block: () -> R
+): R = try {
+    beginUpdate()
 
-        block()
+    block()
 
-    } finally {
-        finishUpdate()
-    }
+} finally {
+    finishUpdate()
 }

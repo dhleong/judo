@@ -344,6 +344,7 @@ class JLineRendererTest {
 
     @Ignore("TODO: Multi-line echo()")
     @Test fun `Multi-line echo()`() {
+        window.appendLine("Mal Reynolds")
         window.updateStatusLine("<status>")
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
         window.scrollPages(1)

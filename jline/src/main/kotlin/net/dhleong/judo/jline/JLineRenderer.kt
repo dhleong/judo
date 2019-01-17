@@ -7,6 +7,7 @@ import net.dhleong.judo.OnResizedEvent
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
@@ -135,9 +136,14 @@ class JLineRenderer(
         if (lines <= 1) {
             // TODO this should get cleared on scroll, etc.
             currentTabpage.currentWindow.updateStatusLine(text)
+            EchoType.TRANSIENT
         } else {
-            TODO("multi-line echo")
+            TODO("multi-line/BLOCKING echo")
         }
+    }
+
+    override fun clearEcho() {
+        TODO("not implemented")
     }
 
     override fun redraw() {

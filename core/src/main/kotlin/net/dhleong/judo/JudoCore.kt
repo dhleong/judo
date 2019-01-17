@@ -20,6 +20,7 @@ import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.BaseCmdMode
+import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -35,6 +36,7 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
+import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
@@ -175,7 +177,8 @@ class JudoCore(
         map
     }
 
-    private var currentMode: Mode = normalMode
+    // internal for testing
+    internal var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
 
     internal var running = true
@@ -271,7 +274,12 @@ class JudoCore(
         }
     }
 
-    override fun echo(vararg objects: Any?) = renderer.echo(objects.toFlavoredSequence())
+    override fun echo(vararg objects: Any?) {
+        val type = renderer.echo(objects.toFlavoredSequence())
+        if (type == EchoType.BLOCKING) {
+            enterMode(BlockingEchoMode(this, renderer))
+        }
+    }
 
     override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())
     override fun printRaw(vararg objects: Any?) = doPrint(false, objects.toFlavoredSequence())
