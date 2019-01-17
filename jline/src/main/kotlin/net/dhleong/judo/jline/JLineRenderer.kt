@@ -130,6 +130,16 @@ class JLineRenderer(
         input.cursorIndex = cursor
     }
 
+    override fun echo(text: FlavorableCharSequence) = inTransaction {
+        val lines = text.count { it == '\n' }
+        if (lines <= 1) {
+            // TODO this should get cleared on scroll, etc.
+            currentTabpage.currentWindow.updateStatusLine(text)
+        } else {
+            TODO("multi-line echo")
+        }
+    }
+
     override fun redraw() {
         inTransaction {
             // NOTE: render() is called for us at the end

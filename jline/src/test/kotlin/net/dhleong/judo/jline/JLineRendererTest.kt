@@ -10,6 +10,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class JLineRendererTest {
@@ -304,6 +305,59 @@ class JLineRendererTest {
                 |…re I cannot stand__
             """.trimMargin())
             hasCursor(5, 18)
+        }
+    }
+
+    @Test fun `Render echo() single-line output`() {
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |Take my love________
+                |____________________
+            """.trimMargin())
+        }
+    }
+
+    @Ignore("TODO: Clear echo() output on scroll")
+    @Test fun `Clear echo() output on scroll`() {
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
+        window.scrollPages(1)
+
+        // reset to previously-set status
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |<status>____________
+                |____________________
+            """.trimMargin())
+        }
+    }
+
+    @Ignore("TODO: Multi-line echo()")
+    @Test fun `Multi-line echo()`() {
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
+        window.scrollPages(1)
+
+        // reset to previously-set status
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |Take my love________
+                |Take my land________
+                |Press enter to cont…
+            """.trimMargin())
         }
     }
 }

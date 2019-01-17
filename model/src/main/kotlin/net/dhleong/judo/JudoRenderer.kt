@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import java.io.Closeable
@@ -75,6 +76,8 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      * Attempt to set the current cursor type
      */
     fun setCursorType(type: CursorType)
+
+    fun echo(text: FlavorableCharSequence)
 
     fun updateInputLine(line: String, cursor: Int)
 

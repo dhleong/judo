@@ -31,7 +31,6 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
-import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
@@ -272,33 +271,10 @@ class JudoCore(
         }
     }
 
-    override fun print(vararg objects: Any?) = printArray(true, objects)
-    override fun printRaw(vararg objects: Any?) = printArray(false, objects)
+    override fun echo(vararg objects: Any?) = renderer.echo(objects.toFlavoredSequence())
 
-    private val printAnsiParser = AnsiFlavorableStringReader()
-    private fun printArray(process: Boolean, objects: Array<out Any?>) {
-        val joined = FlavorableStringBuilder(16)
-
-        var first = true
-        for (o in objects) {
-            if (first) first = false
-            else joined += " "
-
-            when (o) {
-                is FlavorableCharSequence -> joined += o
-                is String -> {
-                    val chars = o.toCharArray()
-                    printAnsiParser.reset()
-                    for (fcs in printAnsiParser.feed(chars)) {
-                        joined += fcs
-                    }
-                }
-                else -> joined += o.toString()
-            }
-        }
-
-        doPrint(process, joined)
-    }
+    override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())
+    override fun printRaw(vararg objects: Any?) = doPrint(false, objects.toFlavoredSequence())
 
     private fun doPrint(process: Boolean, asString: String) =
         doPrint(process, FlavorableStringBuilder.withDefaultFlavor(asString))
