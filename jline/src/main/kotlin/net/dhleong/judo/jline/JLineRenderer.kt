@@ -253,10 +253,6 @@ class JLineRenderer(
             tabpage.currentWindow.isFocusable -> input.cursorIndex
             else -> 0
         }
-        val rawStatusCursor = when {
-            isCursorOnStatus -> win.statusCursor
-            else -> 0
-        }
 
         val originalCursor = input.cursorIndex
         input.cursorIndex = rawInputCursor
@@ -280,7 +276,7 @@ class JLineRenderer(
             val windowY = tabpage.getYPositionOf(win)
             val windowBottom = windowY + win.height - 1
             display.cursorRow = windowBottom
-            display.cursorCol = windowX + rawStatusCursor
+            display.cursorCol = windowX + win.statusCursor
         } else {
             display.cursorRow = windowHeight - renderedInput.size + input.cursorRow
             display.cursorCol = input.cursorCol

@@ -5,7 +5,6 @@ import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.BaseJudoWindow
 import net.dhleong.judo.render.FlavorableCharSequence
-import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedString
@@ -33,8 +32,15 @@ class JLineWindow(
     override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
 
-    private var status: FlavorableCharSequence = FlavorableStringBuilder.EMPTY
-    override var statusCursor: Int = -1
+    private var status = InputLine(cursorIndex = -1)
+    private val statusHelper = TerminalInputLineHelper(
+        settings,
+        forcedMaxInputLines = 1, // TODO can we render a wrapped status line? should we?
+        windowWidth = width
+    )
+    private val statusWorkspace = ArrayList<FlavorableCharSequence>(1)
+    override val statusCursor: Int
+        get() = status.cursorCol
 
     /** offset from end of output */
     private var scrollbackBottom = 0
@@ -153,8 +159,12 @@ class JLineWindow(
         }
 
         if (isFocusable && isFocused) {
+            statusWorkspace.clear()
+            statusHelper.fitInputLinesToWindow(status, statusWorkspace)
+
             display.withLine(x, line, lineWidth = width) {
-                append(status)
+                // NOTE we assume only ever 1 status output line
+                append(statusWorkspace[0])
             }
         } else if (isFocusable && !statusLineOverlaysOutput) {
             // TODO faded out status?
@@ -164,8 +174,14 @@ class JLineWindow(
     override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         renderer.inTransaction {
-            status = line
-            statusCursor = cursor
+            status.line = line
+            status.cursorIndex = cursor
+
+            // also set this since that's where statusCursor comes from;
+            // it'll get recalculated for render anyway, but it's important
+            // that statusCursor *at least* not be -1 if [cursor] is not -1
+            // (see JLineRenderer.render)
+            status.cursorCol = cursor
         }
     }
 
@@ -178,6 +194,7 @@ class JLineWindow(
         renderer.inTransaction {
             this.width = width
             this.height = height
+            statusHelper.windowWidth = width
             renderer.onWindowResized(this)
         }
     }

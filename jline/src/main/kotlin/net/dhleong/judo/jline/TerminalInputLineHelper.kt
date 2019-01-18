@@ -5,15 +5,17 @@ import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.toFlavorable
 
-private val ELLIPSIS = FlavorableStringBuilder.withDefaultFlavor("…")
+private val ELLIPSIS = "…".toFlavorable()
 
 /**
  * @author dhleong
  */
 class TerminalInputLineHelper(
     private val settings: StateMap,
-    var windowWidth: Int = 0
+    var windowWidth: Int = 0,
+    private val forcedMaxInputLines: Int? = null
 ) {
 
     private val workspace = mutableListOf<FlavorableCharSequence>()
@@ -23,7 +25,7 @@ class TerminalInputLineHelper(
         output: MutableList<FlavorableCharSequence>
     ) {
         val maxLineWidth = windowWidth
-        val maxLines = settings[MAX_INPUT_LINES]
+        val maxLines = forcedMaxInputLines ?: settings[MAX_INPUT_LINES]
 
         val line = input.line
         if (line.length < maxLineWidth || maxLines == 1) {
@@ -107,6 +109,11 @@ class TerminalInputLineHelper(
     ) {
         // thanks to word-wrap, cursor row/col is not an exact fit, so just go find it
         var cursorCol = input.cursorIndex
+        if (cursorCol == -1) {
+            // don't change a -1 cursorIndex (usually for simple status messages)
+            input.cursorCol = -1
+            return
+        }
 
         val lastLine = lines.lastIndex
         for (row in lines.indices) {
@@ -185,6 +192,9 @@ class TerminalInputLineHelper(
 
         output.add(withIndicator)
         input.cursorRow = 0
-        input.cursorCol = absolutePageCursor + cursorOffset
+        input.cursorCol = when (cursor) {
+            -1 -> -1 // see above
+            else -> absolutePageCursor + cursorOffset
+        }
     }
 }

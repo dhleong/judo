@@ -406,9 +406,7 @@ class FlavorableStringBuilder private constructor(
 
 fun CharSequence.toFlavorable() = when (this) {
     is FlavorableCharSequence -> this
-    else -> FlavorableStringBuilder(length).also { builder ->
-        builder += this.toString()
-    }
+    else -> FlavorableStringBuilder.withDefaultFlavor(toString())
 }
 
 fun FlavorableCharSequence.asFlavorableBuilder() = when (this) {

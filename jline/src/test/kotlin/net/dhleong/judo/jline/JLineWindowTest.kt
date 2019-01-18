@@ -17,6 +17,7 @@ import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -38,6 +39,24 @@ class JLineWindowTest {
             |__________
             |mreynolds_
             |zoe_______
+        """.trimMargin())
+    }
+
+    @Test fun `Render long status line`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = emptyBuffer()
+
+        windowOf(buffer, 10, 3, focusable = true).apply {
+            updateStatusLine(""":echo("mreynolds")""".toFlavorable(), 18)
+            isFocused = true
+
+            render(display, 0, 0)
+        }
+
+        assert(display).linesEqual("""
+            |__________
+            |__________
+            |…nolds")__
         """.trimMargin())
     }
 

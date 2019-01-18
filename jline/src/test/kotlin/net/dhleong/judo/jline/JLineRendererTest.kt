@@ -251,6 +251,23 @@ class JLineRendererTest {
         }
     }
 
+    @Test fun `Cursor in wrapped status line`() {
+        renderer.updateInputLine("<input>", 7)
+        window.updateStatusLine("Take me where I cannot stand", 28)
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |…re I cannot stand__
+                |<input>_____________
+            """.trimMargin())
+            hasCursor(4, 18)
+        }
+    }
+
     @Test fun `Cursor in status line with wrapped input`() {
         settings[WORD_WRAP] = true
         settings[MAX_INPUT_LINES] = 2
