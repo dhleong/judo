@@ -2,13 +2,13 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
+import net.dhleong.judo.JudoRendererEvent
 import net.dhleong.judo.JudoRendererInfo
-import net.dhleong.judo.OnResizedEvent
+import net.dhleong.judo.OnRendererEventListener
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
-import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
@@ -59,7 +59,7 @@ class JLineRenderer(
     override var windowWidth: Int = terminal.width
     override var windowHeight: Int = terminal.height
 
-    override var onResized: OnResizedEvent? = null
+    override var onEvent: OnRendererEventListener? = null
 
     override lateinit var currentTabpage: IJudoTabpage
 
@@ -140,7 +140,7 @@ class JLineRenderer(
         input.cursorIndex = cursor
     }
 
-    override fun echo(text: FlavorableCharSequence) = inTransaction {
+    override fun echo(text: FlavorableCharSequence) = inTransaction<Unit> {
         // always put in the buffer in case there's another echo
         // in this transaction
         echoWindow.appendLine(text)
@@ -151,10 +151,10 @@ class JLineRenderer(
         ) {
             // TODO this should get cleared on scroll, etc.
             currentTabpage.currentWindow.updateStatusLine(text)
-
-            EchoType.TRANSIENT
         } else {
-            EchoType.BLOCKING
+
+            // blocking echo!
+            onEvent?.invoke(JudoRendererEvent.OnBlockingEcho)
         }
     }
 
@@ -391,7 +391,7 @@ class JLineRenderer(
         // resize the tabpage *last* so it can safely trigger a render
         currentTabpage.resize(windowWidth, windowHeight - 1)
 
-        onResized?.invoke()
+        onEvent?.invoke(JudoRendererEvent.OnResized)
     }
 
     private fun handleSignal(signal: Terminal.Signal) {

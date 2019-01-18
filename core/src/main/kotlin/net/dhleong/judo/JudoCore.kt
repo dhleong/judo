@@ -36,7 +36,6 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
-import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
@@ -203,22 +202,29 @@ class JudoCore(
         primaryWindow.isFocused = true
         renderer.currentTabpage = tabpage
         renderer.settings = state
-        renderer.onResized = {
-            renderer.inTransaction {
-                updateStatusLine(currentMode)
-                updateInputLine()
-
-                tabpage.currentWindow.let {
-                    mapper.resize(width = it.width)
-                }
-            }
-        }
+        renderer.onEvent = { ev -> when (ev) {
+            is JudoRendererEvent.OnResized -> onResize()
+            is JudoRendererEvent.OnBlockingEcho -> onBlockingEcho()
+        } }
 
         if (debug.isEnabled) {
             System.setErr(PrintStream(debugLogFile.outputStream()))
         }
 
         activateMode(currentMode)
+    }
+
+    private fun onResize() = renderer.inTransaction {
+        updateStatusLine(currentMode)
+        updateInputLine()
+
+        tabpage.currentWindow.let {
+            mapper.resize(width = it.width)
+        }
+    }
+
+    private fun onBlockingEcho() {
+        enterMode(BlockingEchoMode(this, renderer))
     }
 
     override fun connect(address: String, port: Int) {
@@ -275,10 +281,7 @@ class JudoCore(
     }
 
     override fun echo(vararg objects: Any?) {
-        val type = renderer.echo(objects.toFlavoredSequence())
-        if (type == EchoType.BLOCKING) {
-            enterMode(BlockingEchoMode(this, renderer))
-        }
+        renderer.echo(objects.toFlavoredSequence())
     }
 
     override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())

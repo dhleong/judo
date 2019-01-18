@@ -1,5 +1,6 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.search.BufferSearcher
 
@@ -9,6 +10,7 @@ import net.dhleong.judo.search.BufferSearcher
  * @author dhleong
  */
 abstract class BaseJudoWindow(
+    private val renderer: JudoRenderer,
     ids: IdManager,
     protected val settings: StateMap,
     initialWidth: Int,
@@ -46,10 +48,8 @@ abstract class BaseJudoWindow(
         )
 
         if (!found) {
-            // TODO bell? print?
-            buffer.appendLine(FlavorableStringBuilder.withDefaultFlavor(
-                "Pattern not found: $word"
-            ))
+            // TODO bell?
+            renderer.echo("Pattern not found: $word".toFlavorable())
             return
         }
 

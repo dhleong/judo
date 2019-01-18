@@ -1,13 +1,12 @@
 package net.dhleong.judo
 
-import net.dhleong.judo.render.EchoType
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import java.io.Closeable
 import java.util.EnumSet
 
-typealias OnResizedEvent = () -> Unit
+typealias OnRendererEventListener = (event: JudoRendererEvent) -> Unit
 
 enum class CursorType(ansiCode: Int) {
 
@@ -51,11 +50,7 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
 
     val windowHeight: Int
 
-    /**
-     * Fired if the [windowWidth] or [windowHeight]
-     *  values changed; run inside a transaction
-     */
-    var onResized: OnResizedEvent?
+    var onEvent: OnRendererEventListener?
 
     var settings: StateMap
 
@@ -86,7 +81,7 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      *
      * A [EchoType.BLOCKING] echo may be cleared with [clearEcho]
      */
-    fun echo(text: FlavorableCharSequence): EchoType
+    fun echo(text: FlavorableCharSequence)
     fun clearEcho()
 
     fun updateInputLine(line: String, cursor: Int)

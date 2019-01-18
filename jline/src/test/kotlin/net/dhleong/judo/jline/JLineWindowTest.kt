@@ -5,7 +5,10 @@ import assertk.assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.times
+import com.nhaarman.mockito_kotlin.verify
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.bufferOf
@@ -21,9 +24,16 @@ import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
+import org.junit.Before
 import org.junit.Test
 
 class JLineWindowTest {
+
+    private lateinit var renderer: IJLineRenderer
+
+    @Before fun setUp() {
+        renderer = mock {  }
+    }
 
     @Test fun `Simple Window rendering`() {
         val display = JLineDisplay(10, 3)
@@ -516,10 +526,16 @@ class JLineWindowTest {
 
         w.searchForKeyword("none", 1)
         w.render(display, 0, 0)
+
+        // don't go anywhere
         assert(w).hasScrollback(0)
         assert(display).linesEqual("""
-            |Pattern not found: none_
+            |first mate zoe__________
         """.trimMargin())
+
+        verify(renderer, times(1)).echo(eq(
+            "Pattern not found: none".toFlavorable()
+        ))
     }
 
     @Test fun `Maintain scrollback on append`() {
@@ -655,6 +671,24 @@ class JLineWindowTest {
             |.${ansi(bg=2)}__${ansi(bg=5)}_______${ansi(0)}
         """.trimMargin())
     }
+
+    private fun windowOf(
+        buffer: JudoBuffer,
+        width: Int,
+        height: Int,
+        focusable: Boolean = false,
+        wrap: Boolean = false
+    ) = JLineWindow(
+        renderer,
+        IdManager(),
+        StateMap().apply {
+            this[WORD_WRAP] = wrap
+        },
+        width,
+        height,
+        buffer,
+        isFocusable = focusable
+    )
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =
@@ -668,20 +702,3 @@ private fun Assert<IJudoWindow>.hasScrollback(lines: Int) {
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }
 
-private fun windowOf(
-    buffer: JudoBuffer,
-    width: Int,
-    height: Int,
-    focusable: Boolean = false,
-    wrap: Boolean = false
-) = JLineWindow(
-    mock {},
-    IdManager(),
-    StateMap().apply {
-        this[WORD_WRAP] = wrap
-    },
-    width,
-    height,
-    buffer,
-    isFocusable = focusable
-)
