@@ -161,6 +161,11 @@ class JLineRenderer(
     override fun clearEcho() = inTransaction {
         echoWindow.currentBuffer.clear()
         echoWindow.scrollToBottom()
+
+        // go ahead and clear the window as well; coming back from
+        // a blocking echo is handled poorly by JLine the same way
+        // that going from 2 -> 1 input lines is
+        window.clear()
     }
 
     override fun redraw() {

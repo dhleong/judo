@@ -11,7 +11,6 @@ import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.render.IdManager
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -89,7 +88,6 @@ class JudoCoreJLineIntegrationTest {
         }
     }
 
-    @Ignore
     @Test fun `Multiline echo() from script`() {
         renderer.forceResize(30, 4)
         judo.feedKeys(":echo(\"mal\\nreynolds\")<cr>")
@@ -99,13 +97,6 @@ class JudoCoreJLineIntegrationTest {
             |Press ENTER or type command to
             |continue______________________
         """.trimMargin())
-
-        assert(display.toAttributedStrings()).all {
-            hasSize(2)
-            each {
-                it.hasLength(20)
-            }
-        }
     }
 }
 

@@ -472,8 +472,7 @@ class JudoCore(
         }
     }
 
-    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
-//        print("## feedKey($stroke)")
+    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) = renderer.inTransaction {
         when (stroke.keyCode) {
             Key.CODE_ESCAPE -> {
                 // reset the current register
@@ -501,15 +500,13 @@ class JudoCore(
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        renderer.inTransaction {
-            if (newMode is StatusBufferProvider) {
-                tabpage.currentWindow.updateStatusLine(
-                    newMode.renderStatusBuffer(),
-                    newMode.getCursor()
-                )
-            } else {
-                updateInputLine()
-            }
+        if (newMode is StatusBufferProvider) {
+            tabpage.currentWindow.updateStatusLine(
+                newMode.renderStatusBuffer(),
+                newMode.getCursor()
+            )
+        } else {
+            updateInputLine()
         }
     }
 
