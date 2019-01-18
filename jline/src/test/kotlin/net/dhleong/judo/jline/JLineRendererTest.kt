@@ -10,7 +10,6 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineRendererTest {
@@ -323,7 +322,6 @@ class JLineRendererTest {
         }
     }
 
-    @Ignore("TODO: Clear echo() output on scroll")
     @Test fun `Clear echo() output on scroll`() {
         window.updateStatusLine("<status>")
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
