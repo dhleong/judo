@@ -24,7 +24,7 @@ class JLineWindow(
     isFocusable: Boolean = false,
     statusLineOverlaysOutput: Boolean = false
 ) : BaseJudoWindow(
-    ids, settings,
+    renderer, ids, settings,
     initialWidth, initialHeight,
     isFocusable, statusLineOverlaysOutput
 ), IJLineWindow {
@@ -32,6 +32,7 @@ class JLineWindow(
     override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
 
+    private var echoLine: FlavorableCharSequence? = null
     private var status = InputLine(cursorIndex = -1)
     private val statusHelper = TerminalInputLineHelper(
         settings,
@@ -159,22 +160,38 @@ class JLineWindow(
         }
 
         if (isFocusable && isFocused) {
-            statusWorkspace.clear()
-            statusHelper.fitInputLinesToWindow(status, statusWorkspace)
+            val statusLineToRender = echoLine ?: let {
+                statusWorkspace.clear()
+                statusHelper.fitInputLinesToWindow(status, statusWorkspace)
+
+                // NOTE we assume only ever 1 status output line
+                statusWorkspace[0]
+            }
 
             display.withLine(x, line, lineWidth = width) {
-                // NOTE we assume only ever 1 status output line
-                append(statusWorkspace[0])
+                append(statusLineToRender)
             }
         } else if (isFocusable && !statusLineOverlaysOutput) {
             // TODO faded out status?
         }
     }
 
+    override fun echo(text: FlavorableCharSequence) {
+        if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive echo")
+        renderer.inTransaction {
+            this.echoLine = text.removeSuffix("\n") as FlavorableCharSequence
+        }
+    }
+
+    override fun clearEcho() = renderer.inTransaction {
+        this.echoLine = null
+    }
+
     override fun updateStatusLine(line: FlavorableCharSequence, cursor: Int) {
         if (!isFocusable) throw IllegalStateException("Not-focusable JudoWindow cannot receive status line")
         renderer.inTransaction {
-            status.line = line
+            echoLine = null
+            status.line = line.removeSuffix("\n") as FlavorableCharSequence
             status.cursorIndex = cursor
 
             // also set this since that's where statusCursor comes from;
@@ -202,6 +219,8 @@ class JLineWindow(
     override fun getScrollback(): Int = scrollbackBottom
 
     override fun scrollLines(count: Int) = renderer.inTransaction {
+        echoLine = null
+
         val buffer = currentBuffer
         if (buffer.size <= 0) {
             // can't scroll within an empty or single-line buffer
@@ -353,6 +372,19 @@ class JLineWindow(
         } else {
             scrollbackBottom += linesAfter - linesBefore
         }
+    }
+
+    fun measureRenderedLines(width: Int): Int {
+        val buffer = currentBuffer
+        val wordWrap = settings[WORD_WRAP]
+
+        var lines = 0
+        for (i in 0..buffer.lastIndex) {
+            val line = buffer[i]
+            lines += line.computeRenderedLinesCount(width, wordWrap)
+        }
+
+        return lines
     }
 }
 

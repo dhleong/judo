@@ -3,6 +3,7 @@ package net.dhleong.judo
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
@@ -218,6 +219,16 @@ class JudoCoreTest {
         judo.onIncomingBuffer(FlavorableStringBuilder.withDefaultFlavor(buffer))
         assertThat(renderer.outputLines)
             .contains("TypeError: my_trigger() takes exactly 2 arguments (1 given)")
+    }
+    
+    @Test fun `Passthrough keypress from blocking echo mode`() {
+        judo.enterMode(BlockingEchoMode(judo, renderer))
+        judo.feedKeys("i")
+        assert(judo).isInMode("insert")
+
+        // and make sure the mode stack is as expected
+        judo.feedKeys("<esc>")
+        assert(judo).isInMode("normal")
     }
 }
 

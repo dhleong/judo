@@ -1,11 +1,12 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import java.io.Closeable
 import java.util.EnumSet
 
-typealias OnResizedEvent = () -> Unit
+typealias OnRendererEventListener = (event: JudoRendererEvent) -> Unit
 
 enum class CursorType(ansiCode: Int) {
 
@@ -49,11 +50,7 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
 
     val windowHeight: Int
 
-    /**
-     * Fired if the [windowWidth] or [windowHeight]
-     *  values changed; run inside a transaction
-     */
-    var onResized: OnResizedEvent?
+    var onEvent: OnRendererEventListener?
 
     var settings: StateMap
 
@@ -76,6 +73,17 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
      */
     fun setCursorType(type: CursorType)
 
+    /**
+     * Write text (possibly multiple lines) to the "echo" buffer.
+     * In a transaction, multiple echoes may be combined into a
+     * single write, but in general subsequent [echo] calls will
+     * replace earlier calls.
+     *
+     * A [EchoType.BLOCKING] echo may be cleared with [clearEcho]
+     */
+    fun echo(text: FlavorableCharSequence)
+    fun clearEcho()
+
     fun updateInputLine(line: String, cursor: Int)
 
     fun redraw()
@@ -93,13 +101,13 @@ interface JudoRenderer : JudoRendererInfo, Closeable {
     fun finishUpdate()
 }
 
-inline fun JudoRenderer.inTransaction(block: () -> Unit) {
-    try {
-        beginUpdate()
+inline fun <R> JudoRenderer.inTransaction(
+    block: () -> R
+): R = try {
+    beginUpdate()
 
-        block()
+    block()
 
-    } finally {
-        finishUpdate()
-    }
+} finally {
+    finishUpdate()
 }

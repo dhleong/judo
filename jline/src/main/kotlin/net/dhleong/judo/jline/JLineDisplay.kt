@@ -26,6 +26,32 @@ class JLineDisplay(
         }
     }
 
+    /**
+     * "scroll" all the lines of this display by [amount], using the same
+     * directional semantics as [IJLineWindow.scrollLines]. The location
+     * of the lines shifted "off screen" and the contents of the lines
+     * "newly on screen" is undefined—only the lines that "remained on
+     * screen" can be relied upon
+     *
+     * @param [amount] currently must be positive
+     */
+    fun scroll(amount: Int) {
+        if (amount < 0) throw UnsupportedOperationException()
+
+        lines as MutableList<AttributedStringBuilder>
+        val len = myHeight
+        val remaining = len - amount
+        for (i in 0 until remaining) {
+            val source = i + amount
+            if (source < 0 || source > len) break
+
+            // swap so we're not sharing instances anywhere
+            val old = lines[i]
+            lines[i] = lines[source]
+            lines[source] = old
+        }
+    }
+
     fun resize(windowWidth: Int, windowHeight: Int) {
         for (i in myHeight until windowHeight) {
             (lines as MutableList) += newBuilder(windowWidth).apply {

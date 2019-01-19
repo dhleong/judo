@@ -20,6 +20,7 @@ import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.BaseCmdMode
+import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.InputBufferProvider
 import net.dhleong.judo.modes.InsertMode
@@ -31,7 +32,6 @@ import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
-import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.PromptManager
@@ -176,7 +176,8 @@ class JudoCore(
         map
     }
 
-    private var currentMode: Mode = normalMode
+    // internal for testing
+    internal var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
 
     internal var running = true
@@ -201,22 +202,29 @@ class JudoCore(
         primaryWindow.isFocused = true
         renderer.currentTabpage = tabpage
         renderer.settings = state
-        renderer.onResized = {
-            renderer.inTransaction {
-                updateStatusLine(currentMode)
-                updateInputLine()
-
-                tabpage.currentWindow.let {
-                    mapper.resize(width = it.width)
-                }
-            }
-        }
+        renderer.onEvent = { ev -> when (ev) {
+            is JudoRendererEvent.OnResized -> onResize()
+            is JudoRendererEvent.OnBlockingEcho -> onBlockingEcho()
+        } }
 
         if (debug.isEnabled) {
             System.setErr(PrintStream(debugLogFile.outputStream()))
         }
 
         activateMode(currentMode)
+    }
+
+    private fun onResize() = renderer.inTransaction {
+        updateStatusLine(currentMode)
+        updateInputLine()
+
+        tabpage.currentWindow.let {
+            mapper.resize(width = it.width)
+        }
+    }
+
+    private fun onBlockingEcho() {
+        enterMode(BlockingEchoMode(this, renderer))
     }
 
     override fun connect(address: String, port: Int) {
@@ -272,33 +280,12 @@ class JudoCore(
         }
     }
 
-    override fun print(vararg objects: Any?) = printArray(true, objects)
-    override fun printRaw(vararg objects: Any?) = printArray(false, objects)
-
-    private val printAnsiParser = AnsiFlavorableStringReader()
-    private fun printArray(process: Boolean, objects: Array<out Any?>) {
-        val joined = FlavorableStringBuilder(16)
-
-        var first = true
-        for (o in objects) {
-            if (first) first = false
-            else joined += " "
-
-            when (o) {
-                is FlavorableCharSequence -> joined += o
-                is String -> {
-                    val chars = o.toCharArray()
-                    printAnsiParser.reset()
-                    for (fcs in printAnsiParser.feed(chars)) {
-                        joined += fcs
-                    }
-                }
-                else -> joined += o.toString()
-            }
-        }
-
-        doPrint(process, joined)
+    override fun echo(vararg objects: Any?) {
+        renderer.echo(objects.toFlavoredSequence())
     }
+
+    override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())
+    override fun printRaw(vararg objects: Any?) = doPrint(false, objects.toFlavoredSequence())
 
     private fun doPrint(process: Boolean, asString: String) =
         doPrint(process, FlavorableStringBuilder.withDefaultFlavor(asString))
@@ -488,8 +475,7 @@ class JudoCore(
         }
     }
 
-    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
-//        print("## feedKey($stroke)")
+    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) = renderer.inTransaction {
         when (stroke.keyCode) {
             Key.CODE_ESCAPE -> {
                 // reset the current register
@@ -517,15 +503,13 @@ class JudoCore(
 
         // NOTE: currentMode might have changed as a result of feedKey
         val newMode = currentMode
-        renderer.inTransaction {
-            if (newMode is StatusBufferProvider) {
-                tabpage.currentWindow.updateStatusLine(
-                    newMode.renderStatusBuffer(),
-                    newMode.getCursor()
-                )
-            } else {
-                updateInputLine()
-            }
+        if (newMode is StatusBufferProvider) {
+            tabpage.currentWindow.updateStatusLine(
+                newMode.renderStatusBuffer(),
+                newMode.getCursor()
+            )
+        } else {
+            updateInputLine()
         }
     }
 

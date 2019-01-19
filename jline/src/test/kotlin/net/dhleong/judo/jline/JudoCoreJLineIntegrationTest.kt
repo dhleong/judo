@@ -87,5 +87,16 @@ class JudoCoreJLineIntegrationTest {
             }
         }
     }
+
+    @Test fun `Multiline echo() from script`() {
+        renderer.forceResize(30, 4)
+        judo.feedKeys(":echo(\"mal\\nreynolds\")<cr>")
+        assert(display).linesEqual("""
+            |mal___________________________
+            |reynolds______________________
+            |Press ENTER or type command to
+            |continue______________________
+        """.trimMargin())
+    }
 }
 

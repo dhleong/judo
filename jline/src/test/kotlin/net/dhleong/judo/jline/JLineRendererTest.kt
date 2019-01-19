@@ -306,6 +306,79 @@ class JLineRendererTest {
             hasCursor(5, 18)
         }
     }
+
+    @Test fun `Render echo() single-line output`() {
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
+
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |Take my love________
+                |____________________
+            """.trimMargin())
+        }
+    }
+
+    @Test fun `Clear echo() output on scroll`() {
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
+        window.scrollPages(1)
+
+        // reset to previously-set status
+        assert(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |<status>____________
+                |____________________
+            """.trimMargin())
+        }
+    }
+
+    @Test fun `Multi-line echo()`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
+
+        assert(display).all {
+            linesEqual("""
+                |Mal Reynolds________
+                |<status>____________
+                |Take my love________
+                |Take my land________
+                |Press ENTER or type_
+                |command to continue_
+            """.trimMargin())
+            hasCursor(
+                5, 19
+            )
+        }
+    }
+
+    @Test fun `Forced Multi-line echo()`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+        renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my\nlove"))
+
+        assert(display).all {
+            linesEqual("""
+                |Mal Reynolds________
+                |<status>____________
+                |Take my ____________
+                |love________________
+                |Press ENTER or type_
+                |command to continue_
+            """.trimMargin())
+            hasCursor(
+                5, 19
+            )
+        }
+    }
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {

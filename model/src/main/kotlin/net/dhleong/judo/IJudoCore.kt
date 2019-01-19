@@ -74,6 +74,7 @@ interface IJudoCore {
     val renderer: JudoRendererInfo
     val tabpage: IJudoTabpage
 
+    fun echo(vararg objects: Any?)
     fun print(vararg objects: Any?)
     /** not processed for triggers, etc. */
     fun printRaw(vararg objects: Any?)
