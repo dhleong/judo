@@ -110,14 +110,14 @@ class JudoCoreJLineIntegrationTest {
         val win = renderer.currentTabpage.hsplit(2, buffer)
         win.updateStatusLine("[status]".toFlavorable())
 
-//        assert(display).linesEqual("""
-//            |__________
-//            |mreynolds_
-//            |[status]__
-//            |__________
-//            |----------
-//            |__________
-//        """.trimMargin())
+        assert(display).linesEqual("""
+            |__________
+            |mreynolds_
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
 
         judo.feedKeys("<ctrl-w>j")
         assert(display).linesEqual("""
@@ -139,6 +139,36 @@ class JudoCoreJLineIntegrationTest {
             |----------
             |__________
         """.trimMargin())
+    }
+
+    @Test fun `Send commands to the active window`() {
+        renderer.forceResize(10, 6)
+
+        val buffer = bufferOf("""
+            Take me where I cannot stand
+        """.trimIndent())
+        val win = renderer.currentTabpage.hsplit(2, buffer)
+        win.updateStatusLine("[status]".toFlavorable())
+
+        assert(display).linesEqual("""
+            |cannot____
+            |stand_____
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+
+        judo.feedKeys("<ctrl-f>")
+        assert(display).linesEqual("""
+            |Take me___
+            |where I___
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+
     }
 }
 

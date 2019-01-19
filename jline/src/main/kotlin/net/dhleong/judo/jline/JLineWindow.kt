@@ -31,6 +31,11 @@ class JLineWindow(
 
     override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
+    override val visibleHeight
+        get() = when {
+            isFocusable -> height - 1 // status line
+            else -> height
+        }
 
     private var echoLine: FlavorableCharSequence? = null
     private var status = InputLine(cursorIndex = -1)
