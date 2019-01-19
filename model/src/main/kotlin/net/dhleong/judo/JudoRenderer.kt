@@ -46,7 +46,7 @@ interface JudoRendererInfo {
 /**
  * @author dhleong
  */
-interface JudoRenderer : JudoRendererInfo, Closeable {
+interface JudoRenderer : JudoRendererInfo, WindowCommandHandler, Closeable {
 
     val windowHeight: Int
 

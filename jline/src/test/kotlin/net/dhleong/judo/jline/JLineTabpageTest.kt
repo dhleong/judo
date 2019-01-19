@@ -1,10 +1,12 @@
 package net.dhleong.judo.jline
 
+import assertk.all
 import assertk.assert
+import assertk.assertions.isSameAs
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.PrimaryJudoWindow
@@ -21,7 +23,7 @@ class JLineTabpageTest {
 
     lateinit var renderer: JLineRenderer
     lateinit var primary: PrimaryJudoWindow
-    lateinit var tabpage: IJudoTabpage
+    lateinit var tabpage: JLineTabpage
 
     @Before fun setUp() {
         settings = StateMap()
@@ -38,7 +40,7 @@ class JLineTabpageTest {
             forceResize(width, height)
             setLoading(false)
         }
-        tabpage = renderer.currentTabpage
+        tabpage = renderer.currentTabpage as JLineTabpage
         primary = tabpage.currentWindow as PrimaryJudoWindow
     }
 
@@ -187,6 +189,47 @@ class JLineTabpageTest {
             |[status]____
             |_          _
         """.trimMargin())
+    }
+
+    @Test fun `Vertical window focus commands`() {
+        val bottom = tabpage.currentWindow
+
+        val b1 = emptyBuffer()
+        val b2 = emptyBuffer()
+        val middle = tabpage.hsplit(0.5f, b1)
+
+        tabpage.currentWindow = middle
+        val top = tabpage.hsplit(0.5f, b2)
+
+        tabpage.focusUp()
+        assert(tabpage.currentWindow).all {
+//            isFocused()
+            isSameAs(top)
+        }
+
+        tabpage.focusDown(2)
+        assert(tabpage.currentWindow).all {
+//            isFocused()
+            isSameAs(bottom)
+        }
+
+        tabpage.focusUp(2)
+        assert(tabpage.currentWindow).all {
+//            isFocused()
+            isSameAs(top)
+        }
+
+        tabpage.focusDown()
+        assert(tabpage.currentWindow).all {
+//            isFocused()
+            isSameAs(middle)
+        }
+
+        tabpage.focusDown()
+        assert(tabpage.currentWindow).all {
+//            isFocused()
+            isSameAs(bottom)
+        }
     }
 }
 

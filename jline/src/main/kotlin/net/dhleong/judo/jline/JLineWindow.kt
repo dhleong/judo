@@ -387,6 +387,8 @@ class JLineWindow(
 
         return lines
     }
+
+    override fun toString() = "JLineWindow(id=$id)"
 }
 
 internal fun FlavorableCharSequence.splitAttributedLinesInto(

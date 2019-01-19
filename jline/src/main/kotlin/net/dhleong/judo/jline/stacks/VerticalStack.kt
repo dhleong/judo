@@ -9,8 +9,13 @@ const val WINDOW_MIN_HEIGHT = 2
 /**
  * @author dhleong
  */
-class VerticalStack(parent: IStack, width: Int, height: Int)
-    : BaseStack(parent, width, height) {
+class VerticalStack(
+    parent: IStack,
+    width: Int,
+    height: Int
+) : BaseStack(parent, width, height),
+    StackWindowCommandHandler by parent // delegate by default
+{
 
     private var cachedSeparator: AttributedString? = null
 
@@ -118,4 +123,8 @@ class VerticalStack(parent: IStack, width: Int, height: Int)
         cachedSeparator = newSeparator
         return newSeparator
     }
+
+    override fun focusUp(search: CountingStackSearch) = focus(search, -1, IStack::focusUp)
+    override fun focusDown(search: CountingStackSearch) = focus(search, 1, IStack::focusDown)
+
 }

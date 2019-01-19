@@ -23,4 +23,43 @@ abstract class BaseStack(
         if (oldIndex < 0) throw IllegalArgumentException("old stack not found")
         contents[oldIndex] = new
     }
+
+    /*
+        Window commands
+     */
+
+    protected fun focus(
+        search: CountingStackSearch,
+        direction: Int,
+        next: IStack.(search: CountingStackSearch) -> Unit
+    ) {
+        val oldIndex = search.current?.let { currentWindow ->
+            val stack = childStackWithWindow(currentWindow)
+            contents.indexOf(stack)
+        } ?: when (direction) {
+            1 -> 0
+            -1 -> contents.lastIndex
+            else -> throw IllegalStateException()
+        }
+        if (oldIndex == -1) throw IllegalStateException("Couldn't find an appropriate child stack")
+
+        val newIndex = oldIndex + search.count * direction
+        when {
+            newIndex < 0 -> {
+                search.count = -newIndex
+                contents.first().next(search)
+            }
+
+            newIndex >= contents.size -> {
+                search.count = newIndex - contents.size
+                contents.last().next(search)
+            }
+
+            else -> {
+                search.count = 0
+                contents[newIndex].next(search)
+            }
+        }
+    }
+
 }
