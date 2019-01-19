@@ -96,7 +96,7 @@ class JLineWindow(
         }
 
         var displayEnd = renderWorkspace.size - scrollbackOffset
-        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+        if (isFocusable && statusLineOverlaysOutput) {
             displayEnd -= 1
         }
 
@@ -104,7 +104,7 @@ class JLineWindow(
         val actualDisplayedLines = maxOf(0, displayEnd - displayStart)
 
         var blankLinesNeeded = (displayHeight - actualDisplayedLines)
-        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+        if (isFocusable && statusLineOverlaysOutput) {
             blankLinesNeeded -= 1
         }
 

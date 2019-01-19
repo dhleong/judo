@@ -71,7 +71,7 @@ interface IJudoCore {
     val registers: IRegisterManager
     val triggers: ITriggerManager
     val state: StateMap
-    val renderer: JudoRendererInfo
+    val renderer: JudoRenderer
     val tabpage: IJudoTabpage
 
     fun echo(vararg objects: Any?)

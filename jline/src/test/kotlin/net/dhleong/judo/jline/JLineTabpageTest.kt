@@ -67,15 +67,13 @@ class JLineTabpageTest {
         assert(window).hasHeight(3)
         assert(primary).hasHeight(3)
 
-        // FIXME: we don't need an explicit separator
-        // if the window is focusable...
         assert(display).linesEqual("""
             |_          _
             |Take my love
             |<status>____
             |_          _
             |Take my land
-            |_          _
+            |------------
             |_          _
         """.trimMargin())
 
