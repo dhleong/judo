@@ -114,7 +114,9 @@ private fun createTabpageMock(ids: IdManager) = object : IJudoTabpage by Proxy()
     private val windows = mutableMapOf<Int, IJudoWindow>()
     override val id: Int = ids.newTabpage()
     override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow =
-        createWindowMock(ids, rows, buffer).also {
+        // mimic JLineRenderer that creates windows whose *visible height*
+        // is the given height (and which have the status line added)
+        createWindowMock(ids, rows + 1, buffer).also {
             windows[it.id] = it
         }
 
@@ -136,6 +138,11 @@ fun createWindowMock(
 
     override var width = 0
     override var height = rows
+    override val visibleHeight: Int
+        get() = when {
+            isFocusable -> height - 1
+            else -> height
+        }
 
     override var currentBuffer: IJudoBuffer
         get() = buffer

@@ -532,7 +532,7 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
                 "buffer" -> createPyBuffer(window, window.currentBuffer) // cache?
-                "height" -> Py.java2py(window.height)
+                "height" -> Py.java2py(window.visibleHeight)
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
 

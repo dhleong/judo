@@ -166,7 +166,7 @@ class Jsr223Window(
 
     override val id: Int = window.id
     override val width: Int = window.width
-    override val height: Int = window.height
+    override val height: Int = window.visibleHeight
     override val buffer: IScriptBuffer
         get() = Jsr223Buffer(window, window.currentBuffer)
 

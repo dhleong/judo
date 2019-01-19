@@ -29,6 +29,14 @@ interface IJudoWindow : IJudoAppendable {
     val id: Int
     val width: Int
     val height: Int
+
+    /**
+     * Depending on the rendered representation, the
+     * *visible* height may be less than the measured [height],
+     * for example if a status bar takes up a line
+     */
+    val visibleHeight: Int
+
     val isFocusable: Boolean
     var isFocused: Boolean
 

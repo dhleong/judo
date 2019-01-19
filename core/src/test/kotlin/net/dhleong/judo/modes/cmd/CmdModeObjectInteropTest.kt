@@ -5,6 +5,7 @@ import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.message
@@ -30,13 +31,17 @@ class CmdModeObjectInteropTest(
             newWin = hsplit(20)
             print(newWin.id)
             print(newWin.buffer)
+            print(newWin.height)
             newWin.buffer.append("test")
             newWin.resize(newWin.width, 4)
             """.trimIndent())
 
         assert(judo.prints).isNotEmpty()
-        val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
 
+        val splitHeight = judo.prints[2] as Int
+        assert(splitHeight, "split height").isEqualTo(20)
+
+        val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
         assert(window).hasHeight(4)
 
         // NOTE: the tests below are no longer useful since core is no longer

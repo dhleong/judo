@@ -18,6 +18,8 @@ abstract class PrimaryJudoWindow(
     override val id = ids.newWindow()
     override var width = initialWidth
     override var height = initialHeight
+    override val visibleHeight: Int
+        get() = height
     override var isFocused: Boolean
         get() = promptWindow.isFocused
         set(value) {
