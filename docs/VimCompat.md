@@ -25,6 +25,9 @@ Here's a list of features we definitely support:
     * Note that both are identical on all platforms; we do not support X11 selections
 * Key Mappings (See [Scripting/Mappings](Scripting.md#mappings))
 * Split Windows (See [Scripting/Windows](Scripting.md#windows))
+    * Navigation can be performed with the `<ctrl-w>k` / `<ctrl-w>j` mappings
+      as expected; when focused on a split window, scrolling and searching work
+      on that window instead of the main output window (as you might expect).
 
 ## Differences from Vim
 

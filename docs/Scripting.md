@@ -201,6 +201,26 @@ id                     | `Int`         | The buffer's unique, numeric ID
 `Buffer` also supports the `len()` function, which will return how many
 lines of text it contains.
 
+## Window focus APIs
+
+You can get and set the current window with an API similar to what Vim offers to Python:
+
+```python
+# retrieve the currently focused window
+old = judo.current.window
+
+# set the currently focused window
+judo.current.window = w
+```
+
+You can also get the current `tabpage` and `buffer`. The Tabpage object is not incredibly
+useful at the moment, but does offer the following attributes:
+
+Name      | Returned Type | Description
+----------|---------------|------------
+id        | `Int`         | The window's unique, numeric ID
+height    | `Int`         | The height of the window in rows
+width     | `Int`         | The width of the window in columns
 
 ## Custom Modes
 
