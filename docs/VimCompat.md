@@ -104,3 +104,8 @@ language to use on startup based on:
 3. If you have an `init.js` script in `~/.config/judo`, Javascript is ussed.
 
 
+### `echo()` does not have a pager (yet)
+
+In Vim if you use `echo` to display more content than fits on a screen, Vim
+will let you page through it. Judo doesn't support that yet, so you will only
+see the most-recently-echo'd content if it surpasses the displayable area.
