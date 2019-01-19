@@ -8,6 +8,7 @@ import net.dhleong.judo.jline.JLineTabpage
  * @author dhleong
  */
 class RootStack(private var tabpage: JLineTabpage) : IStack {
+
     override val parent: IStack = this
     lateinit var child: IStack
 
@@ -27,8 +28,18 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
         child.getYPositionOf(window)
     override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) {
-        if (old != child) throw IllegalArgumentException("old is not current")
+        if (old != child) throw IllegalArgumentException("old ($old) is not current ($child)")
         child = new
     }
     override fun resize(width: Int, height: Int) = child.resize(width, height)
+    override fun nextWindow(): IJLineWindow = child.nextWindow()
+
+    /*
+        Window commands: our algorithm is bottom-up, so if this ever
+        gets called, there are no more candidate windows, so these are
+        all nops
+     */
+
+    override fun focusUp(search: CountingStackSearch) { }
+    override fun focusDown(search: CountingStackSearch) { }
 }

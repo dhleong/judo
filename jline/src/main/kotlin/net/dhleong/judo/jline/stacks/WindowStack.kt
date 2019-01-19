@@ -7,7 +7,7 @@ import net.dhleong.judo.jline.JLineDisplay
  * @author dhleong
  */
 class WindowStack(
-    override val parent: IStack,
+    override var parent: IStack,
     val window: IJLineWindow
 ) : IStack {
     override val width: Int
@@ -20,6 +20,8 @@ class WindowStack(
     override fun getCollapseChild(): IStack? = null
     override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
+
+    override fun nextWindow(): IJLineWindow = window
 
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         if (predicate(window)) this
@@ -34,4 +36,25 @@ class WindowStack(
         else -1
     override fun resize(width: Int, height: Int) =
         window.resize(width, height)
+
+    /*
+        Window commands
+     */
+
+    override fun focusUp(search: CountingStackSearch) =
+        thisOrOnParent(search) { focusUp(search) }
+
+    override fun focusDown(search: CountingStackSearch) =
+        thisOrOnParent(search) { focusDown(search) }
+
+    private inline fun thisOrOnParent(
+        search: CountingStackSearch,
+        block: IStack.(CountingStackSearch) -> Unit
+    ) {
+        if (0 == search.count) {
+            search.current = window
+        } else {
+            parent.block(search)
+        }
+    }
 }

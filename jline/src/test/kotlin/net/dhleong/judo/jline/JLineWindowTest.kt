@@ -407,18 +407,19 @@ class JLineWindowTest {
     }
 
     @Test fun `Search in buffer`() {
-        val display = JLineDisplay(12, 2)
+        val display = JLineDisplay(12, 3)
         val buffer = bufferOf("""
             Take My love
             Take my land
             Take me where I cannot stand
         """.trimIndent())
-        val w = windowOf(buffer, 12, 2)
+        val w = windowOf(buffer, 12, 3, focused = true)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""
             |e I cannot s
             |tand________
+            |____________
         """.trimMargin())
 
         w.searchForKeyword("m", direction = 1)
@@ -426,6 +427,7 @@ class JLineWindowTest {
         assert(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
+            |____________
         """.trimMargin())
 
         // NOTE: we avoid scrolling here since it's on the same page
@@ -434,6 +436,7 @@ class JLineWindowTest {
         assert(display).ansiLinesEqual("""
             |Take ${ansi(inverse = true)}m${ansi(0)}y land
             |Take me wher
+            |____________
         """.trimMargin())
 
         // step back
@@ -442,6 +445,7 @@ class JLineWindowTest {
         assert(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
+            |____________
         """.trimMargin())
 
         // go to next page
@@ -451,20 +455,22 @@ class JLineWindowTest {
         assert(display).ansiLinesEqual("""
             |____________
             |Take ${ansi(inverse = true)}M${ansi(0)}y love
+            |____________
         """.trimMargin())
     }
 
     @Test fun `highlight search result in wrapped buffer`() {
-        val display = JLineDisplay(10, 1)
+        val display = JLineDisplay(10, 2)
         val buffer = bufferOf("""
             captain mreynolds
             first mate zoe
         """.trimIndent())
-        val w = windowOf(buffer, 10, 1, wrap = true)
+        val w = windowOf(buffer, 10, 2, wrap = true, focused = true)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""
             |zoe_______
+            |__________
         """.trimMargin())
 
         w.searchForKeyword("rey", 1)
@@ -472,6 +478,7 @@ class JLineWindowTest {
         assert(w).hasScrollback(1)
         assert(display).linesEqual("""
             |mreynolds_
+            |__________
         """.trimMargin())
 
         assert(display).ansiLinesEqual(
@@ -479,20 +486,22 @@ class JLineWindowTest {
                 append("m")
                 append("rey", AttributedStyle.INVERSE)
                 append("nolds ")
+                append("\n          ")
             }
         )
     }
 
     @Test fun `highlight correct search result of multiple on line`() {
-        val display = JLineDisplay(26, 1)
+        val display = JLineDisplay(26, 2)
         val buffer = bufferOf("""
             take my love, take my land
         """.trimIndent())
-        val w = windowOf(buffer, 26, 1)
+        val w = windowOf(buffer, 26, 2, focused = true)
 
         w.render(display, 0, 0)
         assert(display).linesEqual("""
             take my love, take my land
+            __________________________
         """.trimIndent())
 
         w.searchForKeyword("e", 1)
@@ -502,6 +511,7 @@ class JLineWindowTest {
                 append("take my love, tak")
                 append("e", AttributedStyle.INVERSE)
                 append(" my land")
+                append("\n                          ")
             }
         )
 
@@ -512,6 +522,7 @@ class JLineWindowTest {
                 append("take my lov")
                 append("e", AttributedStyle.INVERSE)
                 append(", take my land")
+                append("\n                          ")
             }
         )
 
@@ -522,6 +533,7 @@ class JLineWindowTest {
                 append("tak")
                 append("e", AttributedStyle.INVERSE)
                 append(" my love, take my land")
+                append("\n                          ")
             }
         )
 
@@ -532,6 +544,7 @@ class JLineWindowTest {
                 append("take my lov")
                 append("e", AttributedStyle.INVERSE)
                 append(", take my land")
+                append("\n                          ")
             }
         )
     }
@@ -702,6 +715,7 @@ class JLineWindowTest {
         width: Int,
         height: Int,
         focusable: Boolean = false,
+        focused: Boolean = false,
         wrap: Boolean = false
     ) = JLineWindow(
         renderer,
@@ -712,8 +726,10 @@ class JLineWindowTest {
         width,
         height,
         buffer,
-        isFocusable = focusable
-    )
+        isFocusable = focused || focusable
+    ).also {
+        it.isFocused = focused
+    }
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =

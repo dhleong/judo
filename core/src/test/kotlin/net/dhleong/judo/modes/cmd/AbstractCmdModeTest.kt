@@ -34,9 +34,9 @@ abstract class AbstractCmdModeTest(
         )
     }
 
-    protected val judo = TestableJudoCore()
     protected val input = InputBuffer()
     protected val renderer = TestableJudoRenderer()
+    protected val judo = TestableJudoCore(renderer)
     protected val mode = CmdMode(
         judo, IdManager(), input,
         renderer,

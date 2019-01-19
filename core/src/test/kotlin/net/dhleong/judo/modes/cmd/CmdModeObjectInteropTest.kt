@@ -10,6 +10,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.hasHeight
+import net.dhleong.judo.hasId
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,15 +49,46 @@ class CmdModeObjectInteropTest(
 //        }
     }
 
+    @Test fun `Set current window by scripting`() {
+        mode.execute("""
+            primary = judo.current.window
+            print(primary.id)
+            newWin = hsplit(20)
+            print(newWin.id)
+        """.trimIndent())
+
+        assert(judo.prints).isNotEmpty()
+        val primaryId = judo.prints[0] as Int
+        val newWinId = judo.prints[1] as Int
+        assert(judo.renderer.currentTabpage.currentWindow).hasId(newWinId)
+
+        mode.execute("""
+            judo.current.window = primary
+        """.trimIndent())
+
+        assert(judo.renderer.currentTabpage.currentWindow).hasId(primaryId)
+    }
+
     @Test fun `Prevent access to non-exposed methods`() {
         assert {
-            // clearTestable is a public fn on TestableJudoCore, but not in IJudoCore
+            // clearTestable is a public fn on TestableJudoCore, but not in IScriptJudo
             mode.execute("""
                 judo.clearTestable()
             """.trimIndent())
         }.thrownError {
             message().isNotNull {
                 it.contains("clearTestable")
+            }
+        }
+
+        assert {
+            // clearTestable is a public fn on IJudoCore, but not in IScriptJudo
+            mode.execute("""
+                judo.print("hi")
+            """.trimIndent())
+        }.thrownError {
+            message().isNotNull {
+                it.contains("print")
             }
         }
     }

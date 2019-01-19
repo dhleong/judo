@@ -200,7 +200,17 @@ class NormalMode(
         keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
         keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
         keys("<ctrl c>") to action { clearBuffer() },
-        keys("<ctrl s>") to { core -> core.enterMode("rsearch") }
+        keys("<ctrl s>") to { core -> core.enterMode("rsearch") },
+
+        // window commands
+
+        keys("<ctrl-w>k") to withCount { count -> judo.renderer.focusUp(count) },
+        keys("<ctrl-w><ctrl-k>") to withCount { count -> judo.renderer.focusUp(count) },
+        keys("<ctrl-w><up>") to withCount { count -> judo.renderer.focusUp(count) },
+
+        keys("<ctrl-w>j") to withCount { count -> judo.renderer.focusDown(count) },
+        keys("<ctrl-w><ctrl-j>") to withCount { count -> judo.renderer.focusDown(count) },
+        keys("<ctrl-w><down>") to withCount { count -> judo.renderer.focusDown(count) }
 
     ) + ALL_MOTIONS.filter { (_, motion) ->
         // text object motions can't be used as an action

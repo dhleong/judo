@@ -7,6 +7,7 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
+import net.dhleong.judo.mapping.IMapManager
 import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
@@ -103,7 +104,8 @@ abstract class Jsr223ScriptingEngine(
 
         // wrap core judo interfaces in delegates to prevent
         // access to private members
-        is IJudoCore -> object : IJudoCore by fromJava {}
+        is IScriptJudo -> object : IScriptJudo by fromJava {}
+        is ICurrentJudoObjects -> object : ICurrentJudoObjects by fromJava {}
         is IAliasManager -> object : IAliasManager by fromJava {}
         is IEventManager -> object : IEventManager by fromJava {}
         is ILogManager -> object : ILogManager by fromJava {}
@@ -123,10 +125,38 @@ abstract class Jsr223ScriptingEngine(
         )
     }
 
+    override fun wrapCore(judo: IJudoCore): IScriptJudo = Jsr223JudoCore(this, judo)
+
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
     ): IScriptWindow = Jsr223Window(tabpage, window)
+}
+
+class Jsr223JudoCore(
+    private val engine: Jsr223ScriptingEngine,
+    private val judo: IJudoCore
+) : IScriptJudo, ICurrentJudoObjects {
+    override val mapper: IMapManager
+        get() = judo.mapper
+
+    override val current: ICurrentJudoObjects = this
+
+    override var tabpage: Any
+        get() = engine.toScript(judo.renderer.currentTabpage)
+        set(value) {
+            judo.renderer.currentTabpage = engine.toJava(value) as IJudoTabpage
+        }
+    override var window: Any
+        get() = engine.toScript(judo.renderer.currentTabpage.currentWindow)
+        set(value) {
+            judo.renderer.currentTabpage.currentWindow = engine.toJava(value) as IJudoWindow
+        }
+    override var buffer: Any
+        get() = engine.toScript(judo.renderer.currentTabpage.currentWindow.currentBuffer)
+        set(value) {
+            throw UnsupportedOperationException("TODO change buffer in Window")
+        }
 }
 
 class Jsr223Window(

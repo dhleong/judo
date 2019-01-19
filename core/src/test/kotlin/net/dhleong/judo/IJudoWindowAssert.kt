@@ -13,4 +13,7 @@ fun Assert<IJudoWindow>.hasHeight(expected: Int) {
     expected("height=${show(expected)} but was ${show(actual.height)}")
 }
 
-
+fun Assert<IJudoWindow>.hasId(expected: Int) {
+    if (actual.id == expected) return
+    expected("id=${show(expected)} but was ${show(actual.id)}")
+}

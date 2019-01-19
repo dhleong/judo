@@ -23,6 +23,13 @@ abstract class BaseJudoWindow(
     override var width: Int = initialWidth
     override var height: Int = initialHeight
 
+    /**
+     * Depending on the rendered representation, the
+     * *visible* height may be less than the measured [height],
+     * for example if a status bar takes up a line
+     */
+    protected abstract val visibleHeight: Int
+
     protected val search = BufferSearcher()
 
     override fun append(text: FlavorableCharSequence) = currentBuffer.append(text)
@@ -32,7 +39,7 @@ abstract class BaseJudoWindow(
     )
 
     override fun scrollPages(count: Int) {
-        scrollLines(height * count)
+        scrollLines(visibleHeight * count)
     }
 
     override fun searchForKeyword(word: CharSequence, direction: Int) {

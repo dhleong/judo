@@ -1,7 +1,10 @@
 package net.dhleong.judo.jline
 
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.WindowCommandHandler
 import net.dhleong.judo.inTransaction
+import net.dhleong.judo.jline.stacks.CountingStackSearch
+import net.dhleong.judo.jline.stacks.IStack
 import net.dhleong.judo.jline.stacks.RootStack
 import net.dhleong.judo.jline.stacks.VerticalStack
 import net.dhleong.judo.jline.stacks.WindowStack
@@ -19,17 +22,30 @@ class JLineTabpage(
     private val ids: IdManager,
     private val settings: StateMap,
     private val initialWindow: IJLineWindow
-) : IJudoTabpage {
+) : IJudoTabpage, WindowCommandHandler {
 
     override val id: Int = ids.newTabpage()
     override var width: Int = initialWindow.width
     override var height: Int = initialWindow.height
-    override var currentWindow: IJudoWindow = initialWindow
+    override var currentWindow: IJudoWindow
+        get() = myCurrentWindow
+        set(value) = renderer.inTransaction {
+            currentStack = rootStack.stackWithWindow { it === value }
+                ?: throw IllegalArgumentException(
+                    "Window #${value.id} does not belong to Tabpage #$id"
+                )
+            myCurrentWindow.isFocused = false
+
+            myCurrentWindow = value
+            value.isFocused = true
+        }
+
+    private var myCurrentWindow: IJudoWindow = initialWindow
 
     private val rootStack = RootStack(this).apply {
         child = WindowStack(this, initialWindow)
     }
-    private var currentStack = rootStack.child
+    private var currentStack: WindowStack = rootStack.child as WindowStack
 
     fun render(display: JLineDisplay) {
         rootStack.render(display, 0, 0)
@@ -51,24 +67,31 @@ class JLineTabpage(
 
     override fun hsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         val containerHeight = currentStack.parent.height
-        return hsplit(containerHeight * percentage, buffer)
+        return hsplit((containerHeight * percentage).toInt(), buffer)
     }
 
     override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val newWindow = JLineWindow(renderer, ids, settings, parent.width, rows, buffer)
+        val winHeight = rows + 1 // include room for a status line
+        val newWindow = JLineWindow(renderer, ids, settings, parent.width, winHeight, buffer, isFocusable = true)
 
         renderer.inTransaction {
             if (parent is VerticalStack) {
-                parent.add(WindowStack(parent, newWindow))
+                parent.add(WindowStack(parent, newWindow).also {
+                    currentStack = it
+                })
             } else {
                 val newStack = VerticalStack(parent, width, height)
+                thisStack.parent = newStack
                 newStack.add(thisStack)
 
-                newStack.add(WindowStack(newStack, newWindow))
+                newStack.add(WindowStack(newStack, newWindow).also {
+                    currentStack = it
+                })
                 parent.replace(thisStack, newStack)
             }
+            currentWindow = newWindow
         }
 
         return newWindow
@@ -86,7 +109,7 @@ class JLineTabpage(
     override fun unsplit() {
         val newStack = WindowStack(rootStack, initialWindow)
         currentStack = newStack
-        currentWindow = initialWindow
+        myCurrentWindow = initialWindow
         rootStack.child = newStack
         rootStack.resize(width, height)
     }
@@ -111,5 +134,33 @@ class JLineTabpage(
         }
 
         resize(width, height)
+
+        if (window.isFocused) {
+            // TODO pick the new focused window
+            currentWindow = stack.nextWindow()
+        }
     }
+
+    /*
+        Window commands
+     */
+
+    override fun focusUp(count: Int) = focusWithCurrent(count) { focusUp(it) }
+    override fun focusDown(count: Int) = focusWithCurrent(count) { focusDown(it) }
+
+    private inline fun focusWithCurrent(
+        count: Int,
+        block: IStack.(CountingStackSearch) -> Unit
+    ) {
+        val search = CountingStackSearch(currentWindow as IJLineWindow, count)
+        currentStack.block(search)
+        if (search.current !== currentWindow) {
+            search.current?.let { result ->
+                renderer.inTransaction {
+                    currentWindow = result
+                }
+            }
+        }
+    }
+
 }

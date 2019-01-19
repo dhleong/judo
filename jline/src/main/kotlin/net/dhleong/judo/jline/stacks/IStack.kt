@@ -10,13 +10,28 @@ import net.dhleong.judo.jline.JLineDisplay
  *
  * @author dhleong
  */
-interface IStack {
+interface IStack : StackWindowCommandHandler {
     val width: Int
     val height: Int
     val parent: IStack
 
     fun add(item: IStack)
     fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack?
+    fun childStackWithWindow(win: IJLineWindow): IStack {
+        var stack: IStack = stackWithWindow { it === win }
+            ?: throw IllegalStateException("Window not contained in this stack")
+
+        while (stack.parent !== this) {
+            if (stack.parent === stack) {
+                throw IllegalStateException()
+            }
+
+            stack = stack.parent
+        }
+
+        return stack
+    }
+
 
     /**
      * If we have just a single child that can be collapsed
@@ -29,5 +44,11 @@ interface IStack {
     fun remove(child: IStack)
     fun replace(old: IStack, new: IStack)
     fun resize(width: Int, height: Int)
+
+    /**
+     * Pick the "next" window in this Stack. Used, for example,
+     * to pick the new "focused" window after closing the previous
+     */
+    fun nextWindow(): IJLineWindow
 }
 

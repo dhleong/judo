@@ -31,6 +31,11 @@ class JLineWindow(
 
     override var currentBuffer: IJudoBuffer = initialBuffer
     override var isFocused: Boolean = false
+    override val visibleHeight
+        get() = when {
+            isFocusable -> height - 1 // status line
+            else -> height
+        }
 
     private var echoLine: FlavorableCharSequence? = null
     private var status = InputLine(cursorIndex = -1)
@@ -96,7 +101,7 @@ class JLineWindow(
         }
 
         var displayEnd = renderWorkspace.size - scrollbackOffset
-        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+        if (isFocusable && statusLineOverlaysOutput) {
             displayEnd -= 1
         }
 
@@ -104,7 +109,7 @@ class JLineWindow(
         val actualDisplayedLines = maxOf(0, displayEnd - displayStart)
 
         var blankLinesNeeded = (displayHeight - actualDisplayedLines)
-        if (isFocusable && isFocused && statusLineOverlaysOutput) {
+        if (isFocusable && statusLineOverlaysOutput) {
             blankLinesNeeded -= 1
         }
 
@@ -117,7 +122,7 @@ class JLineWindow(
         }
 
         // highlight search results:
-        if (workspaceSearchIndex != -1) {
+        if (isFocusable && isFocused && workspaceSearchIndex != -1) {
             val fullLine = buffer[search.resultLine]
             val splitIndex = fullLine.splitIndexOfOffset(
                 windowWidth = width,
@@ -171,8 +176,15 @@ class JLineWindow(
             display.withLine(x, line, lineWidth = width) {
                 append(statusLineToRender)
             }
-        } else if (isFocusable && !statusLineOverlaysOutput) {
-            // TODO faded out status?
+        } else if (isFocusable) {
+            // TODO faded out status? or just a background color?
+//            display.clearLine(x, line, 0, width)
+
+            display.withLine(x, line, lineWidth = width) {
+                for (i in 0 until width) {
+                    append('-')
+                }
+            }
         }
     }
 
@@ -292,10 +304,10 @@ class JLineWindow(
 
         // is the line actually visible already?
         val lastVisibleLine = buffer.lastIndex - scrollbackBottom
-        val firstPossiblyVisibleLine = maxOf(0, lastVisibleLine - height + 1)
+        val firstPossiblyVisibleLine = maxOf(0, lastVisibleLine - visibleHeight + 1)
         if (line >= firstPossiblyVisibleLine) {
             // it's *possible*, but let's take into account wrapped lines
-            var lines = height + scrollbackOffset
+            var lines = visibleHeight + scrollbackOffset
             for (i in lastVisibleLine downTo firstPossiblyVisibleLine) {
                 val renderedLines = buffer[i].computeRenderedLinesCount(width, wordWrap)
                 if (i == line) {
@@ -387,6 +399,8 @@ class JLineWindow(
 
         return lines
     }
+
+    override fun toString() = "JLineWindow(id=$id)"
 }
 
 internal fun FlavorableCharSequence.splitAttributedLinesInto(

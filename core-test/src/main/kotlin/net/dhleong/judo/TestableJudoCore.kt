@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.event.IEventManager
@@ -25,7 +26,9 @@ import net.dhleong.judo.util.InputHistory
  * @author dhleong
  */
 
-class TestableJudoCore : IJudoCore by Proxy() {
+class TestableJudoCore(
+    override val renderer: JudoRenderer = mock {  }
+) : IJudoCore by Proxy() {
 
     private val actualEvents = EventManager()
     inner class TestableEventManager : IEventManager by actualEvents {

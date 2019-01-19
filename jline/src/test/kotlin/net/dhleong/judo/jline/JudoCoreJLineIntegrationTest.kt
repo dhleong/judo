@@ -9,7 +9,9 @@ import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.bufferOf
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
 import org.junit.Test
 
@@ -97,6 +99,76 @@ class JudoCoreJLineIntegrationTest {
             |Press ENTER or type command to
             |continue______________________
         """.trimMargin())
+    }
+
+    @Test fun `Window command mappings`() {
+        renderer.forceResize(10, 6)
+
+        val buffer = bufferOf("""
+            mreynolds
+        """.trimIndent())
+        val win = renderer.currentTabpage.hsplit(2, buffer)
+        win.updateStatusLine("[status]".toFlavorable())
+
+        assert(display).linesEqual("""
+            |__________
+            |mreynolds_
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+
+        judo.feedKeys("<ctrl-w>j")
+        assert(display).linesEqual("""
+            |__________
+            |mreynolds_
+            |----------
+            |__________
+            |__[NORMAL]
+            |__________
+        """.trimMargin())
+
+        // over-count
+        judo.feedKeys("2<ctrl-w>k")
+        assert(display).linesEqual("""
+            |__________
+            |mreynolds_
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+    }
+
+    @Test fun `Send commands to the active window`() {
+        renderer.forceResize(10, 6)
+
+        val buffer = bufferOf("""
+            Take me where I cannot stand
+        """.trimIndent())
+        val win = renderer.currentTabpage.hsplit(2, buffer)
+        win.updateStatusLine("[status]".toFlavorable())
+
+        assert(display).linesEqual("""
+            |cannot____
+            |stand_____
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+
+        judo.feedKeys("<ctrl-f>")
+        assert(display).linesEqual("""
+            |Take me___
+            |where I___
+            |[status]__
+            |__________
+            |----------
+            |__________
+        """.trimMargin())
+
     }
 }
 

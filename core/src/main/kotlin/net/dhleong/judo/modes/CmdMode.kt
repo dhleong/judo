@@ -240,7 +240,7 @@ class CmdMode(
             doc {
                 body { "Reference to the core Judo scripting object" }
             },
-            toScript(judo)
+            wrapCore(judo)
         )
     }
 
