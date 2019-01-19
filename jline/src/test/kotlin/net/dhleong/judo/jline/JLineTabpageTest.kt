@@ -6,10 +6,12 @@ import assertk.assertions.isSameAs
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.hasHeight
+import net.dhleong.judo.isFocused
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
 import org.junit.Test
 
@@ -46,31 +48,45 @@ class JLineTabpageTest {
 
     @Test fun `Render hsplit window`() {
         primary.appendLine("Take my land")
-        primary.updateStatusLine("[status]")
+        primary.updateStatusLine("[pstatus]")
         assert(display).linesEqual("""
             |____________
             |____________
             |____________
             |____________
             |Take my land
-            |[status]____
+            |[pstatus]___
             |____________
         """.trimMargin())
 
         val buffer = JudoBuffer(IdManager())
         val window = tabpage.hsplit(2, buffer)
+        window.updateStatusLine("<status>".toFlavorable())
         window.appendLine("Take my love")
 
-        assert(window).hasHeight(2)
+        assert(window).hasHeight(3)
         assert(primary).hasHeight(3)
 
+        // FIXME: we don't need an explicit separator
+        // if the window is focusable...
+        assert(display).linesEqual("""
+            |_          _
+            |Take my love
+            |<status>____
+            |_          _
+            |Take my land
+            |_          _
+            |_          _
+        """.trimMargin())
+
+        tabpage.currentWindow = primary
         assert(display).linesEqual("""
             |_          _
             |Take my love
             |------------
             |_          _
             |Take my land
-            |[status]____
+            |[pstatus]___
             |_          _
         """.trimMargin())
     }
@@ -107,8 +123,9 @@ class JLineTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
-        assert(window).hasHeight(2)
+        assert(window).hasHeight(3)
         assert(primary).hasHeight(3)
+        tabpage.currentWindow = primary
 
         assert(display).linesEqual("""
             |____________
@@ -154,13 +171,13 @@ class JLineTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
-        assert(window).hasHeight(2)
-        assert(primary).hasHeight(5) // NOTE: separator!
+        assert(window).hasHeight(3)
+        assert(primary).hasHeight(5)
 
         window.resize(window.width, 4)
 
         assert(window).hasHeight(4)
-        assert(primary).hasHeight(3)
+        assert(primary).hasHeight(4)
     }
 
     @Test fun `Re-split`() {
@@ -171,7 +188,7 @@ class JLineTabpageTest {
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
-        assert(window).hasHeight(2)
+        assert(window).hasHeight(3)
         assert(primary).hasHeight(3)
 
         // make sure we're good and unsplit
@@ -180,6 +197,7 @@ class JLineTabpageTest {
 
         // now, re-split without erroring
         tabpage.hsplit(2, buffer)
+        tabpage.currentWindow = primary
         assert(display).linesEqual("""
             |_          _
             |Take my love
@@ -203,31 +221,31 @@ class JLineTabpageTest {
 
         tabpage.focusUp()
         assert(tabpage.currentWindow).all {
-//            isFocused()
+            isFocused()
             isSameAs(top)
         }
 
         tabpage.focusDown(2)
         assert(tabpage.currentWindow).all {
-//            isFocused()
+            isFocused()
             isSameAs(bottom)
         }
 
         tabpage.focusUp(2)
         assert(tabpage.currentWindow).all {
-//            isFocused()
+            isFocused()
             isSameAs(top)
         }
 
         tabpage.focusDown()
         assert(tabpage.currentWindow).all {
-//            isFocused()
+            isFocused()
             isSameAs(middle)
         }
 
         tabpage.focusDown()
         assert(tabpage.currentWindow).all {
-//            isFocused()
+            isFocused()
             isSameAs(bottom)
         }
     }

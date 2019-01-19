@@ -44,5 +44,11 @@ interface IStack : StackWindowCommandHandler {
     fun remove(child: IStack)
     fun replace(old: IStack, new: IStack)
     fun resize(width: Int, height: Int)
+
+    /**
+     * Pick the "next" window in this Stack. Used, for example,
+     * to pick the new "focused" window after closing the previous
+     */
+    fun nextWindow(): IJLineWindow
 }
 

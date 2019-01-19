@@ -32,6 +32,7 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
         child = new
     }
     override fun resize(width: Int, height: Int) = child.resize(width, height)
+    override fun nextWindow(): IJLineWindow = child.nextWindow()
 
     /*
         Window commands: our algorithm is bottom-up, so if this ever

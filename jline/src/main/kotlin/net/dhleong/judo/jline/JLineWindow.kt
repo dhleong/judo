@@ -171,8 +171,15 @@ class JLineWindow(
             display.withLine(x, line, lineWidth = width) {
                 append(statusLineToRender)
             }
-        } else if (isFocusable && !statusLineOverlaysOutput) {
-            // TODO faded out status?
+        } else if (isFocusable) {
+            // TODO faded out status? or just a background color?
+//            display.clearLine(x, line, 0, width)
+
+            display.withLine(x, line, lineWidth = width) {
+                for (i in 0 until width) {
+                    append('-')
+                }
+            }
         }
     }
 

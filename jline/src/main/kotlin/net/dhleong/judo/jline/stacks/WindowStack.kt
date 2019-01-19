@@ -21,6 +21,8 @@ class WindowStack(
     override fun remove(child: IStack) = throw UnsupportedOperationException()
     override fun replace(old: IStack, new: IStack) = throw UnsupportedOperationException()
 
+    override fun nextWindow(): IJLineWindow = window
+
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         if (predicate(window)) this
         else null

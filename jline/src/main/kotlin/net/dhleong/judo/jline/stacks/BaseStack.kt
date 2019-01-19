@@ -13,6 +13,8 @@ abstract class BaseStack(
 
     internal val contents = ArrayList<IStack>(4)
 
+    override fun nextWindow(): IJLineWindow = contents.first().nextWindow()
+
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         contents.asSequence()
             .map { it.stackWithWindow(predicate) }
@@ -46,12 +48,25 @@ abstract class BaseStack(
         val newIndex = oldIndex + search.count * direction
         when {
             newIndex < 0 -> {
-                search.count = -newIndex
+                val newCount = -newIndex
+                if (newCount == search.count) {
+                    // nothing more to consume
+                    parent.next(search)
+                    return
+                }
+                search.count = newCount
                 contents.first().next(search)
             }
 
             newIndex >= contents.size -> {
-                search.count = newIndex - contents.size
+                val newCount = newIndex - contents.size
+                if (newCount == search.count) {
+                    // nothing more to consume
+                    parent.next(search)
+                    return
+                }
+
+                search.count = newCount
                 contents.last().next(search)
             }
 

@@ -2,7 +2,6 @@ package net.dhleong.judo.jline.stacks
 
 import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
-import org.jline.utils.AttributedString
 
 const val WINDOW_MIN_HEIGHT = 2
 
@@ -16,8 +15,6 @@ class VerticalStack(
 ) : BaseStack(parent, width, height),
     StackWindowCommandHandler by parent // delegate by default
 {
-
-    private var cachedSeparator: AttributedString? = null
 
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
@@ -56,15 +53,8 @@ class VerticalStack(
         // vertical stack is easy
         var line = y
         for (i in contents.indices) {
-            if (i > 0) {
-                // separator
-                display.withLine(x, line) {
-                    append(getSeparator())
-                }
-                ++line
-            }
-
             val row = contents[i]
+
             row.render(display, x, line)
             line += row.height
         }
@@ -76,7 +66,7 @@ class VerticalStack(
             val rowY = row.getYPositionOf(window)
             if (rowY != -1) return yOffset + rowY
 
-            yOffset += row.height + 1 // +1 for separator
+            yOffset += row.height
         }
 
         // not in this stack
@@ -90,9 +80,7 @@ class VerticalStack(
     }
 
     override fun resize(width: Int, height: Int) {
-        val rows = contents.size
-        val separators = rows - 1
-        var availableHeight = height - separators
+        var availableHeight = height
 
         val last = contents.lastIndex
         for (i in contents.indices) {
@@ -111,17 +99,6 @@ class VerticalStack(
 
             item.resize(width, allottedHeight)
         }
-    }
-
-    private fun getSeparator(): AttributedString {
-        cachedSeparator?.let {
-            if (it.length == width) return it
-        }
-
-        // TODO fancy separator?
-        val newSeparator = AttributedString.fromAnsi("-".repeat(width))
-        cachedSeparator = newSeparator
-        return newSeparator
     }
 
     override fun focusUp(search: CountingStackSearch) = focus(search, -1, IStack::focusUp)

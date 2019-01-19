@@ -29,12 +29,15 @@ class JLineTabpage(
     override var height: Int = initialWindow.height
     override var currentWindow: IJudoWindow
         get() = myCurrentWindow
-        set(value) {
-            myCurrentWindow = value
+        set(value) = renderer.inTransaction {
             currentStack = rootStack.stackWithWindow { it === value }
                 ?: throw IllegalArgumentException(
                     "Window #${value.id} does not belong to Tabpage #$id"
                 )
+            myCurrentWindow.isFocused = false
+
+            myCurrentWindow = value
+            value.isFocused = true
         }
 
     private var myCurrentWindow: IJudoWindow = initialWindow
@@ -70,7 +73,8 @@ class JLineTabpage(
     override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val newWindow = JLineWindow(renderer, ids, settings, parent.width, rows, buffer)
+        val winHeight = rows + 1 // include room for a status line
+        val newWindow = JLineWindow(renderer, ids, settings, parent.width, winHeight, buffer, isFocusable = true)
 
         renderer.inTransaction {
             if (parent is VerticalStack) {
@@ -87,6 +91,7 @@ class JLineTabpage(
                 })
                 parent.replace(thisStack, newStack)
             }
+            currentWindow = newWindow
         }
 
         return newWindow
@@ -129,6 +134,11 @@ class JLineTabpage(
         }
 
         resize(width, height)
+
+        if (window.isFocused) {
+            // TODO pick the new focused window
+            currentWindow = stack.nextWindow()
+        }
     }
 
     /*
