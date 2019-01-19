@@ -304,10 +304,10 @@ class JLineWindow(
 
         // is the line actually visible already?
         val lastVisibleLine = buffer.lastIndex - scrollbackBottom
-        val firstPossiblyVisibleLine = maxOf(0, lastVisibleLine - height + 1)
+        val firstPossiblyVisibleLine = maxOf(0, lastVisibleLine - visibleHeight + 1)
         if (line >= firstPossiblyVisibleLine) {
             // it's *possible*, but let's take into account wrapped lines
-            var lines = height + scrollbackOffset
+            var lines = visibleHeight + scrollbackOffset
             for (i in lastVisibleLine downTo firstPossiblyVisibleLine) {
                 val renderedLines = buffer[i].computeRenderedLinesCount(width, wordWrap)
                 if (i == line) {
