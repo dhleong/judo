@@ -229,6 +229,31 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `scrollToBottom clears offsets`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            Take my love, take my land,
+            take me where I cannot stand
+        """.trimIndent())
+        val w = windowOf(buffer, 10, 3, wrap = true)
+
+        w.scrollLines(2)
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |my land,__
+            |take me___
+            |where I___
+        """.trimMargin())
+
+        w.scrollToBottom()
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |where I___
+            |cannot____
+            |stand_____
+        """.trimMargin())
+    }
+
     @Test fun `Prevent scrolling behind end of buffer`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""

@@ -282,6 +282,7 @@ class JLineWindow(
 
     override fun scrollToBottom() = renderer.inTransaction {
         scrollbackBottom = 0
+        scrollbackOffset = 0
         search.reset()
     }
 
