@@ -248,6 +248,8 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
+    override fun wrapCore(judo: IJudoCore) = createPyCore(judo)
+
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
@@ -457,6 +459,70 @@ private inline fun <reified T: Any, reified R> asPyFn(
     }
 }
 
+internal fun createPyCore(judo: IJudoCore): PyObject {
+    val currentObjects = object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject? =
+            when (name ?: "") {
+                "tabpage" -> createPyTabpage(judo.renderer.currentTabpage)
+                "window" -> createPyWindow(
+                    judo.renderer.currentTabpage,
+                    judo.renderer.currentTabpage.currentWindow
+                )
+                "buffer" -> createPyBuffer(
+                    judo.renderer.currentTabpage.currentWindow,
+                    judo.renderer.currentTabpage.currentWindow.currentBuffer
+                )
+                else -> super.__findattr_ex__(name)
+            }
+
+        override fun __setattr__(name: String?, value: PyObject?) {
+            when (name ?: "") {
+                "tabpage" -> {
+                    judo.renderer.currentTabpage =
+                        value?.toJava<IJudoTabpage>()
+                        ?: throw IllegalArgumentException()
+                }
+                "window" -> {
+                    judo.renderer.currentTabpage.currentWindow =
+                        value?.toJava<IJudoWindow>()
+                        ?: throw IllegalArgumentException()
+                }
+                "buffer" -> throw UnsupportedOperationException("TODO change buffer in Window")
+
+                else -> super.__findattr_ex__(name)
+            }
+        }
+    }
+
+    return object : PyObject() {
+        override fun __findattr_ex__(name: String?): PyObject? =
+            when (name ?: "") {
+                "mapper" -> Py.java2py(judo.mapper)
+                "current" -> currentObjects
+
+                else -> super.__findattr_ex__(name)
+            }
+    }
+}
+
+internal fun createPyTabpage(tabpage: IJudoTabpage) = object : PyObject() {
+    override fun __findattr_ex__(name: String?): PyObject? =
+        when (name ?: "") {
+            "height" -> Py.java2py(tabpage.height)
+            "width" -> Py.java2py(tabpage.width)
+            "id" -> Py.java2py(tabpage.id)
+
+            else -> super.__findattr_ex__(name)
+        }
+
+    override fun __tojava__(c: Class<*>?): Any {
+        if (c === IJudoTabpage::class.java) {
+            return tabpage
+        }
+        return super.__tojava__(c)
+    }
+}
+
 internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
     val resize = asPyFn<Int, Unit>("resize", 2) {
         window.resize(it[0], it[1])
@@ -478,6 +544,13 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
 
                 else -> super.__findattr_ex__(name)
             }
+
+        override fun __tojava__(c: Class<*>?): Any {
+            if (c === IJudoWindow::class.java) {
+                return window
+            }
+            return super.__tojava__(c)
+        }
     }
 }
 
@@ -509,6 +582,13 @@ internal fun createPyBuffer(
 
                 else -> super.__findattr_ex__(name)
             }
+
+        override fun __tojava__(c: Class<*>?): Any {
+            if (c === IJudoBuffer::class.java) {
+                return buffer
+            }
+            return super.__tojava__(c)
+        }
     }
 }
 
@@ -613,3 +693,6 @@ class InterfaceAdapter : PyObjectAdapter {
         }
     }
 }
+
+private inline fun <reified T> PyObject.toJava(): T =
+    this.__tojava__(T::class.java) as T

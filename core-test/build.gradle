@@ -17,6 +17,7 @@ dependencies {
 
     compile deps.kotlin.core
     compile deps.test.assertk
+    compile deps.test.mockitok
 
     testCompile deps.test.junit
     testCompile deps.test.assertk
