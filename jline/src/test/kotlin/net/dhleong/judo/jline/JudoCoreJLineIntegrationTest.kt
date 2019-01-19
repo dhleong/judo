@@ -168,7 +168,21 @@ class JudoCoreJLineIntegrationTest {
             |----------
             |__________
         """.trimMargin())
+    }
 
+    @Test fun `Print mappings`() {
+        renderer.forceResize(15, 5)
+        judo.printMappings("normal")
+
+        // NOTE: no mappings to print; this is to ensure
+        // that we print without error
+        assert(display).linesEqual("""
+            |_______________
+            |KeyMappings____
+            |===========____
+            |_______[NORMAL]
+            |_______________
+        """.trimMargin())
     }
 }
 

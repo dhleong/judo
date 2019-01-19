@@ -70,6 +70,7 @@ class FlavorableStringBuilder private constructor(
                 }
             }
             isNotEmpty() -> flavors[start + myLength - 1]
+            isEmpty() -> Flavor.default
             else -> null
         })
     }
@@ -129,13 +130,17 @@ class FlavorableStringBuilder private constructor(
             System.arraycopy(other.chars, other.start + offset, chars, start + myLength, length)
             System.arraycopy(other.flavors, other.start + offset, flavors, start + myLength, length)
 
+            // if the provided FSB doesn't start with any flavor, extend
+            // our current one into it
             val oldFlavorIndex = start + myLength - 1
             val oldFlavor =
                 if (oldFlavorIndex >= 0) flavors[oldFlavorIndex]
                 else null
-            val newStartingFlavor = oldFlavor + other.flavors[other.start + offset]
-            if (newStartingFlavor != null) {
-                beginFlavor(newStartingFlavor, myLength)
+            if (
+                (oldFlavorIndex < 0 || flavors[oldFlavorIndex + 1] == null)
+                && oldFlavor != null
+            ) {
+                beginFlavor(oldFlavor, myLength)
             }
         } else {
             TODO("support non-FSB-based char sequences?")
@@ -268,8 +273,13 @@ class FlavorableStringBuilder private constructor(
     }
 
     override fun beginFlavor(flavor: Flavor, startIndex: Int) {
-        for (i in start + startIndex until flavors.size) {
-            if ((flavors[i] ?: flavor) != flavor) {
+        val startI = start + startIndex
+        if (startI >= flavors.size) return
+
+        val initialFlavor: Flavor? = flavors[startI]
+        for (i in startI until flavors.size) {
+            val old = (flavors[i] ?: flavor)
+            if (!(old == flavor || old == initialFlavor)) {
                 break
             }
 
@@ -395,7 +405,8 @@ class FlavorableStringBuilder private constructor(
         val EMPTY: FlavorableCharSequence = fromString("")
 
         fun fromString(string: String) = FlavorableStringBuilder(string.length).also {
-            it += string
+            // ensure we append without any flavor
+            it.appendImpl(string, 0, string.length)
         }
 
         fun withDefaultFlavor(string: String) = fromString(string).apply {

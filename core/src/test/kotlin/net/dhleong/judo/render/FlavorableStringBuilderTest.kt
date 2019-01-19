@@ -216,5 +216,13 @@ class FlavorableStringBuilderTest {
             hasFlavor(SimpleFlavor(isItalic = true), atIndex = 2)
         }
     }
+
+    @Test fun `Deep copy empty FSB`() {
+        val b = FlavorableStringBuilder(FlavorableStringBuilder.EMPTY)
+        assert(b).all {
+            hasToString("")
+            hasLength(0)
+        }
+    }
 }
 
