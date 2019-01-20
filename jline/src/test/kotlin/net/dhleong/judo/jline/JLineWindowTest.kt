@@ -459,6 +459,25 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `Search in un-focusable window always highlights`() {
+        val display = JLineDisplay(12, 2)
+        val buffer = bufferOf(
+            """
+            Take My love
+            Take my land
+            Take me where I cannot stand
+        """.trimIndent())
+        val w = windowOf(buffer, 12, 2, focusable = false)
+
+        w.searchForKeyword("m", direction = 1)
+        w.render(display, 0, 0)
+        assert(display).ansiLinesEqual(
+            """
+            |Take my land
+            |Take ${ansi(inverse = true)}m${ansi(0)}e wher
+        """.trimMargin())
+    }
+
     @Test fun `highlight search result in wrapped buffer`() {
         val display = JLineDisplay(10, 2)
         val buffer = bufferOf("""

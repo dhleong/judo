@@ -122,7 +122,9 @@ class JLineWindow(
         }
 
         // highlight search results:
-        if (isFocusable && isFocused && workspaceSearchIndex != -1) {
+        // if we're not focusable (EG: primary output window), always highlight
+        // results; otherwise, only highlight if actually focused
+        if ((!isFocusable || isFocused) && workspaceSearchIndex != -1) {
             val fullLine = buffer[search.resultLine]
             val splitIndex = fullLine.splitIndexOfOffset(
                 windowWidth = width,
