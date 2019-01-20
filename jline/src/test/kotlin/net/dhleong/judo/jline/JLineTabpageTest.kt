@@ -130,6 +130,47 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
+    @Test fun `Render multi-split window`() {
+        renderer.forceResize(25, 6)
+        primary.appendLine("Take my love")
+        primary.updateStatusLine("[lstatus]")
+
+        val botRight = tabpage.vsplit(12, bufferOf("""
+            Take my land
+        """.trimIndent()))
+        botRight.updateStatusLine("<rstatus>".toFlavorable())
+
+        assert(botRight).hasWidth(12)
+        assert(primary).hasWidth(12)
+
+        val topRight = tabpage.hsplit(2, bufferOf("""
+            Serenity
+        """.trimIndent()))
+        topRight.updateStatusLine("(trstatus)".toFlavorable())
+
+        assert(topRight).all {
+            hasHeight(3)
+            hasWidth(12)
+        }
+        assert(botRight).all {
+            hasHeight(2)
+            hasWidth(12)
+        }
+        assert(primary).all {
+            hasHeight(5)
+            hasWidth(12)
+        }
+
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ Serenity____
+            |____________ (trstatus)__
+            |Take my love Take my land
+            |------------ ------------
+            |____________ ____________
+        """.trimMargin())
+    }
+
     @Test fun `Close window from a single split`() {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")

@@ -97,7 +97,7 @@ class JLineTabpage(
         if (parent is T) {
             parent.add(WindowStack(parent, newWindow))
         } else {
-            val newStack = createStack(parent, width, height)
+            val newStack = createStack(parent, thisStack.width, thisStack.height)
             thisStack.parent = newStack
             newStack.add(thisStack)
 
