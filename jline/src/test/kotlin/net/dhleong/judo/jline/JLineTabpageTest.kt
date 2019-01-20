@@ -4,8 +4,10 @@ import assertk.all
 import assertk.assert
 import assertk.assertions.isSameAs
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.bufferOf
 import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.hasHeight
+import net.dhleong.judo.hasWidth
 import net.dhleong.judo.isFocused
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IdManager
@@ -86,6 +88,45 @@ class JLineTabpageTest {
             |Take my land
             |[pstatus]___
             |_          _
+        """.trimMargin())
+    }
+
+    @Test fun `Render vsplit window`() {
+        renderer.forceResize(25, 5)
+        primary.appendLine("Take my love")
+        primary.updateStatusLine("[lstatus]")
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ ____________
+            |Take my love ____________
+            |[lstatus]___ ____________
+            |____________ ____________
+        """.trimMargin())
+
+        val buffer = bufferOf("""
+            Take my land
+        """.trimIndent())
+        val window = tabpage.vsplit(12, buffer)
+        window.updateStatusLine("<rstatus>".toFlavorable())
+
+        assert(window).hasWidth(12)
+        assert(primary).hasWidth(12)
+
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ ____________
+            |Take my love Take my land
+            |------------ <rstatus>___
+            |____________ ____________
+        """.trimMargin())
+
+        tabpage.currentWindow = primary
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ ____________
+            |Take my love Take my land
+            |[lstatus]___ ------------
+            |____________ ____________
         """.trimMargin())
     }
 

@@ -4,6 +4,7 @@ import net.dhleong.judo.StateMap
 import net.dhleong.judo.WindowCommandHandler
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.jline.stacks.CountingStackSearch
+import net.dhleong.judo.jline.stacks.HorizontalStack
 import net.dhleong.judo.jline.stacks.IStack
 import net.dhleong.judo.jline.stacks.RootStack
 import net.dhleong.judo.jline.stacks.VerticalStack
@@ -58,41 +59,52 @@ class JLineTabpage(
         rootStack.stackWithWindow { it.currentBuffer.id == id }?.window
 
     override fun vsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
-        TODO("not implemented")
+        val containerWidth = currentStack.parent.width
+        return vsplit((containerWidth * percentage).toInt(), buffer)
     }
 
-    override fun vsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow {
-        TODO("not implemented")
-    }
+    override fun vsplit(cols: Int, buffer: IJudoBuffer): IJudoWindow =
+        splitInto(
+            cols,
+            currentStack.parent.height,
+            buffer,
+            ::HorizontalStack
+        )
 
     override fun hsplit(percentage: Float, buffer: IJudoBuffer): IJudoWindow {
         val containerHeight = currentStack.parent.height
         return hsplit((containerHeight * percentage).toInt(), buffer)
     }
 
-    override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow {
+    override fun hsplit(rows: Int, buffer: IJudoBuffer): IJudoWindow =
+        splitInto(
+            currentStack.parent.width,
+            rows + 1, // include room for a status line
+            buffer,
+            ::VerticalStack
+        )
+
+    private inline fun <reified T : IStack> splitInto(
+        windowWidth: Int,
+        windowHeight: Int,
+        buffer: IJudoBuffer,
+        createStack: (parent: IStack, width: Int, height: Int) -> T
+    ): IJudoWindow = renderer.inTransaction {
         val thisStack = currentStack
         val parent = currentStack.parent
-        val winHeight = rows + 1 // include room for a status line
-        val newWindow = JLineWindow(renderer, ids, settings, parent.width, winHeight, buffer, isFocusable = true)
+        val newWindow = createWindow(windowWidth, windowHeight, buffer)
 
-        renderer.inTransaction {
-            if (parent is VerticalStack) {
-                parent.add(WindowStack(parent, newWindow).also {
-                    currentStack = it
-                })
-            } else {
-                val newStack = VerticalStack(parent, width, height)
-                thisStack.parent = newStack
-                newStack.add(thisStack)
+        if (parent is T) {
+            parent.add(WindowStack(parent, newWindow))
+        } else {
+            val newStack = createStack(parent, width, height)
+            thisStack.parent = newStack
+            newStack.add(thisStack)
 
-                newStack.add(WindowStack(newStack, newWindow).also {
-                    currentStack = it
-                })
-                parent.replace(thisStack, newStack)
-            }
-            currentWindow = newWindow
+            newStack.add(WindowStack(newStack, newWindow))
+            parent.replace(thisStack, newStack)
         }
+        currentWindow = newWindow
 
         return newWindow
     }
@@ -162,4 +174,6 @@ class JLineTabpage(
         }
     }
 
+    private fun createWindow(width: Int, height: Int, buffer: IJudoBuffer) =
+        JLineWindow(renderer, ids, settings, width, height, buffer, isFocusable = true)
 }

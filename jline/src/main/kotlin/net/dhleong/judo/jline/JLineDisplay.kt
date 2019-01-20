@@ -66,7 +66,7 @@ class JLineDisplay(
     }
 
     fun clearLine(x: Int, y: Int, fromRelativeX: Int, toRelativeX: Int) {
-        if (x + fromRelativeX == toRelativeX) {
+        if (fromRelativeX == toRelativeX) {
             // nop
             return
         }

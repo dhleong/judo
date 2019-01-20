@@ -17,7 +17,8 @@ class HorizontalStack(
 {
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
-            var available = width
+            // -1 for each separator (and an extra for the new item)
+            var available = width - contents.size
             for (row in contents) {
                 available -= row.width
             }
@@ -45,7 +46,8 @@ class HorizontalStack(
         var col = x
         for (i in contents.indices) {
             if (i > 0) {
-                // TODO drop separator
+                // TODO draw separator
+                ++col
             }
 
             val win = contents[i]
