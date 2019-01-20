@@ -41,14 +41,6 @@ class VerticalStack(
         resize(width, height)
     }
 
-    override fun getCollapseChild(): IStack? {
-        if (contents.size == 1) {
-            return contents[0]
-        }
-
-        return null
-    }
-
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // vertical stack is easy
         var line = y
@@ -71,12 +63,6 @@ class VerticalStack(
 
         // not in this stack
         return -1
-    }
-
-    override fun remove(child: IStack) {
-        if (!contents.remove(child)) {
-            throw IllegalArgumentException("$child not contained in $this")
-        }
     }
 
     override fun resize(width: Int, height: Int) {

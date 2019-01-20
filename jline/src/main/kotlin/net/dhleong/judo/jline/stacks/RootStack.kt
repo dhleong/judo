@@ -42,4 +42,6 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
 
     override fun focusUp(search: CountingStackSearch) { }
     override fun focusDown(search: CountingStackSearch) { }
+    override fun focusLeft(search: CountingStackSearch) { }
+    override fun focusRight(search: CountingStackSearch) { }
 }

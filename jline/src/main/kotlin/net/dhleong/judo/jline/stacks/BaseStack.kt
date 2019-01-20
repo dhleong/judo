@@ -13,12 +13,26 @@ abstract class BaseStack(
 
     internal val contents = ArrayList<IStack>(4)
 
+    override fun getCollapseChild(): IStack? {
+        if (contents.size == 1) {
+            return contents[0]
+        }
+
+        return null
+    }
+
     override fun nextWindow(): IJLineWindow = contents.first().nextWindow()
 
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack? =
         contents.asSequence()
             .map { it.stackWithWindow(predicate) }
             .firstOrNull { it != null }
+
+    override fun remove(child: IStack) {
+        if (!contents.remove(child)) {
+            throw IllegalArgumentException("$child not contained in $this")
+        }
+    }
 
     override fun replace(old: IStack, new: IStack) {
         val oldIndex = contents.indexOf(old)

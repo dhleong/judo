@@ -41,11 +41,10 @@ class WindowStack(
         Window commands
      */
 
-    override fun focusUp(search: CountingStackSearch) =
-        thisOrOnParent(search) { focusUp(search) }
-
-    override fun focusDown(search: CountingStackSearch) =
-        thisOrOnParent(search) { focusDown(search) }
+    override fun focusUp(search: CountingStackSearch) = thisOrOnParent(search) { focusUp(search) }
+    override fun focusDown(search: CountingStackSearch) = thisOrOnParent(search) { focusDown(search) }
+    override fun focusLeft(search: CountingStackSearch) = thisOrOnParent(search) { focusLeft(search) }
+    override fun focusRight(search: CountingStackSearch) = thisOrOnParent(search) { focusRight(search) }
 
     private inline fun thisOrOnParent(
         search: CountingStackSearch,
