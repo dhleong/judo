@@ -27,3 +27,8 @@ fun Assert<IJudoWindow>.isNotFocused() {
     if (!actual.isFocused) return
     expected("to NOT be focused, but *was*")
 }
+
+fun Assert<IJudoWindow>.hasId(expected: Int) {
+    if (actual.id == expected) return
+    expected("id=${show(expected)} but was ${show(actual.id)}")
+}
