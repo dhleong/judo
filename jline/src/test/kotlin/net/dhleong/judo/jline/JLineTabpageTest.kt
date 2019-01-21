@@ -130,7 +130,7 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
-    @Test fun `Render multi-split window`() {
+    @Test fun `Render multi-split tabpage`() {
         renderer.forceResize(25, 6)
         primary.appendLine("Take my love")
         primary.updateStatusLine("[lstatus]")
@@ -167,6 +167,63 @@ class JLineTabpageTest {
             |____________ (trstatus)__
             |Take my love Take my land
             |------------ ------------
+            |____________ ____________
+        """.trimMargin())
+    }
+
+    @Test fun `Move focus around multi-split tabpage`() {
+        renderer.forceResize(25, 6)
+        primary.appendLine("Take my love")
+        primary.updateStatusLine("[lstatus]")
+
+        val botRight = tabpage.vsplit(12, bufferOf("""
+            Take my land
+        """.trimIndent()))
+        botRight.updateStatusLine("<rstatus>".toFlavorable())
+
+        val topRight = tabpage.hsplit(2, bufferOf("""
+            Serenity
+        """.trimIndent()))
+        topRight.updateStatusLine("(trstatus)".toFlavorable())
+
+        tabpage.focusLeft()
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ Serenity____
+            |____________ ------------
+            |Take my love Take my land
+            |[lstatus]___ ------------
+            |____________ ____________
+        """.trimMargin())
+
+        tabpage.focusRight(2) // going too far should be safe
+        tabpage.focusDown() // should be nop
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ Serenity____
+            |____________ ------------
+            |Take my love Take my land
+            |------------ <rstatus>___
+            |____________ ____________
+        """.trimMargin())
+
+        tabpage.focusUp()
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ Serenity____
+            |____________ (trstatus)__
+            |Take my love Take my land
+            |------------ ------------
+            |____________ ____________
+        """.trimMargin())
+
+        tabpage.focusDown()
+        assert(display).linesEqual("""
+            |____________ ____________
+            |____________ Serenity____
+            |____________ ------------
+            |Take my love Take my land
+            |------------ <rstatus>___
             |____________ ____________
         """.trimMargin())
     }

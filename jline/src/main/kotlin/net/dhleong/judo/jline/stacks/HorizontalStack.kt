@@ -12,9 +12,8 @@ class HorizontalStack(
     parent: IStack,
     width: Int,
     height: Int
-) : BaseStack(parent, width, height),
-    StackWindowCommandHandler by parent // delegate by default
-{
+) : BaseStack(parent, width, height) {
+
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
             // -1 for each separator (and an extra for the new item)
@@ -85,4 +84,5 @@ class HorizontalStack(
 
     override fun focusLeft(search: CountingStackSearch) = focus(search, -1, IStack::focusLeft)
     override fun focusRight(search: CountingStackSearch) = focus(search, 1, IStack::focusRight)
+
 }

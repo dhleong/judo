@@ -233,9 +233,9 @@ class JLineRenderer(
      */
 
     override fun focusUp(count: Int) = (currentTabpage as JLineTabpage).focusUp(count)
-//    override fun focusRight(count: Int) = (currentTabpage as JLineTabpage).focusRight(count)
     override fun focusDown(count: Int) = (currentTabpage as JLineTabpage).focusDown(count)
-//    override fun focusLeft(count: Int) = (currentTabpage as JLineTabpage).focusLeft(count)
+    override fun focusLeft(count: Int) = (currentTabpage as JLineTabpage).focusLeft(count)
+    override fun focusRight(count: Int) = (currentTabpage as JLineTabpage).focusRight(count)
 
     /*
          internal

@@ -44,6 +44,11 @@ abstract class BaseStack(
         Window commands
      */
 
+    override fun focusUp(search: CountingStackSearch) = defaultFocus(search) { focusUp(search) }
+    override fun focusDown(search: CountingStackSearch) = defaultFocus(search) { focusDown(search) }
+    override fun focusLeft(search: CountingStackSearch) = defaultFocus(search) { focusLeft(search) }
+    override fun focusRight(search: CountingStackSearch) = defaultFocus(search) { focusRight(search) }
+
     protected fun focus(
         search: CountingStackSearch,
         direction: Int,
@@ -88,6 +93,17 @@ abstract class BaseStack(
                 search.count = 0
                 contents[newIndex].next(search)
             }
+        }
+    }
+
+    private inline fun defaultFocus(
+        search: CountingStackSearch,
+        next: StackWindowCommandHandler.(search: CountingStackSearch) -> Unit
+    ) {
+        if (search.count <= 0) {
+            contents.first().next(search)
+        } else {
+            parent.next(search)
         }
     }
 

@@ -12,9 +12,7 @@ class VerticalStack(
     parent: IStack,
     width: Int,
     height: Int
-) : BaseStack(parent, width, height),
-    StackWindowCommandHandler by parent // delegate by default
-{
+) : BaseStack(parent, width, height) {
 
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {

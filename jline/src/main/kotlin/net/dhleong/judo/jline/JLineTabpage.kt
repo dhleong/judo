@@ -158,6 +158,8 @@ class JLineTabpage(
 
     override fun focusUp(count: Int) = focusWithCurrent(count) { focusUp(it) }
     override fun focusDown(count: Int) = focusWithCurrent(count) { focusDown(it) }
+    override fun focusLeft(count: Int) = focusWithCurrent(count) { focusLeft(it) }
+    override fun focusRight(count: Int) = focusWithCurrent(count) { focusRight(it) }
 
     private inline fun focusWithCurrent(
         count: Int,
