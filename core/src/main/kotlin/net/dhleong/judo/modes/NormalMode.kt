@@ -210,7 +210,15 @@ class NormalMode(
 
         keys("<ctrl-w>j") to withCount { count -> judo.renderer.focusDown(count) },
         keys("<ctrl-w><ctrl-j>") to withCount { count -> judo.renderer.focusDown(count) },
-        keys("<ctrl-w><down>") to withCount { count -> judo.renderer.focusDown(count) }
+        keys("<ctrl-w><down>") to withCount { count -> judo.renderer.focusDown(count) },
+
+        keys("<ctrl-w>h") to withCount { count -> judo.renderer.focusLeft(count) },
+        keys("<ctrl-w><ctrl-h>") to withCount { count -> judo.renderer.focusLeft(count) },
+        keys("<ctrl-w><left>") to withCount { count -> judo.renderer.focusLeft(count) },
+
+        keys("<ctrl-w>l") to withCount { count -> judo.renderer.focusRight(count) },
+        keys("<ctrl-w><ctrl-l>") to withCount { count -> judo.renderer.focusRight(count) },
+        keys("<ctrl-w><right>") to withCount { count -> judo.renderer.focusRight(count) }
 
     ) + ALL_MOTIONS.filter { (_, motion) ->
         // text object motions can't be used as an action
