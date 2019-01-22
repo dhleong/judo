@@ -13,6 +13,7 @@ import net.dhleong.judo.bufferOf
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -183,6 +184,11 @@ class JudoCoreJLineIntegrationTest {
             |_______[NORMAL]
             |_______________
         """.trimMargin())
+    }
+
+    @Ignore("TODO: Mode indicator in vsplit window")
+    @Test fun `Mode indicator in vsplit window`() {
+        TODO()
     }
 }
 

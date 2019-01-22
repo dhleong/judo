@@ -5,11 +5,14 @@ import assertk.assert
 import net.dhleong.judo.MAX_INPUT_LINES
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.bufferOf
+import net.dhleong.judo.hasWidth
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class JLineRendererTest {
@@ -378,6 +381,36 @@ class JLineRendererTest {
                 5, 19
             )
         }
+    }
+
+    @Ignore
+    @Test fun `Render vertical split`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+
+        val splitBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        val right = renderer.currentTabpage.vsplit(8, splitBuffer)
+        right.updateStatusLine("[right]")
+
+        assert(window).hasWidth(11)
+
+        assert(display).all {
+            linesEqual("""
+                |___________ ________
+                |___________ ________
+                |Mal Reynold Take my_
+                |s__________ love____
+                |----------- [right]_
+                |___________ ________
+            """.trimMargin())
+        }
+    }
+
+    @Ignore("TODO")
+    @Test fun `Cursor placement with vertical split status`() {
+
     }
 }
 
