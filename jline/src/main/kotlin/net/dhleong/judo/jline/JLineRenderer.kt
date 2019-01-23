@@ -154,7 +154,7 @@ class JLineRenderer(
         } else {
 
             // blocking echo!
-            onEvent?.invoke(JudoRendererEvent.OnBlockingEcho)
+            dispatch(JudoRendererEvent.OnBlockingEcho)
         }
     }
 
@@ -240,6 +240,8 @@ class JLineRenderer(
     /*
          internal
      */
+
+    internal fun dispatch(event: JudoRendererEvent) = onEvent?.invoke(event)
 
     @Synchronized
     private fun render() {
@@ -404,7 +406,7 @@ class JLineRenderer(
         // resize the tabpage *last* so it can safely trigger a render
         currentTabpage.resize(windowWidth, windowHeight - 1)
 
-        onEvent?.invoke(JudoRendererEvent.OnResized)
+        dispatch(JudoRendererEvent.OnResized)
     }
 
     private fun handleSignal(signal: Terminal.Signal) {

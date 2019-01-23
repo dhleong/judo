@@ -10,10 +10,10 @@ import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.bufferOf
+import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -186,9 +186,19 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Ignore("TODO: Mode indicator in vsplit window")
     @Test fun `Mode indicator in vsplit window`() {
-        TODO()
+        renderer.forceResize(20, 5)
+        renderer.currentTabpage.vsplit(8, emptyBuffer())
+
+        // NOTE: no mappings to print; this is to ensure
+        // that we print without error
+        assert(display).linesEqual("""
+            |___________ ________
+            |___________ ________
+            |___________ ________
+            |----------- [NORMAL]
+            |___________ ________
+        """.trimMargin())
     }
 }
 

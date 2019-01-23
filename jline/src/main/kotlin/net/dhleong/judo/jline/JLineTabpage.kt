@@ -1,5 +1,6 @@
 package net.dhleong.judo.jline
 
+import net.dhleong.judo.JudoRendererEvent
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WindowCommandHandler
 import net.dhleong.judo.inTransaction
@@ -106,6 +107,7 @@ class JLineTabpage(
         }
         currentWindow = newWindow
 
+        renderer.dispatch(JudoRendererEvent.OnLayout)
         return newWindow
     }
 
@@ -126,6 +128,7 @@ class JLineTabpage(
         rootStack.resize(width, height)
         // use [currentWindow] to ensure focus is moved as appropriate
         currentWindow = initialWindow
+        renderer.dispatch(JudoRendererEvent.OnLayout)
     }
 
     override fun close(window: IJudoWindow) {
@@ -153,6 +156,7 @@ class JLineTabpage(
             // TODO pick the new focused window
             currentWindow = stack.nextWindow()
         }
+        renderer.dispatch(JudoRendererEvent.OnLayout)
     }
 
     /*
