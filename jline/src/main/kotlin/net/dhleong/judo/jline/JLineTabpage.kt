@@ -115,6 +115,9 @@ class JLineTabpage(
         rootStack.resize(width, height)
     }
 
+    fun getXPositionOf(window: IJudoWindow): Int =
+        rootStack.getXPositionOf(window as IJLineWindow)
+
     override fun getYPositionOf(window: IJudoWindow): Int =
         rootStack.getYPositionOf(window as IJLineWindow)
 

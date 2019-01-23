@@ -58,7 +58,28 @@ class HorizontalStack(
         }
     }
 
-    override fun getYPositionOf(window: IJLineWindow): Int = 0
+    override fun getXPositionOf(window: IJLineWindow): Int {
+        var xOffset = 0
+        for (row in contents) {
+            val rowX = row.getYPositionOf(window)
+            if (rowX != -1) return xOffset + rowX
+
+            xOffset += row.width + 1 // +1 for separator
+        }
+
+        // not in this stack
+        return -1
+    }
+
+    override fun getYPositionOf(window: IJLineWindow): Int {
+        for (row in contents) {
+            val rowX = row.getYPositionOf(window)
+            if (rowX != -1) return rowX
+        }
+
+        // not in this stack
+        return -1
+    }
 
     override fun resize(width: Int, height: Int) {
         val rows = contents.size

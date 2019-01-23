@@ -50,6 +50,16 @@ class VerticalStack(
         }
     }
 
+    override fun getXPositionOf(window: IJLineWindow): Int {
+        for (row in contents) {
+            val rowX = row.getXPositionOf(window)
+            if (rowX != -1) return rowX
+        }
+
+        // not in this stack
+        return -1
+    }
+
     override fun getYPositionOf(window: IJLineWindow): Int {
         var yOffset = 0
         for (row in contents) {

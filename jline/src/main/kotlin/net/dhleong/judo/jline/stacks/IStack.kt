@@ -40,6 +40,7 @@ interface IStack : StackWindowCommandHandler {
     fun getCollapseChild(): IStack?
 
     fun render(display: JLineDisplay, x: Int, y: Int)
+    fun getXPositionOf(window: IJLineWindow): Int
     fun getYPositionOf(window: IJLineWindow): Int
     fun remove(child: IStack)
     fun replace(old: IStack, new: IStack)

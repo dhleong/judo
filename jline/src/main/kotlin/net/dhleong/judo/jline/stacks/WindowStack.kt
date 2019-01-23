@@ -31,6 +31,9 @@ class WindowStack(
         window.render(display, x, y)
     }
 
+    override fun getXPositionOf(window: IJLineWindow) =
+        if (window == this.window) 0
+        else -1
     override fun getYPositionOf(window: IJLineWindow) =
         if (window == this.window) 0
         else -1

@@ -24,6 +24,8 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
 
     override fun render(display: JLineDisplay, x: Int, y: Int) =
         child.render(display, x, y)
+    override fun getXPositionOf(window: IJLineWindow): Int =
+        child.getXPositionOf(window)
     override fun getYPositionOf(window: IJLineWindow): Int =
         child.getYPositionOf(window)
     override fun remove(child: IStack) = throw UnsupportedOperationException()

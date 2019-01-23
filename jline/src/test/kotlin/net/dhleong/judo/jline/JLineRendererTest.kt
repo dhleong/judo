@@ -13,7 +13,6 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class JLineRendererTest {
@@ -409,9 +408,25 @@ class JLineRendererTest {
         }
     }
 
-    @Ignore("TODO")
     @Test fun `Cursor placement with vertical split status`() {
+        val splitBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        val right = renderer.currentTabpage.vsplit(8, splitBuffer)
+        right.updateStatusLine(":right", 6)
 
+        assert(display).all {
+            linesEqual("""
+                |___________ ________
+                |___________ ________
+                |___________ Take my_
+                |___________ love____
+                |----------- :right__
+                |___________ ________
+            """.trimMargin())
+
+            hasCursor(4, 18)
+        }
     }
 }
 
