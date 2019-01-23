@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertions.isTrue
 import net.dhleong.judo.MAX_INPUT_LINES
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
@@ -383,7 +384,6 @@ class JLineRendererTest {
         }
     }
 
-    @Ignore
     @Test fun `Render vertical split`() {
         window.appendLine("Mal Reynolds")
         window.updateStatusLine("<status>")
@@ -394,14 +394,15 @@ class JLineRendererTest {
         val right = renderer.currentTabpage.vsplit(8, splitBuffer)
         right.updateStatusLine("[right]")
 
+        assert(settings[WORD_WRAP]).isTrue()
         assert(window).hasWidth(11)
 
         assert(display).all {
             linesEqual("""
                 |___________ ________
                 |___________ ________
-                |Mal Reynold Take my_
-                |s__________ love____
+                |Mal________ Take my_
+                |Reynolds___ love____
                 |----------- [right]_
                 |___________ ________
             """.trimMargin())

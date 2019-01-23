@@ -2,6 +2,9 @@ package net.dhleong.judo.jline.stacks
 
 import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
+import net.dhleong.judo.jline.toAttributedStyle
+import net.dhleong.judo.render.Flavor
+import org.jline.utils.AttributedString
 
 const val WINDOW_MIN_WIDTH = 2
 
@@ -45,7 +48,7 @@ class HorizontalStack(
         var col = x
         for (i in contents.indices) {
             if (i > 0) {
-                // TODO draw separator
+                display.renderSeparator(x + col, y, height)
                 ++col
             }
 
@@ -86,3 +89,14 @@ class HorizontalStack(
     override fun focusRight(search: CountingStackSearch) = focus(search, 1, IStack::focusRight)
 
 }
+
+private fun JLineDisplay.renderSeparator(x: Int, y: Int, height: Int) {
+    val flavor = Flavor.default.toAttributedStyle()
+    val string = AttributedString(" ", flavor)
+    for (i in y until y + height) {
+        withLine(x, i) {
+            append(string)
+        }
+    }
+}
+
