@@ -15,6 +15,7 @@ import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -298,7 +299,7 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
-    @Test fun `Resize a split`() {
+    @Test fun `Resize a vertical split`() {
         renderer.forceResize(tabpage.width, 9)
         assert(tabpage).hasHeight(8)
         assert(primary).hasHeight(8)
@@ -315,6 +316,24 @@ class JLineTabpageTest {
 
         assert(window).hasHeight(4)
         assert(primary).hasHeight(4)
+    }
+
+    @Ignore("Resize horizontal split")
+    @Test fun `Resize a horizontal split`() {
+        renderer.forceResize(20, tabpage.height)
+        assert(primary).hasWidth(20)
+
+        val buffer = JudoBuffer(IdManager())
+        val window = tabpage.vsplit(2, buffer)
+        window.appendLine("Take my love")
+
+        assert(window).hasWidth(2)
+        assert(primary).hasWidth(17)
+
+        window.resize(8, window.height)
+
+        assert(window).hasHeight(8)
+        assert(primary).hasHeight(11)
     }
 
     @Test fun `Re-split`() {
