@@ -428,6 +428,36 @@ class JLineRendererTest {
             hasCursor(4, 18)
         }
     }
+
+    @Test fun `Cursor placement with multi-split status`() {
+        val rightBuffer = bufferOf("""
+            Take my land
+        """.trimIndent())
+        renderer.currentTabpage.vsplit(7, rightBuffer)
+
+        renderer.currentTabpage.currentWindow = window
+        val topBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        renderer.currentTabpage.hsplit(1, topBuffer)
+
+        renderer.currentTabpage.currentWindow = window
+        window.updateStatusLine(":prim", 5)
+
+        assert(display).all {
+            linesEqual("""
+                |Take my love _______
+                |------------ _______
+                |____________ Take my
+                |____________ land___
+                |:prim_______ -------
+                |____________ _______
+            """.trimMargin())
+
+            hasCursor(4, 5)
+        }
+    }
+
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {

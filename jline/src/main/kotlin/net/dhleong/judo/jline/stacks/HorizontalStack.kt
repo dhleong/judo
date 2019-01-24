@@ -61,7 +61,7 @@ class HorizontalStack(
     override fun getXPositionOf(window: IJLineWindow): Int {
         var xOffset = 0
         for (row in contents) {
-            val rowX = row.getYPositionOf(window)
+            val rowX = row.getXPositionOf(window)
             if (rowX != -1) return xOffset + rowX
 
             xOffset += row.width + 1 // +1 for separator
