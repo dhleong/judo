@@ -78,6 +78,7 @@ class JLineRenderer(
     private val echoPromptWorkspace = mutableListOf<AttributedString>()
 
     private val transactionDepth = AtomicInteger(0)
+    private val resizeDepth = AtomicInteger(0)
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
@@ -221,11 +222,29 @@ class JLineRenderer(
         }
     }
 
-    override fun onWindowResized(window: JLineWindow) {
-        // TODO multiple tabpages?
-        currentTabpage.apply {
-            resize(width, height)
+    override fun onWindowResized(window: JLineWindow): Boolean {
+        val didRun = beginWindowResize()
+        endWindowResize()
+        return didRun
+    }
+
+    fun beginWindowResize(): Boolean {
+        return 0 == resizeDepth.getAndIncrement()
+    }
+
+    fun endWindowResize() {
+        if (0 == resizeDepth.decrementAndGet()) {
+            // TODO multiple tabpages?
+            currentTabpage.apply {
+                resize(width, height)
+            }
         }
+    }
+
+    inline fun inWindowResize(block: () -> Unit) {
+        beginWindowResize()
+        block()
+        endWindowResize()
     }
 
     /*

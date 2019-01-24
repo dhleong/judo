@@ -81,30 +81,12 @@ class HorizontalStack(
         return -1
     }
 
-    override fun resize(width: Int, height: Int) {
-        val rows = contents.size
-        val separators = rows - 1
-        var availableWidth = width - separators
-
-        var remainingRows = rows - 1
-        for (item in contents.sortedByDescending { it.lastResizeRequest }) {
-            val requestedWidth = item.width
-            val allottedWidth =
-                if (remainingRows == 0) availableWidth
-                else maxOf(
-                    WINDOW_MIN_WIDTH,
-                    minOf(
-                        requestedWidth,
-                        // leave room for the remaining rows
-                        availableWidth - WINDOW_MIN_WIDTH * remainingRows
-                    )
-                )
-            availableWidth -= allottedWidth
-
-            item.resize(allottedWidth, height)
-            --remainingRows
-        }
-    }
+    override fun resize(width: Int, height: Int) = doResize(
+        available = width - (contents.size - 1), // leave room for separators
+        minDimension = WINDOW_MIN_WIDTH,
+        getDimension = { it.width },
+        setDimension = { w -> resize(w, height) }
+    )
 
     override fun focusLeft(search: CountingStackSearch) = focus(search, -1, IStack::focusLeft)
     override fun focusRight(search: CountingStackSearch) = focus(search, 1, IStack::focusRight)

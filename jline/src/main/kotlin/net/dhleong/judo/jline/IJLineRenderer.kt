@@ -7,5 +7,6 @@ import net.dhleong.judo.JudoRenderer
  * @author dhleong
  */
 interface IJLineRenderer : JudoRenderer {
-    fun onWindowResized(window: JLineWindow)
+    fun onWindowResized(window: JLineWindow): Boolean
 }
+

@@ -45,6 +45,35 @@ abstract class BaseStack(
         contents[oldIndex] = new
     }
 
+    internal inline fun doResize(
+        available: Int,
+        minDimension: Int,
+        getDimension: (IStack) -> Int,
+        setDimension: IStack.(Int) -> Unit
+    ) {
+        val itemsCount = contents.size
+        var freeSpace = available
+
+        var remainingItems = itemsCount - 1
+        for (item in contents.sortedByDescending { it.lastResizeRequest }) {
+            val requested = getDimension(item)
+            val allotted =
+                if (remainingItems == 0) freeSpace
+                else maxOf(
+                    minDimension,
+                    minOf(
+                        requested,
+                        // leave room for the remaining items
+                        freeSpace - minDimension * remainingItems
+                    )
+                )
+            freeSpace -= allotted
+
+            item.setDimension(allotted)
+            --remainingItems
+        }
+    }
+
     /*
         Window commands
      */

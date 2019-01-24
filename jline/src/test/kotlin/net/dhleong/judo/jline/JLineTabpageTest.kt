@@ -298,7 +298,7 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
-    @Test fun `Resize a vertical split`() {
+    @Test fun `Resize a vertical stack`() {
         renderer.forceResize(tabpage.width, 9)
         assert(tabpage).hasHeight(8)
         assert(primary).hasHeight(8)
@@ -317,7 +317,7 @@ class JLineTabpageTest {
         assert(primary).hasHeight(4)
     }
 
-    @Test fun `Resize a horizontal split`() {
+    @Test fun `Resize a horizontal stack`() {
         renderer.forceResize(20, tabpage.height)
         assert(primary).hasWidth(20)
 

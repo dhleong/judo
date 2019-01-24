@@ -73,27 +73,35 @@ class VerticalStack(
         return -1
     }
 
-    override fun resize(width: Int, height: Int) {
-        var availableHeight = height
+//    override fun resize(width: Int, height: Int) {
+//        var availableHeight = height
+//
+//        val last = contents.lastIndex
+//        for (i in contents.indices) {
+//            val item = contents[i]
+//            val requestedHeight = item.height
+//            val remainingRows = last - i
+//            val allottedHeight =
+//                if (remainingRows == 0) availableHeight
+//                else maxOf(
+//                    WINDOW_MIN_HEIGHT,
+//                    minOf(requestedHeight,
+//                        // leave room for the remaining rows
+//                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
+//                )
+//            availableHeight -= allottedHeight
+//
+//            item.resize(width, allottedHeight)
+//        }
+//    }
 
-        val last = contents.lastIndex
-        for (i in contents.indices) {
-            val item = contents[i]
-            val requestedHeight = item.height
-            val remainingRows = last - i
-            val allottedHeight =
-                if (remainingRows == 0) availableHeight
-                else maxOf(
-                    WINDOW_MIN_HEIGHT,
-                    minOf(requestedHeight,
-                        // leave room for the remaining rows
-                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
-                )
-            availableHeight -= allottedHeight
+    override fun resize(width: Int, height: Int) = doResize(
+        available = height,
+        minDimension = WINDOW_MIN_HEIGHT,
+        getDimension = { it.height },
+        setDimension = { h -> resize(width, h) }
+    )
 
-            item.resize(width, allottedHeight)
-        }
-    }
 
     override fun focusUp(search: CountingStackSearch) = focus(search, -1, IStack::focusUp)
     override fun focusDown(search: CountingStackSearch) = focus(search, 1, IStack::focusDown)

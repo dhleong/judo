@@ -228,8 +228,9 @@ class JLineWindow(
             this.width = width
             this.height = height
             statusHelper.windowWidth = width
-            lastResizeRequest = ids.newTimestamp()
-            renderer.onWindowResized(this)
+            if (renderer.onWindowResized(this)) {
+                lastResizeRequest = ids.newTimestamp()
+            }
         }
     }
 

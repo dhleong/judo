@@ -99,11 +99,13 @@ class JLineTabpage(
             parent.add(WindowStack(parent, newWindow))
         } else {
             val newStack = createStack(parent, thisStack.width, thisStack.height)
-            thisStack.parent = newStack
-            newStack.add(thisStack)
+            renderer.inWindowResize {
+                thisStack.parent = newStack
+                newStack.add(thisStack)
 
-            newStack.add(WindowStack(newStack, newWindow))
-            parent.replace(thisStack, newStack)
+                newStack.add(WindowStack(newStack, newWindow))
+                parent.replace(thisStack, newStack)
+            }
         }
         currentWindow = newWindow
 
