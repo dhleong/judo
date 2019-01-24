@@ -16,6 +16,9 @@ class WindowStack(
     override val height: Int
         get() = window.height
 
+    override val lastResizeRequest: Long
+        get() = window.lastResizeRequest
+
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
     override fun remove(child: IStack) = throw UnsupportedOperationException()

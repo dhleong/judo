@@ -11,6 +11,11 @@ abstract class BaseStack(
     override var height: Int
 ) : IStack {
 
+    override val lastResizeRequest: Long
+        get() = contents.maxBy {
+            it.lastResizeRequest
+        }?.lastResizeRequest ?: 0L
+
     internal val contents = ArrayList<IStack>(4)
 
     override fun getCollapseChild(): IStack? {

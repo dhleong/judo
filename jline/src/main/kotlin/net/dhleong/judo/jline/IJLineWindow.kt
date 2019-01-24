@@ -7,6 +7,9 @@ import net.dhleong.judo.render.IJudoWindow
  * @author dhleong
  */
 interface IJLineWindow : IJudoWindow {
+
+    val lastResizeRequest: Long
+
     /**
      * Single-line echo
      */

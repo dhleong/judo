@@ -15,7 +15,6 @@ import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -318,7 +317,6 @@ class JLineTabpageTest {
         assert(primary).hasHeight(4)
     }
 
-    @Ignore("Resize horizontal split")
     @Test fun `Resize a horizontal split`() {
         renderer.forceResize(20, tabpage.height)
         assert(primary).hasWidth(20)
@@ -332,8 +330,8 @@ class JLineTabpageTest {
 
         window.resize(8, window.height)
 
-        assert(window).hasHeight(8)
-        assert(primary).hasHeight(11)
+        assert(window).hasWidth(8)
+        assert(primary).hasWidth(11)
     }
 
     @Test fun `Re-split`() {

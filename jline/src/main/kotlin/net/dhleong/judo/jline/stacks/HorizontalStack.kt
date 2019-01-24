@@ -86,16 +86,15 @@ class HorizontalStack(
         val separators = rows - 1
         var availableWidth = width - separators
 
-        val last = contents.lastIndex
-        for (i in contents.indices) {
-            val item = contents[i]
+        var remainingRows = rows - 1
+        for (item in contents.sortedByDescending { it.lastResizeRequest }) {
             val requestedWidth = item.width
-            val remainingRows = last - i
             val allottedWidth =
                 if (remainingRows == 0) availableWidth
                 else maxOf(
                     WINDOW_MIN_WIDTH,
-                    minOf(requestedWidth,
+                    minOf(
+                        requestedWidth,
                         // leave room for the remaining rows
                         availableWidth - WINDOW_MIN_WIDTH * remainingRows
                     )
@@ -103,6 +102,7 @@ class HorizontalStack(
             availableWidth -= allottedWidth
 
             item.resize(allottedWidth, height)
+            --remainingRows
         }
     }
 

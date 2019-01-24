@@ -17,6 +17,9 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
     override val height: Int
         get() = tabpage.height
 
+    override val lastResizeRequest: Long
+        get() = child.lastResizeRequest
+
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean) =
