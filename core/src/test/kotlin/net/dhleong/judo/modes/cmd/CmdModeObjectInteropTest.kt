@@ -1,10 +1,12 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.Assert
+import assertk.all
 import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
+import assertk.assertions.hasToString
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
@@ -12,6 +14,10 @@ import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.hasId
+import net.dhleong.judo.hasSize
+import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.hasFlavor
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -121,6 +127,34 @@ class CmdModeObjectInteropTest(
 
         assert(judo.prints).containsExactly(true)
         file.delete()
+    }
+
+    @Test fun `Buffer append handles ANSI`() {
+
+        val esc = "\\u001b"
+        var string = """
+            "$esc[33mANSI"
+        """.trimIndent()
+
+        @Suppress("NON_EXHAUSTIVE_WHEN")
+        when (scriptType()) {
+            SupportedScriptTypes.PY -> string = "u$string"
+        }
+
+        mode.execute("""
+            judo.current.buffer.append($string)
+        """.trimIndent())
+
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        assert(buffer).hasSize(1)
+
+        assert(buffer[0]).all {
+            hasToString("ANSI\n")
+            hasFlavor(SimpleFlavor(
+                hasForeground = true,
+                foreground = JudoColor.Simple.from(3)
+            ))
+        }
     }
 
 }

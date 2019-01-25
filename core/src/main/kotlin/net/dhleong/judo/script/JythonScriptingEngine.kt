@@ -559,7 +559,7 @@ internal fun createPyBuffer(
     buffer: IJudoBuffer
 ): PyObject {
     val append = asPyFn<String, Unit>("append", 1) {
-        window.appendLine(it[0])
+        it[0].appendAsFlavorableTo(window)
     }
     val clear = asPyFn<Any, Unit>("clear") {
         buffer.clear()
@@ -584,7 +584,7 @@ internal fun createPyBuffer(
             }
 
         override fun __tojava__(c: Class<*>?): Any {
-            if (c === IJudoBuffer::class.java) {
+            if (c === IJudoBuffer::class.java || c === Object::class.java) {
                 return buffer
             }
             return super.__tojava__(c)
