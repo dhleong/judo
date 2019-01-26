@@ -207,6 +207,34 @@ class JLineTabpageTest {
         """.trimMargin())
     }
 
+    @Test fun `Restore focus properly after unsplit()`() {
+        primary.appendLine("Take my land")
+        primary.updateStatusLine("[status]")
+
+        val buffer = JudoBuffer(IdManager())
+        val window = tabpage.hsplit(2, buffer)
+        window.appendLine("Take my love")
+
+        assert(window).hasHeight(3)
+        assert(primary).hasHeight(3)
+
+        // make sure we're good and unsplit
+        tabpage.unsplit()
+        tabpage.unsplit() // this should be idempotent
+
+        // now, re-split without erroring
+        assert(tabpage.currentWindow).isSameAs(primary)
+        assert(display).linesEqual("""
+            |_          _
+            |           _
+            |           _
+            |_          _
+            |Take my land
+            |[status]____
+            |_          _
+        """.trimMargin())
+    }
+
     @Test fun `Vertical window focus commands`() {
         val bottom = tabpage.currentWindow
 

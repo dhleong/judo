@@ -107,11 +107,10 @@ class JLineTabpage(
         rootStack.getYPositionOf(window as IJLineWindow)
 
     override fun unsplit() {
-        val newStack = WindowStack(rootStack, initialWindow)
-        currentStack = newStack
-        myCurrentWindow = initialWindow
-        rootStack.child = newStack
+        rootStack.child = WindowStack(rootStack, initialWindow)
         rootStack.resize(width, height)
+        // use [currentWindow] to ensure focus is moved as appropriate
+        currentWindow = initialWindow
     }
 
     override fun close(window: IJudoWindow) {
