@@ -31,6 +31,13 @@ class TriggerManager : ITriggerManager {
         // in general, it *should* have a newline;
         // don't process with trailing newlines
         val hadNewline = input.removeTrailingNewline()
+        if (!hadNewline) {
+            // also, don't process if it's not a complete line;
+            // we might be asked to process the same line again
+            // with more content added to it, so waiting for the
+            // complete line prevents duplicate work
+            return
+        }
 
         aliases.process(toProcess)
 

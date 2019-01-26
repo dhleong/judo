@@ -182,6 +182,30 @@ class CmdModeTriggerTest(
         assert(judo.prints).containsExactly("awesome", "awesome")
     }
 
+    @Test fun `trigger() only matches complete lines`() {
+        mode.execute(when (scriptType()) {
+            SupportedScriptTypes.PY -> """
+                |@trigger('cool $1')
+                |def handleTrigger(thing): print("awesome %s" % thing)
+            """.trimMargin()
+
+            SupportedScriptTypes.JS -> """
+                trigger('cool $1', function(thing) {
+                    print("awesome " + thing);
+                });
+            """.trimIndent()
+        })
+
+        judo.triggers.process(`cool story`().apply {
+            removeTrailingNewline()
+        })
+        judo.triggers.process(`cool story`().apply {
+            removeTrailingNewline()
+            append("bro\n")
+        })
+        assert(judo.prints).containsExactly("awesome storybro")
+    }
+
     private fun `cool story`() = FlavorableStringBuilder(64).apply {
         append("cool ", Flavor.default)
         append("st", SimpleFlavor(
@@ -199,7 +223,7 @@ class CmdModeTriggerTest(
             hasForeground = true,
             foreground = JudoColor.Simple.from(4)
         ))
-
+        append("\n")
     }
 }
 
