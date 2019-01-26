@@ -56,7 +56,7 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
             initialBuffer: IJudoBuffer,
             isFocusable: Boolean,
             statusLineOverlaysOutput: Boolean
-        ): IJudoWindow = createWindowMock(ids, initialHeight, initialBuffer, isFocusable)
+        ): IJudoWindow = createWindowMock(ids, initialWidth, initialHeight, initialBuffer, isFocusable)
     }
 
     val tabpage = object : IJudoTabpage by DumbProxy() {

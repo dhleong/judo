@@ -41,6 +41,7 @@ import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.parseAnsi
@@ -203,8 +204,9 @@ class JudoCore(
         renderer.currentTabpage = tabpage
         renderer.settings = state
         renderer.onEvent = { ev -> when (ev) {
-            is JudoRendererEvent.OnResized -> onResize()
-            is JudoRendererEvent.OnBlockingEcho -> onBlockingEcho()
+            JudoRendererEvent.OnLayout,
+            JudoRendererEvent.OnResized -> onResize()
+            JudoRendererEvent.OnBlockingEcho -> onBlockingEcho()
         } }
 
         if (debug.isEnabled) {
@@ -769,12 +771,14 @@ class JudoCore(
     }
 
     private fun updateStatusLine(mode: Mode) {
-        tabpage.currentWindow.updateStatusLine(buildStatusLine(mode))
+        tabpage.currentWindow.apply {
+            updateStatusLine(buildStatusLine(this, mode))
+        }
     }
 
-    internal fun buildStatusLine(mode: Mode): FlavorableCharSequence {
+    internal fun buildStatusLine(window: IJudoWindow, mode: Mode): FlavorableCharSequence {
         val modeIndicator = "[${mode.name.toUpperCase()}]"
-        val availableCols = renderer.windowWidth - modeIndicator.length
+        val availableCols = window.width - modeIndicator.length
         statusLineWorkspace.setLength(0)
         if (parsedPrompts.isNotEmpty()) {
             val prompt = parsedPrompts.last()

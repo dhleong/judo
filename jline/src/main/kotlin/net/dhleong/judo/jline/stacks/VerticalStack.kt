@@ -12,9 +12,7 @@ class VerticalStack(
     parent: IStack,
     width: Int,
     height: Int
-) : BaseStack(parent, width, height),
-    StackWindowCommandHandler by parent // delegate by default
-{
+) : BaseStack(parent, width, height) {
 
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
@@ -41,14 +39,6 @@ class VerticalStack(
         resize(width, height)
     }
 
-    override fun getCollapseChild(): IStack? {
-        if (contents.size == 1) {
-            return contents[0]
-        }
-
-        return null
-    }
-
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // vertical stack is easy
         var line = y
@@ -58,6 +48,16 @@ class VerticalStack(
             row.render(display, x, line)
             line += row.height
         }
+    }
+
+    override fun getXPositionOf(window: IJLineWindow): Int {
+        for (row in contents) {
+            val rowX = row.getXPositionOf(window)
+            if (rowX != -1) return rowX
+        }
+
+        // not in this stack
+        return -1
     }
 
     override fun getYPositionOf(window: IJLineWindow): Int {
@@ -73,33 +73,35 @@ class VerticalStack(
         return -1
     }
 
-    override fun remove(child: IStack) {
-        if (!contents.remove(child)) {
-            throw IllegalArgumentException("$child not contained in $this")
-        }
-    }
+//    override fun resize(width: Int, height: Int) {
+//        var availableHeight = height
+//
+//        val last = contents.lastIndex
+//        for (i in contents.indices) {
+//            val item = contents[i]
+//            val requestedHeight = item.height
+//            val remainingRows = last - i
+//            val allottedHeight =
+//                if (remainingRows == 0) availableHeight
+//                else maxOf(
+//                    WINDOW_MIN_HEIGHT,
+//                    minOf(requestedHeight,
+//                        // leave room for the remaining rows
+//                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
+//                )
+//            availableHeight -= allottedHeight
+//
+//            item.resize(width, allottedHeight)
+//        }
+//    }
 
-    override fun resize(width: Int, height: Int) {
-        var availableHeight = height
+    override fun resize(width: Int, height: Int) = doResize(
+        available = height,
+        minDimension = WINDOW_MIN_HEIGHT,
+        getDimension = { it.height },
+        setDimension = { h -> resize(width, h) }
+    )
 
-        val last = contents.lastIndex
-        for (i in contents.indices) {
-            val item = contents[i]
-            val requestedHeight = item.height
-            val remainingRows = last - i
-            val allottedHeight =
-                if (remainingRows == 0) availableHeight
-                else maxOf(
-                    WINDOW_MIN_HEIGHT,
-                    minOf(requestedHeight,
-                        // leave room for the remaining rows
-                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
-                )
-            availableHeight -= allottedHeight
-
-            item.resize(width, allottedHeight)
-        }
-    }
 
     override fun focusUp(search: CountingStackSearch) = focus(search, -1, IStack::focusUp)
     override fun focusDown(search: CountingStackSearch) = focus(search, 1, IStack::focusDown)

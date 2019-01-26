@@ -26,6 +26,12 @@ class JLinePrimaryWindow(
     initialHeight
 ), IJLineWindow {
 
+    override val lastResizeRequest: Long
+        get() = maxOf(
+            (outputWindow as IJLineWindow).lastResizeRequest,
+            (promptWindow as IJLineWindow).lastResizeRequest
+        )
+
     override fun createBuffer(ids: IdManager): IJudoBuffer = renderer.createBuffer()
 
     override fun createWindow(

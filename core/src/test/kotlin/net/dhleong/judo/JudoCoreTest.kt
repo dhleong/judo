@@ -7,6 +7,7 @@ import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
+import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
@@ -122,7 +123,10 @@ class JudoCoreTest {
         judo.onPrompt(0, prompt)
         renderer.settableWindowWidth = 12
 
-        val status = judo.buildStatusLine(fakeMode("Test"))
+        val status = judo.buildStatusLine(
+            createWindowMock(IdManager(), 12, 1, emptyBuffer()),
+            fakeMode("Test")
+        )
 
         assertThat(status.toAnsi()).isEqualTo(
             "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"

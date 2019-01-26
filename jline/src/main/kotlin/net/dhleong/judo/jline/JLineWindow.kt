@@ -16,7 +16,7 @@ import org.jline.utils.AttributedStyle
  */
 class JLineWindow(
     private val renderer: IJLineRenderer,
-    ids: IdManager,
+    private val ids: IdManager,
     settings: StateMap,
     initialWidth: Int,
     initialHeight: Int,
@@ -36,6 +36,8 @@ class JLineWindow(
             isFocusable -> height - 1 // status line
             else -> height
         }
+
+    override var lastResizeRequest: Long = ids.newTimestamp()
 
     private var echoLine: FlavorableCharSequence? = null
     private var status = InputLine(cursorIndex = -1)
@@ -226,7 +228,9 @@ class JLineWindow(
             this.width = width
             this.height = height
             statusHelper.windowWidth = width
-            renderer.onWindowResized(this)
+            if (renderer.onWindowResized(this)) {
+                lastResizeRequest = ids.newTimestamp()
+            }
         }
     }
 

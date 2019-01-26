@@ -14,6 +14,7 @@ interface IStack : StackWindowCommandHandler {
     val width: Int
     val height: Int
     val parent: IStack
+    val lastResizeRequest: Long
 
     fun add(item: IStack)
     fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack?
@@ -40,6 +41,7 @@ interface IStack : StackWindowCommandHandler {
     fun getCollapseChild(): IStack?
 
     fun render(display: JLineDisplay, x: Int, y: Int)
+    fun getXPositionOf(window: IJLineWindow): Int
     fun getYPositionOf(window: IJLineWindow): Int
     fun remove(child: IStack)
     fun replace(old: IStack, new: IStack)

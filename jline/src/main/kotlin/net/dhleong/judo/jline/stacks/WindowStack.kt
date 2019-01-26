@@ -16,6 +16,9 @@ class WindowStack(
     override val height: Int
         get() = window.height
 
+    override val lastResizeRequest: Long
+        get() = window.lastResizeRequest
+
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
     override fun remove(child: IStack) = throw UnsupportedOperationException()
@@ -31,6 +34,9 @@ class WindowStack(
         window.render(display, x, y)
     }
 
+    override fun getXPositionOf(window: IJLineWindow) =
+        if (window == this.window) 0
+        else -1
     override fun getYPositionOf(window: IJLineWindow) =
         if (window == this.window) 0
         else -1
@@ -41,11 +47,10 @@ class WindowStack(
         Window commands
      */
 
-    override fun focusUp(search: CountingStackSearch) =
-        thisOrOnParent(search) { focusUp(search) }
-
-    override fun focusDown(search: CountingStackSearch) =
-        thisOrOnParent(search) { focusDown(search) }
+    override fun focusUp(search: CountingStackSearch) = thisOrOnParent(search) { focusUp(search) }
+    override fun focusDown(search: CountingStackSearch) = thisOrOnParent(search) { focusDown(search) }
+    override fun focusLeft(search: CountingStackSearch) = thisOrOnParent(search) { focusLeft(search) }
+    override fun focusRight(search: CountingStackSearch) = thisOrOnParent(search) { focusRight(search) }
 
     private inline fun thisOrOnParent(
         search: CountingStackSearch,

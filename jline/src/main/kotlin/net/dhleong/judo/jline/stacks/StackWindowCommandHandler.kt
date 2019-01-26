@@ -8,9 +8,9 @@ class CountingStackSearch(
 )
 
 interface StackWindowCommandHandler {
-    /**
-     * If [current] is null, that means start from the *bottom-most*
-     */
     fun focusUp(search: CountingStackSearch)
     fun focusDown(search: CountingStackSearch)
+
+    fun focusLeft(search: CountingStackSearch)
+    fun focusRight(search: CountingStackSearch)
 }

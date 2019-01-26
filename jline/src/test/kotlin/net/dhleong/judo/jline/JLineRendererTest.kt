@@ -2,9 +2,12 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertions.isTrue
 import net.dhleong.judo.MAX_INPUT_LINES
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
+import net.dhleong.judo.bufferOf
+import net.dhleong.judo.hasWidth
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
@@ -379,6 +382,82 @@ class JLineRendererTest {
             )
         }
     }
+
+    @Test fun `Render vertical split`() {
+        window.appendLine("Mal Reynolds")
+        window.updateStatusLine("<status>")
+
+        val splitBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        val right = renderer.currentTabpage.vsplit(8, splitBuffer)
+        right.updateStatusLine("[right]")
+
+        assert(settings[WORD_WRAP]).isTrue()
+        assert(window).hasWidth(11)
+
+        assert(display).all {
+            linesEqual("""
+                |___________ ________
+                |___________ ________
+                |Mal________ Take my_
+                |Reynolds___ love____
+                |----------- [right]_
+                |___________ ________
+            """.trimMargin())
+        }
+    }
+
+    @Test fun `Cursor placement with vertical split status`() {
+        val splitBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        val right = renderer.currentTabpage.vsplit(8, splitBuffer)
+        right.updateStatusLine(":right", 6)
+
+        assert(display).all {
+            linesEqual("""
+                |___________ ________
+                |___________ ________
+                |___________ Take my_
+                |___________ love____
+                |----------- :right__
+                |___________ ________
+            """.trimMargin())
+
+            hasCursor(4, 18)
+        }
+    }
+
+    @Test fun `Cursor placement with multi-split status`() {
+        val rightBuffer = bufferOf("""
+            Take my land
+        """.trimIndent())
+        renderer.currentTabpage.vsplit(7, rightBuffer)
+
+        renderer.currentTabpage.currentWindow = window
+        val topBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        renderer.currentTabpage.hsplit(1, topBuffer)
+
+        renderer.currentTabpage.currentWindow = window
+        window.updateStatusLine(":prim", 5)
+
+        assert(display).all {
+            linesEqual("""
+                |Take my love _______
+                |------------ _______
+                |____________ Take my
+                |____________ land___
+                |:prim_______ -------
+                |____________ _______
+            """.trimMargin())
+
+            hasCursor(4, 5)
+        }
+    }
+
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {

@@ -11,7 +11,20 @@ abstract class BaseStack(
     override var height: Int
 ) : IStack {
 
+    override val lastResizeRequest: Long
+        get() = contents.maxBy {
+            it.lastResizeRequest
+        }?.lastResizeRequest ?: 0L
+
     internal val contents = ArrayList<IStack>(4)
+
+    override fun getCollapseChild(): IStack? {
+        if (contents.size == 1) {
+            return contents[0]
+        }
+
+        return null
+    }
 
     override fun nextWindow(): IJLineWindow = contents.first().nextWindow()
 
@@ -20,15 +33,55 @@ abstract class BaseStack(
             .map { it.stackWithWindow(predicate) }
             .firstOrNull { it != null }
 
+    override fun remove(child: IStack) {
+        if (!contents.remove(child)) {
+            throw IllegalArgumentException("$child not contained in $this")
+        }
+    }
+
     override fun replace(old: IStack, new: IStack) {
         val oldIndex = contents.indexOf(old)
         if (oldIndex < 0) throw IllegalArgumentException("old stack not found")
         contents[oldIndex] = new
     }
 
+    internal inline fun doResize(
+        available: Int,
+        minDimension: Int,
+        getDimension: (IStack) -> Int,
+        setDimension: IStack.(Int) -> Unit
+    ) {
+        val itemsCount = contents.size
+        var freeSpace = available
+
+        var remainingItems = itemsCount - 1
+        for (item in contents.sortedByDescending { it.lastResizeRequest }) {
+            val requested = getDimension(item)
+            val allotted =
+                if (remainingItems == 0) freeSpace
+                else maxOf(
+                    minDimension,
+                    minOf(
+                        requested,
+                        // leave room for the remaining items
+                        freeSpace - minDimension * remainingItems
+                    )
+                )
+            freeSpace -= allotted
+
+            item.setDimension(allotted)
+            --remainingItems
+        }
+    }
+
     /*
         Window commands
      */
+
+    override fun focusUp(search: CountingStackSearch) = defaultFocus(search) { focusUp(search) }
+    override fun focusDown(search: CountingStackSearch) = defaultFocus(search) { focusDown(search) }
+    override fun focusLeft(search: CountingStackSearch) = defaultFocus(search) { focusLeft(search) }
+    override fun focusRight(search: CountingStackSearch) = defaultFocus(search) { focusRight(search) }
 
     protected fun focus(
         search: CountingStackSearch,
@@ -74,6 +127,17 @@ abstract class BaseStack(
                 search.count = 0
                 contents[newIndex].next(search)
             }
+        }
+    }
+
+    private inline fun defaultFocus(
+        search: CountingStackSearch,
+        next: StackWindowCommandHandler.(search: CountingStackSearch) -> Unit
+    ) {
+        if (search.count <= 0) {
+            contents.first().next(search)
+        } else {
+            parent.next(search)
         }
     }
 

@@ -78,6 +78,7 @@ class JLineRenderer(
     private val echoPromptWorkspace = mutableListOf<AttributedString>()
 
     private val transactionDepth = AtomicInteger(0)
+    private val resizeDepth = AtomicInteger(0)
 
     init {
         terminal.handle(Terminal.Signal.WINCH, this::handleSignal)
@@ -154,7 +155,7 @@ class JLineRenderer(
         } else {
 
             // blocking echo!
-            onEvent?.invoke(JudoRendererEvent.OnBlockingEcho)
+            dispatch(JudoRendererEvent.OnBlockingEcho)
         }
     }
 
@@ -221,11 +222,29 @@ class JLineRenderer(
         }
     }
 
-    override fun onWindowResized(window: JLineWindow) {
-        // TODO multiple tabpages?
-        currentTabpage.apply {
-            resize(width, height)
+    override fun onWindowResized(window: JLineWindow): Boolean {
+        val didRun = beginWindowResize()
+        endWindowResize()
+        return didRun
+    }
+
+    fun beginWindowResize(): Boolean {
+        return 0 == resizeDepth.getAndIncrement()
+    }
+
+    fun endWindowResize() {
+        if (0 == resizeDepth.decrementAndGet()) {
+            // TODO multiple tabpages?
+            currentTabpage.apply {
+                resize(width, height)
+            }
         }
+    }
+
+    inline fun inWindowResize(block: () -> Unit) {
+        beginWindowResize()
+        block()
+        endWindowResize()
     }
 
     /*
@@ -233,13 +252,15 @@ class JLineRenderer(
      */
 
     override fun focusUp(count: Int) = (currentTabpage as JLineTabpage).focusUp(count)
-//    override fun focusRight(count: Int) = (currentTabpage as JLineTabpage).focusRight(count)
     override fun focusDown(count: Int) = (currentTabpage as JLineTabpage).focusDown(count)
-//    override fun focusLeft(count: Int) = (currentTabpage as JLineTabpage).focusLeft(count)
+    override fun focusLeft(count: Int) = (currentTabpage as JLineTabpage).focusLeft(count)
+    override fun focusRight(count: Int) = (currentTabpage as JLineTabpage).focusRight(count)
 
     /*
          internal
      */
+
+    internal fun dispatch(event: JudoRendererEvent) = onEvent?.invoke(event)
 
     @Synchronized
     private fun render() {
@@ -333,7 +354,7 @@ class JLineRenderer(
         }
 
         if (isCursorOnStatus) {
-            val windowX = 0 // TODO when we add vsplit support
+            val windowX = tabpage.getXPositionOf(win)
             val windowY = tabpage.getYPositionOf(win)
             val windowBottom = windowY + win.height - 1
             display.cursorRow = windowBottom
@@ -404,7 +425,7 @@ class JLineRenderer(
         // resize the tabpage *last* so it can safely trigger a render
         currentTabpage.resize(windowWidth, windowHeight - 1)
 
-        onEvent?.invoke(JudoRendererEvent.OnResized)
+        dispatch(JudoRendererEvent.OnResized)
     }
 
     private fun handleSignal(signal: Terminal.Signal) {

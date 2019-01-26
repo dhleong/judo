@@ -18,6 +18,7 @@ import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.render.hasFlavor
+import net.dhleong.judo.hasWidth
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,7 +41,7 @@ class CmdModeObjectInteropTest(
             print(newWin.height)
             newWin.buffer.append("test")
             newWin.resize(newWin.width, 4)
-            """.trimIndent())
+        """.trimIndent())
 
         assert(judo.prints).isNotEmpty()
 
@@ -58,6 +59,25 @@ class CmdModeObjectInteropTest(
 //
 //            hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
 //        }
+    }
+
+    @Test fun `vsplit() returns an object supporting resize()`() {
+        mode.execute("""
+            newWin = vsplit(20)
+            print(newWin.id)
+            print(newWin.buffer)
+            print(newWin.width)
+            newWin.buffer.append("test")
+            newWin.resize(4, newWin.height)
+        """.trimIndent())
+
+        assert(judo.prints).isNotEmpty()
+
+        val splitWidth = judo.prints[2] as Int
+        assert(splitWidth, "split width").isEqualTo(20)
+
+        val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
+        assert(window).hasWidth(4)
     }
 
     @Test fun `Set current window by scripting`() {

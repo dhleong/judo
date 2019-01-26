@@ -17,6 +17,9 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
     override val height: Int
         get() = tabpage.height
 
+    override val lastResizeRequest: Long
+        get() = child.lastResizeRequest
+
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
     override fun stackWithWindow(predicate: (IJLineWindow) -> Boolean) =
@@ -24,6 +27,8 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
 
     override fun render(display: JLineDisplay, x: Int, y: Int) =
         child.render(display, x, y)
+    override fun getXPositionOf(window: IJLineWindow): Int =
+        child.getXPositionOf(window)
     override fun getYPositionOf(window: IJLineWindow): Int =
         child.getYPositionOf(window)
     override fun remove(child: IStack) = throw UnsupportedOperationException()
@@ -42,4 +47,6 @@ class RootStack(private var tabpage: JLineTabpage) : IStack {
 
     override fun focusUp(search: CountingStackSearch) { }
     override fun focusDown(search: CountingStackSearch) { }
+    override fun focusLeft(search: CountingStackSearch) { }
+    override fun focusRight(search: CountingStackSearch) { }
 }
