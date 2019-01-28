@@ -11,11 +11,13 @@ import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.emptyBuffer
+import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.Keys
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * @author dhleong
@@ -202,9 +204,8 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Ignore("We don't have a great way to support this test right now...")
-    @Test fun `Render while typing in input()`() {
-        judo.feedKeys(":print(input(\"input:\"))<cr>")
+    @Test fun `Render while typing in input()`() = assertionsWhileTyping {
+        yieldKeys(":print(input(\"input:\"))<cr>")
 
         assert(display).linesEqual("""
             |____________________
@@ -212,6 +213,36 @@ class JudoCoreJLineIntegrationTest {
             |_____________[INPUT]
             |input:______________
         """.trimMargin())
+
+        yieldKeys("test")
+
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |_____________[INPUT]
+            |input:test__________
+        """.trimMargin())
+    }
+
+    private inline fun assertionsWhileTyping(
+        crossinline block: suspend SequenceScope<Key>.() -> Unit
+    ) {
+        // NOTE: we have to catch any exceptions (including from
+        // assertions) and re-throw them later, since feedKeys
+        // normally consumes exceptions and prints them to the buffer
+        val error = AtomicReference<Throwable>(null)
+        judo.feedKeys(sequence {
+            try {
+                block()
+            } catch (e: Throwable) {
+                error.set(e)
+            }
+        })
+        error.get()?.let { throw it }
+    }
+
+    private suspend fun SequenceScope<Key>.yieldKeys(keys: String) {
+        yieldAll(Keys.parse(keys))
     }
 }
 
