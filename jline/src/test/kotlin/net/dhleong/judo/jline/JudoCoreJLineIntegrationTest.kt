@@ -14,6 +14,7 @@ import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -198,6 +199,18 @@ class JudoCoreJLineIntegrationTest {
             |___________ ________
             |----------- [NORMAL]
             |___________ ________
+        """.trimMargin())
+    }
+
+    @Ignore("We don't have a great way to support this test right now...")
+    @Test fun `Render while typing in input()`() {
+        judo.feedKeys(":print(input(\"input:\"))<cr>")
+
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |_____________[INPUT]
+            |input:______________
         """.trimMargin())
     }
 }

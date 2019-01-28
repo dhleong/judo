@@ -170,11 +170,19 @@ class JLineRenderer(
     }
 
     override fun redraw() {
-        inTransaction {
-            // NOTE: render() is called for us at the end
-            // of inTransaction; calling it here would result
-            // in double rendering!
+        // NOTE: we want to force a render(), but maintain
+        // semantics of calling clearEcho(), etc.
+        val before = transactionDepth.getAndSet(0)
+
+        try {
+            inTransaction {
+                // NOTE: render() is called for us at the end
+                // of inTransaction; calling it here would result
+                // in double rendering!
 //            render()
+            }
+        } finally {
+            transactionDepth.set(before)
         }
     }
 
