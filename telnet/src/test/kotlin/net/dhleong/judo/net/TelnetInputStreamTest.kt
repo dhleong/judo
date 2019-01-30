@@ -127,6 +127,17 @@ class TelnetInputStreamTest {
         )
     }
 
+    @Test(timeout = 200) fun `Don't hang on incomplete read`() {
+        val toRead = PipedOutputStream()
+        val input = TelnetInputStream(PipedInputStream(toRead)) { /* nop */ }
+        val buffer = CharArray(1024)
+
+        toRead.write("mreynolds")
+
+        val read = input.bufferedReader().read(buffer)
+        assert(read).isEqualTo(9)
+    }
+
     private fun readAsString(s: String): String = readAsString(s.byteInputStream())
     private fun readAsString(builder: OutputStream.() -> Unit): String =
         PipedInputStream().use { stream ->

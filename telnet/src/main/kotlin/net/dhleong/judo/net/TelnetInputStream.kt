@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import java.io.BufferedInputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 private enum class State {
     IDLE,
@@ -14,6 +15,9 @@ private enum class State {
     SB,
     IAC_IN_SB
 }
+
+private const val EOF = -1
+private const val NO_DATA = -2
 
 /**
  * @author dhleong
@@ -29,12 +33,68 @@ internal class TelnetInputStream(
     private val delegate = BufferedInputStream(delegate)
 
     private var state = State.IDLE
+    private val hasReadEof = AtomicBoolean(false)
 
     override fun read(): Int {
+        var byte: Int
+        do {
+            byte = readNonBlocking()
+        } while (byte == NO_DATA)
+        return byte
+    }
+
+    override fun read(b: ByteArray): Int = read(b, 0, b.size)
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
+        if (hasReadEof.get()) {
+            return EOF
+        }
+
+        var read = 0
+        for (i in off until off + len) {
+            // block to get at least 1 byte
+            var byte: Int
+            do {
+                byte = readNonBlocking(readAtLeastOnce = read == 0)
+            } while (read == 0 && byte == NO_DATA)
+
+            if (byte == EOF && read > 0) {
+                // reached EOF, but we still have bytes to deliver
+                break
+            } else if (byte == EOF) {
+                return EOF
+            } else if (byte == NO_DATA && read > 0) {
+                // not eof, but no data available;
+                break
+            }
+
+            b[i] = (byte and 0xff).toByte()
+            ++read
+        }
+
+        return read
+    }
+
+    override fun available(): Int = delegate.available()
+
+    private fun readNonBlocking(readAtLeastOnce: Boolean = true): Int {
+        var first = true
         var read: Int
         do {
+            if (!readAtLeastOnce || !first) {
+                // make sure we won't block
+                if (delegate.available() <= 0) {
+                    return NO_DATA
+                }
+            }
+
             read = delegate.read()
-        } while (read != -1 && handleTelnetCommand((read and 0xff).toByte()))
+            first = false
+        } while (read != EOF && handleTelnetCommand((read and 0xff).toByte()))
+
+        if (read == EOF) {
+            hasReadEof.set(true)
+        }
+
         return read
     }
 

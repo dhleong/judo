@@ -79,6 +79,9 @@ abstract class BaseConnection(
         }
         job.cancel()
         writeTask.cancel()
+
+        // ensure we notify
+        notifyDisconnect()
     }
 
     @Suppress("EXPERIMENTAL_API_USAGE")
@@ -93,7 +96,7 @@ abstract class BaseConnection(
             while (job.isActive) {
                 val read = reader.read(buffer)
                 if (read == -1) {
-                    onDisconnect?.invoke(this@BaseConnection)
+                    notifyDisconnect()
                     break
                 } else if (read > 0) {
 
@@ -108,6 +111,14 @@ abstract class BaseConnection(
                 }
             }
         }
+    }
+
+    private fun notifyDisconnect() = synchronized(this) {
+        // there can be only one
+        val callback = onDisconnect
+        onDisconnect = null
+
+        callback?.invoke(this)
     }
 
 }
