@@ -9,6 +9,12 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.nio.charset.Charset
 
+const val MSDP_TABLE_OPEN = 3
+const val MSDP_TABLE_CLOSE = 4
+
+const val MSDP_ARRAY_OPEN = 5
+const val MSDP_ARRAY_CLOSE = 6
+
 
 private const val INITIAL_LIST = "COMMANDS"
 private val MSDP_LIST_COMMANDS = buildMsdpRequest("LIST", INITIAL_LIST)
@@ -71,7 +77,7 @@ class MsdpHandler(
 
     override fun answerSubnegotiation(suboptionData: IntArray, suboptionLength: Int): IntArray? {
         // NOTE suboptionData[0] == MSDP *always*
-        if (suboptionData[1] == MSDP_VAR) {
+        if (suboptionData[1] == MSDP_VAR.toInt()) {
 
             varReader.reset(suboptionData, 2, suboptionLength)
             val name = varReader.readString()
@@ -121,9 +127,9 @@ class MsdpHandler(
 fun buildMsdpRequest(key: String, value: String) =
     with(ArrayList<Int>(3 + key.length + value.length)) {
         add(TELNET_TELOPT_MSDP.toInt())
-        add(MSDP_VAR)
+        add(MSDP_VAR.toInt())
         addAll(key.map { it.toInt() })
-        add(MSDP_VAL)
+        add(MSDP_VAL.toInt())
         addAll(value.map { it.toInt() })
         toIntArray()
     }
@@ -139,7 +145,7 @@ class MsdpReader() {
     }
 
     fun readObject(): Any {
-        if (data[index] != MSDP_VAL) {
+        if (data[index] != MSDP_VAL.toInt()) {
             throw IllegalStateException("Expected MSDP_VAL but was ${data[index]}")
         }
 
@@ -172,8 +178,8 @@ class MsdpReader() {
         stringBuilder.setLength(0)
         while (index < end) {
             val byte = data[index]
-            if (byte == MSDP_VAL
-                    || byte == MSDP_VAR
+            if (byte == MSDP_VAL.toInt()
+                    || byte == MSDP_VAR.toInt()
                     || byte == MSDP_ARRAY_CLOSE
                     || byte == MSDP_TABLE_CLOSE
             ) {
@@ -191,7 +197,7 @@ class MsdpReader() {
         val result = HashMap<String, Any>()
 
         while (data[index] != MSDP_TABLE_CLOSE) {
-            if (data[index] != MSDP_VAR) {
+            if (data[index] != MSDP_VAR.toInt()) {
                 throw IllegalStateException("Expected MSDP_VAR; saw ${data[index]}")
             }
 

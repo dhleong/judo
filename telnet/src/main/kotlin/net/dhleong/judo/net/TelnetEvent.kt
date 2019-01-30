@@ -1,10 +1,12 @@
 package net.dhleong.judo.net
 
+import java.io.ByteArrayInputStream
+
 /**
  * @author dhleong
  */
 class TelnetEvent(
-    internal val data: ByteArray,
+    private val data: ByteArray,
 
     /**
      * Start must point to the first byte *after* IAC
@@ -24,14 +26,24 @@ class TelnetEvent(
         return TelnetEvent(bytes, 0, length)
     }
 
-
-
     operator fun get(index: Int): Byte {
         val idx = start + index
         if (idx < 0 || idx >= length) throw ArrayIndexOutOfBoundsException(index)
 
         return data[idx]
     }
+
+    fun toInputStream(start: Int, length: Int) = ByteArrayInputStream(
+        data,
+        this.start + start,
+        length
+    )
+
+    fun toString(start: Int, length: Int) = String(
+        data,
+        this.start + start,
+        length
+    )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

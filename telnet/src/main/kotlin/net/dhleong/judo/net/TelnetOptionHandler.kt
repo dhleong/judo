@@ -11,6 +11,9 @@ open class TelnetOptionHandler(
     internal val acceptRemoteDo: Boolean = false
 ) {
 
+    // FIXME TODO we should probably track the will/do state
+    // so we don't get into a recursive loop
+
     open fun onAttach(client: TelnetClient) {
         if (sendWill) client.sendWill()
         if (sendDo) client.sendDo()

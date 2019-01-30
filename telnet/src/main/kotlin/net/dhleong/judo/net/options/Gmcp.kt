@@ -12,7 +12,6 @@ import net.dhleong.judo.net.indexOfFirst
 import net.dhleong.judo.net.write
 import net.dhleong.judo.util.Json
 import okio.Okio
-import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.EOFException
 
@@ -53,12 +52,7 @@ class GmcpHandler(
             ) { it != ' '.toByte() }
         }
 
-        val suboptionByteArray = event.data
-        val packageName = String(
-            suboptionByteArray,
-            packageStart,
-            packageEnd - packageStart
-        )
+        val packageName = event.toString(packageStart, packageEnd - packageStart)
 
         // parse data (if there is any)
         val data =
@@ -66,8 +60,7 @@ class GmcpHandler(
             else {
                 try {
                     Json.read<Any>(
-                        Okio.source(ByteArrayInputStream(
-                            suboptionByteArray,
+                        Okio.source(event.toInputStream(
                             packageEnd + 1,
                             event.length - packageEnd - 1
                         ))
@@ -88,6 +81,8 @@ class GmcpHandler(
     }
 
     override fun onRemoteWill(client: TelnetClient, event: TelnetEvent) {
+        super.onRemoteWill(client, event)
+
         printDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 
         isGmcpEnabled = true
