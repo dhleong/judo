@@ -7,8 +7,7 @@ const val TELNET_SE = 240.toByte()
 const val TELNET_TELOPT_TERMINAL_TYPE = 24.toByte()
 const val TELNET_TELOPT_MSDP = 69.toByte()
 const val TELNET_TELOPT_MCCP2 = 86.toByte()
-
-const val TELNET_TELOPT_GMCP = 201
+const val TELNET_TELOPT_GMCP = 201.toByte()
 
 const val MSDP_VAR = 1
 const val MSDP_VAL = 2

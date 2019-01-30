@@ -4,7 +4,7 @@ package net.dhleong.judo.net
  * @author dhleong
  */
 class TelnetEvent(
-    private val data: ByteArray,
+    internal val data: ByteArray,
 
     /**
      * Start must point to the first byte *after* IAC
@@ -71,4 +71,35 @@ class TelnetEvent(
         }
         append("}")
     }.toString()
+
 }
+
+inline fun TelnetEvent.indexOfFirst(
+    startIndex: Int = 0,
+    predicate: (Byte) -> Boolean
+): Int {
+    for (index in startIndex until length) {
+        if (predicate(this[index])) {
+            return index
+        }
+    }
+    return -1
+}
+
+fun TelnetEvent.indexOf(
+    byte: Byte,
+    startIndex: Int = 0
+): Int = indexOfFirst(startIndex) { it == byte }
+
+inline fun TelnetEvent.map(
+    startIndex: Int = 0,
+    predicate: (Byte) -> Boolean
+): Int {
+    for (index in startIndex until length) {
+        if (predicate(this[index])) {
+            return index
+        }
+    }
+    return -1
+}
+

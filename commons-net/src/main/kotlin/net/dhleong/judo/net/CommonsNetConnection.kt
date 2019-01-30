@@ -169,7 +169,7 @@ class CommonsNetConnection private constructor(
             90 -> "MSP" // mud sound
             91 -> "MXP" // mud extension
             93 -> "ZMP" // zenith mud
-            TELNET_TELOPT_GMCP -> "GMCP"
+            201 -> "GMCP"
             239 -> "EOR" // used for prompt marking
             249 -> "GA" // used for prompt marking
             else -> {

@@ -14,7 +14,7 @@ class GmcpHandler(
     private val isDebug: () -> Boolean,
     private val printDebug: (String) -> Unit
 ) : TelnetOptionHandler(
-    TELNET_TELOPT_GMCP,
+    201,
     false,
     false,
     false,
@@ -88,6 +88,7 @@ class GmcpHandler(
     }
 
     override fun startSubnegotiationRemote(): IntArray? {
+        super.startSubnegotiationRemote()
         printDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 
         isGmcpEnabled = true
@@ -132,3 +133,4 @@ inline fun IntArray.indexOfFirst(startIndex: Int = 0, predicate: (Int) -> Boolea
     }
     return -1
 }
+

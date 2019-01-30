@@ -1,5 +1,6 @@
 package net.dhleong.judo.net
 
+import net.dhleong.judo.net.options.MccpInputStream
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.ByteArrayInputStream

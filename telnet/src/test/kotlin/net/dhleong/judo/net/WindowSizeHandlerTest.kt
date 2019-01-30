@@ -2,6 +2,7 @@ package net.dhleong.judo.net
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.net.options.WindowSizeHandler
 import org.junit.Test
 
 /**

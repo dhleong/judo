@@ -1,5 +1,10 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
+import net.dhleong.judo.net.TELNET_TELOPT_NAWS
+import net.dhleong.judo.net.TelnetClient
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.TelnetOptionHandler
+import net.dhleong.judo.net.writeShort
 import java.util.concurrent.atomic.AtomicBoolean
 
 class WindowSizeHandler(

@@ -1,7 +1,17 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.net.MTTS_256COLOR
+import net.dhleong.judo.net.MTTS_ANSI
+import net.dhleong.judo.net.MTTS_UTF8
+import net.dhleong.judo.net.MTTS_VT100
+import net.dhleong.judo.net.TELNET_IS
+import net.dhleong.judo.net.TELNET_TELOPT_TERMINAL_TYPE
+import net.dhleong.judo.net.TelnetClient
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.TelnetOptionHandler
+import net.dhleong.judo.net.write
 
 class MttsTermTypeHandler(
     private val info: JudoRendererInfo,

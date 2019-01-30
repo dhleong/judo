@@ -1,5 +1,8 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
+import net.dhleong.judo.net.TELNET_IAC
+import net.dhleong.judo.net.TELNET_SB
+import net.dhleong.judo.net.TELNET_TELOPT_MCCP2
 import java.io.IOException
 import java.io.InputStream
 import java.io.PushbackInputStream
@@ -10,7 +13,7 @@ class MccpInputStream(
     private val debug: (String) -> Unit = { /* nop */ }
 ): InputStream() {
 
-    internal var compressEnabled = false
+    var compressEnabled = false
     private val inputStream = PushbackInputStream(delegate, 8192)
     private val inflater = Inflater()
     private val buffer = ByteArray(1024)

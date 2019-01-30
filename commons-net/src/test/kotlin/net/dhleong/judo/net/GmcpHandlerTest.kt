@@ -90,7 +90,7 @@ class GmcpHandlerTest {
     }
 
     fun TelnetOptionHandler.subnegotiate(string: String) {
-        val intArray = (arrayOf(TELNET_TELOPT_GMCP) + string.map { it.toInt() }).toIntArray()
+        val intArray = (arrayOf(201) + string.map { it.toInt() }).toIntArray()
         answerSubnegotiation(intArray, intArray.size)
     }
 }
