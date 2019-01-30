@@ -14,7 +14,7 @@ class TelnetClient(
      * NOTE: There can be only one handler of any given type
      */
     fun register(handler: TelnetOptionHandler): TelnetOptionHandler? = synchronized(handlers) {
-        val index = handler.option.toInt()
+        val index = handler.option.toIndex()
         val old = handlers[index]
         handlers[index] = handler
 
@@ -24,7 +24,7 @@ class TelnetClient(
     }
 
     fun unregister(handler: TelnetOptionHandler): Boolean = synchronized(handlers) {
-        val index = handler.option.toInt()
+        val index = handler.option.toIndex()
         val old = handlers[index]
         if (old === handler) {
             handlers[index] = null
@@ -71,7 +71,7 @@ class TelnetClient(
             TELNET_SB -> {
                 if (event.length < 1) return // nop
                 val opt = event[1]
-                handlers[opt.toInt()]?.onSubnegotiation(this, event)
+                handlers[opt.toIndex()]?.onSubnegotiation(this, event)
             }
         }
     }
@@ -84,7 +84,7 @@ class TelnetClient(
         if (event.length < 1) return // nop
 
         val opt = event[1]
-        val handler = handlers[opt.toInt()]
+        val handler = handlers[opt.toIndex()]
         if (handler != null) {
             handler.onHandler(this)
         } else if (refuseCode != 0.toByte()) {
@@ -96,6 +96,8 @@ class TelnetClient(
         inputStream.close()
         outputStream.close()
     }
+
+    private fun Byte.toIndex(): Int = toInt() and 0xff
 }
 
 private class SynchronizedOutputStream(
@@ -116,4 +118,3 @@ private class SynchronizedOutputStream(
 
 }
 
-fun OutputStream.write(byte: Byte) = write(byte.toInt())

@@ -11,11 +11,11 @@ import java.net.Socket
 /**
  * @author dhleong
  */
-class TelnetConnection private constructor(
+class TelnetConnection internal constructor(
     private val judo: IJudoCore,
     private val toString: String,
     private val socket: Closeable,
-    rawInput: InputStream,
+    input: InputStream,
     output: OutputStream
 ) : BaseConnection(false) { // TODO debug mode (?)
 
@@ -29,7 +29,7 @@ class TelnetConnection private constructor(
         judo, toString, socket, socket.getInputStream(), socket.getOutputStream()
     )
 
-    private val telnetClient = TelnetClient(MccpInputStream(rawInput), output)
+    private val telnetClient = TelnetClient(MccpInputStream(input), output)
     private val windowSizeHandler by lazy {
         WindowSizeHandler().also {
             telnetClient.register(it)

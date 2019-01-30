@@ -1,5 +1,7 @@
 package net.dhleong.judo.net
 
+fun OutputStream.write(byte: Byte) = write(byte.toInt() and 0xff)
+
 /**
  * Write a string to the OutputStream
  *
