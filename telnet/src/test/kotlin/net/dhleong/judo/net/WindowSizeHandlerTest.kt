@@ -11,12 +11,10 @@ import org.junit.Test
 class WindowSizeHandlerTest {
     @Test fun `Send small numbers`() {
         val bytes = WindowSizeHandler(22, 42).sentBytesOn {
-            onRemoteDo(it, TelnetEvent(byteArrayOf()))
+            onRemoteDo(it)
         }
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_WILL)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
         assert(bytes.get()).isEqualTo(TELNET_IAC)
         assert(bytes.get()).isEqualTo(TELNET_SB)
@@ -27,12 +25,10 @@ class WindowSizeHandlerTest {
 
     @Test fun `Send large numbers`() {
         val bytes = WindowSizeHandler(422, 9001).sentBytesOn {
-            onRemoteDo(it, TelnetEvent(byteArrayOf()))
+            onRemoteDo(it)
         }
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_WILL)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
         assert(bytes.get()).isEqualTo(TELNET_IAC)
         assert(bytes.get()).isEqualTo(TELNET_SB)
@@ -43,12 +39,10 @@ class WindowSizeHandlerTest {
 
     @Test fun `Duplicate IAC as necessary`() {
         val bytes = WindowSizeHandler(255, 0xffff).sentBytesOn {
-            onRemoteDo(it, TelnetEvent(byteArrayOf()))
+            onRemoteDo(it)
         }
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_WILL)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
         assert(bytes.get()).isEqualTo(TELNET_IAC)
         assert(bytes.get()).isEqualTo(TELNET_SB)
@@ -68,3 +62,4 @@ class WindowSizeHandlerTest {
         assert(bytes.get()).isEqualTo(TELNET_IAC)
     }
 }
+

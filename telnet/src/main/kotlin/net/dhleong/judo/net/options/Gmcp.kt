@@ -80,8 +80,8 @@ class GmcpHandler(
         }
     }
 
-    override fun onRemoteWill(client: TelnetClient, event: TelnetEvent) {
-        super.onRemoteWill(client, event)
+    override fun onRemoteWill(client: TelnetClient) {
+        super.onRemoteWill(client)
 
         printDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 

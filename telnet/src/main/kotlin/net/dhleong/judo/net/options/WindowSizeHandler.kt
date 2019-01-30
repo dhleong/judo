@@ -2,7 +2,6 @@ package net.dhleong.judo.net.options
 
 import net.dhleong.judo.net.TELNET_TELOPT_NAWS
 import net.dhleong.judo.net.TelnetClient
-import net.dhleong.judo.net.TelnetEvent
 import net.dhleong.judo.net.TelnetOptionHandler
 import net.dhleong.judo.net.writeShort
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,14 +24,14 @@ class WindowSizeHandler(
         client.trySendSize()
     }
 
-    override fun onRemoteDo(client: TelnetClient, event: TelnetEvent) {
-        super.onRemoteDo(client, event)
+    override fun onRemoteDo(client: TelnetClient) {
+        super.onRemoteDo(client)
         enabled.set(true)
         client.trySendSize()
     }
 
-    override fun onRemoteDont(client: TelnetClient, event: TelnetEvent) {
-        super.onRemoteDont(client, event)
+    override fun onRemoteDont(client: TelnetClient) {
+        super.onRemoteDont(client)
         enabled.set(false)
     }
 

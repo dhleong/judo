@@ -73,12 +73,12 @@ class TelnetConnection private constructor(
         msdp = MsdpHandler(judo, { debug }, printDebug)
 
         register(object : TelnetOptionHandler(TELNET_TELOPT_ECHO, acceptRemoteDo = true) {
-            override fun onRemoteDo(client: TelnetClient, event: TelnetEvent) {
-                super.onRemoteDo(client, event)
+            override fun onRemoteDo(client: TelnetClient) {
+                super.onRemoteDo(client)
                 onEchoStateChanged?.invoke(true)
             }
-            override fun onRemoteDont(client: TelnetClient, event: TelnetEvent) {
-                super.onRemoteDont(client, event)
+            override fun onRemoteDont(client: TelnetClient) {
+                super.onRemoteDont(client)
                 onEchoStateChanged?.invoke(false)
             }
         })

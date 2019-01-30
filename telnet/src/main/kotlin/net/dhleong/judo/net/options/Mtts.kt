@@ -29,8 +29,8 @@ class MttsTermTypeHandler(
 
     private var state = State.CLIENT_NAME
 
-    override fun onRemoteDont(client: TelnetClient, event: TelnetEvent) {
-        super.onRemoteDont(client, event)
+    override fun onRemoteDont(client: TelnetClient) {
+        super.onRemoteDont(client)
         reset()
     }
 

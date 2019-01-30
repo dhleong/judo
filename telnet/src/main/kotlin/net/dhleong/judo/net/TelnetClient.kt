@@ -79,14 +79,14 @@ class TelnetClient(
     private inline fun handleCmdOpt(
         event: TelnetEvent,
         refuseCode: Byte = 0.toByte(),
-        onHandler: TelnetOptionHandler.(TelnetClient, TelnetEvent) -> Unit
+        onHandler: TelnetOptionHandler.(TelnetClient) -> Unit
     ) {
         if (event.length < 1) return // nop
 
         val opt = event[1]
         val handler = handlers[opt.toInt()]
         if (handler != null) {
-            handler.onHandler(this, event)
+            handler.onHandler(this)
         } else if (refuseCode != 0.toByte()) {
             sendOpt(refuseCode, opt)
         }

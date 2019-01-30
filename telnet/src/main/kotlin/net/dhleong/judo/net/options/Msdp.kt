@@ -72,8 +72,8 @@ class MsdpHandler(
         }
     }
 
-    override fun onRemoteWill(client: TelnetClient, event: TelnetEvent) {
-        super.onRemoteWill(client, event)
+    override fun onRemoteWill(client: TelnetClient) {
+        super.onRemoteWill(client)
 
         printDebug("## TELNET > IAC SB MSDP MSDP_VAR 'LIST' MSDP_VAL '$INITIAL_LIST' IAC SE")
         client.sendSubnegotiation {
