@@ -79,7 +79,7 @@ internal class TelnetInputStream(
         State.IAC_IN_SB -> when (byte) {
             TELNET_IAC -> consumeAnd(State.SB) {
                 // literal IAC
-                eventBuffer[++eventBufferSize] = byte
+                eventBuffer[eventBufferSize++] = byte
             }
             TELNET_SE -> consumeAnd(State.IDLE) {
                 // NOTE if size == 1 it's just SB with no content
