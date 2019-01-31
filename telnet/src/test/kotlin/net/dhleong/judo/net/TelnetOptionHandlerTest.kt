@@ -26,6 +26,30 @@ class TelnetOptionHandlerTest {
         }
     }
 
+    @Test fun `Respond to DO if we didn't send initial WILL`() {
+        val handler = TelnetOptionHandler(
+            42,
+            acceptRemoteDo = true
+        )
+
+        // verify we don't send anything on attach
+        val attach = handler.sentBytesOn {
+            onAttach(it)
+        }
+        assert(attach).all {
+            hasNoMore()
+        }
+
+        // only on do
+        val bytes = handler.sentBytesOn {
+            onRemoteDo(it)
+        }
+        assert(bytes).all {
+            nextIsWill(42)
+            hasNoMore()
+        }
+    }
+
     @Test fun `Don't cause infinite do-will loops`() {
         val handler = TelnetOptionHandler(
             42,

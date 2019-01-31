@@ -15,7 +15,7 @@ import net.dhleong.judo.net.write
 
 class MttsTermTypeHandler(
     private val info: JudoRendererInfo,
-    private val printDebug: (String) -> Unit
+    private val printDebug: (String) -> Unit = { /* nop */ }
 ) : TelnetOptionHandler(
     TELNET_TELOPT_TERMINAL_TYPE,
     acceptRemoteDo = true
@@ -29,12 +29,25 @@ class MttsTermTypeHandler(
 
     private var state = State.CLIENT_NAME
 
+    override fun onRemoteDo(client: TelnetClient) {
+        super.onRemoteDo(client)
+        sendType(client)
+    }
+
     override fun onRemoteDont(client: TelnetClient) {
         super.onRemoteDont(client)
         reset()
     }
 
     override fun onSubnegotiation(client: TelnetClient, event: TelnetEvent) {
+        sendType(client)
+    }
+
+    fun reset() {
+        state = State.CLIENT_NAME
+    }
+
+    private fun sendType(client: TelnetClient) {
         val name = getNameForCurrentState()
         advanceState()
 
@@ -43,10 +56,6 @@ class MttsTermTypeHandler(
             write(TELNET_IS)
             write(name)
         }
-    }
-
-    fun reset() {
-        state = State.CLIENT_NAME
     }
 
     private fun advanceState() {

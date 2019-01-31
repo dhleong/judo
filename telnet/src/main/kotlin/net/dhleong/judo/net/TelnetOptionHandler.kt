@@ -7,27 +7,18 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 open class TelnetOptionHandler(
     val option: Byte,
-    sendWill: Boolean = false,
-    sendDo: Boolean = false,
+    private val sendWill: Boolean = false,
+    private val sendDo: Boolean = false,
     internal val acceptRemoteWill: Boolean = false,
     internal val acceptRemoteDo: Boolean = false
 ) {
 
-    private val localWill = AtomicInteger(
-        if (sendWill) 1
-        else 0
-    )
-    private val localDo = AtomicInteger(
-        if (sendDo) 1
-        else 0
-    )
-
-    // FIXME TODO we should probably track the will/do state
-    // so we don't get into a recursive loop
+    private val localWill = AtomicInteger(1)
+    private val localDo = AtomicInteger(1)
 
     open fun onAttach(client: TelnetClient) {
-        client.sendWillIfNeeded()
-        client.sendIfNeeded(localDo, TELNET_DO)
+        if (sendWill) client.sendWillIfNeeded()
+        if (sendDo) client.sendDoIfNeeded()
     }
 
     open fun onRemoteDo(client: TelnetClient) {
@@ -66,11 +57,7 @@ open class TelnetOptionHandler(
     private fun TelnetClient.sendDoIfNeeded() = sendIfNeeded(localDo, TELNET_DO)
 
     private fun TelnetClient.sendIfNeeded(queue: AtomicInteger, opt: Byte) {
-        val queueSize = queue.getAndUpdate {
-            if (it > 0) {
-                it - 1
-            } else 0
-        }
+        val queueSize = queue.getAndDecrement()
         if (queueSize > 0) {
             sendOpt(opt, option)
         }

@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import assertk.Assert
+import assertk.assertAll
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
@@ -45,9 +46,17 @@ fun Assert<ByteBuffer>.nextIsDo(telnetOpt: Byte) {
 }
 
 fun Assert<ByteBuffer>.nextIsCmd(kind: Byte, telnetOpt: Byte) {
-    assert(actual.get()).isEqualTo(TELNET_IAC)
-    assert(actual.get()).isEqualTo(kind)
-    assert(actual.get()).isEqualTo(telnetOpt)
+    assertAll {
+        assert(actual.get()).isEqualTo(TELNET_IAC)
+        assert(actual.get(), "kind").isEqualTo(kind)
+        assert(actual.get(), "opt").isEqualTo(telnetOpt)
+    }
+}
+
+fun Assert<ByteBuffer>.nextIsString(string: String) {
+    val nameBytes = ByteArray(string.length)
+    actual.get(nameBytes, 0, string.length)
+    assert(String(nameBytes)).isEqualTo(string)
 }
 
 

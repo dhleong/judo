@@ -4,7 +4,7 @@ class TelnetClient(
     input: InputStream,
     output: OutputStream,
     maxSubnegotiationSize: Int = 8192,
-    private val printDebug: ((String) -> Unit)?
+    private val printDebug: ((String) -> Unit)? = null
 ) {
     val inputStream: InputStream = TelnetInputStream(input, maxSubnegotiationSize, this::onTelnetEvent)
     val outputStream: OutputStream = SynchronizedOutputStream(output)

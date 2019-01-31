@@ -34,4 +34,5 @@ const val MTTS_UTF8 = 4
 const val MTTS_256COLOR = 8
 
 const val TELNET_IS = 0.toByte()
+const val TELNET_SEND = 1.toByte()
 
