@@ -3,7 +3,8 @@ package net.dhleong.judo.net
 class TelnetClient(
     input: InputStream,
     output: OutputStream,
-    maxSubnegotiationSize: Int = 8192
+    maxSubnegotiationSize: Int = 8192,
+    private val printDebug: ((String) -> Unit)?
 ) {
     val inputStream: InputStream = TelnetInputStream(input, maxSubnegotiationSize, this::onTelnetEvent)
     val outputStream: OutputStream = SynchronizedOutputStream(output)
@@ -57,11 +58,13 @@ class TelnetClient(
     }
 
     internal fun sendOpt(cmd: Byte, option: Byte) = sendCommand {
+        printDebug { "## TELNET > ${cmd.describe()} ${option.describe()}" }
         write(cmd)
         write(option)
     }
 
     private fun onTelnetEvent(event: TelnetEvent) {
+        printDebug { "## TELNET < ${event.joinToString(" ") { it.describe() }}" }
         when (event[0]) {
             TELNET_DO -> handleCmdOpt(event, TELNET_WONT, TelnetOptionHandler::onRemoteDo)
             TELNET_DONT -> handleCmdOpt(event, onHandler = TelnetOptionHandler::onRemoteDont)
@@ -98,6 +101,41 @@ class TelnetClient(
     }
 
     private fun Byte.toIndex(): Int = toInt() and 0xff
+
+    private inline fun printDebug(block: () -> String) {
+        printDebug?.let {
+            it(block())
+        }
+    }
+
+    private fun Byte.describe() = when (this) {
+        TELNET_IAC -> "IAC"
+        TELNET_DONT -> "DONT"
+        TELNET_DO -> "DO"
+        TELNET_WONT -> "WONT"
+        TELNET_WILL -> "WILL"
+        TELNET_SB -> "SB"
+        TELNET_SE -> "SE"
+
+        TELNET_TELOPT_ECHO -> "ECHO"
+        TELNET_TELOPT_TERMINAL_TYPE -> "TTYPE"
+        TELNET_TELOPT_NAWS -> "NAWS"
+        TELNET_TELOPT_MSDP -> "MSDP"
+        TELNET_TELOPT_MCCP2 -> "MCCP"
+        TELNET_TELOPT_GMCP -> "GMCP"
+
+        70.toByte() -> "MSSP" // server status
+        85.toByte() -> "MCCP1" // legacy; don't use
+
+        90.toByte() -> "MSP" // mud sound
+        91.toByte() -> "MXP" // mud extension
+        93.toByte() -> "ZMP" // zenith mud
+
+        239.toByte() -> "EOR" // used for prompt marking
+        249.toByte() -> "GA" // used for prompt marking
+
+        else -> (toInt() and 0xff).toString(16)
+    }
 }
 
 private class SynchronizedOutputStream(

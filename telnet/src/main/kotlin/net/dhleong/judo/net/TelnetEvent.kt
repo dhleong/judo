@@ -13,7 +13,8 @@ class TelnetEvent(
      */
     private val start: Int = 0,
     private val end: Int = data.size
-) {
+) : Sequence<Byte> {
+
     val length: Int = end - start
 
     /**
@@ -32,6 +33,12 @@ class TelnetEvent(
 
         return data[idx]
     }
+
+    override fun iterator(): Iterator<Byte> =
+        data.asSequence()
+            .drop(start)
+            .take(length)
+            .iterator()
 
     fun toInputStream(start: Int, length: Int) = ByteArrayInputStream(
         data,
@@ -102,16 +109,4 @@ fun TelnetEvent.indexOf(
     byte: Byte,
     startIndex: Int = 0
 ): Int = indexOfFirst(startIndex) { it == byte }
-
-inline fun TelnetEvent.map(
-    startIndex: Int = 0,
-    predicate: (Byte) -> Boolean
-): Int {
-    for (index in startIndex until length) {
-        if (predicate(this[index])) {
-            return index
-        }
-    }
-    return -1
-}
 

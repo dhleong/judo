@@ -16,20 +16,45 @@ class TelnetConnection internal constructor(
     private val toString: String,
     private val socket: Closeable,
     input: InputStream,
-    output: OutputStream
-) : BaseConnection(false) { // TODO debug mode (?)
+    output: OutputStream,
+    private val debug: Boolean = false,
+    logRaw: Boolean = false
+) : BaseConnection(logRaw) {
 
-    class Factory : JudoConnection.Factory {
+    class Factory(
+        private val debug: Boolean = false,
+        private val logRaw: Boolean = false
+    ) : JudoConnection.Factory {
         override fun create(judo: IJudoCore, address: String, port: Int): JudoConnection {
-            return TelnetConnection(judo, "[$address:$port]", Socket(address, port))
+            return TelnetConnection(
+                judo,
+                "[$address:$port]",
+                Socket(address, port),
+                debug = debug,
+                logRaw = logRaw
+            )
         }
     }
 
-    private constructor(judo: IJudoCore, toString: String, socket: Socket) : this(
-        judo, toString, socket, socket.getInputStream(), socket.getOutputStream()
+    private constructor(
+        judo: IJudoCore, toString: String, socket: Socket,
+        debug: Boolean, logRaw: Boolean
+    ) : this(
+        judo, toString, socket, socket.getInputStream(), socket.getOutputStream(),
+        debug, logRaw
     )
 
-    private val telnetClient = TelnetClient(MccpInputStream(input), output)
+    private val printDebug = { text: String ->
+        if (debug) {
+            judo.print(text)
+        }
+    }
+
+    private val telnetClient = TelnetClient(
+        input = MccpInputStream(input),
+        output = output,
+        printDebug = if (debug) printDebug else null
+    )
     private val windowSizeHandler by lazy {
         WindowSizeHandler().also {
             telnetClient.register(it)
@@ -39,8 +64,6 @@ class TelnetConnection internal constructor(
     private lateinit var gmcp: GmcpHandler
     private lateinit var msdp: MsdpHandler
 
-    // TODO debug?
-    var debug = false // FIXME
     override val input = telnetClient.inputStream
     override val output = telnetClient.outputStream
 
@@ -64,11 +87,6 @@ class TelnetConnection internal constructor(
     }
 
     private fun TelnetClient.registerHandlers() {
-        val printDebug = { text: String ->
-            if (debug) {
-                print(text)
-            }
-        }
         gmcp = GmcpHandler(judo, { debug }, printDebug)
         msdp = MsdpHandler(judo, { debug }, printDebug)
 

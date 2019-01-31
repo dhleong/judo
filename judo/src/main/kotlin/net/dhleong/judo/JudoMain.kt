@@ -62,9 +62,8 @@ fun main(args: Array<String>) {
     )
 
     val connections: JudoConnection.Factory = TelnetConnection.Factory(
-        // TODO telnet debugging
-//        debug = debugLevel.isEnabled,
-//        logRaw = hasNetDebug
+        debug = debugLevel.isEnabled,
+        logRaw = hasNetDebug
     )
 
     val worldScriptFile = if (argsList.size == 1) {
