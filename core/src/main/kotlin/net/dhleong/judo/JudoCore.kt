@@ -84,7 +84,6 @@ class JudoCore(
     userConfigFile: File = File(userConfigDir, "init.py"),
     scripting: ScriptingEngine.Factory = JythonScriptingEngine.Factory(),
     val debug: DebugLevel = DebugLevel.OFF,
-//    private val connections: JudoConnection.Factory = CommonsNetConnection.Factory(debug.isEnabled)
     private val connections: JudoConnection.Factory
 ) : IJudoCore {
     companion object {
