@@ -1,19 +1,24 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.JudoRendererInfo
-import org.apache.commons.net.telnet.TelnetOption
-import org.apache.commons.net.telnet.TelnetOptionHandler
+import net.dhleong.judo.net.MTTS_256COLOR
+import net.dhleong.judo.net.MTTS_ANSI
+import net.dhleong.judo.net.MTTS_UTF8
+import net.dhleong.judo.net.MTTS_VT100
+import net.dhleong.judo.net.TELNET_IS
+import net.dhleong.judo.net.TELNET_TELOPT_TERMINAL_TYPE
+import net.dhleong.judo.net.TelnetClient
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.TelnetOptionHandler
+import net.dhleong.judo.net.write
 
 class MttsTermTypeHandler(
     private val info: JudoRendererInfo,
-    private val printDebug: (String) -> Unit
+    private val printDebug: (String) -> Unit = { /* nop */ }
 ) : TelnetOptionHandler(
-    TelnetOption.TERMINAL_TYPE,
-    false,
-    false,
-    true,
-    false
+    TELNET_TELOPT_TERMINAL_TYPE,
+    acceptRemoteDo = true
 ) {
 
     private enum class State {
@@ -24,21 +29,33 @@ class MttsTermTypeHandler(
 
     private var state = State.CLIENT_NAME
 
-    override fun answerSubnegotiation(suboptionData: IntArray?, suboptionLength: Int): IntArray {
-        val name = getNameForCurrentState()
-        advanceState()
+    override fun onRemoteDo(client: TelnetClient) {
+        super.onRemoteDo(client)
+        sendType(client)
+    }
 
-        printDebug("## TELNET > IAC SB TTYPE IS $name")
-        return with(name.map { it.toInt() }.toMutableList()) {
-            TELNET_IAC
-            add(0, TelnetOption.TERMINAL_TYPE)
-            add(1, TELNET_IS.toInt())
-            toIntArray()
-        }
+    override fun onRemoteDont(client: TelnetClient) {
+        super.onRemoteDont(client)
+        reset()
+    }
+
+    override fun onSubnegotiation(client: TelnetClient, event: TelnetEvent) {
+        sendType(client)
     }
 
     fun reset() {
         state = State.CLIENT_NAME
+    }
+
+    private fun sendType(client: TelnetClient) {
+        val name = getNameForCurrentState()
+        advanceState()
+
+        printDebug("## TELNET > IAC SB TTYPE IS $name")
+        client.sendSubnegotiation {
+            write(TELNET_IS)
+            write(name)
+        }
     }
 
     private fun advanceState() {

@@ -1,7 +1,7 @@
 package net.dhleong.judo.net
 
-import net.dhleong.judo.assertThat
-import org.junit.Before
+import net.dhleong.judo.net.options.MccpInputStream
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.ByteArrayInputStream
 
@@ -10,19 +10,11 @@ import java.io.ByteArrayInputStream
  */
 class MccpInputStreamTest {
 
-    lateinit var mccp: MccpHandlingSocketFactory
-    lateinit var socket: MccpHandlingSocket
-
-    @Before fun setUp() {
-        mccp = MccpHandlingSocketFactory { System.out.println(it) }
-        socket = mccp.createSocket() as MccpHandlingSocket
-    }
-
-    @Test fun enterCompressedMode() {
+    @Test fun `Enter compressed mode`() {
         val input = "ÿùÿü\u0019ÿüÈÿüÉÿúVÿðhCúÿK\u0082ñÿ\u0007\u0000\u0000\u0000\u0000ÿÿ".map {
             it.toInt().toByte()
         }.toByteArray()
-        val stream = MccpInputStream(socket, ByteArrayInputStream(input))
+        val stream = MccpInputStream(ByteArrayInputStream(input))
 
         val result = ByteArray(1024)
         var readCount = stream.read(result)
@@ -33,8 +25,9 @@ class MccpInputStreamTest {
             TELNET_SB.toUInt(),
             TELNET_TELOPT_MCCP2.toUInt(),
             TELNET_IAC.toUInt(),
-            TELNET_SE.toUInt())
-        assertThat(socket.compressEnabled).isTrue()
+            TELNET_SE.toUInt()
+        )
+        assertThat(stream.compressEnabled).isTrue()
 
         readCount = stream.read(result)
         read = result.take(readCount).map { it.toUInt() }
@@ -43,16 +36,17 @@ class MccpInputStreamTest {
             TELNET_IAC.toUInt(),
             TELNET_SB.toUInt(),
             TELNET_TELOPT_TERMINAL_TYPE.toUInt(),
-            TELNET_DO.toUInt(),
+            1,
             TELNET_IAC.toUInt(),
-            TELNET_SE.toUInt())
+            TELNET_SE.toUInt()
+        )
     }
 
-    @Test fun lessOutputThanInput() {
+    @Test fun `Less output than input`() {
         val input = "ÿùÿü\u0019ÿüÈÿüÉÿúVÿðhCúÿK\u0082ñÿ\u0007\u0000\u0000\u0000\u0000ÿÿ".map {
             it.toInt().toByte()
         }.toByteArray()
-        val stream = MccpInputStream(socket, ByteArrayInputStream(input))
+        val stream = MccpInputStream(ByteArrayInputStream(input))
 
         val result = ByteArray(1024)
         stream.read(result)
@@ -62,7 +56,7 @@ class MccpInputStreamTest {
         assertThat(stream.readByte()).isEqualTo(TELNET_IAC)
         assertThat(stream.readByte()).isEqualTo(TELNET_SB)
         assertThat(stream.readByte()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
-        assertThat(stream.readByte()).isEqualTo(TELNET_DO)
+        assertThat(stream.readByte()).isEqualTo(1)
         assertThat(stream.readByte()).isEqualTo(TELNET_IAC)
         assertThat(stream.readByte()).isEqualTo(TELNET_SE)
 

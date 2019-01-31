@@ -1,12 +1,18 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.event.EVENT_GMCP_ENABLED
+import net.dhleong.judo.net.TELNET_TELOPT_GMCP
+import net.dhleong.judo.net.TelnetClient
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.TelnetOptionHandler
+import net.dhleong.judo.net.indexOf
+import net.dhleong.judo.net.indexOfFirst
+import net.dhleong.judo.net.write
 import net.dhleong.judo.util.Json
 import okio.Okio
-import org.apache.commons.net.telnet.TelnetOptionHandler
-import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.EOFException
 
 class GmcpHandler(
@@ -15,10 +21,7 @@ class GmcpHandler(
     private val printDebug: (String) -> Unit
 ) : TelnetOptionHandler(
     TELNET_TELOPT_GMCP,
-    false,
-    false,
-    false,
-    true // accept WILL GMCP
+    acceptRemoteWill = true // accept WILL GMCP
 ) {
 
     var isGmcpEnabled = false
@@ -32,42 +35,35 @@ class GmcpHandler(
         )
     )
 
-    override fun answerSubnegotiation(suboptionData: IntArray, suboptionLength: Int): IntArray? {
-        // NOTE suboptionData[0] == MSDP *always*
-        val packageStart: Int = suboptionData.indexOfFirst(startIndex = 1) { it != ' '.toInt() }
-        val spaceSeparator = suboptionData.indexOf(' '.toInt(), startIndex = packageStart)
+    override fun onSubnegotiation(client: TelnetClient, event: TelnetEvent) {
+        // NOTE suboptionData[0] == SB *always*
+        //  and suboptionData[1] == MSDP *always*
+        val packageStart: Int = event.indexOfFirst(startIndex = 2) { it != ' '.toByte() }
+        val spaceSeparator = event.indexOf(' '.toByte(), startIndex = packageStart)
         val dataStart: Int
         val packageEnd: Int
-        if (spaceSeparator < 0 || spaceSeparator >= suboptionLength) {
+        if (spaceSeparator < 0 || spaceSeparator >= event.length) {
             // just the package name
-            packageEnd = suboptionLength
+            packageEnd = event.length
             dataStart = -1
         } else {
             packageEnd = spaceSeparator
-            dataStart = suboptionData.indexOfFirst(
+            dataStart = event.indexOfFirst(
                 startIndex = spaceSeparator
-            ) { it != ' '.toInt() }
+            ) { it != ' '.toByte() }
         }
 
-        val suboptionByteArray = suboptionData
-            .map { it.toByte() }
-            .toByteArray()
-        val packageName = String(
-            suboptionByteArray,
-            packageStart,
-            packageEnd - packageStart
-        )
+        val packageName = event.toString(packageStart, packageEnd - packageStart)
 
         // parse data (if there is any)
         val data =
-            if (dataStart == -1 || dataStart >= suboptionLength) null
+            if (dataStart == -1 || dataStart >= event.length) null
             else {
                 try {
                     Json.read<Any>(
-                        Okio.source(ByteArrayInputStream(
-                            suboptionByteArray,
+                        Okio.source(event.toInputStream(
                             packageEnd + 1,
-                            suboptionLength - packageEnd - 1
+                            event.length - packageEnd - 1
                         ))
                     )
                 } catch (e: EOFException) {
@@ -83,11 +79,11 @@ class GmcpHandler(
             judo.events.raise("GMCP", arrayOf(packageName, data))
             judo.events.raise("GMCP:$packageName", data)
         }
-
-        return null
     }
 
-    override fun startSubnegotiationRemote(): IntArray? {
+    override fun onRemoteWill(client: TelnetClient) {
+        super.onRemoteWill(client)
+
         printDebug("## TELNET > IAC SB GMCP Core.Hello ...")
 
         isGmcpEnabled = true
@@ -96,21 +92,19 @@ class GmcpHandler(
             judo.events.raise(EVENT_GMCP_ENABLED)
         }
 
-        return GMCP_HELLO
+        client.sendSubnegotiation {
+            write(GMCP_HELLO)
+        }
     }
 
     fun buildGmcpRequest(packageName: String, value: Any?) =
-        with(ArrayList<Int>(packageName.length + 32)) {
-            add(TELNET_TELOPT_MSDP.toInt())
-            addAll(packageName.map { it.toInt() })
+        ByteArrayOutputStream(packageName.length + 32).apply {
+            write(packageName)
             if (value != null) {
-                add(' '.toInt())
-                addAll(
-                    Json.write(value)
-                        .map { it.toInt() })
+                write(' '.toByte())
+                write(Json.write(value))
             }
-            toIntArray()
-        }
+        }.toByteArray()
 }
 
 fun IntArray.indexOf(element: Int, startIndex: Int = 0): Int {

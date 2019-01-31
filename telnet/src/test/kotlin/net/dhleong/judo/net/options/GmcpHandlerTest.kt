@@ -1,12 +1,17 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.TestableJudoCore
-import org.apache.commons.net.telnet.TelnetOptionHandler
+import net.dhleong.judo.net.TELNET_SB
+import net.dhleong.judo.net.TELNET_TELOPT_GMCP
+import net.dhleong.judo.net.TelnetClient
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.TelnetOptionHandler
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayOutputStream
 
 /**
  * @author dhleong
@@ -17,7 +22,8 @@ class GmcpHandlerTest {
     lateinit var judo: TestableJudoCore
     lateinit var gmcp: GmcpHandler
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         judo = TestableJudoCore()
         gmcp = GmcpHandler(
             judo,
@@ -39,7 +45,8 @@ class GmcpHandlerTest {
                 "GMCP:net.dhleong.judo" to null)
     }
 
-    @Test fun packageOnlyWithSpaces() {
+    @Test
+    fun packageOnlyWithSpaces() {
         gmcp.subnegotiate(" net.dhleong.judo ")
 
         val catchall = judo.raised.removeAt(0)
@@ -90,7 +97,14 @@ class GmcpHandlerTest {
     }
 
     fun TelnetOptionHandler.subnegotiate(string: String) {
-        val intArray = (arrayOf(TELNET_TELOPT_GMCP) + string.map { it.toInt() }).toIntArray()
-        answerSubnegotiation(intArray, intArray.size)
+        val client = TelnetClient(
+            "".byteInputStream(),
+            ByteArrayOutputStream()
+        )
+
+        onSubnegotiation(client, TelnetEvent(
+            byteArrayOf(TELNET_SB, TELNET_TELOPT_GMCP) +
+                string.toByteArray()
+        ))
     }
 }

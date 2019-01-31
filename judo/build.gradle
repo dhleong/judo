@@ -17,7 +17,7 @@ mainClassName = 'net.dhleong.judo.JudoMainKt'
 
 dependencies {
     compile project(':core')
-    compile project(':commons-net')
+    compile project(':telnet')
     compile project(':jline')
 
     compile deps.kotlin.core

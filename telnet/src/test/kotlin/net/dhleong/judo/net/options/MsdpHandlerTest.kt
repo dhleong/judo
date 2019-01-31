@@ -1,8 +1,17 @@
-package net.dhleong.judo.net
+package net.dhleong.judo.net.options
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.net.MSDP_ARRAY_CLOSE
+import net.dhleong.judo.net.MSDP_ARRAY_OPEN
+import net.dhleong.judo.net.MSDP_TABLE_CLOSE
+import net.dhleong.judo.net.MSDP_TABLE_OPEN
+import net.dhleong.judo.net.MSDP_VAL
+import net.dhleong.judo.net.MSDP_VAR
+import net.dhleong.judo.net.TelnetEvent
+import net.dhleong.judo.net.write
 import org.junit.Test
+import java.io.ByteArrayOutputStream
 
 /**
  * @author dhleong
@@ -39,10 +48,10 @@ class MsdpReaderTest {
             MSDP_ARRAY_OPEN,
             MSDP_VAL, "Kaywinnet",
             MSDP_VAL,
-                MSDP_ARRAY_OPEN,
-                MSDP_VAL, "Lee",
-                MSDP_VAL, "Frye",
-                MSDP_ARRAY_CLOSE,
+            MSDP_ARRAY_OPEN,
+            MSDP_VAL, "Lee",
+            MSDP_VAL, "Frye",
+            MSDP_ARRAY_CLOSE,
             MSDP_ARRAY_CLOSE
         )
         assert(reader.readObject())
@@ -71,10 +80,10 @@ class MsdpReaderTest {
             MSDP_TABLE_OPEN,
             MSDP_VAR, "Kaywinnet",
             MSDP_VAL,
-                MSDP_TABLE_OPEN,
-                MSDP_VAR, "Lee",
-                MSDP_VAL, "Frye",
-                MSDP_TABLE_CLOSE,
+            MSDP_TABLE_OPEN,
+            MSDP_VAR, "Lee",
+            MSDP_VAL, "Frye",
+            MSDP_TABLE_CLOSE,
             MSDP_TABLE_CLOSE
         )
 
@@ -86,15 +95,16 @@ class MsdpReaderTest {
 
 
     private fun reader(vararg parts: Any): MsdpReader {
-        val intList = ArrayList<Int>()
-        for (part in parts) {
-            if (part is Int) intList.add(part)
-            else if (part is String) {
-                part.forEach { intList.add(it.toInt()) }
+        val bytes = ByteArrayOutputStream().apply {
+            for (part in parts) {
+                when (part) {
+                    is Byte -> write(part)
+                    is String -> write(part)
+                    else -> throw IllegalArgumentException("Unexpected `$part`")
+                }
             }
-        }
+        }.toByteArray()
 
-        val intArray = intList.toIntArray()
-        return MsdpReader(intArray, 0, intArray.size)
+        return MsdpReader(TelnetEvent(bytes), 0)
     }
 }
