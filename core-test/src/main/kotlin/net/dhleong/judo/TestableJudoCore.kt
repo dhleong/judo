@@ -21,6 +21,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
+import java.net.URI
 
 /**
  * @author dhleong
@@ -42,6 +43,7 @@ class TestableJudoCore(
     val sends = ArrayList<String>()
     val maps = ArrayList<List<Any>>()
     val raised = ArrayList<Pair<String, Any?>>()
+    val connects = ArrayList<URI>()
 
     private val mapRenderer = Proxy<MapRenderer> { _, _ -> }
 
@@ -61,6 +63,10 @@ class TestableJudoCore(
         this, buffer, InputHistory(buffer),
         OperatorPendingMode(this, buffer)
     )
+
+    override fun connect(uri: URI) {
+        connects.add(uri)
+    }
 
     override fun map(mode: String, from: String, to: String, remap: Boolean) {
         maps.add(listOf(mode, from, to, remap))

@@ -24,9 +24,14 @@ class ScriptingConfig(
             requestedScriptFile: File?
         ): ScriptingConfig {
             if (requestedScriptFile != null) {
-                // choose scripting file and engine by provided script,
-                // even if it doesn't exist or we can't read it
-                return byExtension(configDir, requestedScriptFile.extension)
+                // if there's no extension, or it's weirdly long, it's
+                // probably actually a URI and not a world script file
+                val ext = requestedScriptFile.extension
+                if (!(ext.isEmpty() || ext.length > 4)) {
+                    // choose scripting file and engine by provided script,
+                    // even if it doesn't exist or we can't read it
+                    return byExtension(configDir, ext)
+                }
             }
 
             // no script file? pick based on the contents of configDir
@@ -56,7 +61,7 @@ class ScriptingConfig(
             )
 
             else -> throw IllegalArgumentException(
-                "Unsupported scripting type: $ext"
+                "Unsupported scripting type: `$ext`"
             )
         }
     }
