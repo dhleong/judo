@@ -4,6 +4,7 @@ import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.TestableJudoCore
+import net.dhleong.judo.net.TELNET_SB
 import net.dhleong.judo.net.TELNET_TELOPT_GMCP
 import net.dhleong.judo.net.TelnetClient
 import net.dhleong.judo.net.TelnetEvent
@@ -102,7 +103,8 @@ class GmcpHandlerTest {
         )
 
         onSubnegotiation(client, TelnetEvent(
-            byteArrayOf(TELNET_TELOPT_GMCP) + string.toByteArray()
+            byteArrayOf(TELNET_SB, TELNET_TELOPT_GMCP) +
+                string.toByteArray()
         ))
     }
 }

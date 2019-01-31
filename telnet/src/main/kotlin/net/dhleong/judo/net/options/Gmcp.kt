@@ -36,8 +36,9 @@ class GmcpHandler(
     )
 
     override fun onSubnegotiation(client: TelnetClient, event: TelnetEvent) {
-        // NOTE suboptionData[0] == MSDP *always*
-        val packageStart: Int = event.indexOfFirst(startIndex = 1) { it != ' '.toByte() }
+        // NOTE suboptionData[0] == SB *always*
+        //  and suboptionData[1] == MSDP *always*
+        val packageStart: Int = event.indexOfFirst(startIndex = 2) { it != ' '.toByte() }
         val spaceSeparator = event.indexOf(' '.toByte(), startIndex = packageStart)
         val dataStart: Int
         val packageEnd: Int
