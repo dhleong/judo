@@ -4,6 +4,7 @@ import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
 import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
+import net.dhleong.judo.net.CompositeConnectionFactory
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.TelnetConnection
 import net.dhleong.judo.render.IdManager
@@ -43,10 +44,19 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
-    val connections: JudoConnection.Factory = TelnetConnection.Factory(
-        debug = debugLevel.isEnabled,
-        logRaw = hasNetDebug
-    )
+    val connections: JudoConnection.Factory = CompositeConnectionFactory(listOf(
+        // normal telnet
+        TelnetConnection.Factory(
+            debug = debugLevel.isEnabled,
+            logRaw = hasNetDebug
+        ),
+
+        // secure telnet
+        TelnetConnection.SecureFactory(
+            debug = debugLevel.isEnabled,
+            logRaw = hasNetDebug
+        )
+    ))
 
     val init = try {
         InitStrategy.pick(argsList)

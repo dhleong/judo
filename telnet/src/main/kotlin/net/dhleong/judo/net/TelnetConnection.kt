@@ -9,6 +9,7 @@ import net.dhleong.judo.net.options.WindowSizeHandler
 import net.dhleong.judo.util.whenTrue
 import java.net.Socket
 import java.net.URI
+import javax.net.ssl.SSLSocketFactory
 
 /**
  * @author dhleong
@@ -33,6 +34,24 @@ class TelnetConnection internal constructor(
                     judo,
                     "[${uri.host}:${uri.port}]",
                     Socket(uri.host, uri.port),
+                    debug = debug,
+                    logRaw = logRaw
+                )
+            }
+    }
+
+    class SecureFactory(
+        private val debug: Boolean = false,
+        private val logRaw: Boolean = false
+    ) : JudoConnection.Factory {
+        override fun create(judo: IJudoCore, uri: URI): JudoConnection? =
+            whenTrue(uri.scheme == "ssl") {
+                TelnetConnection(
+                    judo,
+                    "[$uri]",
+                    SSLSocketFactory.getDefault().createSocket(
+                        uri.host, uri.port
+                    ),
                     debug = debug,
                     logRaw = logRaw
                 )
