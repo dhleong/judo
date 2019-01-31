@@ -1,10 +1,12 @@
 package net.dhleong.judo.net
 
 const val TELNET_IAC = 255.toByte()
+
 const val TELNET_DONT = 254.toByte()
 const val TELNET_DO = 253.toByte()
 const val TELNET_WONT = 252.toByte()
 const val TELNET_WILL = 251.toByte()
+
 const val TELNET_SB = 250.toByte()
 const val TELNET_SE = 240.toByte()
 
@@ -33,8 +35,3 @@ const val MTTS_256COLOR = 8
 
 const val TELNET_IS = 0.toByte()
 
-fun isTelnetSubsequence(line: CharSequence) =
-    line.length >= 3
-        && line[0].toByte() == TELNET_IAC
-        && line[1].toByte() == TELNET_SB
-        && line.last().toByte() == TELNET_SE

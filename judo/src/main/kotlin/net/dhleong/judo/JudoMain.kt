@@ -4,8 +4,8 @@ import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
 import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
-import net.dhleong.judo.net.CommonsNetConnection
 import net.dhleong.judo.net.JudoConnection
+import net.dhleong.judo.net.TelnetConnection
 import net.dhleong.judo.render.IdManager
 import java.io.File
 
@@ -61,9 +61,10 @@ fun main(args: Array<String>) {
         SimpleBufferMapRenderer(renderer)
     )
 
-    val connections: JudoConnection.Factory = CommonsNetConnection.Factory(
-        debug = debugLevel.isEnabled,
-        logRaw = hasNetDebug
+    val connections: JudoConnection.Factory = TelnetConnection.Factory(
+        // TODO telnet debugging
+//        debug = debugLevel.isEnabled,
+//        logRaw = hasNetDebug
     )
 
     val worldScriptFile = if (argsList.size == 1) {
