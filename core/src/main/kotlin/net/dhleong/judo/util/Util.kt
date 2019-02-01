@@ -22,3 +22,10 @@ inline fun <T, R> iflet(value: T?, block: (T) -> R): R? {
 }
 
 inline fun <R> letelse(block: () -> R): R = block()
+
+/**
+ * Another functional construct inspired by Clojure's `(when)`
+ */
+inline fun <R> whenTrue(value: Boolean, factory: () -> R): R? =
+    if (value) factory()
+    else null

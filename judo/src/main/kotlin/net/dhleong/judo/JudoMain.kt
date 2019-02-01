@@ -4,6 +4,7 @@ import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
 import net.dhleong.judo.mapping.renderer.SimpleBufferMapRenderer
+import net.dhleong.judo.net.CompositeConnectionFactory
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.TelnetConnection
 import net.dhleong.judo.render.IdManager
@@ -33,20 +34,6 @@ fun main(args: Array<String>) {
     // shared settings
     val settings = StateMap()
 
-    // make sure we can render
-    val ids = IdManager()
-    val renderer = JLineRenderer(ids, settings)
-    renderer.validate()
-
-    // clean up after ourselves
-    Runtime.getRuntime().addShutdownHook(object : Thread() {
-        override fun run() {
-            if (!closed) {
-                renderer.close()
-            }
-        }
-    })
-
     val argsList = args.toMutableList()
     val hasDebug = argsList.remove("--debug")
     val hasNetDebug = argsList.remove("--debug=net")
@@ -57,23 +44,46 @@ fun main(args: Array<String>) {
         else -> DebugLevel.OFF
     }
 
+    val connections: JudoConnection.Factory = CompositeConnectionFactory(listOf(
+        // normal telnet
+        TelnetConnection.Factory(
+            debug = debugLevel.isEnabled,
+            logRaw = hasNetDebug
+        ),
+
+        // secure telnet
+        TelnetConnection.SecureFactory(
+            debug = debugLevel.isEnabled,
+            logRaw = hasNetDebug
+        )
+    ))
+
+    val init = try {
+        InitStrategy.pick(argsList)
+    } catch (e: Exception) {
+        // unable to pick a strategy
+        println(e.message)
+        System.exit(1)
+        return
+    }
+
+    // make sure we can render
+    val ids = IdManager()
+    val renderer = JLineRenderer(ids, settings)
+    renderer.validate()
+
     val mapRenderer: MapRenderer = DelegateMapRenderer(
         SimpleBufferMapRenderer(renderer)
     )
 
-    val connections: JudoConnection.Factory = TelnetConnection.Factory(
-        debug = debugLevel.isEnabled,
-        logRaw = hasNetDebug
-    )
-
-    val worldScriptFile = if (argsList.size == 1) {
-        File(
-            argsList[0].replace("^~", USER_HOME)
-        ).absoluteFile
-    } else null
-
-    // figure out what our scripting config should be
-    val config = ScriptingConfig.pick(USER_CONFIG_DIR, worldScriptFile)
+    // clean up after ourselves
+    Runtime.getRuntime().addShutdownHook(object : Thread() {
+        override fun run() {
+            if (!closed) {
+                renderer.close()
+            }
+        }
+    })
 
     // the main thing
     val judo = JudoCore(
@@ -82,45 +92,14 @@ fun main(args: Array<String>) {
         settings,
         connections = connections,
         userConfigDir = USER_CONFIG_DIR,
-        userConfigFile = config.userConfigFile,
-        scripting = config.engineFactory,
+        userConfigFile = init.config.userConfigFile,
+        scripting = init.config.engineFactory,
         debug = debugLevel
     )
 
-    // if they have a global init.py, read it
-    if (config.userConfigFile.exists()) {
-        judo.readFile(config.userConfigFile)
-    }
-
-    when (argsList.size) {
-        1 -> {
-            // read world.(script)
-            if (worldScriptFile == null) throw IllegalStateException()
-            if (!(worldScriptFile.exists() && worldScriptFile.canRead())) {
-                closed = true
-
-                judo.quit()
-                renderer.close()
-
-                System.err.println("Unable to open world file $worldScriptFile")
-                System.exit(2)
-                return
-            }
-
-            judo.readFile(worldScriptFile)
-        }
-
-        2 -> {
-            // connect directly
-            try {
-                val host = argsList[0]
-                val port = argsList[1].toInt()
-                judo.connect(host, port)
-            } catch (e: NumberFormatException) {
-                System.err.println("Invalid port: ${argsList[1]}")
-                System.exit(1)
-            }
-        }
+    // connect or read a world file based on the init strategy
+    if (!init.perform(judo)) {
+        closed = true
     }
 
     // if they want to use the clipboard as the unnamed register, warm it up;
@@ -140,4 +119,3 @@ fun main(args: Array<String>) {
     // finally, start handling user input
     judo.readKeys(renderer)
 }
-

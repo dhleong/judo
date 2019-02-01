@@ -55,6 +55,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.io.PrintWriter
+import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue
 
 /**
@@ -184,7 +185,7 @@ class JudoCore(
     internal var doEcho = true
 
     override var connection: JudoConnection? = null
-    private var lastConnect: Pair<String, Int>? = null
+    private var lastConnect: URI? = null
 
     private val statusLineWorkspace = FlavorableStringBuilder(128)
 
@@ -228,15 +229,18 @@ class JudoCore(
         enterMode(BlockingEchoMode(this, renderer))
     }
 
-    override fun connect(address: String, port: Int) {
+    override fun connect(uri: URI) {
         disconnect()
-        doPrint(false, "Connecting to $address:$port... ")
+        doPrint(false, "Connecting to $uri... ")
 
-        lastConnect = address to port
+        lastConnect = uri
 
         val connection: JudoConnection
         try {
-            connection = connections.create(this, address, port)
+            connection = connections.create(this, uri)
+                ?: return doPrint(false,
+                    "Don't know how to connect to $uri"
+                )
             print("Connected.")
         } catch (e: IOException) {
             appendError(e, "Failed.\nNETWORK ERROR: ")
@@ -395,8 +399,8 @@ class JudoCore(
     }
 
     override fun reconnect() {
-        lastConnect?.let { (address, port) ->
-            connect(address, port)
+        lastConnect?.let { uri ->
+            connect(uri)
             return
         }
 

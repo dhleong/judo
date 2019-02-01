@@ -15,6 +15,7 @@ import assertk.assertions.support.show
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.ScriptExecutionException
+import net.dhleong.judo.net.createURI
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -214,6 +215,37 @@ class CmdModeCoreTest(
                 "===="
             )
     }
+
+    @Test fun `Support connect() with host and port`() {
+        mode.execute("""
+            connect("host", 23)
+        """.trimIndent())
+
+        assert(judo.connects).containsExactly(
+            createURI("host:23")
+        )
+    }
+
+    @Test fun `Support connect() with schema-less URI`() {
+        mode.execute("""
+            connect("host:port")
+        """.trimIndent())
+
+        assert(judo.connects).containsExactly(
+            createURI("host:port")
+        )
+    }
+
+    @Test fun `Support connect() with SSL schema URI`() {
+        mode.execute("""
+            connect("ssl://host:port")
+        """.trimIndent())
+
+        assert(judo.connects).containsExactly(
+            createURI("ssl://host:port")
+        )
+    }
+
 }
 
 private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) {

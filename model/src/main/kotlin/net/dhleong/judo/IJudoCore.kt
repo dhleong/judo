@@ -11,6 +11,7 @@ import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
+import java.net.URI
 
 val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persistentInput")
 
@@ -81,7 +82,7 @@ interface IJudoCore {
     fun enterMode(modeName: String)
     fun enterMode(mode: Mode)
     fun exitMode()
-    fun connect(address: String, port: Int)
+    fun connect(uri: URI)
     fun createUserMode(name: String)
     fun disconnect()
     fun feedKey(stroke: Key, remap: Boolean = true, fromMap: Boolean = false)

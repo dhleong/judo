@@ -8,6 +8,7 @@ import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.net.createURI
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
@@ -393,18 +394,24 @@ class CmdMode(
     }
 
     private fun ScriptingEngine.initConnection() {
-        registerFn(
+        registerFn<Unit>(
             "connect",
             doc {
+                usage {
+                    arg("uri", "String")
+                }
+
                 usage {
                     arg("host", "String")
                     arg("port", "Int")
                 }
 
                 body { "Connect to a server." }
-            },
-            judo::connect
-        )
+            }
+        ) { args: Array<Any> -> when (args.size) {
+            1 -> judo.connect(createURI(args[0] as String))
+            2 -> judo.connect(createURI("${args[0]}:${args[1]}"))
+        } }
 
         registerFn(
             "disconnect",

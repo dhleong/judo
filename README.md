@@ -95,17 +95,23 @@ Note that you may also need to install [Java 8][14] if it isn't already availabl
 
 ### Connecting to a Server
 
-You have a couple options here:
+You have a few options here:
 
 1. Pass host and port to the CLI:
 
         judo myawesomeserver.com 5656
 
-2. Use the `:connect(host, port)` command while `judo` is running
+2. Use the `:connect("host", port)` command while `judo` is running
 
 3. Create a world script containing `connect(host, port)` and pass *that* to the CLI:
 
         judo myawesomescript.py
+
+4. Use a URI with any of the above, especially if you want Secure Telnet:
+
+        judo ssl://myawesomeserver.com:1443
+
+        :connect("ssl://host:port")
 
 ### Configuring
 
