@@ -216,6 +216,16 @@ class CmdModeCoreTest(
             )
     }
 
+    @Test fun `Support connect() with host and port`() {
+        mode.execute("""
+            connect("host", 23)
+        """.trimIndent())
+
+        assert(judo.connects).containsExactly(
+            createURI("host:23")
+        )
+    }
+
     @Test fun `Support connect() with schema-less URI`() {
         mode.execute("""
             connect("host:port")

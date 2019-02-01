@@ -410,7 +410,7 @@ class CmdMode(
             }
         ) { args: Array<Any> -> when (args.size) {
             1 -> judo.connect(createURI(args[0] as String))
-            2 -> judo.connect(args[0] as String, args[1] as Int)
+            2 -> judo.connect(createURI("${args[0]}:${args[1]}"))
         } }
 
         registerFn(

@@ -83,7 +83,6 @@ interface IJudoCore {
     fun enterMode(mode: Mode)
     fun exitMode()
     fun connect(uri: URI)
-    fun connect(address: String, port: Int) = connect(URI.create("$address:$port"))
     fun createUserMode(name: String)
     fun disconnect()
     fun feedKey(stroke: Key, remap: Boolean = true, fromMap: Boolean = false)
