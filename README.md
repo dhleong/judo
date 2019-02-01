@@ -9,6 +9,20 @@ Judo is a terminal-based, modal MUD client inspired by [Vim][2].  If you're unfa
 with Vim and do a lot of typing or text editing, go take a look! On a Unix system you
 can probably run `vimtutor` from your favorite terminal to get an intro.
 
+### Features
+
+Here's a quick list of some features Judo provides:
+
+- Most common MUD protocols: MCCP, MSDP, GMCP, Secure Telnet
+- Scripting via Python or Javascript
+- Aliases, triggers, and Prompts (of course)
+- Intelligent tab-completion, based on previously-entered commands and output
+  from the server
+- Persist input history across sessions
+- Input history searching
+- Logging, including HTML formatting
+- And, of course, *modal* input
+
 Being modal means that the keys you type don't always just go into the "input buffer"
 for sending to the MUD server. Instead, each key press, or sequence of key presses,
 can be bound to do many different things, which very based on the current "mode."
