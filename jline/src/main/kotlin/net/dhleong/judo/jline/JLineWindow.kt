@@ -178,7 +178,7 @@ class JLineWindow(
             }
 
             display.withLine(x, line, lineWidth = width) {
-                append(statusLineToRender)
+                statusLineToRender.appendTo(this)
             }
         } else if (isFocusable) {
             // TODO faded out status? or just a background color?
