@@ -140,6 +140,7 @@ class CmdModePromptTest(
             into = "awesome ${ansi(1,2)}42${ansi(0)}"
         )
     }
+
 }
 
 private fun Assert<IPromptManager>.hasSize(size: Int) {

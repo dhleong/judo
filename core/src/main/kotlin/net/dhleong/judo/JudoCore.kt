@@ -788,7 +788,9 @@ class JudoCore(
         if (parsedPrompts.isNotEmpty()) {
             val prompt = parsedPrompts.last()
             val promptColsToPrint = minOf(prompt.length, availableCols)
-            val partialPrompt = prompt.subSequence(0, promptColsToPrint)
+            val partialPrompt = prompt.subSequence(0, promptColsToPrint).apply {
+                removeTrailingNewline()
+            }
             statusLineWorkspace.append(partialPrompt)
         }
 

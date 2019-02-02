@@ -204,6 +204,17 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `Render prompts`() {
+        judo.prompts.define("^HP: $1", "HP $1")
+        judo.onIncomingBuffer("HP: 42".toFlavorable())
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |HP 42_______[NORMAL]
+            |____________________
+        """.trimMargin())
+    }
+
     @Test fun `Render while typing in input()`() = assertionsWhileTyping {
         yieldKeys(":print(input(\"input:\"))<cr>")
 
