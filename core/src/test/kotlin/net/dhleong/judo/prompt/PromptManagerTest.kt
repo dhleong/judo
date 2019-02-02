@@ -8,7 +8,6 @@ import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -71,7 +70,6 @@ class PromptManagerTest {
         assert(extractedPrompts).containsExactly(1 to "Ammo: 42" to 1)
     }
 
-    @Ignore
     @Test fun `Strip prompts that resolve to empty`() {
         var hp = ""
         prompts.define("^HP[$1]>", { matches ->

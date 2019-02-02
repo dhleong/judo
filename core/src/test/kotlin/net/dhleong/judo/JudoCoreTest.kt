@@ -15,7 +15,6 @@ import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 
@@ -165,10 +164,6 @@ class JudoCoreTest {
         assert(promptBuffer).hasLines(
             "<32>\n"
         )
-    }
-
-    @Ignore("TODO")
-    @Test fun `Strip prompts that resolve to empty`() {
     }
 
     @Test fun feedKeys() {

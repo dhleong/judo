@@ -1,16 +1,17 @@
 package net.dhleong.judo.prompt
 
+import net.dhleong.judo.alias.Alias
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.alias.IAlias
 import net.dhleong.judo.render.FlavorableCharSequence
-import net.dhleong.judo.render.asFlavorableBuilder
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.util.PatternSpec
 import java.util.concurrent.atomic.AtomicInteger
 
 private class PromptGroup(
     val id: Int,
-    private val entries: MutableList<Prompt> = mutableListOf()
+    val entries: MutableList<Prompt> = mutableListOf()
 ) {
 
     val size: Int
@@ -20,7 +21,43 @@ private class PromptGroup(
         entries += prompt
     }
 
-    fun indexOf(alias: IAlias) = entries.indexOfFirst { it.alias === alias }
+    inline fun forEachOutputter(
+        except: Prompt,
+        block: (Int, Prompt, FlavorableCharSequence) -> Unit
+    ) {
+        var index = 0
+
+        for (entry in entries) {
+            if (entry !== except) {
+                entry.lastOutputProducingInput?.let { input ->
+                    block(index, entry, input)
+
+                    ++index
+                }
+            } else if (entry.lastOutputProducingInput != null) {
+                // the entry to skip also produced output
+                ++index
+            }
+        }
+    }
+
+    fun indexOf(alias: IAlias): Int {
+        var index = 0
+
+        for (entry in entries) {
+            if (entry.alias === alias) {
+                return index
+            }
+
+            // if entry hasn't produced any output,
+            // do not count it toward the index of `alias`
+            if (entry.lastOutputProducingInput != null) {
+                ++index
+            }
+        }
+
+        return -1
+    }
     fun removeEntry(entry: String) {
         entries.removeIf { it.alias.original == entry }
     }
@@ -97,10 +134,12 @@ class PromptManager : IPromptManager {
         input: FlavorableCharSequence,
         onPrompt: (group: Int, prompt: String, index: Int) -> Unit
     ): FlavorableCharSequence {
-        val toProcess = input.asFlavorableBuilder()
+
+        // copy; we might want to keep the original
+        val toProcess = FlavorableStringBuilder(input)
 
         // in general, it *should* have a newline
-        val hadNewline = input.removeTrailingNewline()
+        val hadNewline = toProcess.removeTrailingNewline()
         val result = delegate.process(toProcess) { alias, prompt ->
             val promptObj = aliasToPrompt[alias.original]
                 ?: throw IllegalStateException("Alias not registered as Prompt")
@@ -108,8 +147,10 @@ class PromptManager : IPromptManager {
 
             val index = group.indexOf(alias)
             if (prompt.isNullOrEmpty()) {
-                // TODO re-run any other prompts in the group
-                // that have produced output
+
+                // re-run any other prompts in the group that have produced output
+                triggerOtherPrompts(promptObj, onPrompt)
+
             } else {
                 promptObj.lastOutputProducingInput = input
                 onPrompt(group.id, prompt, index)
@@ -128,6 +169,22 @@ class PromptManager : IPromptManager {
         }
 
         return result
+    }
+
+    private fun triggerOtherPrompts(
+        except: Prompt,
+        onPrompt: (group: Int, prompt: String, index: Int) -> Unit
+    ) {
+        val group = except.group
+        group.forEachOutputter(except) { index, prompt, input ->
+            // this cast is HAX!
+            val parseInput = FlavorableStringBuilder(input)
+            parseInput.removeTrailingNewline()
+            (prompt.alias as Alias).parse(parseInput) { output ->
+                onPrompt(group.id, output ?: "", index)
+                ""
+            }
+        }
     }
 
 }
