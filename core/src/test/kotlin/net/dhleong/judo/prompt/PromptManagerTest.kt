@@ -1,9 +1,13 @@
 package net.dhleong.judo.prompt
 
+import assertk.assert
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -40,6 +44,22 @@ class PromptManagerTest {
             .isEqualTo(" \n")
         assertThat(extractedPrompts)
             .containsExactly(0 to "<||||  > <42>")
+    }
+
+    @Test fun `Switch between groups`() {
+        prompts.define("^HP[$1] Ammo: $2>", "<$1> Combat: <$2>")
+        prompts.define("^HP[$1]>", "<$1>")
+
+        assert(process("HP[||||  ] Ammo: 42> \n")).isEqualTo(" \n")
+        assert(extractedPrompts).containsExactly(0 to "<||||  > Combat: <42>")
+        extractedPrompts.clear()
+
+        assert(process("HP[||||  ]>\n")).isEqualTo("")
+        assert(extractedPrompts).containsExactly(0 to "<||||  >")
+    }
+
+    @Ignore("TODO: Multiple prompts in a group")
+    @Test fun `Multiple prompts in a group`() {
     }
 
     private fun process(input: String): String =

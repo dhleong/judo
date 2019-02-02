@@ -97,11 +97,11 @@ fun compileSimplePatternSpec(
  * @author dhleong
  */
 class Alias(
-    val original: String,
+    override val original: String,
     private val originalOutput: String?,
     private val spec: PatternSpec,
     private val process: AliasProcesser
-) {
+) : IAlias {
 
     companion object {
         fun compile(spec: String, outputSpec: String?, processor: AliasProcesser): Alias {
