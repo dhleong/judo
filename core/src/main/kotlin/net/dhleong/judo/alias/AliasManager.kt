@@ -76,7 +76,7 @@ class AliasManager : IAliasManager {
      */
     fun process(
         input: FlavorableCharSequence,
-        postProcess: (IAlias, String) -> String
+        postProcess: (IAlias, String?) -> String?
     ): FlavorableCharSequence {
         val builder = FlavorableStringBuilder(input)
         aliases.forEach { alias ->

@@ -4,7 +4,7 @@ import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
 
-typealias AliasProcesser = (args: Array<String>) -> String
+typealias AliasProcesser = (args: Array<String>) -> String?
 
 interface IAlias {
     /**

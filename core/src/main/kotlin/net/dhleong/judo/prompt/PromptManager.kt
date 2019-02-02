@@ -10,21 +10,27 @@ import java.util.concurrent.atomic.AtomicInteger
 
 private class PromptGroup(
     val id: Int,
-    private val entries: MutableList<IAlias> = mutableListOf()
+    private val entries: MutableList<Prompt> = mutableListOf()
 ) {
 
     val size: Int
         get() = entries.size
 
-    fun add(alias: IAlias) {
-        entries += alias
+    fun add(prompt: Prompt) {
+        entries += prompt
     }
 
-    fun indexOf(alias: IAlias) = entries.indexOf(alias)
+    fun indexOf(alias: IAlias) = entries.indexOfFirst { it.alias === alias }
     fun removeEntry(entry: String) {
-        entries.removeIf { it.original == entry }
+        entries.removeIf { it.alias.original == entry }
     }
 }
+
+private class Prompt(
+    val alias: IAlias,
+    val group: PromptGroup,
+    var lastOutputProducingInput: FlavorableCharSequence? = null
+)
 
 /**
  * @author dhleong
@@ -36,18 +42,19 @@ class PromptManager : IPromptManager {
 
     private val delegate = AliasManager()
     private val groupsById = mutableMapOf<Int, PromptGroup>()
-    private val groupsForAlias = mutableMapOf<String, PromptGroup>()
+    private val aliasToPrompt = mutableMapOf<String, Prompt>()
     private val nextUniqueGroupId = AtomicInteger(-1)
 
     override fun clear() {
         delegate.clear()
         groupsById.clear()
-        groupsForAlias.clear()
+        aliasToPrompt.clear()
     }
 
     override fun clear(entry: String) {
         delegate.undefine(entry)
-        groupsForAlias.remove(entry)?.let { group ->
+        aliasToPrompt.remove(entry)?.let { prompt ->
+            val group = prompt.group
             group.removeEntry(entry)
             if (group.size == 0) {
                 groupsById.remove(group.id)
@@ -73,12 +80,13 @@ class PromptManager : IPromptManager {
     }
 
     private fun define(group: Int, alias: IAlias) {
-        groupsForAlias[alias.original] = when (group) {
+        val groupObj = when (group) {
             AUTO_UNIQUE_GROUP_ID -> createGroup(nextUniqueGroupId.getAndDecrement())
             else -> groupsById[group] ?: createGroup(group)
-        }.apply {
-            add(alias)
         }
+        val prompt = Prompt(alias, groupObj)
+        groupObj.add(prompt)
+        aliasToPrompt[alias.original] = prompt
     }
 
     private fun createGroup(id: Int): PromptGroup = PromptGroup(id).also {
@@ -94,11 +102,19 @@ class PromptManager : IPromptManager {
         // in general, it *should* have a newline
         val hadNewline = input.removeTrailingNewline()
         val result = delegate.process(toProcess) { alias, prompt ->
-            val group = groupsForAlias[alias.original]
-                ?: throw IllegalStateException("No group for prompt")
+            val promptObj = aliasToPrompt[alias.original]
+                ?: throw IllegalStateException("Alias not registered as Prompt")
+            val group = promptObj.group
 
             val index = group.indexOf(alias)
-            onPrompt(group.id, prompt, index)
+            if (prompt.isNullOrEmpty()) {
+                // TODO re-run any other prompts in the group
+                // that have produced output
+            } else {
+                promptObj.lastOutputProducingInput = input
+                onPrompt(group.id, prompt, index)
+            }
+
             "" // always replace with empty string
         }
 

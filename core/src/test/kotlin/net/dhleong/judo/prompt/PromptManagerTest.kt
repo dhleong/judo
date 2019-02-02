@@ -2,11 +2,13 @@ package net.dhleong.judo.prompt
 
 import assertk.assert
 import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -67,7 +69,35 @@ class PromptManagerTest {
 
         assert(process("Ammo: 42>\n")).isEqualTo("")
         assert(extractedPrompts).containsExactly(1 to "Ammo: 42" to 1)
+    }
 
+    @Ignore
+    @Test fun `Strip prompts that resolve to empty`() {
+        var hp = ""
+        prompts.define("^HP[$1]>", { matches ->
+            hp = matches[0]
+            null // render nothing
+        }, group = 1)
+        prompts.define("^MP[$1]>", { (mp) ->
+            "HP<$hp> MP<$mp>"
+        }, group = 1)
+
+        // since HP resolves to the empty string, we don't count it
+        assert(process("HP[10]>\n")).isEqualTo("")
+        assert(extractedPrompts).isEmpty()
+        assert(hp).isEqualTo("10")
+
+        // note that even though HP is first, because it doesn't produce output
+        // it is not counted when computing index
+        assert(process("MP[20]>\n")).isEqualTo("")
+        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20>" to 0)
+        extractedPrompts.clear()
+
+        // when we see HP again, since it doesn't produce output,
+        // the OTHER prompts are re-triggered
+        assert(process("HP[42]>\n")).isEqualTo("")
+        assert(hp).isEqualTo("42")
+        assert(extractedPrompts).containsExactly(1 to "HP<42> MP<20>" to 0)
     }
 
     private fun process(input: String): String =

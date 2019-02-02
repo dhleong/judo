@@ -117,7 +117,7 @@ class Alias(
         return parse(input) { it }
     }
 
-    fun parse(input: FlavorableStringBuilder, postProcess: (String) -> String): Boolean {
+    fun parse(input: FlavorableStringBuilder, postProcess: (String?) -> String?): Boolean {
         val matcher = spec.matcher(input)
         val groups = matcher.groups
 
@@ -140,7 +140,7 @@ class Alias(
         }
 
         val processed = postProcess(process(vars))
-        input.replace(matcher.start, matcher.end, processed)
+        input.replace(matcher.start, matcher.end, processed ?: "")
 
         return true
     }

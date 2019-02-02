@@ -190,7 +190,6 @@ class JythonScriptingEngine : ScriptingEngine {
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                     .__tojava__(String::class.java)
                     as String?
-                    ?: ""
             }
         }
     }
