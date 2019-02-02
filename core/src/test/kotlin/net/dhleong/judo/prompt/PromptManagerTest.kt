@@ -7,15 +7,14 @@ import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
  * @author dhleong
  */
 class PromptManagerTest {
-    val prompts = PromptManager()
-    val extractedPrompts = mutableListOf<Pair<Int, String>>()
+    private val prompts = PromptManager()
+    private val extractedPrompts = mutableListOf<Triple<Int, String, Int>>()
 
     @Before fun setUp() {
         prompts.clear()
@@ -34,7 +33,7 @@ class PromptManagerTest {
             .isEqualTo(" \n")
 
         assertThat(extractedPrompts)
-            .containsExactly(0 to "<||||  > <42>")
+            .containsExactly(-1 to "<||||  > <42>" to 0)
     }
 
     @Test fun stripAnsiPrompt() {
@@ -43,7 +42,7 @@ class PromptManagerTest {
         assertThat(process("${ansi(1, 6)}HP[${ansi(1, 2)}||||  ] Ammo: 42> \n"))
             .isEqualTo(" \n")
         assertThat(extractedPrompts)
-            .containsExactly(0 to "<||||  > <42>")
+            .containsExactly(-1 to "<||||  > <42>" to 0)
     }
 
     @Test fun `Switch between groups`() {
@@ -51,19 +50,31 @@ class PromptManagerTest {
         prompts.define("^HP[$1]>", "<$1>")
 
         assert(process("HP[||||  ] Ammo: 42> \n")).isEqualTo(" \n")
-        assert(extractedPrompts).containsExactly(0 to "<||||  > Combat: <42>")
+        assert(extractedPrompts).containsExactly(-1 to "<||||  > Combat: <42>" to 0)
         extractedPrompts.clear()
 
         assert(process("HP[||||  ]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(0 to "<||||  >")
+        assert(extractedPrompts).containsExactly(-2 to "<||||  >" to 0)
     }
 
-    @Ignore("TODO: Multiple prompts in a group")
     @Test fun `Multiple prompts in a group`() {
+        prompts.define("^HP[$1]>", "HP: <$1>", group = 1)
+        prompts.define("^Ammo: $1>", "Ammo: $1", group = 1)
+
+        assert(process("HP[||||  ]>\n")).isEqualTo("")
+        assert(extractedPrompts).containsExactly(1 to "HP: <||||  >" to 0)
+        extractedPrompts.clear()
+
+        assert(process("Ammo: 42>\n")).isEqualTo("")
+        assert(extractedPrompts).containsExactly(1 to "Ammo: 42" to 1)
+
     }
 
     private fun process(input: String): String =
-        prompts.process(input.parseAnsi()) { index, prompt ->
-            extractedPrompts.add(index to prompt)
+        prompts.process(input.parseAnsi()) { group, prompt, index ->
+            extractedPrompts.add(Triple(group, prompt, index))
         }.toString()
 }
+
+private infix fun Pair<Int, String>.to(third: Int) =
+    Triple(first, second, third)

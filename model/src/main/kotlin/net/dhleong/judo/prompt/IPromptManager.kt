@@ -30,7 +30,7 @@ interface IPromptManager : Clearable<String> {
 
     fun process(
         input: FlavorableCharSequence,
-        onPrompt: (index: Int, prompt: String) -> Unit
+        onPrompt: (group: Int, prompt: String, index: Int) -> Unit
     ): FlavorableCharSequence
 
     val size: Int

@@ -148,7 +148,7 @@ private fun Assert<IPromptManager>.hasSize(size: Int) {
 }
 private fun Assert<IPromptManager>.processes(line: FlavorableCharSequence, into: String) {
     var lastPrompt: String? = null
-    val result = actual.process(line) { _, prompt ->
+    val result = actual.process(line) { _, prompt, _ ->
         lastPrompt = prompt
     }
     assertAll {
