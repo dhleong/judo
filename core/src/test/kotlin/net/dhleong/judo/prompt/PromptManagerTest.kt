@@ -72,12 +72,17 @@ class PromptManagerTest {
 
     @Test fun `Strip prompts that resolve to empty`() {
         var hp = ""
+        var ammo = ""
         prompts.define("^HP[$1]>", { matches ->
             hp = matches[0]
             null // render nothing
         }, group = 1)
+        prompts.define("^Ammo[$1]>", { matches ->
+            ammo = matches[0]
+            null // render nothing
+        }, group = 1)
         prompts.define("^MP[$1]>", { (mp) ->
-            "HP<$hp> MP<$mp>"
+            "HP<$hp> MP<$mp> Ammo<$ammo>"
         }, group = 1)
 
         // since HP resolves to the empty string, we don't count it
@@ -88,14 +93,20 @@ class PromptManagerTest {
         // note that even though HP is first, because it doesn't produce output
         // it is not counted when computing index
         assert(process("MP[20]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20>" to 0)
+        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<>" to 0)
+        extractedPrompts.clear()
+
+        // Ammo also doesn't produce any output, but it should re-render MP
+        // (and not cause an infinite loop with HP)
+        assert(process("Ammo[11]>\n")).isEqualTo("")
+        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<11>" to 0)
         extractedPrompts.clear()
 
         // when we see HP again, since it doesn't produce output,
         // the OTHER prompts are re-triggered
         assert(process("HP[42]>\n")).isEqualTo("")
         assert(hp).isEqualTo("42")
-        assert(extractedPrompts).containsExactly(1 to "HP<42> MP<20>" to 0)
+        assert(extractedPrompts).containsExactly(1 to "HP<42> MP<20> Ammo<11>" to 0)
     }
 
     private fun process(input: String): String =
