@@ -170,19 +170,13 @@ class JLineRenderer(
     }
 
     override fun redraw() {
-        // NOTE: we want to force a render(), but maintain
-        // semantics of calling clearEcho(), etc.
-        val before = transactionDepth.getAndSet(0)
+        inTransaction {
+            clearEcho()
 
-        try {
-            inTransaction {
-                // NOTE: render() is called for us at the end
-                // of inTransaction; calling it here would result
-                // in double rendering!
+            // NOTE: render() is called for us at the end
+            // of inTransaction; calling it here would result
+            // in double rendering!
 //            render()
-            }
-        } finally {
-            transactionDepth.set(before)
         }
     }
 
@@ -215,10 +209,7 @@ class JLineRenderer(
     override fun readKey(): Key? = keySource.readKey()
 
     override fun beginUpdate() {
-        val initialDepth = transactionDepth.getAndIncrement()
-        if (initialDepth == 0) {
-            clearEcho()
-        }
+        transactionDepth.getAndIncrement()
     }
 
     override fun finishUpdate() {

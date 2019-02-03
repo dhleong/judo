@@ -51,6 +51,7 @@ import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.VisibleForTesting
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -179,7 +180,7 @@ class JudoCore(
         map
     }
 
-    // internal for testing
+    @VisibleForTesting
     internal var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
 
@@ -293,6 +294,13 @@ class JudoCore(
 
     override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())
     override fun printRaw(vararg objects: Any?) = doPrint(false, objects.toFlavoredSequence())
+
+    override fun redraw() = renderer.inTransaction {
+        if (currentMode is BlockingEchoMode) {
+            exitMode()
+        }
+        renderer.redraw()
+    }
 
     private fun doPrint(process: Boolean, asString: String) =
         doPrint(process, FlavorableStringBuilder.withDefaultFlavor(asString))
@@ -429,7 +437,7 @@ class JudoCore(
         if (fromMap || text.isEmpty()) {
             // NOTE: we don't process text sent from mappings or
             // scripts for aliases. Both would be done with send(),
-            // and it doesn't seem to make sense that to get
+            // and it doesn't seem to make sense for that to get
             // alias-ified (not to mention the potential for unintended
             // recursion). We can revisit this later if it's a problem
             toSend = text
@@ -482,9 +490,9 @@ class JudoCore(
         }
     }
 
-    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) = renderer.inTransaction {
+    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
         when (stroke.keyCode) {
-            Key.CODE_ESCAPE -> {
+            Key.CODE_ESCAPE -> renderer.inTransaction {
                 // reset the current register
                 registers.resetCurrent()
 
@@ -496,11 +504,11 @@ class JudoCore(
                 return
             }
 
-            Key.CODE_PAGE_UP -> {
+            Key.CODE_PAGE_UP -> renderer.inTransaction {
                 tabpage.currentWindow.scrollLines(1)
                 return
             }
-            Key.CODE_PAGE_DOWN -> {
+            Key.CODE_PAGE_DOWN -> renderer.inTransaction {
                 tabpage.currentWindow.scrollLines(-1)
                 return
             }
@@ -508,15 +516,17 @@ class JudoCore(
 
         currentMode.feedKey(stroke, remap, fromMap)
 
-        // NOTE: currentMode might have changed as a result of feedKey
-        val newMode = currentMode
-        if (newMode is StatusBufferProvider) {
-            tabpage.currentWindow.updateStatusLine(
-                newMode.renderStatusBuffer(),
-                newMode.getCursor()
-            )
-        } else {
-            updateInputLine()
+        renderer.inTransaction {
+            // NOTE: currentMode might have changed as a result of feedKey
+            val newMode = currentMode
+            if (newMode is StatusBufferProvider) {
+                tabpage.currentWindow.updateStatusLine(
+                    newMode.renderStatusBuffer(),
+                    newMode.getCursor()
+                )
+            } else {
+                updateInputLine()
+            }
         }
     }
 
@@ -740,24 +750,22 @@ class JudoCore(
         processAndStripPrompt(line)
     }
 
-    private fun activateMode(mode: Mode) {
-        renderer.inTransaction {
-            renderer.setCursorType(CursorType.BLOCK)
+    private fun activateMode(mode: Mode) = renderer.inTransaction {
+        renderer.setCursorType(CursorType.BLOCK)
 
-            currentMode.onExit()
-            currentMode = mode
-            mode.onEnter()
+        currentMode.onExit()
+        currentMode = mode
+        mode.onEnter()
 
-            updateInputLine()
+        updateInputLine()
 
-            if (mode is StatusBufferProvider) {
-                tabpage.currentWindow.updateStatusLine(
-                    mode.renderStatusBuffer(),
-                    mode.getCursor()
-                )
-            } else {
-                updateStatusLine(mode)
-            }
+        if (mode is StatusBufferProvider) {
+            tabpage.currentWindow.updateStatusLine(
+                mode.renderStatusBuffer(),
+                mode.getCursor()
+            )
+        } else {
+            updateStatusLine(mode)
         }
     }
 

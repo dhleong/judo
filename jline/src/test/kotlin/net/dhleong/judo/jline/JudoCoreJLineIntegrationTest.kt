@@ -10,6 +10,7 @@ import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.bufferOf
+import net.dhleong.judo.cmdMode
 import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
@@ -256,6 +257,47 @@ class JudoCoreJLineIntegrationTest {
             |____________________
             |_____________[INPUT]
             |input:test__________
+        """.trimMargin())
+    }
+
+    @Test fun `Redraw clears blocking echo`() {
+        judo.cmdMode.execute("""
+            def echoAndClear():
+                echo("Take my love")
+                echo("Take my land")
+        """.trimIndent())
+
+        judo.feedKeys(":echoAndClear()<cr>")
+        assert(display).linesEqual("""
+            |Take my love________
+            |Take my land________
+            |Press ENTER or type_
+            |command to continue_
+        """.trimMargin())
+
+        judo.cmdMode.execute("redraw()")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________[NORMAL]
+            |____________________
+        """.trimMargin())
+    }
+
+    @Test fun `Immediate redraw() clears blocking echo`() {
+        judo.cmdMode.execute("""
+            def echoAndClear():
+                echo("Take my love")
+                echo("Take my land")
+                redraw()
+        """.trimIndent())
+
+        judo.feedKeys(":echoAndClear()<cr>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________[NORMAL]
+            |____________________
         """.trimMargin())
     }
 

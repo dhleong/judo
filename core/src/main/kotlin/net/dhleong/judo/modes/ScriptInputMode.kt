@@ -88,22 +88,9 @@ class ScriptInputMode(
         prompt.length + buffer.cursor
 
     fun awaitResult(): String? {
-        // force a redraw
-        judo.renderer.redraw()
-
         while (true) {
             val stroke = judo.readKey()
             judo.feedKey(stroke)
-
-            // force a redraw after feedKey; this is called in a transaction,
-            // so the normal semantics don't trigger another redraw.
-            // FIXME: this is temporary to ensure the UI updates. A more permanent may
-            // involve some sort of stacked input request system (where the default
-            // input request constantly loops to send to the server). This approach
-            // should make it somewhat intuitive to support editing input() and
-            // CmdMode buffers via normal mode, etc in a "command line mode"
-
-            judo.renderer.redraw()
 
             if (exitted && !submitted) {
                 return null

@@ -339,6 +339,18 @@ class CmdMode(
             }
         ) { args: Array<Any> -> feedKeys(args, mode = "normal") }
 
+
+        registerFn(
+            "redraw",
+            doc {
+                usage { }
+                body { """
+                    Force a redraw of the screen; clears any echo()'d output
+                """.trimMargin() }
+            },
+            judo::redraw
+        )
+
         registerFn(
             "quit",
             doc {

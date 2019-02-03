@@ -97,6 +97,7 @@ interface IJudoCore {
     fun quit()
     fun readKey(): Key
     fun reconnect()
+    fun redraw()
     fun scrollPages(count: Int)
     fun scrollToBottom()
     fun searchForKeyword(text: CharSequence, direction: Int = 1)
