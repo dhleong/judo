@@ -13,37 +13,32 @@ class AliasManager : IAliasManager {
     override fun clear() =
         aliases.clear()
 
-    override fun define(inputSpec: String, outputSpec: String) {
+    override fun define(inputSpec: String, outputSpec: String) =
         define(inputSpec, outputSpec, VariableOutputProcessor(outputSpec)::process)
-    }
 
-    override fun define(inputSpec: String, parser: AliasProcesser) {
+    override fun define(inputSpec: String, parser: AliasProcesser) =
         define(inputSpec, null, parser)
-    }
 
-    private fun define(inputSpec: String, outputSpec: String?, parser: AliasProcesser) {
+    private fun define(inputSpec: String, outputSpec: String?, parser: AliasProcesser) =
         define(inputSpec, Alias.compile(inputSpec, outputSpec, parser))
-    }
 
 
-    override fun define(inputSpec: PatternSpec, outputSpec: String) {
+    override fun define(inputSpec: PatternSpec, outputSpec: String) =
         define(inputSpec, outputSpec, VariableOutputProcessor(outputSpec)::process)
-    }
 
-    override fun define(inputSpec: PatternSpec, parser: AliasProcesser) {
+    override fun define(inputSpec: PatternSpec, parser: AliasProcesser) =
         define(inputSpec, null, parser)
-    }
 
-    private fun define(inputSpec: PatternSpec, outputSpec: String?, parser: AliasProcesser) {
+    private fun define(inputSpec: PatternSpec, outputSpec: String?, parser: AliasProcesser) =
         define(inputSpec.original, Alias(inputSpec.original, outputSpec, inputSpec, parser))
-    }
 
     /** Shared implementation */
-    private fun define(inputSpec: String, alias: Alias) {
+    private fun define(inputSpec: String, alias: Alias): IAlias {
         // de-dup
         aliases.removeIf { it.original == inputSpec }
 
         aliases.add(alias)
+        return alias
     }
 
     override fun process(input: FlavorableCharSequence): FlavorableCharSequence {
@@ -81,11 +76,11 @@ class AliasManager : IAliasManager {
      */
     fun process(
         input: FlavorableCharSequence,
-        postProcess: (Int, String) -> String
+        postProcess: (IAlias, String?) -> String?
     ): FlavorableCharSequence {
         val builder = FlavorableStringBuilder(input)
-        aliases.forEachIndexed { index, alias ->
-            alias.parse(builder) { postProcess(index, it) }
+        aliases.forEach { alias ->
+            alias.parse(builder) { postProcess(alias, it) }
         }
         return builder
     }

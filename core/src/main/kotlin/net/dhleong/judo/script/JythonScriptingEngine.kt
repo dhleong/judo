@@ -190,7 +190,6 @@ class JythonScriptingEngine : ScriptingEngine {
                 handler.__call__(args.map { Py.java2py(it) }.toTypedArray())
                     .__tojava__(String::class.java)
                     as String?
-                    ?: ""
             }
         }
     }
@@ -306,7 +305,6 @@ class JythonScriptingEngine : ScriptingEngine {
         val flagsType = usages.flatMap { usage ->
             usage.args.map { it.flags }
         }.firstOrNull { it != null }
-        val hasFlags = flagsType != null
         val maxArgs = when {
             hasVarArgs -> Int.MAX_VALUE
             else -> usages.maxBy { it.args.size }!!.args.size
@@ -322,7 +320,7 @@ class JythonScriptingEngine : ScriptingEngine {
         return if (hasDecorator) {
             asMaybeDecorator<Any>(
                 name,
-                acceptsFlag = hasFlags,
+                usages.first { it.canBeDecorator },
                 isFlag = flagCheckerFor(flagsType),
                 takeArgs = maxArgs,
                 minArgs = minArgs - 1 // as a decorator, it can be called with min-1
@@ -378,13 +376,13 @@ private class PyGlobals : PyStringMap() {
  */
 private inline fun <reified T: Any> asMaybeDecorator(
     name: String,
+    decoratorUsage: JudoScriptInvocation,
     takeArgs: Int,
     minArgs: Int = takeArgs - 1,
-    acceptsFlag: Boolean,
     crossinline isFlag: (String) -> Boolean,
     crossinline fn: (Array<T>) -> Unit
 ) = asPyFn<T, PyObject?>(name, takeArgs, minArgs) { args ->
-    if (isDecoratorCall(args, minArgs, takeArgs, acceptsFlag, isFlag)) {
+    if (isDecoratorCall(decoratorUsage, args, minArgs, takeArgs, isFlag)) {
         // decorator mode; we return a function that accepts
         // a function and finally calls `fn`
         asPyFn<PyObject, PyObject>(name, 1) { wrappedArgs ->
@@ -400,30 +398,45 @@ private inline fun <reified T: Any> asMaybeDecorator(
 }
 
 private inline fun <T : Any> isDecoratorCall(
+    decoratorUsage: JudoScriptInvocation,
     args: Array<T>, minArgs: Int, takeArgs: Int,
-    acceptsFlag: Boolean, isFlag: (String) -> Boolean
+    isFlag: (String) -> Boolean
 ): Boolean {
-    if (args.size !in minArgs..(takeArgs - 1)) return false
+    if (args.size !in minArgs until takeArgs) return false
 
     val lastArg = args.last()
     if (lastArg is PyFunction) return false
 
-    if (acceptsFlag) {
-        if (lastArg is String && isFlag(lastArg)) {
-            return true
-        }
+    var argsToAccountFor = args.size
 
-        if (args.size == takeArgs - 1
-            && lastArg is String
-            && !isFlag(lastArg)) {
-            // one less than takeArgs, but last arg is not a flag.
-            // This must be a regular function call
-            return false
+    var index = 0
+    for (arg in decoratorUsage.args) {
+        // probably, got to the handler without seeing a flag
+        if (index > args.lastIndex) break
+
+        // NOTE: check flags first, because they are also optional!
+        when {
+            arg.flags != null ->
+                if (args[index] is String && isFlag(args[index] as String)) {
+                    // we saw the flag! if this is the last arg provided,
+                    // it's definitely a decorator invocation;
+                    // if not, it's definitely *not*
+                    return index == args.lastIndex
+                }
+
+            arg.isOptional ->
+                if (arg.typeMatches(args[index])) {
+                    // optional arg provided; move on
+                    ++index
+                    --argsToAccountFor
+                }
+
+            // required arg
+            else -> ++index
         }
     }
 
-    // otherwise, it's a decorator!
-    return true
+    return argsToAccountFor == minArgs
 }
 
 

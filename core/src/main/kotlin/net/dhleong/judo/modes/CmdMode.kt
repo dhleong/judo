@@ -9,6 +9,7 @@ import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.net.createURI
+import net.dhleong.judo.prompt.AUTO_UNIQUE_GROUP_ID
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
@@ -162,13 +163,20 @@ class CmdMode(
         queueEvent(eventName, handler)
     }
 
-    private fun definePrompt(prompt: PatternSpec, handler: Any) {
+    /** User-input group number */
+    private fun tryDefinePrompt(group: Int, prompt: PatternSpec, handler: Any) {
+        if (group <= 0) {
+            throw IllegalArgumentException("group must be > 0")
+        }
+        definePrompt(group, prompt, handler)
+    }
+    private fun definePrompt(group: Int, prompt: PatternSpec, handler: Any) {
         queuePrompt(prompt.original)
         if (handler is String) {
-            judo.prompts.define(prompt, handler)
+            judo.prompts.define(prompt, handler, group)
         } else {
             val processor = callableToAliasProcessor(handler)
-            judo.prompts.define(prompt, processor)
+            judo.prompts.define(prompt, processor, group)
         }
     }
 
@@ -680,12 +688,14 @@ class CmdMode(
             "prompt",
             doc {
                 usage {
+                    arg("group", "Int", isOptional = true)
                     arg("inputSpec", "Pattern/String")
                     arg("options", "String", flags = PatternProcessingFlags::class.java)
                     arg("outputSpec", "String")
                 }
 
                 usage(decorator = true) {
+                    arg("group", Integer::class.java, isOptional = true)
                     arg("inputSpec", "Pattern/String")
                     arg("options", "String", flags = PatternProcessingFlags::class.java)
                     arg("handler", "Fn")
@@ -694,15 +704,37 @@ class CmdMode(
                     Prepare a prompt to be displayed in the status area.
                     See :help alias for more about `inputSpec`, and :help trigger for more
                     about the optional `options`.
+
+                    You may optionally assign your prompt to a `group` in order to
+                    display multiple prompts at once. The number must be greater than
+                    zero (0) but is otherwise arbitrary, as long as you are consistent.
+                    If `group` is not specified, the prompt will be added to its own group.
+
+                    As long as the matched prompts belong to the same group they will
+                    all be displayed, in the order you declared them, in the prompt
+                    area. If a prompt from a different group is matched, only prompts
+                    from *that* group will be displayed at that point, and so on.
                 """.trimIndent() }
             }
-        ) { args: Array<Any> ->
-            if (args.size == 2) {
-                definePrompt(compilePatternSpec(args[0], ""), args[1])
-            } else {
-                definePrompt(compilePatternSpec(args[0], args[1] as String), args[2])
+        ) { args: Array<Any> -> when (args.size) {
+            2 -> definePrompt(
+                AUTO_UNIQUE_GROUP_ID,
+                compilePatternSpec(args[0], ""), args[1]
+            )
+            3 -> {
+                if (args[0] is Int) {
+                    // provided a group
+                    tryDefinePrompt(args[0] as Int, compilePatternSpec(args[1], ""), args[2])
+                } else {
+                    // provided flags
+                    definePrompt(
+                        AUTO_UNIQUE_GROUP_ID,
+                        compilePatternSpec(args[0], args[1] as String), args[2]
+                    )
+                }
             }
-        }
+            4 -> tryDefinePrompt(args[0] as Int, compilePatternSpec(args[1], args[2] as String), args[3])
+        } }
     }
 
     private fun ScriptingEngine.initTriggers() {
@@ -716,10 +748,10 @@ class CmdMode(
                 }
 
                 body { """
-        Declare a trigger. See :help alias for more about inputSpec.
-        `options` is an optional, space-separated string that may contain any of:
-             color - Keep color codes in the values passed to the handler
-        """.trimIndent() }
+                    Declare a trigger. See :help alias for more about inputSpec.
+                    `options` is an optional, space-separated string that may contain any of:
+                         color - Keep color codes in the values passed to the handler
+                """.trimIndent() }
             }
         ) { args: Array<Any> ->
             if (args.size == 2) {

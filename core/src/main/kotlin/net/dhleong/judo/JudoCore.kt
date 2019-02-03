@@ -34,6 +34,7 @@ import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.isTelnetSubsequence
+import net.dhleong.judo.prompt.AUTO_UNIQUE_GROUP_ID
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
 import net.dhleong.judo.render.Flavor
@@ -104,6 +105,7 @@ class JudoCore(
     internal val undo = UndoManager()
 
     private val parsedPrompts = ArrayList<FlavorableCharSequence>(2)
+    private var lastPromptGroup = AUTO_UNIQUE_GROUP_ID
 
     internal val buffer = InputBuffer(registers, undo)
     internal val cmdBuffer = InputBuffer()
@@ -786,7 +788,9 @@ class JudoCore(
         if (parsedPrompts.isNotEmpty()) {
             val prompt = parsedPrompts.last()
             val promptColsToPrint = minOf(prompt.length, availableCols)
-            val partialPrompt = prompt.subSequence(0, promptColsToPrint)
+            val partialPrompt = prompt.subSequence(0, promptColsToPrint).apply {
+                removeTrailingNewline()
+            }
             statusLineWorkspace.append(partialPrompt)
         }
 
@@ -870,9 +874,14 @@ class JudoCore(
         }
     }
 
-    internal fun onPrompt(index: Int, prompt: String) {
+    internal fun onPrompt(group: Int, prompt: String, index: Int) {
+        if (group != lastPromptGroup) {
+            lastPromptGroup = group
+            parsedPrompts.clear()
+        }
         if (parsedPrompts.lastIndex < index) {
-            for (i in maxOf(0, parsedPrompts.lastIndex)..index) {
+            val neededRows = index - parsedPrompts.lastIndex
+            for (i in 0 until neededRows) {
                 parsedPrompts.add(FlavorableStringBuilder.EMPTY)
             }
         }

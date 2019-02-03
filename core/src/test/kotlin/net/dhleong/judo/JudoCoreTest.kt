@@ -8,7 +8,9 @@ import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
@@ -117,10 +119,9 @@ class JudoCoreTest {
         )
     }
 
-
     @Test fun buildPromptWithAnsi() {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42"
-        judo.onPrompt(0, prompt)
+        judo.onPrompt(0, prompt, 0)
         renderer.settableWindowWidth = 12
 
         val status = judo.buildStatusLine(
@@ -130,6 +131,38 @@ class JudoCoreTest {
 
         assertThat(status.toAnsi()).isEqualTo(
             "${ansi(1,3)}HP: ${ansi(fg = 6)}42${ansi(attr = 0)}[TEST]"
+        )
+    }
+
+    @Test fun `Multiple prompts in a group`() {
+        val win = judo.renderer.currentTabpage.currentWindow as PrimaryJudoWindow
+        val promptBuffer = win.promptWindow.currentBuffer
+
+        judo.prompts.define("^HP[$1]>", "HP: $1", group = 1)
+        judo.prompts.define("^Ammo: $1>", "Ammo: $1", group = 1)
+
+        judo.prompts.define("^HP $1>", "<$1>")
+
+        judo.onIncomingBuffer("HP 42>\n".toFlavorable())
+        assert(promptBuffer).hasLines(
+            "<42>\n"
+        )
+
+        judo.onIncomingBuffer("HP[42]>\n".toFlavorable())
+        assert(promptBuffer).hasLines(
+            "HP: 42\n"
+        )
+
+        judo.onIncomingBuffer("Ammo: 22>\n".toFlavorable())
+        assert(promptBuffer).hasLines(
+            "HP: 42\n",
+            "Ammo: 22\n"
+        )
+
+        // back to group -1
+        judo.onIncomingBuffer("HP 32>\n".toFlavorable())
+        assert(promptBuffer).hasLines(
+            "<32>\n"
         )
     }
 

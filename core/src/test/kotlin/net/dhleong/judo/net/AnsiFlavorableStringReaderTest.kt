@@ -163,7 +163,7 @@ class AnsiFlavorableStringReaderTest {
     @Test fun `Process sequence with Trailing ANSI`() {
         val original = "\u001B[48;5;234m  \u001B[0;38;5;007;48;5;000m\r\u001B[38;5;000;48;5;232m".parseAnsi()
         val processed = PromptManager()
-            .process(original) { _, _ ->
+            .process(original) { _, _, _ ->
                 /* nop */
             }
         assert(processed).all {

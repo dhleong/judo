@@ -19,8 +19,12 @@ class JudoScriptArgument(
     val name: String,
     val type: String,
     val isOptional: Boolean = false,
-    val flags: Class<out Enum<*>>? = null
-)
+    val flags: Class<out Enum<*>>? = null,
+    val typeClass: Class<*>? = null
+) {
+    fun typeMatches(obj: Any): Boolean = typeClass?.isAssignableFrom(obj.javaClass)
+        ?: throw IllegalStateException("No typeClass for arg `$name`")
+}
 
 class InvocationBuilder(
     private val canBeDecorator: Boolean
@@ -34,7 +38,16 @@ class InvocationBuilder(
     }
 
     fun arg(name: String, type: String, isOptional: Boolean = false) {
+        if (canBeDecorator && isOptional) {
+            throw IllegalArgumentException(
+                "Optional argument `$name` to decorator invocation MUST have type class"
+            )
+        }
         args += JudoScriptArgument(name, type, isOptional)
+    }
+
+    fun arg(name: String, typeClass: Class<*>, isOptional: Boolean = false) {
+        args += JudoScriptArgument(name, typeClass.displayName, isOptional, typeClass = typeClass)
     }
 
     fun returns(type: String) {
@@ -45,12 +58,36 @@ class InvocationBuilder(
         hasVarArgs = true
     }
 
-    fun create(): JudoScriptInvocation = JudoScriptInvocation(
-        args,
-        returnType = returnType,
-        canBeDecorator = this.canBeDecorator,
-        hasVarArgs = this.hasVarArgs
-    )
+    fun create(): JudoScriptInvocation {
+        if (canBeDecorator) {
+            // validate args per rules for decorators (see below)
+            args.forEachIndexed { index, arg ->
+                // NOTE: verifying that optional args for decorators
+                // have a type class is done eagerly, above
+
+                if (arg.flags != null && index != args.lastIndex - 1) {
+                    throw IllegalArgumentException(
+                        "Flags `${arg.name}` provided not in penultimate position"
+                    )
+                }
+            }
+        }
+
+        return JudoScriptInvocation(
+            args,
+            returnType = returnType,
+            canBeDecorator = this.canBeDecorator,
+            hasVarArgs = this.hasVarArgs
+        )
+    }
+
+    private val Class<*>.displayName: String
+        get() = when (this) {
+            Integer::class.java -> "Int"
+
+            else -> simpleName
+        }
+
 }
 
 class DocBuilder {
@@ -61,6 +98,13 @@ class DocBuilder {
         setBody(block())
     }
 
+    /**
+     * NOTE: Rules for decorators:
+     * - They may have a single Flag-type arg; it MUST be the last arg
+     *   *before* the handler
+     * - They may have optional args; they MUST have a specific type distinct
+     *   from required args
+     */
     inline fun usage(decorator: Boolean = false, block: InvocationBuilder.() -> Unit) {
         addInvocation(
             InvocationBuilder(decorator).apply {

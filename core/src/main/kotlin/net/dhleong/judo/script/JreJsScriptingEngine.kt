@@ -22,7 +22,7 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
         return { args ->
             (engine as Invocable).invokeMethod(
                 fromScript, "call", fromScript, *args
-            ) as String? ?: ""
+            ) as String?
         }
     }
 

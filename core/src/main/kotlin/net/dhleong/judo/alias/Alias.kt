@@ -97,11 +97,11 @@ fun compileSimplePatternSpec(
  * @author dhleong
  */
 class Alias(
-    val original: String,
+    override val original: String,
     private val originalOutput: String?,
     private val spec: PatternSpec,
     private val process: AliasProcesser
-) {
+) : IAlias {
 
     companion object {
         fun compile(spec: String, outputSpec: String?, processor: AliasProcesser): Alias {
@@ -117,7 +117,7 @@ class Alias(
         return parse(input) { it }
     }
 
-    fun parse(input: FlavorableStringBuilder, postProcess: (String) -> String): Boolean {
+    fun parse(input: FlavorableStringBuilder, postProcess: (String?) -> String?): Boolean {
         val matcher = spec.matcher(input)
         val groups = matcher.groups
 
@@ -140,7 +140,7 @@ class Alias(
         }
 
         val processed = postProcess(process(vars))
-        input.replace(matcher.start, matcher.end, processed)
+        input.replace(matcher.start, matcher.end, processed ?: "")
 
         return true
     }

@@ -14,10 +14,16 @@ import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
+import net.dhleong.judo.script.JavaRegexPatternSpec
+import net.dhleong.judo.util.PatternProcessingFlags
+import net.dhleong.judo.util.ansi
 import org.junit.Before
 import org.junit.Test
+import java.util.EnumSet
 import java.util.concurrent.atomic.AtomicReference
+import java.util.regex.Pattern
 
 /**
  * @author dhleong
@@ -201,6 +207,35 @@ class JudoCoreJLineIntegrationTest {
             |___________ ________
             |----------- [NORMAL]
             |___________ ________
+        """.trimMargin())
+    }
+
+    @Test fun `Render prompts`() {
+        judo.prompts.define("^HP: $1", "HP $1")
+        judo.onIncomingBuffer("HP: 42".toFlavorable())
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |HP 42_______[NORMAL]
+            |____________________
+        """.trimMargin())
+    }
+
+    @Test fun `Render ANSI prompts`() {
+        val pattern = "^(HP.*)$"
+        judo.prompts.define(JavaRegexPatternSpec(
+            pattern,
+            Pattern.compile(pattern),
+            flags = EnumSet.of(PatternProcessingFlags.KEEP_COLOR)
+        ), "$1")
+
+        val input = "\u001b[35mHP: \u001b[36m42"
+        judo.onIncomingBuffer(input.parseAnsi())
+        assert(display).ansiLinesEqual("""
+            |____________________
+            |____________________
+            |$input${ansi(0)}______[NORMAL]
+            |____________________
         """.trimMargin())
     }
 
