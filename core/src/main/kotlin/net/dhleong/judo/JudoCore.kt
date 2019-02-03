@@ -20,6 +20,7 @@ import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.BaseCmdMode
+import net.dhleong.judo.modes.BaseModeWithBuffer
 import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.InputBufferProvider
@@ -59,6 +60,7 @@ import java.io.PrintStream
 import java.io.PrintWriter
 import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * @author dhleong
@@ -191,6 +193,7 @@ class JudoCore(
     private var lastConnect: URI? = null
 
     private val statusLineWorkspace = FlavorableStringBuilder(128)
+    private val cmdLineModeDepth = AtomicInteger(0)
 
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
@@ -561,7 +564,7 @@ class JudoCore(
         }
     }
 
-    fun feedKeys(keys: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
+    private fun feedKeys(keys: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
         readKeys(object : BlockingKeySource {
             override fun readKey(): Key = keys.next()
         }, remap = remap, fromMap = fromMap) {
@@ -725,6 +728,64 @@ class JudoCore(
     }
 
     /**
+     * Read a line of input from the user in "Command Line" mode
+     * (not to be confused with "Command Mode")
+     */
+    override fun readCommandLineInput(
+        prefix: Char,
+        bufferContents: String
+    ): String? {
+        cmdLineModeDepth.incrementAndGet()
+        val originalMode = currentMode
+        val originalBuffer = buffer.toString()
+        val originalCursor = buffer.cursor
+        renderer.inTransaction {
+            buffer.set(bufferContents)
+            enterMode(normalMode)
+        }
+
+        // FIXME render the `prefix` on the input line
+
+        var result: String? = null
+        while (true) {
+            val key = try {
+                readKey()
+            } catch (e: NoSuchElementException) {
+                // probably just in tests
+                return null
+            }
+
+            val mode = currentMode
+            if (key.keyCode == Key.CODE_ENTER && mode is BaseModeWithBuffer) {
+                // input read! done!
+                result = mode.buffer.toString()
+                break
+            }
+
+            // process the key as normal
+            feedKey(key, remap = true, fromMap = false)
+
+            if (key.char == 'c' && key.hasCtrl()) {
+                // cancel input
+                break
+            }
+        }
+
+        renderer.inTransaction {
+            cmdLineModeDepth.decrementAndGet()
+
+            (currentMode as? BaseModeWithBuffer)?.clearBuffer() // in case its Normal mode, for example
+            exitMode()
+            currentMode = originalMode
+
+            buffer.set(originalBuffer)
+            buffer.cursor = originalCursor
+        }
+
+        return result
+    }
+
+    /**
      * Read keys from the given producer until [keepReading] returns false
      */
     fun readKeys(producer: BlockingKeySource, remap: Boolean, fromMap: Boolean, keepReading: () -> Boolean) {
@@ -790,7 +851,12 @@ class JudoCore(
     }
 
     internal fun buildStatusLine(window: IJudoWindow, mode: Mode): FlavorableCharSequence {
-        val modeIndicator = "[${mode.name.toUpperCase()}]"
+        val modeName = mode.name.toUpperCase()
+        val commandLineIndicator = when (cmdLineModeDepth.get()) {
+            0 -> ""
+            else -> "CL:"
+        }
+        val modeIndicator = "[$commandLineIndicator$modeName]"
         val availableCols = window.width - modeIndicator.length
         statusLineWorkspace.setLength(0)
         if (parsedPrompts.isNotEmpty()) {

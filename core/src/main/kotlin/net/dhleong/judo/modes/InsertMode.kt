@@ -118,9 +118,9 @@ class InsertMode(
         }
     }
 
-    private fun clearBuffer() {
+    override fun clearBuffer() {
+        super.clearBuffer()
         input.clear()
-        buffer.clear()
         history.resetHistoryOffset()
         buffer.undoMan.clear()
     }

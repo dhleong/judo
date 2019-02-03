@@ -27,16 +27,16 @@ fun JudoScriptingEntity.Function<*>.toFunctionalInterface(
 }
 
 interface JudoCallable {
-    fun call(vararg args: Any): Any
+    fun call(vararg args: Any): Any?
 }
 
 @FunctionalInterface
 internal interface FIN : JudoCallable {
-    fun invoke(vararg args: Any): Any
-    override fun call(vararg args: Any): Any = invoke(*args)
+    fun invoke(vararg args: Any): Any?
+    override fun call(vararg args: Any): Any? = invoke(*args)
 }
 @Suppress("UNCHECKED_CAST")
-private class FnN(name: String, engine: ScriptingEngine, val fn: Function1<Array<out Any?>, Any>) : FnBase(name, engine) {
+private class FnN(name: String, engine: ScriptingEngine, val fn: Function1<Array<out Any?>, Any?>) : FnBase(name, engine) {
     override fun invoke(vararg args: Any) = safely {
         fn.invoke(engine.toJava(args as Array<Any>))
     }
@@ -51,7 +51,7 @@ private abstract class FnBase(
     protected val engine: ScriptingEngine,
     private val expectedArgs: Int = -1
 ) : FIN {
-    override fun invoke(vararg args: Any): Any {
+    override fun invoke(vararg args: Any): Any? {
         val expectedStatement = when {
             expectedArgs != -1 -> "expected $expectedArgs, "
             else -> ""
@@ -76,7 +76,7 @@ private abstract class FnBase(
 @FunctionalInterface
 internal interface FI0 : Function0<Any>, FIN
 private class Fn0(name: String, engine: ScriptingEngine, val fn: Function0<Any>) : FnBase(name, engine), FI0 {
-    override fun invoke(vararg args: Any): Any {
+    override fun invoke(vararg args: Any): Any? {
         if (args.isEmpty()) {
             return invoke()
         }
@@ -88,7 +88,7 @@ private class Fn0(name: String, engine: ScriptingEngine, val fn: Function0<Any>)
 @FunctionalInterface
 internal interface FI1 : Function1<Any, Any>, FIN
 private class Fn1(name: String, engine: ScriptingEngine, val fn: Function1<Any, Any>) : FnBase(name, engine), FI1 {
-    override fun invoke(vararg args: Any): Any {
+    override fun invoke(vararg args: Any): Any? {
         if (args.size == 1) {
             return invoke(args[0])
         }
@@ -100,7 +100,7 @@ private class Fn1(name: String, engine: ScriptingEngine, val fn: Function1<Any, 
 @FunctionalInterface
 internal interface FI2 : Function2<Any, Any, Any>
 private class Fn2(name: String, engine: ScriptingEngine, val fn: Function2<Any, Any, Any>) : FnBase(name, engine), FI2 {
-    override fun invoke(vararg args: Any): Any {
+    override fun invoke(vararg args: Any): Any? {
         if (args.size == 2) {
             return invoke(args[0], args[1])
         }
@@ -114,7 +114,7 @@ private class Fn2(name: String, engine: ScriptingEngine, val fn: Function2<Any, 
 @FunctionalInterface
 internal interface FI3 : Function3<Any, Any, Any, Any>
 private class Fn3(name: String, engine: ScriptingEngine, val fn: Function3<Any, Any, Any, Any>) : FnBase(name, engine), FI3 {
-    override fun invoke(vararg args: Any): Any {
+    override fun invoke(vararg args: Any): Any? {
         if (args.size == 3) {
             return invoke(args[0], args[1], args[2])
         }

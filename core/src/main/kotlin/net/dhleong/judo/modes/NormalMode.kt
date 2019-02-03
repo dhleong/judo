@@ -313,10 +313,10 @@ class NormalMode(
     override fun renderInputBuffer(): String = buffer.toString()
     override fun getCursor(): Int = buffer.cursor
 
-    private fun clearBuffer() {
+    override fun clearBuffer() {
+        super.clearBuffer()
         count.clear()
         input.clear()
-        buffer.clear()
         buffer.undoMan.clear()
         history.resetHistoryOffset()
     }

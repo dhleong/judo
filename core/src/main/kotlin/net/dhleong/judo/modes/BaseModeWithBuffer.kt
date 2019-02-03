@@ -22,6 +22,10 @@ abstract class BaseModeWithBuffer(
     val buffer: InputBuffer
 ) : Mode {
 
+    open fun clearBuffer() {
+        buffer.clear()
+    }
+
     protected fun actionOn(motion: Motion, action: KeyActionOnRange): KeyAction =
         { judo ->
             val range = rangeOf(motion)

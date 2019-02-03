@@ -326,7 +326,7 @@ class JythonScriptingEngine : ScriptingEngine {
                 minArgs = minArgs - 1 // as a decorator, it can be called with min-1
             ) { args -> callable.call(*args) }
         } else {
-            asPyFn<Any, Any>(
+            asPyFn<Any, Any?>(
                 name,
                 takeArgs = maxArgs,
                 minArgs = minArgs

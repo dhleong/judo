@@ -61,6 +61,16 @@ class ScriptInputMode(
                 return
             }
 
+            key.char == 'f' && key.hasCtrl() -> {
+                val result = judo.readCommandLineInput('@', buffer.toString())
+                if (result != null) {
+                    buffer.set(result)
+                    submitted = true
+                    judo.exitMode()
+                }
+                return
+            }
+
             key.isTab() -> {
                 performTabCompletionFrom(key, suggester)
                 return

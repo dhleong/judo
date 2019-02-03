@@ -91,8 +91,8 @@ class OutputSearchMode(
         judo.exitMode()
     }
 
-    private fun clearBuffer() {
-        buffer.clear()
+    override fun clearBuffer() {
+        super.clearBuffer()
         input.clear()
     }
 
