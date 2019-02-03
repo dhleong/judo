@@ -12,6 +12,8 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
+import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.toFlavorable
 
 /**
  * @author dhleong
@@ -91,8 +93,8 @@ class ScriptInputMode(
         buffer.type(key)
     }
 
-    override fun renderInputBuffer(): String =
-        "$prompt$buffer"
+    override fun renderInputBuffer(): FlavorableCharSequence =
+        "$prompt$buffer".toFlavorable()
 
     override fun getCursor(): Int =
         prompt.length + buffer.cursor

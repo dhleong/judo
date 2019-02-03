@@ -46,6 +46,7 @@ import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
@@ -194,6 +195,7 @@ class JudoCore(
 
     private val statusLineWorkspace = FlavorableStringBuilder(128)
     private val cmdLineModeDepth = AtomicInteger(0)
+    private var cmdLinePrefix = ':'
 
     private var keyStrokeProducer: BlockingKeySource? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
@@ -737,10 +739,12 @@ class JudoCore(
     ): String? {
         cmdLineModeDepth.incrementAndGet()
         val originalMode = currentMode
+        val originalPrefix = cmdLinePrefix
         val originalBuffer = buffer.toString()
         val originalCursor = buffer.cursor
         renderer.inTransaction {
             buffer.set(bufferContents)
+            cmdLinePrefix = prefix
             enterMode(normalMode)
         }
 
@@ -773,6 +777,7 @@ class JudoCore(
 
         renderer.inTransaction {
             cmdLineModeDepth.decrementAndGet()
+            cmdLinePrefix = originalPrefix
 
             (currentMode as? BaseModeWithBuffer)?.clearBuffer() // in case its Normal mode, for example
             exitMode()
@@ -832,15 +837,28 @@ class JudoCore(
 
     private fun updateInputLine() = renderer.inTransaction {
         if (!doEcho) {
-            renderer.updateInputLine("", 0)
+            renderer.updateInputLine(FlavorableStringBuilder.EMPTY, 0)
             return
         }
 
         val mode = currentMode
+        val inputLine: FlavorableCharSequence
+        val cursor: Int
         if (mode is InputBufferProvider) {
-            renderer.updateInputLine(mode.renderInputBuffer(), mode.getCursor())
+            inputLine = mode.renderInputBuffer()
+            cursor = mode.getCursor()
         } else {
-            renderer.updateInputLine(buffer.toString(), buffer.cursor)
+            inputLine = buffer.toString().toFlavorable()
+            cursor = buffer.cursor
+        }
+
+        if (cmdLineModeDepth.get() > 0) {
+            val prefixed = FlavorableStringBuilder(inputLine.length + 1)
+            prefixed.append(cmdLinePrefix, SimpleFlavor(isFaint = true))
+            prefixed.append(inputLine)
+            renderer.updateInputLine(prefixed, cursor + 1)
+        } else {
+            renderer.updateInputLine(inputLine, cursor)
         }
     }
 

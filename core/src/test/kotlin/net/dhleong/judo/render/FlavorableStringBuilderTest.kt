@@ -21,6 +21,14 @@ class FlavorableStringBuilderTest {
         }
     }
 
+    @Test fun `append empty FSB`() {
+        assert {
+            val b = FlavorableStringBuilder(1)
+            b.append('m', Flavor.default)
+            b.append(FlavorableStringBuilder.EMPTY)
+        }.doesNotThrowAnyException()
+    }
+
     @Test fun `Append subsequence with flavor`() {
         val b = FlavorableStringBuilder(1).apply {
             append("bla bla mal reynolds", 8, 20, SimpleFlavor(isBold = true))

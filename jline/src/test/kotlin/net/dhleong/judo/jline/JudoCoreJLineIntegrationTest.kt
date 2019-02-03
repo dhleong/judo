@@ -308,7 +308,7 @@ class JudoCoreJLineIntegrationTest {
             |____________________
             |____________________
             |_________[CL:INSERT]
-            |noldsrey____________
+            |@noldsrey___________
         """.trimMargin())
 
         yieldKeys("<cr>")

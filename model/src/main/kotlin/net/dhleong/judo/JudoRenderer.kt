@@ -84,7 +84,7 @@ interface JudoRenderer : JudoRendererInfo, WindowCommandHandler, Closeable {
     fun echo(text: FlavorableCharSequence)
     fun clearEcho()
 
-    fun updateInputLine(line: String, cursor: Int)
+    fun updateInputLine(line: FlavorableCharSequence, cursor: Int)
 
     fun redraw()
     fun setLoading(isLoading: Boolean)

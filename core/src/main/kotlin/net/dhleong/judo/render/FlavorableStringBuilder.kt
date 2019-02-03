@@ -137,7 +137,13 @@ class FlavorableStringBuilder private constructor(
                 if (oldFlavorIndex >= 0) flavors[oldFlavorIndex]
                 else null
             if (
-                (oldFlavorIndex < 0 || flavors[oldFlavorIndex + 1] == null)
+                (
+                    oldFlavorIndex < 0
+                    || (
+                        oldFlavorIndex < flavors.size - 1
+                            && flavors[oldFlavorIndex + 1] == null
+                    )
+                )
                 && oldFlavor != null
             ) {
                 beginFlavor(oldFlavor, myLength)

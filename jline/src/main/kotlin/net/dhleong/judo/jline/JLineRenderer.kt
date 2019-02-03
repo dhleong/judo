@@ -136,8 +136,8 @@ class JLineRenderer(
         cursorType = type
     }
 
-    override fun updateInputLine(line: String, cursor: Int) = inTransaction {
-        input.line = FlavorableStringBuilder.withDefaultFlavor(line)
+    override fun updateInputLine(line: FlavorableCharSequence, cursor: Int) = inTransaction {
+        input.line = line
         input.cursorIndex = cursor
     }
 
