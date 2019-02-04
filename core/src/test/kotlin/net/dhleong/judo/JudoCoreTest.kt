@@ -245,12 +245,11 @@ class JudoCoreTest {
     }
 
     @Test fun triggerScriptingError() {
-        judo.executeScript(
-            """
+        judo.executeScript("""
             import re
             @trigger(re.compile("(take.*)"))
             def my_trigger(my, love): print('triggered!')
-            """.trimIndent())
+        """.trimIndent())
 
         val buffer = "take my love\r\n"
         judo.onIncomingBuffer(FlavorableStringBuilder.withDefaultFlavor(buffer))
@@ -266,6 +265,15 @@ class JudoCoreTest {
         // and make sure the mode stack is as expected
         judo.feedKeys("<esc>")
         assert(judo).isInMode("normal")
+    }
+
+    @Test fun `Invalid commands still get added to command mode history`() {
+        judo.feedKeys(":echo()<cr>:<up>")
+        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+        judo.feedKeys("<esc>")
+
+        judo.feedKeys(":doesNotExist()<cr>:<up>")
+        assert(judo.cmdMode.buffer.toString()).isEqualTo("doesNotExist()")
     }
 }
 

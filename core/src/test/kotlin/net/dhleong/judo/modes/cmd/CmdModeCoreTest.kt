@@ -47,19 +47,20 @@ class CmdModeCoreTest(
 
         mode.execute("""
             value = "magic"
-            """.trimIndent())
+        """.trimIndent())
 
         mode.execute("""
             print(value)
-            """.trimIndent())
+        """.trimIndent())
 
         assert(judo.prints).containsExactly("magic")
     }
 
     @Test fun `Complain with unexpected number of args`() {
-        // works:
-        mode.execute(fnCall("send", "mreynolds"))
-        assert(judo.sends).containsExactly("mreynolds")
+        assert {
+            mode.execute(fnCall("send", "mreynolds"))
+            assert(judo.sends).containsExactly("mreynolds")
+        }.doesNotThrowAnyException()
 
         assert {
             mode.execute(fnCall("send"))

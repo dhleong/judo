@@ -127,6 +127,9 @@ abstract class BaseCmdMode(
         clearBuffer()
         exitMode()
 
+        // always add to history
+        history.push(code)
+
         // some special no-arg "commands"
         if (handleNoArgListingCommand(code)) {
             return
@@ -139,10 +142,8 @@ abstract class BaseCmdMode(
         } else if (code in registeredFns) {
             // no args needed, so just implicitly handle for convenience
             executeImplicit(code)
-            history.push(code)
         } else {
             execute(code)
-            history.push(code)
         }
     }
 
@@ -464,6 +465,7 @@ abstract class BaseCmdMode(
     override fun clearBuffer() {
         super.clearBuffer()
         input.clear()
+        history.resetHistoryOffset()
     }
 
     private fun clearQueuedForContext(context: String) {
