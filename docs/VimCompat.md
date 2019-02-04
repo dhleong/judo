@@ -28,6 +28,10 @@ Here's a list of features we definitely support:
     * Navigation can be performed with the `<ctrl-w>k` / `<ctrl-w>j` mappings
       as expected; when focused on a split window, scrolling and searching work
       on that window instead of the main output window (as you might expect).
+* Command Line mode
+    * Press `<ctrl-f>` in Command Mode or when in a prompt created by `input()`
+      to edit your input in Normal Mode. Press enter to submit as normal, or
+      `<ctrl-c>` to cancel (`input()` will return `null` in this case).
 
 ## Differences from Vim
 

@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes
 
 import net.dhleong.judo.Mode
+import net.dhleong.judo.render.FlavorableCharSequence
 
 /**
  * An InputBufferProvider is some sort of Mode
@@ -8,7 +9,7 @@ import net.dhleong.judo.Mode
  */
 interface InputBufferProvider : Mode {
 
-    fun renderInputBuffer(): String
+    fun renderInputBuffer(): FlavorableCharSequence
     fun getCursor(): Int
 
 }

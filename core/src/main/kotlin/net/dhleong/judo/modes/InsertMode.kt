@@ -13,6 +13,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.InputHistory
 
 /**
@@ -109,7 +110,7 @@ class InsertMode(
         buffer.type(key)
     }
 
-    override fun renderInputBuffer(): String = buffer.toString()
+    override fun renderInputBuffer() = buffer.toString().toFlavorable()
     override fun getCursor(): Int = buffer.cursor
 
     override fun clampCursor(buffer: InputBuffer) {
@@ -118,9 +119,9 @@ class InsertMode(
         }
     }
 
-    private fun clearBuffer() {
+    override fun clearBuffer() {
+        super.clearBuffer()
         input.clear()
-        buffer.clear()
         history.resetHistoryOffset()
         buffer.undoMan.clear()
     }

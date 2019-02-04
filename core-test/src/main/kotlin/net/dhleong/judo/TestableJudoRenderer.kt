@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.FlavorableCharSequence
+import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
@@ -22,7 +23,10 @@ class TestableJudoRenderer(
         set(value) { state.windowWidth = value }
 
     val inputLine: Pair<String, Int>
-        get() = state.inputLine
+        get() {
+            val (flavorableLine, cursor) = state.inputLine
+            return flavorableLine.toString() to cursor
+        }
 
     val mapRenderer: MapRenderer = Proxy { _, _ -> }
 
@@ -62,7 +66,8 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
     val tabpage = object : IJudoTabpage by DumbProxy() {
         override var currentWindow: IJudoWindow = primaryWindow
     }
-    var inputLine: Pair<String, Int> = "" to 0
+    var inputLine: Pair<FlavorableCharSequence, Int> =
+        FlavorableStringBuilder.EMPTY to 0
 }
 
 private fun createRendererProxy(state: RendererState): JudoRenderer {
@@ -75,7 +80,7 @@ private fun createRendererProxy(state: RendererState): JudoRenderer {
             "getCurrentTabpage" -> state.tabpage
 
             "updateInputLine" -> {
-                state.inputLine = args[0] as String to args[1] as Int
+                state.inputLine = args[0] as FlavorableCharSequence to args[1] as Int
             }
 
             else -> null // ignore

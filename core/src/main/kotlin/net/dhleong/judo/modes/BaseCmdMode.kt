@@ -76,39 +76,21 @@ abstract class BaseCmdMode(
         when {
             key == Key.ENTER -> {
                 val code = buffer.toString().trim()
-                when (code) {
-                    "q", "q!", "qa", "qa!" -> {
-                        judo.quit()
-                        return
-                    }
-                }
-
-                clearBuffer()
-                exitMode()
-
-                // some special no-arg "commands"
-                if (handleNoArgListingCommand(code)) {
-                    return
-                }
-
-                if (code.startsWith("help")) {
-                    showHelp(code.substring(5))
-                } else if (!(code.contains('(') && code.contains(')')) && code !in registeredFns) {
-                    showHelp(code)
-                } else if (code in registeredFns) {
-                    // no args needed, so just implicitly handle for convenience
-                    executeImplicit(code)
-                    history.push(code)
-                } else {
-                    execute(code)
-                    history.push(code)
-                }
+                handleEnteredCommand(code)
                 return
             }
 
             key.char == 'c' && key.hasCtrl() -> {
                 clearBuffer()
                 exitMode()
+                return
+            }
+
+            key.char == 'f' && key.hasCtrl() -> {
+                val result = judo.readCommandLineInput(':', buffer.toString())
+                if (result != null) {
+                    handleEnteredCommand(result)
+                }
                 return
             }
 
@@ -132,6 +114,36 @@ abstract class BaseCmdMode(
         }
 
         insertChar(key)
+    }
+
+    private fun handleEnteredCommand(code: String) {
+        when (code) {
+            "q", "q!", "qa", "qa!" -> {
+                judo.quit()
+                return
+            }
+        }
+
+        clearBuffer()
+        exitMode()
+
+        // some special no-arg "commands"
+        if (handleNoArgListingCommand(code)) {
+            return
+        }
+
+        if (code.startsWith("help")) {
+            showHelp(code.substring(5))
+        } else if (!(code.contains('(') && code.contains(')')) && code !in registeredFns) {
+            showHelp(code)
+        } else if (code in registeredFns) {
+            // no args needed, so just implicitly handle for convenience
+            executeImplicit(code)
+            history.push(code)
+        } else {
+            execute(code)
+            history.push(code)
+        }
     }
 
     override fun renderStatusBuffer() = FlavorableStringBuilder.withDefaultFlavor(":$buffer")
@@ -449,8 +461,8 @@ abstract class BaseCmdMode(
 
     protected abstract fun readFile(fileName: String, stream: InputStream)
 
-    private fun clearBuffer() {
-        buffer.clear()
+    override fun clearBuffer() {
+        super.clearBuffer()
         input.clear()
     }
 

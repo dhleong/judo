@@ -301,6 +301,25 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `Command Line Mode from input()`() = assertionsWhileTyping {
+        yieldKeys(":print(input(\"m:\"))<cr>rey<ctrl-f>Inolds")
+
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |_________[CL:INSERT]
+            |@noldsrey___________
+        """.trimMargin())
+
+        yieldKeys("<cr>")
+        assert(display).linesEqual("""
+            |____________________
+            |noldsrey____________
+            |____________[NORMAL]
+            |____________________
+        """.trimMargin())
+    }
+
     private inline fun assertionsWhileTyping(
         crossinline block: suspend SequenceScope<Key>.() -> Unit
     ) {

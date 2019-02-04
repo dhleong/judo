@@ -4,6 +4,7 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.InputHistory
 
 class ReverseInputSearchMode(
@@ -72,8 +73,8 @@ class ReverseInputSearchMode(
         }
     }
 
-    override fun renderInputBuffer(): String =
-        "$SEARCH_BUFFER_PREFIX$searchBuffer$SEARCH_BUFFER_SUFFIX$buffer"
+    override fun renderInputBuffer() =
+        "$SEARCH_BUFFER_PREFIX$searchBuffer$SEARCH_BUFFER_SUFFIX$buffer".toFlavorable()
 
     override fun getCursor(): Int =
         SEARCH_BUFFER_PREFIX.length + searchBuffer.cursor

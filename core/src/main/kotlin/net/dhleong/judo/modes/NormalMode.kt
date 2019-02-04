@@ -18,6 +18,7 @@ import net.dhleong.judo.motions.repeat
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.InputHistory
 
 /**
@@ -310,13 +311,13 @@ class NormalMode(
         }
     }
 
-    override fun renderInputBuffer(): String = buffer.toString()
+    override fun renderInputBuffer() = buffer.toString().toFlavorable()
     override fun getCursor(): Int = buffer.cursor
 
-    private fun clearBuffer() {
+    override fun clearBuffer() {
+        super.clearBuffer()
         count.clear()
         input.clear()
-        buffer.clear()
         buffer.undoMan.clear()
         history.resetHistoryOffset()
     }

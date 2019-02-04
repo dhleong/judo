@@ -95,6 +95,7 @@ interface IJudoCore {
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()
+    fun readCommandLineInput(prefix: Char, bufferContents: String = ""): String?
     fun readKey(): Key
     fun reconnect()
     fun redraw()

@@ -12,6 +12,7 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.toFlavorable
 import org.junit.Before
 import org.junit.Test
 
@@ -458,6 +459,10 @@ class JLineRendererTest {
         }
     }
 
+}
+
+private fun JLineRenderer.updateInputLine(line: String, cursor: Int) {
+    updateInputLine(line.toFlavorable(), cursor)
 }
 
 fun JLineRenderer.forceResize(width: Int, height: Int) {
