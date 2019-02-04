@@ -275,6 +275,15 @@ class JudoCoreTest {
         judo.feedKeys(":doesNotExist()<cr>:<up>")
         assert(judo.cmdMode.buffer.toString()).isEqualTo("doesNotExist()")
     }
+
+    @Test fun `Blank commands do NOT get added to command mode history`() {
+        judo.feedKeys(":echo()<cr>:<up>")
+        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+        judo.feedKeys("<esc>")
+
+        judo.feedKeys(":<cr>:<up>")
+        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+    }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =

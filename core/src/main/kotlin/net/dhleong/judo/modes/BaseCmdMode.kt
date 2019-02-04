@@ -127,8 +127,10 @@ abstract class BaseCmdMode(
         clearBuffer()
         exitMode()
 
-        // always add to history
-        history.push(code)
+        // always add to history (if not empty)
+        if (code.isNotBlank()) {
+            history.push(code)
+        }
 
         // some special no-arg "commands"
         if (handleNoArgListingCommand(code)) {
