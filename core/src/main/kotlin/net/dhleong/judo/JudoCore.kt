@@ -11,6 +11,7 @@ import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
@@ -53,6 +54,7 @@ import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.SubstitutableInputHistory
 import net.dhleong.judo.util.VisibleForTesting
 import java.io.File
 import java.io.FileOutputStream
@@ -113,8 +115,10 @@ class JudoCore(
 
     internal val buffer = InputBuffer(registers, undo)
     internal val cmdBuffer = InputBuffer()
+    internal val inputCmdBuffer = InputBuffer()
 
-    private val sendHistory = InputHistory(buffer)
+    private val sendHistory = SubstitutableInputHistory(InputHistory(buffer))
+    private val inputCmdHistory = InputHistory(inputCmdBuffer)
     private val cmdHistory = InputHistory(cmdBuffer)
 
     // fancy completions from stuff the user input
@@ -174,7 +178,9 @@ class JudoCore(
             this, ids, cmdBuffer, renderer, cmdHistory, completions,
             userConfigDir,
             userConfigFile,
-            scripting
+            scripting,
+            inputCmdBuffer,
+            inputCmdHistory
         ),
         ReverseInputSearchMode(this, buffer, sendHistory)
 
@@ -735,6 +741,7 @@ class JudoCore(
      */
     override fun readCommandLineInput(
         prefix: Char,
+        history: IInputHistory,
         bufferContents: String
     ): String? {
         cmdLineModeDepth.incrementAndGet()
@@ -742,6 +749,7 @@ class JudoCore(
         val originalPrefix = cmdLinePrefix
         val originalBuffer = buffer.toString()
         val originalCursor = buffer.cursor
+        val originalHistoryState = sendHistory.substitute(history)
         renderer.inTransaction {
             buffer.set(bufferContents)
             cmdLinePrefix = prefix
@@ -763,6 +771,9 @@ class JudoCore(
             if (key.keyCode == Key.CODE_ENTER && mode is BaseModeWithBuffer) {
                 // input read! done!
                 result = mode.buffer.toString()
+                if (result.isNotBlank()) {
+                    history.push(result)
+                }
                 break
             }
 
@@ -778,6 +789,7 @@ class JudoCore(
         renderer.inTransaction {
             cmdLineModeDepth.decrementAndGet()
             cmdLinePrefix = originalPrefix
+            sendHistory.restore(originalHistoryState)
 
             (currentMode as? BaseModeWithBuffer)?.clearBuffer() // in case its Normal mode, for example
             exitMode()

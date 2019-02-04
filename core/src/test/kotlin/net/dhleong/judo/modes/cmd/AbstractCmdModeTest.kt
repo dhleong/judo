@@ -34,6 +34,7 @@ abstract class AbstractCmdModeTest(
         )
     }
 
+    private val inputCmdBuffer = InputBuffer()
     protected val input = InputBuffer()
     protected val renderer = TestableJudoRenderer()
     protected val judo = TestableJudoCore(renderer)
@@ -44,7 +45,9 @@ abstract class AbstractCmdModeTest(
         DumbCompletionSource(),
         File(".judo"),
         File(".judo/init.${scriptType().toString().toLowerCase()}"),
-        factory
+        factory,
+        inputCmdBuffer = inputCmdBuffer,
+        inputCmdHistory = InputHistory(inputCmdBuffer)
     )
 
     @Before fun setUp() {

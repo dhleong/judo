@@ -4,14 +4,17 @@ import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import java.io.File
 
-class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory {
+class InputHistory(
+    override var buffer: InputBuffer,
+    capacity: Int = 2000
+): IInputHistory {
 
     private val contents = CircularArrayList<String>(capacity)
 
     private var lastBufferValue: String? = null
     private var historyOffset = 0
 
-    val size: Int
+    override val size: Int
         get() = contents.size
 
     override fun clear() {
@@ -116,7 +119,7 @@ class InputHistory(val buffer: InputBuffer, capacity: Int = 2000): IInputHistory
         }
     }
 
-    fun writeTo(path: File) {
+    override fun writeTo(path: File) {
         if (!path.exists()) {
             if (!path.parentFile.isDirectory && !path.parentFile.mkdirs()) {
                 throw IllegalArgumentException("Couldn't create directories for $path")

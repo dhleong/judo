@@ -2,15 +2,15 @@ package net.dhleong.judo.modes
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.toFlavorable
-import net.dhleong.judo.util.InputHistory
 
 class ReverseInputSearchMode(
     val judo: IJudoCore,
     val buffer: InputBuffer,
-    val sendHistory: InputHistory
+    private val sendHistory: IInputHistory
 ) : Mode, InputBufferProvider {
 
     override val name = "rsearch"

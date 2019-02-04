@@ -9,21 +9,21 @@ import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
+import net.dhleong.judo.assertionsWhileTyping
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.cmdMode
 import net.dhleong.judo.emptyBuffer
 import net.dhleong.judo.input.Key
-import net.dhleong.judo.input.Keys
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JavaRegexPatternSpec
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.ansi
+import net.dhleong.judo.yieldKeys
 import org.junit.Before
 import org.junit.Test
 import java.util.EnumSet
-import java.util.concurrent.atomic.AtomicReference
 import java.util.regex.Pattern
 
 /**
@@ -322,23 +322,7 @@ class JudoCoreJLineIntegrationTest {
 
     private inline fun assertionsWhileTyping(
         crossinline block: suspend SequenceScope<Key>.() -> Unit
-    ) {
-        // NOTE: we have to catch any exceptions (including from
-        // assertions) and re-throw them later, since feedKeys
-        // normally consumes exceptions and prints them to the buffer
-        val error = AtomicReference<Throwable>(null)
-        judo.feedKeys(sequence {
-            try {
-                block()
-            } catch (e: Throwable) {
-                error.set(e)
-            }
-        })
-        error.get()?.let { throw it }
-    }
+    ) = assertionsWhileTyping(judo, block)
 
-    private suspend fun SequenceScope<Key>.yieldKeys(keys: String) {
-        yieldAll(Keys.parse(keys))
-    }
 }
 

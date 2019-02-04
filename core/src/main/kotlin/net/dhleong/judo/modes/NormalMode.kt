@@ -3,6 +3,7 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.CountReadingBuffer
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
@@ -19,7 +20,7 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.xCharMotion
 import net.dhleong.judo.render.toFlavorable
-import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.VisibleForTesting
 
 /**
  * @author dhleong
@@ -28,7 +29,8 @@ import net.dhleong.judo.util.InputHistory
 class NormalMode(
     judo: IJudoCore,
     buffer: InputBuffer,
-    private val history: InputHistory,
+    @VisibleForTesting
+    internal val history: IInputHistory,
     private val opMode: OperatorPendingMode
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,

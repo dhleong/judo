@@ -4,6 +4,7 @@ import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
@@ -21,8 +22,10 @@ import net.dhleong.judo.render.toFlavorable
 class ScriptInputMode(
     judo: IJudoCore,
     completions: CompletionSource,
+    buffer: InputBuffer,
+    private val history: IInputHistory,
     val prompt: String = ""
-) : BaseModeWithBuffer(judo, InputBuffer()),
+) : BaseModeWithBuffer(judo, buffer),
     InputBufferProvider {
 
     override val name = "input"
@@ -54,6 +57,7 @@ class ScriptInputMode(
         when {
             key == Key.ENTER -> {
                 submitted = true
+                history.push(buffer.toString())
                 judo.exitMode()
                 return
             }
@@ -64,7 +68,7 @@ class ScriptInputMode(
             }
 
             key.char == 'f' && key.hasCtrl() -> {
-                val result = judo.readCommandLineInput('@', buffer.toString())
+                val result = judo.readCommandLineInput('@', history, buffer.toString())
                 if (result != null) {
                     buffer.set(result)
                     submitted = true

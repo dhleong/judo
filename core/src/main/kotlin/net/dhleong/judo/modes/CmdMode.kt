@@ -35,7 +35,9 @@ class CmdMode(
     private var completions: CompletionSource,
     userConfigDir: File,
     userConfigFile: File,
-    private val engineFactory: ScriptingEngine.Factory
+    private val engineFactory: ScriptingEngine.Factory,
+    private val inputCmdBuffer: InputBuffer,
+    private val inputCmdHistory: IInputHistory
 ) : BaseCmdMode(
     judo,
     inputBuffer, renderer,
@@ -201,7 +203,11 @@ class CmdMode(
 
     private fun readInput(prompt: String): String? {
         // TODO user-provided completions?
-        val inputMode = ScriptInputMode(judo, completions, prompt)
+        val inputMode = ScriptInputMode(
+            judo, completions,
+            inputCmdBuffer, inputCmdHistory,
+            prompt
+        )
         judo.enterMode(inputMode)
         return inputMode.awaitResult()
     }

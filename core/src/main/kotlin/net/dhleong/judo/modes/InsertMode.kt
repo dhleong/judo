@@ -4,6 +4,7 @@ import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyMapping
@@ -14,7 +15,6 @@ import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
 import net.dhleong.judo.render.toFlavorable
-import net.dhleong.judo.util.InputHistory
 
 /**
  * @author dhleong
@@ -23,7 +23,7 @@ class InsertMode(
     judo: IJudoCore,
     buffer: InputBuffer,
     completions: CompletionSource,
-    private val history: InputHistory
+    private val history: IInputHistory
 ) : BaseModeWithBuffer(judo, buffer),
     MappableMode,
     InputBufferProvider {

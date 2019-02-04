@@ -3,7 +3,10 @@ package net.dhleong.judo
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.modes.BlockingEchoMode
+import net.dhleong.judo.modes.CmdMode
+import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.net.AnsiFlavorableStringReader
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
@@ -11,7 +14,6 @@ import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.render.toFlavorable
-import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.ansi
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -191,7 +193,7 @@ class JudoCoreTest {
         tmpFile.writeText("Take my love,\nTake my land")
         val history = with(JudoCore::class.java.getDeclaredField("sendHistory")) {
             isAccessible = true
-            get(judo) as InputHistory
+            get(judo) as IInputHistory
         }
 
         assertThat(history.size).isEqualTo(0)
@@ -207,7 +209,7 @@ class JudoCoreTest {
         tmpFile.delete()
         val history = with(JudoCore::class.java.getDeclaredField("sendHistory")) {
             isAccessible = true
-            get(judo) as InputHistory
+            get(judo) as IInputHistory
         }
 
         assertThat(history.size).isEqualTo(0)
@@ -283,6 +285,22 @@ class JudoCoreTest {
 
         judo.feedKeys(":<cr>:<up>")
         assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+    }
+
+    @Test fun `readCommandLineInput switches to relevant history`() = assertionsWhileTyping(judo) {
+        (judo.currentMode as NormalMode).history.push("Normal")
+
+        yieldKeys(":")
+        (judo.currentMode as CmdMode).history.push("Cmd")
+
+        yieldKeys("<ctrl-f>k")
+        assert((judo.currentMode as NormalMode).buffer.toString())
+            .isEqualTo("Cmd")
+
+        // when we pop back to normal mode, its history should return
+        yieldKeys("<ctrl-c><esc>k")
+        assert((judo.currentMode as NormalMode).buffer.toString())
+            .isEqualTo("Normal")
     }
 }
 

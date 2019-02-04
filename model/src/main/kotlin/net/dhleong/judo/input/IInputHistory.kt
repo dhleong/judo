@@ -1,10 +1,15 @@
 package net.dhleong.judo.input
 
+import java.io.File
+
 /**
  * @author dhleong
  */
 
 interface IInputHistory {
+
+    val size: Int
+    var buffer: InputBuffer
 
     fun clear()
     fun push(line: String)
@@ -26,4 +31,6 @@ interface IInputHistory {
      * @return True if a match was found, else false.
      */
     fun search(match: String, forceNext: Boolean): Boolean
+
+    fun writeTo(path: File)
 }

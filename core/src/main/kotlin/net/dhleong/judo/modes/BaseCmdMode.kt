@@ -24,6 +24,7 @@ import net.dhleong.judo.script.JudoScriptInvocation
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
+import net.dhleong.judo.util.VisibleForTesting
 import net.dhleong.judo.util.hash
 import java.io.File
 import java.io.InputStream
@@ -36,7 +37,8 @@ abstract class BaseCmdMode(
     judo: IJudoCore,
     buffer: InputBuffer,
     private val rendererInfo: JudoRendererInfo,
-    private val history: IInputHistory,
+    @VisibleForTesting
+    internal val history: IInputHistory,
     private val userConfigDir: File,
     val userConfigFile: File
 ) : BaseModeWithBuffer(judo, buffer),
@@ -87,7 +89,7 @@ abstract class BaseCmdMode(
             }
 
             key.char == 'f' && key.hasCtrl() -> {
-                val result = judo.readCommandLineInput(':', buffer.toString())
+                val result = judo.readCommandLineInput(':', history, buffer.toString())
                 if (result != null) {
                     handleEnteredCommand(result)
                 }

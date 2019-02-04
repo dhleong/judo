@@ -2,6 +2,7 @@ package net.dhleong.judo
 
 import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
+import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IMapManager
@@ -95,7 +96,11 @@ interface IJudoCore {
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()
-    fun readCommandLineInput(prefix: Char, bufferContents: String = ""): String?
+    fun readCommandLineInput(
+        prefix: Char,
+        history: IInputHistory,
+        bufferContents: String = ""
+    ): String?
     fun readKey(): Key
     fun reconnect()
     fun redraw()
