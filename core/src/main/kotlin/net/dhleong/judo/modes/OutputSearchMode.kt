@@ -81,7 +81,6 @@ class OutputSearchMode(
 
     override fun onEnter() {
         clearBuffer()
-        suggester.reset()
     }
 
     override fun renderStatusBuffer() = FlavorableStringBuilder.withDefaultFlavor("/$buffer")
@@ -94,6 +93,7 @@ class OutputSearchMode(
     override fun clearBuffer() {
         super.clearBuffer()
         input.clear()
+        suggester.reset()
     }
 
     /**

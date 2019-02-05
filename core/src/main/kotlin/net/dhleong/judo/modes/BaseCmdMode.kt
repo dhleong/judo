@@ -71,7 +71,6 @@ abstract class BaseCmdMode(
 
     override fun onEnter() {
         clearBuffer()
-        suggester.reset()
     }
 
     override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
@@ -469,6 +468,7 @@ abstract class BaseCmdMode(
     override fun clearBuffer() {
         super.clearBuffer()
         input.clear()
+        suggester.reset()
         history.resetHistoryOffset()
     }
 

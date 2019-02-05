@@ -3,6 +3,8 @@ package net.dhleong.judo
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
+import com.nhaarman.mockito_kotlin.mock
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.modes.CmdMode
@@ -301,6 +303,23 @@ class JudoCoreTest {
         yieldKeys("<ctrl-c><esc>k")
         assert((judo.currentMode as NormalMode).buffer.toString())
             .isEqualTo("Normal")
+    }
+
+    @Test fun `Complete empty buffer after submit input`() {
+        judo.connection = mock {  }
+        judo.feedKeys("ihelp news<cr>")
+        judo.feedKeys("h<tab> n<tab><cr>")
+        assert(renderer.outputLines).containsExactly(
+            "help news",
+            "help news"
+        )
+
+        judo.feedKeys("<tab>")
+        assert(renderer.outputLines).isEqualTo(listOf(
+            "help news",
+            "help news"
+        ))
+        assert(judo.buffer.toString()).isNotEmpty()
     }
 }
 

@@ -121,6 +121,7 @@ class InsertMode(
 
     override fun clearBuffer() {
         super.clearBuffer()
+        suggester.reset()
         input.clear()
         history.resetHistoryOffset()
         buffer.undoMan.clear()

@@ -103,6 +103,11 @@ class ScriptInputMode(
     override fun getCursor(): Int =
         prompt.length + buffer.cursor
 
+    override fun clearBuffer() {
+        super.clearBuffer()
+        suggester.reset()
+    }
+
     fun awaitResult(): String? {
         while (true) {
             val stroke = judo.readKey()
