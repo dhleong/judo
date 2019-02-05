@@ -337,7 +337,7 @@ class JudoCore(
 
     override fun enterMode(mode: Mode) {
         if (state[MODE_STACK] &&
-            (modeStack.isEmpty() || modeStack.last() != mode)) {
+            (modeStack.isEmpty() || modeStack.last() != currentMode)) {
             modeStack.add(currentMode)
         }
 
@@ -345,11 +345,19 @@ class JudoCore(
     }
 
     override fun exitMode() {
-        if (currentMode == normalMode) return
+        val stack = modeStack
+        if (
+            currentMode === normalMode
+            && stack.isEmpty()
+        ) {
+            // don't exit normal mode unless it's actually on the stack
+            // due to readCommandLineInput, etc.
+            return
+        }
 
-        if (state[MODE_STACK] && !modeStack.isEmpty()) {
+        if (state[MODE_STACK] && !stack.isEmpty()) {
             // actually, return to the previous mode
-            val previousMode = modeStack.removeAt(modeStack.lastIndex)
+            val previousMode = stack.removeAt(stack.lastIndex)
             activateMode(previousMode)
         } else {
             activateMode(normalMode)
@@ -745,10 +753,10 @@ class JudoCore(
         bufferContents: String
     ): String? {
         cmdLineModeDepth.incrementAndGet()
-        val originalMode = currentMode
         val originalPrefix = cmdLinePrefix
         val originalBuffer = buffer.toString()
         val originalCursor = buffer.cursor
+        val originalMode = currentMode
         val originalHistoryState = sendHistory.substitute(history)
         renderer.inTransaction {
             buffer.set(bufferContents)
@@ -756,14 +764,13 @@ class JudoCore(
             enterMode(normalMode)
         }
 
-        // FIXME render the `prefix` on the input line
-
+        var bufferToRestore: String? = null
         var result: String? = null
         while (true) {
             val key = try {
                 readKey()
             } catch (e: NoSuchElementException) {
-                // probably just in tests
+                // should just be in tests
                 return null
             }
 
@@ -775,15 +782,14 @@ class JudoCore(
                     history.push(result)
                 }
                 break
+            } else if (key.char == 'c' && key.hasCtrl()) {
+                // cancel input editing, but preserve the changes
+                bufferToRestore = buffer.toString()
+                break
             }
 
             // process the key as normal
             feedKey(key, remap = true, fromMap = false)
-
-            if (key.char == 'c' && key.hasCtrl()) {
-                // cancel input
-                break
-            }
         }
 
         renderer.inTransaction {
@@ -792,11 +798,18 @@ class JudoCore(
             sendHistory.restore(originalHistoryState)
 
             (currentMode as? BaseModeWithBuffer)?.clearBuffer() // in case its Normal mode, for example
-            exitMode()
-            currentMode = originalMode
+
+            // pop the stack until we get back to our original state
+            while (currentMode != originalMode) {
+                exitMode()
+            }
 
             buffer.set(originalBuffer)
             buffer.cursor = originalCursor
+
+            if (bufferToRestore != null) {
+                (currentMode as? BaseModeWithBuffer)?.buffer?.set(bufferToRestore)
+            }
         }
 
         return result

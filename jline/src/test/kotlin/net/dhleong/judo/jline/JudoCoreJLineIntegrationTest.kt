@@ -320,6 +320,25 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `Exiting Command Line Mode hides prompt`() = assertionsWhileTyping {
+        yieldKeys(":mrey<ctrl-f>")
+
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |_________[CL:NORMAL]
+            |:mrey_______________
+        """.trimMargin())
+
+        yieldKeys("<ctrl-c>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |:mrey_______________
+            |____________________
+        """.trimMargin())
+    }
+
     private inline fun assertionsWhileTyping(
         crossinline block: suspend SequenceScope<Key>.() -> Unit
     ) = assertionsWhileTyping(judo, block)
