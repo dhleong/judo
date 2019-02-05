@@ -58,7 +58,7 @@ class JythonScriptingEngine : ScriptingEngine {
     }
 
     private val python = PythonInterpreter()
-    private val keepModules = HashSet<String>() // FIXME TODO initialize this
+    private val keepModules = HashSet<String>()
     private val globals = PyGlobals()
 
     private lateinit var printFn: (Array<Any?>) -> Unit

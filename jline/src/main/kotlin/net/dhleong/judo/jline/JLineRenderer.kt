@@ -150,7 +150,6 @@ class JLineRenderer(
             echoWindow.currentBuffer.size <= 1
             && text.computeRenderedLinesCount(windowWidth, settings[WORD_WRAP]) <= 1
         ) {
-            // TODO this should get cleared on scroll, etc.
             (currentTabpage.currentWindow as IJLineWindow).echo(text)
         } else {
 
