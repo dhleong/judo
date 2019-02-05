@@ -15,7 +15,7 @@ class SubstitutableInputHistory(
 
     override var buffer: InputBuffer
         get() = current.buffer
-        set(value) {
+        set(_) {
             throw UnsupportedOperationException(
                 "Do not change SubstituitableInputHistory's buffer!"
             )
