@@ -28,7 +28,7 @@ class ReverseInputSearchMode(
     override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
-                judo.send(buffer.toString(), fromMap)
+                judo.submit(buffer.toString(), fromMap)
                 judo.exitMode()
                 clearBuffer()
                 return

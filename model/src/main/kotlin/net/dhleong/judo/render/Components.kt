@@ -46,6 +46,12 @@ interface IJudoWindow : IJudoAppendable {
     val statusCursor: Int
 
     /**
+     * Optional property; if set, *when this window is focused* any user input
+     * will come to this function instead of [net.dhleong.judo.IJudoCore.send].
+     */
+    var onSubmit: ((String) -> Unit)?
+
+    /**
      * Common-use convenience
      */
     fun appendLine(line: String)

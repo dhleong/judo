@@ -109,6 +109,8 @@ interface IJudoCore {
     fun searchForKeyword(text: CharSequence, direction: Int = 1)
     fun seedCompletion(text: String)
     fun send(text: String, fromMap: Boolean)
+    /** Called from an input mode when a line of text is "submitted" */
+    fun submit(text: String, fromMap: Boolean)
     fun setCursorType(type: CursorType)
     fun unmap(mode: String, from: String)
 }

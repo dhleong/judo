@@ -509,6 +509,13 @@ class JudoCore(
         }
     }
 
+    override fun submit(text: String, fromMap: Boolean) {
+        val onSubmit = renderer.currentTabpage.currentWindow.onSubmit
+            ?: return send(text, fromMap)
+
+        onSubmit(text)
+    }
+
     override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
         when (stroke.keyCode) {
             Key.CODE_ESCAPE -> renderer.inTransaction {

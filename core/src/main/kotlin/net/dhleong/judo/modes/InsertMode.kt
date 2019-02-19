@@ -69,7 +69,7 @@ class InsertMode(
     override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
-                judo.send(buffer.toString(), fromMap)
+                judo.submit(buffer.toString(), fromMap)
                 clearBuffer()
                 return
             }

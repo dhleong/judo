@@ -100,6 +100,10 @@ class TestableJudoCore(
         }
     }
 
+    override fun submit(text: String, fromMap: Boolean) {
+        send(text, fromMap)
+    }
+
     override fun print(vararg objects: Any?) {
         objects.forEach { prints.add(it) }
     }
