@@ -3,10 +3,12 @@ package net.dhleong.judo.modes.cmd
 import assertk.Assert
 import assertk.all
 import assertk.assert
+import assertk.assertAll
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
 import assertk.assertions.hasToString
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
@@ -15,10 +17,10 @@ import assertk.assertions.support.expected
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.hasId
 import net.dhleong.judo.hasSize
+import net.dhleong.judo.hasWidth
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.render.hasFlavor
-import net.dhleong.judo.hasWidth
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -177,6 +179,41 @@ class CmdModeObjectInteropTest(
         }
     }
 
+    @Test fun `onSubmit handlers`() {
+        mode.execute(when (scriptType()) {
+            SupportedScriptTypes.PY -> """
+                newWin = vsplit(20)
+                def onSubmit(text):
+                    print("Submitted %s" % text)
+                    newWin.onSubmit = None
+                newWin.onSubmit = onSubmit
+            """.trimIndent()
+
+            SupportedScriptTypes.JS -> """
+                newWin = vsplit(20)
+                newWin.onSubmit = function(text) {
+                    print("Submitted " + text);
+                    newWin.onSubmit = null;
+                };
+            """.trimIndent()
+        })
+
+        assert(judo.prints).isEmpty()
+
+        judo.submit("mreynolds", fromMap = false)
+        assertAll {
+            assert(judo.sends, "sends").isEmpty()
+            assert(judo.prints, "prints").containsExactly("Submitted mreynolds")
+        }
+
+        // after onSubmit we clear the handler
+        judo.prints.clear()
+        judo.submit("mreynolds", fromMap = false)
+        assertAll {
+            assert(judo.prints, "prints").isEmpty()
+            assert(judo.sends, "sends").containsExactly("mreynolds")
+        }
+    }
 }
 
 private fun Assert<File>.doesNotExist() {

@@ -177,7 +177,7 @@ class CmdModeTriggerTest(
         judo.triggers.process("this is cool")
         assert(judo.prints).containsExactly("awesome")
 
-        judo.send("shiny", fromMap = false)
+        judo.submit("shiny", fromMap = false)
         assert(judo.sends).isEmpty()
         assert(judo.prints).containsExactly("awesome", "awesome")
     }

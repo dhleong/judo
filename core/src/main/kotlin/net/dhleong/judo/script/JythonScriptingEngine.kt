@@ -26,6 +26,7 @@ import org.python.core.PyException
 import org.python.core.PyFunction
 import org.python.core.PyIterator
 import org.python.core.PyModule
+import org.python.core.PyNone
 import org.python.core.PyObject
 import org.python.core.PyObjectDerived
 import org.python.core.PyStringMap
@@ -247,12 +248,12 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
-    override fun wrapCore(judo: IJudoCore) = createPyCore(judo)
+    override fun wrapCore(judo: IJudoCore) = createPyCore(this, judo)
 
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
-    ) = createPyWindow(tabpage, window)
+    ) = createPyWindow(this, tabpage, window)
 
     override fun onPreReadFile(file: File, inputStream: InputStream) {
         file.parentFile?.let { fileDir ->
@@ -472,12 +473,16 @@ private inline fun <reified T: Any, reified R> asPyFn(
     }
 }
 
-internal fun createPyCore(judo: IJudoCore): PyObject {
+internal fun createPyCore(
+    engine: JythonScriptingEngine,
+    judo: IJudoCore
+): PyObject {
     val currentObjects = object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
                 "tabpage" -> createPyTabpage(judo.renderer.currentTabpage)
                 "window" -> createPyWindow(
+                    engine,
                     judo.renderer.currentTabpage,
                     judo.renderer.currentTabpage.currentWindow
                 )
@@ -536,7 +541,11 @@ internal fun createPyTabpage(tabpage: IJudoTabpage) = object : PyObject() {
     }
 }
 
-internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObject {
+internal fun createPyWindow(
+    engine: JythonScriptingEngine,
+    tabpage: IJudoTabpage,
+    window: IJudoWindow
+): PyObject {
     val resize = asPyFn<Int, Unit>("resize", 2) {
         window.resize(it[0], it[1])
     }
@@ -549,6 +558,8 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
 
+                "onSubmit" -> Py.java2py(window.onSubmit)
+
                 // not used oft enough to cache
                 "close" -> asPyFn<Any, Unit>("close") {
                     tabpage.close(window)
@@ -557,6 +568,21 @@ internal fun createPyWindow(tabpage: IJudoTabpage, window: IJudoWindow): PyObjec
 
                 else -> super.__findattr_ex__(name)
             }
+
+        override fun __setattr__(name: String?, value: PyObject?) {
+            @Suppress("UNCHECKED_CAST")
+            when (name) {
+                "onSubmit" -> {
+                    window.onSubmit = when (value) {
+                        null -> null
+                        is PyNone -> null
+                        else -> engine.callableToFunction1(value) as (String) -> Unit
+                    }
+                }
+
+                else -> super.__setattr__(name, value)
+            }
+        }
 
         override fun __tojava__(c: Class<*>?): Any {
             if (c === IJudoWindow::class.java) {

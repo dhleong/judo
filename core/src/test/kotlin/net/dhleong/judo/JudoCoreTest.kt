@@ -219,8 +219,8 @@ class JudoCoreTest {
         judo.persistInput(tmpFile)
         assertThat(history.size).isEqualTo(0) // nothing there
 
-        judo.send("take love", fromMap = false)
-        judo.send("take land", fromMap = false)
+        judo.submit("take love", fromMap = false)
+        judo.submit("take land", fromMap = false)
         assertThat(history.size).isEqualTo(2)
 
         judo.onDisconnect(DumbProxy())

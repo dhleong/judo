@@ -25,6 +25,8 @@ abstract class BaseJudoWindow(
 
     protected val search = BufferSearcher()
 
+    override var onSubmit: ((String) -> Unit)? = null
+
     override fun append(text: FlavorableCharSequence) = currentBuffer.append(text)
     override fun appendLine(line: FlavorableCharSequence) = currentBuffer.appendLine(line)
     override fun appendLine(line: String) = appendLine(

@@ -100,6 +100,20 @@ class TestableJudoCore(
         }
     }
 
+    override fun submit(text: String, fromMap: Boolean) {
+        val window = try {
+            tabpage.currentWindow
+        } catch (e: NoSuchElementException) {
+            // will be null if we haven't split anything, in which case
+            // there's no way there's an onSubmit set
+            null
+        }
+
+        window?.onSubmit?.let {
+            it(text)
+        } ?: send(text, fromMap)
+    }
+
     override fun print(vararg objects: Any?) {
         objects.forEach { prints.add(it) }
     }
@@ -155,6 +169,8 @@ fun createWindowMock(
             isFocusable -> height - 1
             else -> height
         }
+
+    override var onSubmit: ((String) -> Unit)? = null
 
     override var currentBuffer: IJudoBuffer
         get() = buffer

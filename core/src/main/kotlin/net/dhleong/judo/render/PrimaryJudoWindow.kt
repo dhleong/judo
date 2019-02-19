@@ -36,6 +36,14 @@ abstract class PrimaryJudoWindow(
     override val statusCursor: Int
         get() = promptWindow.statusCursor
 
+    override var onSubmit: ((String) -> Unit)?
+        get() = null
+        set(_) {
+            throw IllegalArgumentException(
+                "You may not override onSubmit of a Primary window"
+            )
+        }
+
     // have to create lazy since the implementing class may depend
     // on fields initialized by its constructor.
     // NOTE: these should be init'd pretty quickly by the first render,
