@@ -130,7 +130,7 @@ abstract class Jsr223ScriptingEngine(
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
-    ): IScriptWindow = Jsr223Window(tabpage, window)
+    ): IScriptWindow = Jsr223Window(this, tabpage, window)
 }
 
 class Jsr223JudoCore(
@@ -163,6 +163,7 @@ class Jsr223JudoCore(
 }
 
 class Jsr223Window(
+    private val engine: Jsr223ScriptingEngine,
     private val tabpage: IJudoTabpage,
     private val window: IJudoWindow
 ) : IScriptWindow {
@@ -172,6 +173,13 @@ class Jsr223Window(
     override val height: Int = window.visibleHeight
     override val buffer: IScriptBuffer
         get() = Jsr223Buffer(window, window.currentBuffer)
+
+    @Suppress("UNCHECKED_CAST")
+    override var onSubmit: Any?
+        get() = window.onSubmit?.let { engine.toScript(it) }
+        set(value) {
+            window.onSubmit = value?.let { engine.callableToFunction1(it) as (String) -> Unit }
+        }
 
     override fun close() {
         tabpage.close(window)

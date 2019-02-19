@@ -24,6 +24,9 @@ interface IScriptWindow {
 
     val buffer: IScriptBuffer
 
+    /** *Should* be `(String) -> Unit)` */
+    var onSubmit: Any?
+
     fun close()
     fun resize(width: Int, height: Int)
 }
