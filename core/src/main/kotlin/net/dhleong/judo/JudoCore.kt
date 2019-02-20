@@ -508,7 +508,7 @@ class JudoCore(
     }
 
     override fun submit(text: String, fromMap: Boolean) {
-        val onSubmit = renderer.currentTabpage.currentWindow.onSubmit
+        val onSubmit = renderer.currentTabpage.currentWindow.onSubmitFn
             ?: return send(text, fromMap)
 
         onSubmit(text)

@@ -7,7 +7,6 @@ import net.dhleong.judo.alias.compileSimplePatternSpec
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
-import net.dhleong.judo.mapping.IMapManager
 import net.dhleong.judo.mapping.IMapManagerPublic
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
@@ -109,7 +108,14 @@ abstract class Jsr223ScriptingEngine(
         is IAliasManager -> object : IAliasManager by fromJava {}
         is IEventManager -> object : IEventManager by fromJava {}
         is ILogManager -> object : ILogManager by fromJava {}
-        is IMapManagerPublic -> object : IMapManagerPublic by fromJava {}
+        is IMapManagerPublic -> object : IMapManagerPublic by fromJava {
+            override var window: IJudoWindow?
+                get() = fromJava.window
+                set(value) {
+                    // unpack for simplicity
+                    fromJava.window = (value as? Jsr223Window)?.window ?: value
+                }
+        }
         is IPromptManager -> object : IPromptManager by fromJava {}
         is ITriggerManager -> object : ITriggerManager by fromJava {}
         is JudoRendererInfo -> object : JudoRendererInfo by fromJava {}
@@ -137,8 +143,8 @@ class Jsr223JudoCore(
     private val engine: Jsr223ScriptingEngine,
     private val judo: IJudoCore
 ) : IScriptJudo, ICurrentJudoObjects {
-    override val mapper: IMapManager
-        get() = judo.mapper
+    override val mapper: IMapManagerPublic
+        get() = engine.toScript(judo.mapper) as IMapManagerPublic
 
     override val current: ICurrentJudoObjects = this
 
@@ -165,8 +171,8 @@ class Jsr223JudoCore(
 class Jsr223Window(
     private val engine: Jsr223ScriptingEngine,
     private val tabpage: IJudoTabpage,
-    private val window: IJudoWindow
-) : IScriptWindow {
+    internal val window: IJudoWindow
+) : IScriptWindow, IJudoWindow by window {
 
     override val id: Int = window.id
     override val width: Int = window.width
@@ -176,9 +182,9 @@ class Jsr223Window(
 
     @Suppress("UNCHECKED_CAST")
     override var onSubmit: Any?
-        get() = window.onSubmit?.let { engine.toScript(it) }
+        get() = window.onSubmitFn?.let { engine.toScript(it) }
         set(value) {
-            window.onSubmit = value?.let { engine.callableToFunction1(it) as (String) -> Unit }
+            window.onSubmitFn = value?.let { engine.callableToFunction1(it) as (String) -> Unit }
         }
 
     override fun close() {

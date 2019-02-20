@@ -36,7 +36,7 @@ abstract class PrimaryJudoWindow(
     override val statusCursor: Int
         get() = promptWindow.statusCursor
 
-    override var onSubmit: ((String) -> Unit)?
+    override var onSubmitFn: ((String) -> Unit)?
         get() = null
         set(_) {
             throw IllegalArgumentException(

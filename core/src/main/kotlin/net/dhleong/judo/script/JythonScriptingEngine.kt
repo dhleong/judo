@@ -558,7 +558,7 @@ internal fun createPyWindow(
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
 
-                "onSubmit" -> Py.java2py(window.onSubmit)
+                "onSubmit" -> Py.java2py(window.onSubmitFn)
 
                 // not used oft enough to cache
                 "close" -> asPyFn<Any, Unit>("close") {
@@ -573,7 +573,7 @@ internal fun createPyWindow(
             @Suppress("UNCHECKED_CAST")
             when (name) {
                 "onSubmit" -> {
-                    window.onSubmit = when (value) {
+                    window.onSubmitFn = when (value) {
                         null -> null
                         is PyNone -> null
                         else -> engine.callableToFunction1(value) as (String) -> Unit
