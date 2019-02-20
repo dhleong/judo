@@ -109,7 +109,7 @@ class TestableJudoCore(
             null
         }
 
-        window?.onSubmit?.let {
+        window?.onSubmitFn?.let {
             it(text)
         } ?: send(text, fromMap)
     }
@@ -170,7 +170,7 @@ fun createWindowMock(
             else -> height
         }
 
-    override var onSubmit: ((String) -> Unit)? = null
+    override var onSubmitFn: ((String) -> Unit)? = null
 
     override var currentBuffer: IJudoBuffer
         get() = buffer

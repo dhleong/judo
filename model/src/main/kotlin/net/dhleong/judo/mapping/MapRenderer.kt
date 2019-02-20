@@ -7,5 +7,9 @@ import net.dhleong.judo.render.IJudoWindow
  */
 interface MapRenderer {
     fun resize(width: Int = -1, height: Int = -1)
-    fun renderMap(map: IJudoMap, window: IJudoWindow? = null)
+
+    /**
+     * Will be called in a [net.dhleong.judo.JudoRenderer] transaction for you
+     */
+    fun renderMap(map: IJudoMap, window: IJudoWindow)
 }

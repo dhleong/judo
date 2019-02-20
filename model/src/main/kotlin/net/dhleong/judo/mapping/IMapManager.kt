@@ -15,6 +15,7 @@ interface IMapManagerPublic {
     }
 
     val current: IJudoMap?
+    var window: IJudoWindow?
 
     /**
      * Create a new, empty Map with at least the given capacity
@@ -54,10 +55,13 @@ interface IMapManagerPublic {
     /**
      * Render the current map
      */
-    fun render() = render(null)
-    fun render(intoWindow: IJudoWindow?)
+    fun render() = render(window ?: throw IllegalStateException("No window to render into"))
+    fun render(intoWindow: IJudoWindow)
 
-    fun resize(width: Int = -1, height: Int = -1)
+    /**
+     * Called when the attached window may have changed in size
+     */
+    fun onResize()
 
     /**
      * Write the current map to disk, overwriting the

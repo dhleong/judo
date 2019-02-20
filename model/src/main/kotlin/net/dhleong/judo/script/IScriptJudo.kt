@@ -1,6 +1,6 @@
 package net.dhleong.judo.script
 
-import net.dhleong.judo.mapping.IMapManager
+import net.dhleong.judo.mapping.IMapManagerPublic
 
 /**
  * Subset of [net.dhleong.judo.IJudoCore] that is exposed to scripting
@@ -9,7 +9,7 @@ import net.dhleong.judo.mapping.IMapManager
  */
 interface IScriptJudo {
 
-    val mapper: IMapManager
+    val mapper: IMapManagerPublic
     val current: ICurrentJudoObjects
 
 }

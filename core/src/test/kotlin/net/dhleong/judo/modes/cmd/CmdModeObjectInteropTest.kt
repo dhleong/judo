@@ -12,6 +12,8 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
+import assertk.assertions.isNotSameAs
+import assertk.assertions.isSameAs
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.hasHeight
@@ -213,6 +215,26 @@ class CmdModeObjectInteropTest(
             assert(judo.prints, "prints").isEmpty()
             assert(judo.sends, "sends").containsExactly("mreynolds")
         }
+    }
+
+    @Test fun `Mapper window binding`() {
+        val primary = judo.renderer.currentTabpage.currentWindow
+        mode.execute("""
+            judo.mapper.createEmpty()
+            print(judo.mapper.window.id)
+
+            w = hsplit(10)
+            judo.mapper.window = w
+            print(judo.mapper.window.id)
+        """.trimIndent())
+
+        val splitWindow = judo.tabpage.currentWindow
+        assert(splitWindow).isNotSameAs(primary)
+        assert(judo.prints).containsExactly(
+            primary.id,
+            splitWindow.id
+        )
+        assert(judo.mapper.window).isSameAs(splitWindow)
     }
 }
 
