@@ -18,7 +18,7 @@ class DelegateMapRenderer(
         delegate.resize(width, height)
     }
 
-    override fun renderMap(map: IJudoMap, window: IJudoWindow?) {
+    override fun renderMap(map: IJudoMap, window: IJudoWindow) {
         delegate.renderMap(map, window)
     }
 

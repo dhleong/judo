@@ -73,7 +73,7 @@ fun main(args: Array<String>) {
     renderer.validate()
 
     val mapRenderer: MapRenderer = DelegateMapRenderer(
-        SimpleBufferMapRenderer(renderer)
+        SimpleBufferMapRenderer()
     )
 
     // clean up after ourselves

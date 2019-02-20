@@ -234,9 +234,7 @@ class JudoCore(
         updateStatusLine(currentMode)
         updateInputLine()
 
-        tabpage.currentWindow.let {
-            mapper.resize(width = it.width)
-        }
+        mapper.onResize()
     }
 
     private fun onBlockingEcho() {

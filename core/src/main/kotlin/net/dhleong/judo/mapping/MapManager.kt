@@ -7,6 +7,7 @@ import net.dhleong.judo.MAP_AUTOROOM
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.event.EVENT_GMCP_ENABLED
 import net.dhleong.judo.event.EVENT_MSDP_ENABLED
+import net.dhleong.judo.inTransaction
 import net.dhleong.judo.render.IJudoWindow
 import java.io.File
 
@@ -20,6 +21,7 @@ class MapManager(
 ) : IMapManager {
 
     override var current: IJudoMap? = null
+    override var window: IJudoWindow? = null
 
     private var currentFormat: String? = null
     private var currentFile: File? = null
@@ -64,14 +66,19 @@ class MapManager(
         init()
     }
 
-    override fun render(intoWindow: IJudoWindow?) {
+    override fun render(intoWindow: IJudoWindow) {
         current?.let {
-            mapRenderer.renderMap(it, intoWindow)
+            mapRenderer.resize(intoWindow.width, intoWindow.visibleHeight)
+
+            judo.renderer.inTransaction {
+                mapRenderer.renderMap(it, intoWindow)
+            }
         }
     }
 
-    override fun resize(width: Int, height: Int) {
-        mapRenderer.resize(width, height)
+    override fun onResize() {
+        val w = window ?: return
+        mapRenderer.resize(w.width, w.visibleHeight)
     }
 
     override fun save() {
@@ -126,6 +133,10 @@ class MapManager(
     }
 
     private fun init() {
+
+        // use the current window by default
+        window = judo.renderer.currentTabpage.currentWindow
+
         if (!settings[MAP_AUTOMAGIC]) return
 
         val mapper = AutomagicMapper(judo, this)

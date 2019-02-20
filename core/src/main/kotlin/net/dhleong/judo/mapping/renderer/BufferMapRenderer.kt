@@ -1,7 +1,5 @@
 package net.dhleong.judo.mapping.renderer
 
-import net.dhleong.judo.JudoRenderer
-import net.dhleong.judo.inTransaction
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_HEIGHT
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
 import net.dhleong.judo.mapping.IJudoMap
@@ -9,6 +7,7 @@ import net.dhleong.judo.mapping.MapGrid
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.render.IJudoAppendable
 import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.PrimaryJudoWindow
 
 /**
  * Base class for [MapRenderer] implementations that
@@ -17,7 +16,6 @@ import net.dhleong.judo.render.IJudoWindow
  * @author dhleong
  */
 abstract class BufferMapRenderer(
-    protected val renderer: JudoRenderer,
     protected var mapGrid: MapGrid
 ) : MapRenderer {
 
@@ -30,19 +28,21 @@ abstract class BufferMapRenderer(
      */
     abstract fun appendGridInto(map: IJudoMap, grid: MapGrid, window: IJudoAppendable)
 
-    override fun renderMap(map: IJudoMap, window: IJudoWindow?) {
-        renderer.inTransaction {
-            map.currentRoom?.let { room ->
-                mapGrid.buildAround(map, room)
+    override fun renderMap(map: IJudoMap, window: IJudoWindow) {
+        if (window !is PrimaryJudoWindow) {
+            window.currentBuffer.clear()
+        }
 
-                // if provided a window, use it; otherwise, try to use
-                // the current window
-                appendGridInto(
-                    map,
-                    mapGrid,
-                    (window ?: renderer.currentTabpage.currentWindow)
-                )
-            }
+        map.currentRoom?.let { room ->
+            mapGrid.buildAround(map, room)
+
+            // if provided a window, use it; otherwise, try to use
+            // the current window
+            appendGridInto(
+                map,
+                mapGrid,
+                window
+            )
         }
     }
 
@@ -57,6 +57,12 @@ abstract class BufferMapRenderer(
             if (height == -1) mapGrid.height
             else height
         )
+
+        if (newWidth == mapGrid.width && newHeight == mapGrid.height) {
+            // nop
+            return
+        }
+
         mapGrid = MapGrid(newWidth / charsPerX, newHeight / charsPerY)
     }
 }

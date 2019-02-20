@@ -1,7 +1,6 @@
 package net.dhleong.judo.mapping.renderer
 
 import assertk.assert
-import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.hasLinesSomewhere
 import net.dhleong.judo.mapping.JudoMap
 import net.dhleong.judo.mapping.JudoRoom
@@ -16,20 +15,18 @@ import org.junit.Test
  * @author dhleong
  */
 class SimpleBufferMapRendererTest {
-    val ids = IdManager()
-    val buffer = JudoBuffer(ids)
+    private val ids = IdManager()
+    private val buffer = JudoBuffer(ids)
 
-    lateinit var renderer: SimpleBufferMapRenderer
-    lateinit var roadColor: Flavor
-    lateinit var stairColor: Flavor
-    lateinit var wallColor: Flavor
-    lateinit var hereColor: Flavor
-    lateinit var noColor: Flavor
+    private lateinit var renderer: SimpleBufferMapRenderer
+    private lateinit var roadColor: Flavor
+    private lateinit var stairColor: Flavor
+    private lateinit var wallColor: Flavor
+    private lateinit var hereColor: Flavor
+    private lateinit var noColor: Flavor
 
     @Before fun setUp() {
-        renderer = SimpleBufferMapRenderer(
-            TestableJudoRenderer()
-        )
+        renderer = SimpleBufferMapRenderer()
         buffer.clear()
 
         roadColor = renderer.roadColor

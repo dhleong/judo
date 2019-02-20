@@ -1,6 +1,7 @@
 package net.dhleong.judo.mapping
 
 import net.dhleong.judo.TestableJudoCore
+import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -16,7 +17,7 @@ class DirectionalMapStrategyTest {
     lateinit var map: JudoMap
 
     @Before fun setUp() {
-        judo = TestableJudoCore()
+        judo = TestableJudoCore(TestableJudoRenderer())
         mapper = AutomagicMapper(judo, judo.mapper)
         strategy = DirectionalMapStrategy(mapper)
 

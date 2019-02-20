@@ -1,6 +1,5 @@
 package net.dhleong.judo.mapping.renderer
 
-import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_HEIGHT
 import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
 import net.dhleong.judo.mapping.IJudoMap
@@ -17,9 +16,8 @@ import net.dhleong.judo.render.SimpleFlavor
  * @author dhleong
  */
 class SimpleBufferMapRenderer(
-    renderer: JudoRenderer,
     mapGrid: MapGrid = MapGrid(DEFAULT_MIN_MAP_WIDTH, DEFAULT_MIN_MAP_HEIGHT)
-) : BufferMapRenderer(renderer, mapGrid) {
+) : BufferMapRenderer(mapGrid) {
 
     override val name: String = "simple"
     override val charsPerX = 5
