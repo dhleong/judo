@@ -176,8 +176,8 @@ will currently always be the one on top. `hsplit()` takes either a
 the current window, or an `int` such as `10` to explicitly choose a height
 in lines.
 
-`hsplit()` returns a `Window` object, which has the following attributes
-and methods:
+`hsplit()` and `vsplit()` return a `Window` object, which has the following
+attributes and methods:
 
 Name      | Returned Type | Description
 ----------|---------------|------------
@@ -185,6 +185,7 @@ id        | `Int`         | The window's unique, numeric ID
 buffer    | `Buffer`      | The window's underlying `Buffer` object
 height    | `Int`         | The height of the window in rows
 width     | `Int`         | The width of the window in columns
+onSubmit  | `(String) -> Unit` | A function to call when input is submitted while this window is focused
 `close()` | `None`        | Close the window
 `resize(width: Int, height: Int)` | `None` | Resize the window
 
