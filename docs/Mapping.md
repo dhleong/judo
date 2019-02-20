@@ -23,7 +23,7 @@ window. However, you can also create a new window with `hsplit()` or
 primary = judo.current.window
 mapWindow = vsplit(20)
 
-# switch focus back to primry window
+# switch focus back to primary window
 judo.current.window = primary
 
 # set the target window for map output
