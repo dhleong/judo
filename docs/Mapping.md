@@ -76,3 +76,27 @@ def mapToFile(mapFile):
 
     event("DISCONNECTED", persistMap)
 ```
+
+## Mapper interface
+
+The Mapper interface can be accessed in scripting via `judo.mapper`.
+
+### Properties
+
+Name      | Type          | Description
+----------|---------------|------------
+current   | `JudoMap`     | The current Map instance, if any
+window    | `Window`      | The bound Window instance (see above)
+
+### Functions
+
+Signature                    | Description
+-----------------------------|---------------
+`createEmpty()`              | Create a new, empty map
+`deleteRoom(dir: String)`    | Delete the room at the exit `dir` from the current room
+`render()`                   | Manually render to the current Window
+`load(file: String)`         | Load the file at the given file path
+`saveAs(file: String)`       | Save the current map to the given file path
+`save()`                     | Save the current map. You *must* have either used `load()` or `saveAs()` prior to calling this
+`command(text: String)`      | Process the given text like a movement command, updating the map to follow the exit, creating the room if appropriate and desired.
+`goto(roomId: Int)`          | Set the current room ID
