@@ -1,5 +1,6 @@
 package net.dhleong.judo.net
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -9,6 +10,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.render.FlavorableCharSequence
 import java.io.File
 import java.io.IOException
@@ -30,8 +32,7 @@ abstract class BaseConnection(
     protected abstract val input: InputStream
     protected abstract val output: OutputStream
 
-    override var onError: ((IOException) -> Unit)? = null
-    override var onDisconnect: ((JudoConnection) -> Unit)? = null
+    override var onDisconnect: ((JudoConnection, reason: IOException?) -> Unit)? = null
     override var onEchoStateChanged: ((Boolean) -> Unit)? = null
 
     private val writeQueue = Channel<String>(capacity = 8)
@@ -58,14 +59,17 @@ abstract class BaseConnection(
         writeQueue.send(line)
     }
 
-    override fun forEachLine(onNewLine: (FlavorableCharSequence) -> Unit) {
+    override fun forEachLine(
+        async: Boolean,
+        onNewLine: (FlavorableCharSequence) -> Unit
+    ) {
         startTasks()
 
-        launch(Dispatchers.Default + job) {
+        maybeAsync(async) {
             while (job.isActive) {
                 @Suppress("EXPERIMENTAL_API_USAGE")
                 val read = readTask.receiveOrNull()
-                    ?: return@launch // disconnected
+                    ?: break // disconnected
 
                 onNewLine(read)
             }
@@ -93,10 +97,16 @@ abstract class BaseConnection(
             val buffer = CharArray(1024)
             val reader = input.bufferedReader()
             val helper = AnsiFlavorableStringReader()
+            var reason: IOException? = null
             while (job.isActive) {
-                val read = reader.read(buffer)
+                val read = try {
+                    reader.read(buffer)
+                } catch (e: IOException) {
+                    reason = e
+                    -1
+                }
                 if (read == -1) {
-                    notifyDisconnect()
+                    notifyDisconnect(reason)
                     break
                 } else if (read > 0) {
 
@@ -113,12 +123,27 @@ abstract class BaseConnection(
         }
     }
 
-    private fun notifyDisconnect() = synchronized(this) {
+    private fun notifyDisconnect(reason: IOException? = null) = synchronized(this) {
         // there can be only one
         val callback = onDisconnect
         onDisconnect = null
 
-        callback?.invoke(this)
+        callback?.invoke(this, reason)
     }
 
+    private inline fun maybeAsync(async: Boolean, crossinline block: suspend CoroutineScope.() -> Unit) {
+        if (async) {
+            launch(Dispatchers.Default + job) {
+                block()
+            }
+        } else {
+            try {
+                runBlocking(job) {
+                    block()
+                }
+            } catch (e: CancellationException) {
+                // it's okay
+            }
+        }
+    }
 }

@@ -268,16 +268,6 @@ class JudoCore(
                 print("## TELNET doPrint($doEcho)")
             }
         }
-        connection.onError = {
-            appendError(it, "NETWORK ERROR: ")
-
-            // force disconnect on network error; we've probably already
-            // lost connection, but in case we haven't, manually handle
-            // onDisconnect to avoid duplicates
-            connection.onDisconnect = null
-            disconnect()
-            onDisconnect(connection)
-        }
         connection.forEachLine { buffer ->
             onIncomingBuffer(buffer)
         }
@@ -291,10 +281,7 @@ class JudoCore(
     }
 
     override fun disconnect() {
-        connection?.let {
-            it.onError = null
-            it.close()
-        }
+        connection?.close()
     }
 
     override fun echo(vararg objects: Any?) {
@@ -676,7 +663,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    @Synchronized internal fun onDisconnect(connection: JudoConnection) {
+    @Synchronized internal fun onDisconnect(connection: JudoConnection, reason: IOException? = null) {
         doEcho = true
         renderer.inTransaction {
             // dump the parsed prompts for visual effect
@@ -689,6 +676,13 @@ class JudoCore(
             tabpage.unsplit()
 
             print("Disconnected from $connection")
+            if (reason is IOException) {
+                // network errors don't need a full stack trace
+                print(" - Reason: ${reason.message}")
+            } else if (reason != null) {
+                // some other kind of error
+                appendError(reason, "NETWORK ERROR: ")
+            }
             updateStatusLine(currentMode)
 
             // stop logging
