@@ -1,8 +1,10 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.JudoRenderer
+import net.dhleong.judo.SCROLL
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.search.BufferSearcher
+import java.lang.Math.abs
 
 /**
  * Core, non-rendering-dependent [IJudoWindow] implementations
@@ -35,6 +37,18 @@ abstract class BaseJudoWindow(
 
     override fun scrollPages(count: Int) {
         scrollLines(visibleHeight * count)
+    }
+
+    override fun scrollBySetting(count: Int) {
+        // NOTE: currently, count is only used for the direction
+        val normalizedCount = count / abs(count)
+        
+        val setting = settings[SCROLL]
+        if (setting <= 0) {
+            scrollLines((visibleHeight / 2) * normalizedCount)
+        } else {
+            scrollLines(setting * normalizedCount)
+        }
     }
 
     override fun searchForKeyword(word: CharSequence, direction: Int) {

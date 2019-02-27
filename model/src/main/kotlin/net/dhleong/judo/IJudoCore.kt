@@ -106,6 +106,7 @@ interface IJudoCore {
     fun redraw()
     fun scrollLines(count: Int)
     fun scrollPages(count: Int)
+    fun scrollBySetting(count: Int)
     fun scrollToBottom()
     fun searchForKeyword(text: CharSequence, direction: Int = 1)
     fun seedCompletion(text: String)

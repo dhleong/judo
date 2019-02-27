@@ -448,6 +448,10 @@ class JudoCore(
         tabpage.currentWindow.scrollPages(count)
     }
 
+    override fun scrollBySetting(count: Int) {
+        tabpage.currentWindow.scrollBySetting(count)
+    }
+
     override fun scrollToBottom() {
         tabpage.currentWindow.scrollToBottom()
     }

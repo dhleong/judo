@@ -24,6 +24,11 @@ val MODE_STACK = declareSetting("modestack", true,
 val MAX_INPUT_LINES = declareSetting("inputlines", 1,
     "Maximum number of lines the input field can expand to before the text gets scrolled.")
 
+val SCROLL = declareSetting("scroll", 0, """
+    Number of lines to scroll with CTRL-U and CTRL-D commands. When less
+    than or equal to 0, will use half the window's height.
+""".trimIndent())
+
 // map settings
 val MAP_AUTORENDER = declareSetting("map:autorender", false,
     "Automatically render maps on move")

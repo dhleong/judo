@@ -9,6 +9,7 @@ import com.nhaarman.mockito_kotlin.eq
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.times
 import com.nhaarman.mockito_kotlin.verify
+import net.dhleong.judo.SCROLL
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.bufferOf
@@ -194,6 +195,53 @@ class JLineWindowTest {
             |first_____
             |mate______
             |zoe_______
+        """.trimMargin())
+    }
+
+    @Test fun `Scroll by setting`() {
+        val display = JLineDisplay(10, 4)
+        val buffer = bufferOf("""
+            pilot
+            wash
+            captain
+            mreynolds
+            first
+            mate
+            zoe
+        """.trimIndent())
+
+        val state = StateMap()
+        val w = windowOf(buffer, 10, 4, settings = state)
+
+        w.render(display, 0, 0)
+        assert(display).linesEqual("""
+            |mreynolds_
+            |first_____
+            |mate______
+            |zoe_______
+        """.trimMargin())
+
+        // count is ignored; half window height is used
+        w.scrollBySetting(4)
+        w.render(display, 0, 0)
+        assert(w).hasScrollback(2)
+        assert(display).linesEqual("""
+            |wash______
+            |captain___
+            |mreynolds_
+            |first_____
+        """.trimMargin())
+
+        // when > 0, SCROLL is used
+        state[SCROLL] = 1
+        w.scrollBySetting(4)
+        w.render(display, 0, 0)
+        assert(w).hasScrollback(3)
+        assert(display).linesEqual("""
+            |pilot_____
+            |wash______
+            |captain___
+            |mreynolds_
         """.trimMargin())
     }
 
@@ -753,11 +801,12 @@ class JLineWindowTest {
         height: Int,
         focusable: Boolean = false,
         focused: Boolean = false,
-        wrap: Boolean = false
+        wrap: Boolean = false,
+        settings: StateMap? = null
     ) = JLineWindow(
         renderer,
         IdManager(),
-        StateMap().apply {
+        settings ?: StateMap().apply {
             this[WORD_WRAP] = wrap
         },
         width,

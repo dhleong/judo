@@ -204,6 +204,8 @@ class NormalMode(
         keys("<ctrl-f>") to withCount { count -> judo.scrollPages(-count) },
         keys("<ctrl-y>") to withCount { count -> judo.scrollLines(count) },
         keys("<ctrl-e>") to withCount { count -> judo.scrollLines(-count) },
+        keys("<ctrl-u>") to withCount { count -> judo.scrollBySetting(count) },
+        keys("<ctrl-d>") to withCount { count -> judo.scrollBySetting(-count) },
 
         keys("<ctrl-c>") to action { clearBuffer() },
         keys("<ctrl-s>") to { core -> core.enterMode("rsearch") },

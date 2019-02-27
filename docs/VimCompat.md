@@ -18,7 +18,8 @@ Here's a list of features we definitely support:
 * Undo history:
     * `u <ctrl-r> .`
 * Scrolling
-    * `<ctrl-f>  <ctrl-b>`, `<ctrl-e>  <ctrl-y>`
+    * `<ctrl-f>  <ctrl-b>`, `<ctrl-e>  <ctrl-y>`, `<ctrl-d>  <ctrl-u>` (see
+      [Differences](#scroll-setting-is-fixed) below)
 * Searching with `/` and `n`, `N`
     * This searches through the output window
 * Registers, including `"*` and `"+` for the clipboard
@@ -113,3 +114,13 @@ language to use on startup based on:
 In Vim if you use `echo` to display more content than fits on a screen, Vim
 will let you page through it. Judo doesn't support that yet, so you will only
 see the most-recently-echo'd content if it surpasses the displayable area.
+
+### `scroll` setting is fixed
+
+In Vim, the value of `scroll` is changed whenever the Window is resized;
+furthermore, it is local to each Window. In Judo, currently this value is
+global, and is not changed unless you change it. This also means that any count
+provided to `<CTRL-U>` or `<CTRL-D>` is ignored. If the value is `0` or
+negative, half of the window's height is used as the scroll amount; otherwise,
+the value of the `scroll` setting is used. Part of the reason for this is that
+Judo does not yet have Window-local (or Buffer-local) settings.

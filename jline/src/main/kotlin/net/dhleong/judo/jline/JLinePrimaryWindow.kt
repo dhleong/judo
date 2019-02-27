@@ -67,6 +67,7 @@ class JLinePrimaryWindow(
 
     override fun scrollLines(count: Int) = clearingEcho { outputWindow.scrollLines(count) }
     override fun scrollPages(count: Int) = clearingEcho { outputWindow.scrollPages(count) }
+    override fun scrollBySetting(count: Int) = clearingEcho { outputWindow.scrollBySetting(count) }
     override fun scrollToBottom() = clearingEcho { outputWindow.scrollToBottom() }
     override fun scrollToBufferLine(line: Int, offsetOnLine: Int) = clearingEcho {
         outputWindow.scrollToBufferLine(line, offsetOnLine)

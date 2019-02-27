@@ -70,6 +70,7 @@ interface IJudoWindow : IJudoAppendable {
      * @see scrollLines
      */
     fun scrollPages(count: Int)
+    fun scrollBySetting(count: Int)
     fun scrollToBottom()
 
     /**

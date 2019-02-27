@@ -109,6 +109,7 @@ abstract class PrimaryJudoWindow(
     override fun getScrollback(): Int = outputWindow.getScrollback()
     override fun scrollLines(count: Int) = outputWindow.scrollLines(count)
     override fun scrollPages(count: Int) = outputWindow.scrollPages(count)
+    override fun scrollBySetting(count: Int) = outputWindow.scrollBySetting(count)
     override fun scrollToBottom() = outputWindow.scrollToBottom()
     override fun scrollToBufferLine(line: Int, offsetOnLine: Int) =
         outputWindow.scrollToBufferLine(line, offsetOnLine)
