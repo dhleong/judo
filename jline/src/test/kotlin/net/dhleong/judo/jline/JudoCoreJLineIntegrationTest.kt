@@ -341,7 +341,6 @@ class JudoCoreJLineIntegrationTest {
 
     @Test(timeout = 3000) fun `Hitting ESC in Command Line Mode doesn't result in hang on submit`() = assertionsWhileTyping {
         yieldKeys(":print(\"hi\")<ctrl-f>A<esc>")
-//        yieldKeys(":print(\"hi\")<ctrl-f>")
 
         assert(display).linesEqual("""
             |____________________
