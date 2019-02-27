@@ -200,10 +200,13 @@ class NormalMode(
         keys("<up>") to withCount { count -> history.scroll(-count) },
         keys("<down>") to withCount { count -> history.scroll(count) },
 
-        keys("<ctrl b>") to withCount { count -> judo.scrollPages(count) },
-        keys("<ctrl f>") to withCount { count -> judo.scrollPages(-count) },
-        keys("<ctrl c>") to action { clearBuffer() },
-        keys("<ctrl s>") to { core -> core.enterMode("rsearch") },
+        keys("<ctrl-b>") to withCount { count -> judo.scrollPages(count) },
+        keys("<ctrl-f>") to withCount { count -> judo.scrollPages(-count) },
+        keys("<ctrl-y>") to withCount { count -> judo.scrollLines(count) },
+        keys("<ctrl-e>") to withCount { count -> judo.scrollLines(-count) },
+
+        keys("<ctrl-c>") to action { clearBuffer() },
+        keys("<ctrl-s>") to { core -> core.enterMode("rsearch") },
 
         // window commands
 

@@ -421,6 +421,10 @@ class JudoCore(
         throw IllegalStateException("You have to connect() first")
     }
 
+    override fun scrollLines(count: Int) {
+        tabpage.currentWindow.scrollLines(count)
+    }
+
     override fun scrollPages(count: Int) {
         tabpage.currentWindow.scrollPages(count)
     }

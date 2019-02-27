@@ -18,7 +18,7 @@ Here's a list of features we definitely support:
 * Undo history:
     * `u <ctrl-r> .`
 * Scrolling
-    * `<ctrl-f>  <ctrl-b>`
+    * `<ctrl-f>  <ctrl-b>`, `<ctrl-e>  <ctrl-y>`
 * Searching with `/` and `n`, `N`
     * This searches through the output window
 * Registers, including `"*` and `"+` for the clipboard
