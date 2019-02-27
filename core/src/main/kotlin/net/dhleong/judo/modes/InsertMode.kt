@@ -43,12 +43,8 @@ class InsertMode(
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion()),
 
-        keys("<ctrl-b>") to { core -> core.scrollPages(1) },
-        keys("<ctrl-f>") to { core -> core.scrollPages(-1) },
-        keys("<ctrl-y>") to { core -> core.scrollLines(1) },
-        keys("<ctrl-e>") to { core -> core.scrollLines(-1) },
-        keys("<ctrl-u>") to { core -> core.scrollBySetting(1) },
-        keys("<ctrl-d>") to { core -> core.scrollBySetting(-1) },
+        keys("<ctrl b>") to { core -> core.scrollPages(1) },
+        keys("<ctrl f>") to { core -> core.scrollPages(-1) },
 
         keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
     )
