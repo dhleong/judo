@@ -52,6 +52,24 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `Blank line rendering`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            mreynolds
+
+            zoe
+        """.trimIndent())
+
+        windowOf(buffer, 10, 3)
+            .render(display, 0, 0)
+
+        assert(display).linesEqual("""
+            |mreynolds_
+            |__________
+            |zoe_______
+        """.trimMargin())
+    }
+
     @Test fun `Render long status line`() {
         val display = JLineDisplay(10, 3)
         val buffer = emptyBuffer()

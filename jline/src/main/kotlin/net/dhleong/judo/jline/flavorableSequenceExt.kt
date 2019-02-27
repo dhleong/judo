@@ -94,7 +94,7 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
     block: (start: Int, end: Int) -> Unit
 ) {
     var len = length
-    if (len == 0) {
+    if (len == 0 || len == 1 && this[0] == '\n') {
         block(0, 0)
         return
     }
