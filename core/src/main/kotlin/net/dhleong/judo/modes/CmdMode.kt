@@ -610,7 +610,6 @@ class CmdMode(
                     usage {
                         arg("inputKeys", "String")
                     }
-                    usage { /* no args to list */ }
 
                     body { "Delete a mapping in the specific mode with inputKeys" }
                 }

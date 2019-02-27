@@ -51,6 +51,13 @@ class CmdModeMappingTest(
             .containsExactly(listOf("custom", "a", "bc", true))
     }
 
+    @Test fun `unmap removes mappings`() {
+        mode.execute(fnCall("map", "a", "b"))
+        mode.execute(fnCall("unmap", "a"))
+
+        assert(judo.maps).isEmpty()
+    }
+
     @Test fun `deleteMap removes mappings`() {
         mode.execute(fnCall("createMap", "custom", "a", "bc", true))
         mode.execute(fnCall("deleteMap", "custom", "a"))
