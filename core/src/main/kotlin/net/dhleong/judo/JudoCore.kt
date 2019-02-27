@@ -399,7 +399,26 @@ class JudoCore(
     }
 
     override fun printMappings(mode: String) {
-        // TODO if mode.isBlank() print ALL mappings
+        if (mode.isEmpty()) {
+            renderer.inTransaction {
+                // if mode.isBlank() print ALL mappings
+                modes.values.asSequence()
+                    .filter {
+                        it is MappableMode
+                            && it.userMappings.size > 0
+                    }
+                    .forEach { modeObj ->
+                        tabpage.currentWindow.appendLine("")
+                        tabpage.currentWindow.appendLine(
+                            (modeObj as MappableMode).userMappings.toString(
+                                "${modeObj.name} "
+                            )
+                        )
+                    }
+            }
+            return
+        }
+
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")

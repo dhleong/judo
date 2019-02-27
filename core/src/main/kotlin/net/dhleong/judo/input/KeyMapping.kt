@@ -61,9 +61,15 @@ class KeyMapping() {
         }
     }
 
-    override fun toString(): String =
+    override fun toString(): String = toString("")
+
+    fun toString(prefix: String): String =
         StringBuilder(1024).apply {
+            append(prefix)
             appendln("KeyMappings")
+            for (i in 0 until prefix.length) {
+                append("=")
+            }
             appendln("===========")
             keysMap.forEach { (k, v) ->
                 k.describeTo(this)
