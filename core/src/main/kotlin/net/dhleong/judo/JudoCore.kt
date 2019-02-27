@@ -532,7 +532,21 @@ class JudoCore(
 
                 // leave the current mode
                 if (currentMode != normalMode) {
-                    modeStack.clear()
+                    val lastNormalMode = modeStack.lastIndexOf(normalMode)
+                    if (lastNormalMode > 0) {
+                        // normal mode is above root on the stack; exit up to it.
+                        // this is probably for something like readCommandLine.
+                        // There ought to be a more efficient way to drop the last
+                        // N elements of an ArrayList... but this N shouldn't ever
+                        // be more than one or two, so...
+                        for (i in lastNormalMode until modeStack.size) {
+                            modeStack.removeAt(modeStack.lastIndex)
+                        }
+                    } else {
+                        // in the usual case, normalMode is at the root of the
+                        // stack; just clear the whole thing
+                        modeStack.clear()
+                    }
                     activateMode(normalMode)
                 }
                 return
