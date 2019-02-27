@@ -42,7 +42,7 @@ abstract class BaseJudoWindow(
     override fun scrollBySetting(count: Int) {
         // NOTE: currently, count is only used for the direction
         val normalizedCount = count / abs(count)
-        
+
         val setting = settings[SCROLL]
         if (setting <= 0) {
             scrollLines((visibleHeight / 2) * normalizedCount)
