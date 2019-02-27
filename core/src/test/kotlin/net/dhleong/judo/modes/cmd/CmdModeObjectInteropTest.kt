@@ -236,6 +236,17 @@ class CmdModeObjectInteropTest(
         )
         assert(judo.mapper.window).isSameAs(splitWindow)
     }
+
+    @Test fun `Scrolling via Judo object`() {
+        val window = judo.renderer.currentTabpage.currentWindow
+        assert(window.getScrollback()).isEqualTo(0)
+
+        mode.execute("""
+            judo.scrollLines(1)
+        """.trimIndent())
+
+        assert(window.getScrollback()).isEqualTo(1)
+    }
 }
 
 private fun Assert<File>.doesNotExist() {

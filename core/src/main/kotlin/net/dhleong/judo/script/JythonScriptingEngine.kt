@@ -512,11 +512,18 @@ internal fun createPyCore(
         }
     }
 
+    val scrollable = Py.java2py(judo as IJudoScrollable)
+
     return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
                 "mapper" -> Py.java2py(judo.mapper)
                 "current" -> currentObjects
+
+                "scrollLines",
+                "scrollPages",
+                "scrollBySetting",
+                "scrollToBottom" -> scrollable.__findattr_ex__(name)
 
                 else -> super.__findattr_ex__(name)
             }

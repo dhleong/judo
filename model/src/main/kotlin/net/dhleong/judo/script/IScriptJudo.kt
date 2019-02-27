@@ -7,7 +7,7 @@ import net.dhleong.judo.mapping.IMapManagerPublic
  *
  * @author dhleong
  */
-interface IScriptJudo {
+interface IScriptJudo : IJudoScrollable {
 
     val mapper: IMapManagerPublic
     val current: ICurrentJudoObjects

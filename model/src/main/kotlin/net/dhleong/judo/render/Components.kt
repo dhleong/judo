@@ -1,5 +1,7 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.script.IJudoScrollable
+
 interface IJudoAppendable {
     /**
      * Append text to the last line
@@ -25,7 +27,7 @@ interface IJudoBuffer : IJudoAppendable {
     fun set(newContents: List<FlavorableCharSequence>)
 }
 
-interface IJudoWindow : IJudoAppendable {
+interface IJudoWindow : IJudoAppendable, IJudoScrollable {
     val id: Int
     val width: Int
     val height: Int
@@ -59,19 +61,6 @@ interface IJudoWindow : IJudoAppendable {
     fun resize(width: Int, height: Int)
 
     fun getScrollback(): Int
-
-    /**
-     * @param count Number of lines to scroll, where a POSITIVE number
-     *  moves backward in history, and a NEGATIVE number moves forward
-     */
-    fun scrollLines(count: Int)
-
-    /**
-     * @see scrollLines
-     */
-    fun scrollPages(count: Int)
-    fun scrollBySetting(count: Int)
-    fun scrollToBottom()
 
     /**
      * Scroll such that the given line in this window's [IJudoBuffer] is visible

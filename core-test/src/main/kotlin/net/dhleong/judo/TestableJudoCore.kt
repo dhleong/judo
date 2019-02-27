@@ -122,6 +122,8 @@ class TestableJudoCore(
         objects.forEach { prints.add(it) }
     }
 
+    override fun scrollLines(count: Int) = renderer.currentTabpage.currentWindow.scrollLines(count)
+
     fun clearTestable() {
         prints.clear()
         sends.clear()
@@ -179,6 +181,8 @@ fun createWindowMock(
     override val isFocusable: Boolean = isFocusable
     override var isFocused: Boolean = isFocusable
 
+    private var myScrollback: Int = 0
+
     override fun append(text: FlavorableCharSequence) = buffer.append(text)
     override fun appendLine(line: FlavorableCharSequence) = buffer.appendLine(line)
     override fun appendLine(line: String) =
@@ -187,5 +191,10 @@ fun createWindowMock(
     override fun resize(width: Int, height: Int) {
         this.width = width
         this.height = height
+    }
+
+    override fun getScrollback(): Int = myScrollback
+    override fun scrollLines(count: Int) {
+        myScrollback += count
     }
 }

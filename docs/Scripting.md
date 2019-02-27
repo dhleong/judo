@@ -263,6 +263,23 @@ for key, dir in dirs.iteritems():
         createMap('nav', key.upper(), lambda d=dir: send('open ' + d))
 ```
 
+## Etc.
+
+As you might have noticed, a handful of features are exposed via a global
+object called `judo`. Here's a list of all the properties on this object:
+
+Name                        | Returned Type | Description
+----------------------------|---------------|------------
+`current.buffer`            | Buffer        | The buffer of the currently-focused window.
+`current.window`            | Window        | The currently-focused window. Settable.
+`current.tabpage`           | Tabpage       | The currently-focused tabpage.
+`mapper`                    | Mapper        | See [Mapping.md](Mapping.md) for more info
+`scrollLines(count: Int)`   | None          | Scroll the currently-focused window by `count` lines. A positive number goes *back in time*; a negative number goes forward.
+`scrollPages(count: Int)`   | None          | Scroll the currently-focused window by `count` pages.
+`scrollBySetting(count: Int)`| None         | Scroll the currently-focused window as if by `<CTRL-U>` (positive numbers) or `<CTRL-D>` (negative numbers). See [VimCompat](VimCompat.md#scroll-setting-is-fixed) for more information.
+`scrollToBottom()`          | None          | Scroll the currently-focused window to the newest line.
+
+
 
 [1]: https://www.python.org
 [2]: http://tintin.sourceforge.net/msdp

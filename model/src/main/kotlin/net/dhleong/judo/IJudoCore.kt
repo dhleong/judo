@@ -10,6 +10,7 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.script.IJudoScrollable
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
 import java.net.URI
@@ -62,7 +63,7 @@ class StateMap() {
 /**
  * @author dhleong
  */
-interface IJudoCore {
+interface IJudoCore : IJudoScrollable {
 
     val aliases: IAliasManager
     val connection: JudoConnection?
@@ -104,10 +105,6 @@ interface IJudoCore {
     fun readKey(): Key
     fun reconnect()
     fun redraw()
-    fun scrollLines(count: Int)
-    fun scrollPages(count: Int)
-    fun scrollBySetting(count: Int)
-    fun scrollToBottom()
     fun searchForKeyword(text: CharSequence, direction: Int = 1)
     fun seedCompletion(text: String)
     fun send(text: String, fromMap: Boolean)

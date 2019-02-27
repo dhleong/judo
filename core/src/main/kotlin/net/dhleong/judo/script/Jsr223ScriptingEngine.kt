@@ -142,7 +142,7 @@ abstract class Jsr223ScriptingEngine(
 class Jsr223JudoCore(
     private val engine: Jsr223ScriptingEngine,
     private val judo: IJudoCore
-) : IScriptJudo, ICurrentJudoObjects {
+) : IScriptJudo, ICurrentJudoObjects, IJudoScrollable by judo {
     override val mapper: IMapManagerPublic
         get() = engine.toScript(judo.mapper) as IMapManagerPublic
 
