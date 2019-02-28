@@ -163,6 +163,19 @@ class TerminalInputLineHelperTest {
         }
     }
 
+    @Test fun `fit with word wrap and space right at width`() {
+        windowWidth = 10
+        settings[MAX_INPUT_LINES] = 4
+        settings[WORD_WRAP] = true
+
+        val text = "The quick "
+        renderer.typeMultiAndFit(text,
+            expected = listOf(
+                "The quick ",
+                ""
+            ) to (1 to 0))
+    }
+
     private fun InputLine.updateInputLine(text: String, cursor: Int) {
         line = FlavorableStringBuilder.withDefaultFlavor(text)
         cursorIndex = cursor

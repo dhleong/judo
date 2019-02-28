@@ -94,7 +94,7 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
     block: (start: Int, end: Int) -> Unit
 ) {
     var len = length
-    if (len == 0 || len == 1 && this[0] == '\n') {
+    if (len == 0 || (len == 1 && this[0] == '\n')) {
         block(0, 0)
         return
     }
@@ -137,9 +137,16 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
 
             // word wrap right on a boundary
             (
-                wordWrap
-                    && inWord
-                    && (i == len || Character.isWhitespace(codePointAt(i)))
+                wordWrap && (
+                    (
+                        inWord && (
+                            i == len || Character.isWhitespace(codePointAt(i))
+                        )
+                    ) || (
+                        // if preserving whitespace, it's okay to not be "in a word"
+                        preserveWhitespace && (i == len || !inWord)
+                    )
+                )
             ) -> {
                 block(lineStart, i)
                 lineStart = i

@@ -141,4 +141,28 @@ class LineSplittingTest {
             )
         }
     }
+
+
+    @Test fun `Split line with preserved whitespace at limit`() {
+        val s = FlavorableStringBuilder.withDefaultFlavor(
+            "Kaylee Frye "
+        )
+        assertInWindow(width = 12, wordWrap = true, preserveWhitespace = true) {
+            s.hasRenderedLines(
+                "Kaylee Frye "
+            )
+        }
+    }
+
+    @Test fun `Split line with preserved whitespace at limit and text just after`() {
+        val s = FlavorableStringBuilder.withDefaultFlavor(
+            "Kaylee Frye a"
+        )
+        assertInWindow(width = 12, wordWrap = true, preserveWhitespace = true) {
+            s.hasRenderedLines(
+                "Kaylee Frye ",
+                "a"
+            )
+        }
+    }
 }
