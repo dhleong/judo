@@ -62,15 +62,22 @@ private abstract class FnBase(
         )
     }
 
-    protected inline fun <R> safely(block: () -> R): R =
-        try {
-            @Suppress("UNCHECKED_CAST")
-            engine.toJava(block() as Any) as R
+    protected inline fun <R> safely(block: () -> R): R {
+        val result = try {
+            block()
         } catch (e: ClassCastException) {
             throw IllegalArgumentException(
                 "Incorrect arguments to $name()", e
             )
         }
+
+        if (result == null) {
+            return result
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return engine.toJava(result as Any) as R
+    }
 }
 
 @FunctionalInterface
