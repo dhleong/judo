@@ -205,8 +205,17 @@ internal inline fun FlavorableCharSequence.forEachRenderedLine(
         }
     }
 
-    if (currentWidth > 0) {
-        block(lineStart, i)
+    val remainingLength = i - lineStart
+    when {
+        currentWidth > 0 && remainingLength <= windowWidth -> {
+            block(lineStart, i)
+        }
+
+        currentWidth > 0 -> {
+            val split = lineStart + windowWidth
+            block(lineStart, split)
+            block(split, split + remainingLength - windowWidth)
+        }
     }
 }
 

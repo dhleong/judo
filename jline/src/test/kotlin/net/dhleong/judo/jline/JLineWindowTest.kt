@@ -53,6 +53,22 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `Error message rendering`() {
+        val display = JLineDisplay(80, 3)
+        val buffer = bufferOf()
+
+        windowOf(buffer, 80, 3, wrap = true).apply {
+            appendLine("Failed\nNETWORK ERROR: java.net.ConnectException: Connection refused (Connection refused)")
+
+        }.render(display, 0, 0)
+
+        assert(display).linesEqual("""
+            |Failed__________________________________________________________________________
+            |NETWORK ERROR: java.net.ConnectException: Connection refused (Connection_refused
+            |)_______________________________________________________________________________
+        """.trimMargin())
+    }
+
     @Test fun `Blank line rendering`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
