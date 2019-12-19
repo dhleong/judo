@@ -14,7 +14,6 @@ import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
-import net.dhleong.judo.input.CtrlCPressedException
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
@@ -793,26 +792,15 @@ class JudoCore(
     fun readKeys(keysFactory: KeyChannelFactory) = runBlocking(job) {
         var channel: Channel<Key>? = null
         while (running) {
-            val ch = channel ?: keysFactory.createChannel(job).also {
+            val ch = channel ?: keysFactory.createChannel(job,
+                onInterrupt = {
+                    print("canceled")
+                }
+            ).also {
                 channel = it
             }
 
-            val key = try {
-                ch.receive()
-            } catch (e: CtrlCPressedException) {
-                // TODO cancel long-running tasks
-                print("canceled: ${e.message}")
-                channel = null
-
-                if (e.hadPendingKeys) {
-                    // cancel'd some pending input or action;
-                    // don't perform ctrl-c input
-                    continue
-                }
-
-                // also feed the ctrl-c (?)
-                Key.CTRL_C
-            }
+            val key = ch.receive()
 
             redirectErrors("INTERNAL ERROR: ") {
                 feedKey(key, remap = true, fromMap = false)

@@ -5,6 +5,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import net.dhleong.judo.BlockingKeySource
 import java.util.concurrent.CancellationException
 
@@ -14,6 +15,8 @@ class CtrlCPressedException(
 
 class InputQueueOverflowException : CancellationException()
 
+typealias InterruptHandler = (e: CancellationException) -> Unit
+
 /**
  * @author dhleong
  */
@@ -22,32 +25,40 @@ interface KeyChannelFactory {
      * The returned [Channel] may be canceled with instances of
      * [CtrlCPressedException] or [InputQueueOverflowException]
      */
-    fun createChannel(job: Job): Channel<Key>
+    fun createChannel(job: Job, onInterrupt: InterruptHandler): Channel<Key>
 }
 
 class BlockingKeySourceChannelAdapter(
     private val keySource: BlockingKeySource,
-    private val queueCapacity: Int = 1024
+    private val interruptTimeoutMillis: Long = 350
 ) : KeyChannelFactory {
 
-    override fun createChannel(job: Job): Channel<Key> {
-        val channel = Channel<Key>(capacity = queueCapacity)
+    override fun createChannel(job: Job, onInterrupt: InterruptHandler): Channel<Key> {
+        val channel = Channel<Key>(capacity = Channel.RENDEZVOUS)
 
         GlobalScope.launch(Dispatchers.IO + job) {
             while (!job.isCompleted) {
                 Thread.yield()
 
                 val key = keySource.readKey() ?: continue
-                if (key == Key.CTRL_C) {
-                    channel.cancel(CtrlCPressedException(
-                        hadPendingKeys = channel.poll() != null
-                    ))
-                    break
+                if (key != Key.CTRL_C) {
+                    channel.send(key)
+                    continue
                 }
 
-                if (!channel.offer(key)) {
-                    channel.cancel(InputQueueOverflowException())
-                    break
+                // ctrl-c is a special case to handle interrupts;
+                select<Unit> {
+                    channel.onSend(key) {
+                        // sent key successfully
+                    }
+
+                    // if we are unable to send the key to the channel
+                    // within some time then *something* is blocking the
+                    // main thread
+                    @Suppress("EXPERIMENTAL_API_USAGE")
+                    onTimeout(interruptTimeoutMillis) {
+                        onInterrupt(CtrlCPressedException(hadPendingKeys = true))
+                    }
                 }
             }
 
