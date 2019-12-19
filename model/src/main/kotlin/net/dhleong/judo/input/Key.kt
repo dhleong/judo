@@ -37,6 +37,7 @@ class Key private constructor(
         val BACKSPACE: Key by lazy { ofChar(CODE_BACKSPACE.toChar()) }
         val ESCAPE: Key by lazy { ofChar(CODE_ESCAPE.toChar()) }
         val ENTER: Key by lazy { ofChar(CODE_ENTER.toChar()) }
+        val CTRL_C: Key by lazy { Key('c', modifiers = EnumSet.of(Modifier.CTRL)) }
 
         private val cache = mutableMapOf<String, Key>()
         private val charCache = arrayOfNulls<Key>(255)

@@ -1,7 +1,10 @@
 package net.dhleong.judo
 
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcessingException
 import net.dhleong.judo.complete.DEFAULT_STOP_WORDS
@@ -11,9 +14,11 @@ import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
 import net.dhleong.judo.complete.multiplex.wordsBeforeFactory
 import net.dhleong.judo.event.EventManager
+import net.dhleong.judo.input.CtrlCPressedException
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyChannelFactory
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.changes.UndoManager
@@ -193,6 +198,7 @@ class JudoCore(
     internal var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
 
+    private val job = Job()
     internal var running = true
     internal var doEcho = true
 
@@ -680,6 +686,7 @@ class JudoCore(
         connection?.close()
         renderer.close()
         running = false
+        job.complete()
     }
 
     override fun unmap(mode: String, from: String) {
@@ -781,6 +788,36 @@ class JudoCore(
      */
     fun readKeys(producer: BlockingKeySource) {
         readKeys(producer, remap = true, fromMap = false) { running }
+    }
+
+    fun readKeys(keysFactory: KeyChannelFactory) = runBlocking(job) {
+        var channel: Channel<Key>? = null
+        while (running) {
+            val ch = channel ?: keysFactory.createChannel(job).also {
+                channel = it
+            }
+
+            val key = try {
+                ch.receive()
+            } catch (e: CtrlCPressedException) {
+                // TODO cancel long-running tasks
+                print("canceled: ${e.message}")
+                channel = null
+
+                if (e.hadPendingKeys) {
+                    // cancel'd some pending input or action;
+                    // don't perform ctrl-c input
+                    continue
+                }
+
+                // also feed the ctrl-c (?)
+                Key.CTRL_C
+            }
+
+            redirectErrors("INTERNAL ERROR: ") {
+                feedKey(key, remap = true, fromMap = false)
+            }
+        }
     }
 
     /**
