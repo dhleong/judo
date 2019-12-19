@@ -1,8 +1,9 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.alias.AliasManager
@@ -68,6 +69,8 @@ import java.io.PrintWriter
 import java.net.URI
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * @author dhleong
@@ -198,6 +201,8 @@ class JudoCore(
     private val modeStack = ArrayList<Mode>()
 
     private val job = Job()
+    private var cancellable = Job(parent = job)
+    private val mainThread = Thread.currentThread()
     internal var running = true
     internal var doEcho = true
 
@@ -252,18 +257,22 @@ class JudoCore(
 
         lastConnect = uri
 
-        val connection: JudoConnection
-        try {
-            connection = connections.create(this, uri)
-                ?: return doPrint(false,
-                    "Don't know how to connect to $uri"
-                )
-            print("Connected.")
-        } catch (e: IOException) {
-            appendError(e, "Failed.\nNETWORK ERROR: ")
-            return
-        }
+        val connection = runCancelable(Dispatchers.IO,
+            onCanceled = { print("Connection canceled.") }
+        ) {
+            try {
+                connections.create(this, uri)
+                    ?: null.also {
+                        // no connection created
+                        doPrint(false, "Don't know how to connect to $uri")
+                    }
+            } catch (e: IOException) {
+                appendError(e, "Failed.\nNETWORK ERROR: ")
+                null
+            }
+        } ?: return
 
+        print("Connected.")
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
         connection.onEchoStateChanged = { doEcho ->
@@ -790,17 +799,11 @@ class JudoCore(
     }
 
     fun readKeys(keysFactory: KeyChannelFactory) = runBlocking(job) {
-        var channel: Channel<Key>? = null
+        val channel = keysFactory.createChannel(job,
+            onInterrupt = { interruptCancelables() }
+        )
         while (running) {
-            val ch = channel ?: keysFactory.createChannel(job,
-                onInterrupt = {
-                    print("canceled")
-                }
-            ).also {
-                channel = it
-            }
-
-            val key = ch.receive()
+            val key = channel.receive()
 
             redirectErrors("INTERNAL ERROR: ") {
                 feedKey(key, remap = true, fromMap = false)
@@ -1084,5 +1087,32 @@ class JudoCore(
             appendError(e, prefix)
         }
     }
+
+    private fun interruptCancelables() {
+        val old = cancellable
+        cancellable = Job(parent = job)
+        old.cancel()
+
+        // interrupt the main thread to
+        mainThread.interrupt()
+    }
+
+    private fun <R> runCancelable(
+        context: CoroutineContext = EmptyCoroutineContext,
+        onCanceled: (() -> Unit)? = null,
+        block: suspend () -> R
+    ): R? = try {
+        runBlocking(context + cancellable) {
+            block()
+        }
+    } catch (e: InterruptedException) {
+        Thread.interrupted() // clear the flag
+        onCanceled?.invoke()
+        null
+    } catch (e: CancellationException) {
+        onCanceled?.invoke()
+        null
+    }
+
 }
 
