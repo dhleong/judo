@@ -22,6 +22,7 @@ import net.dhleong.judo.input.KeyChannelFactory
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.changes.UndoManager
+import net.dhleong.judo.input.toChannelFactory
 import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
@@ -61,6 +62,7 @@ import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.SubstitutableInputHistory
 import net.dhleong.judo.util.VisibleForTesting
+import net.dhleong.judo.util.asSequence
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -213,7 +215,7 @@ class JudoCore(
     private val cmdLineModeDepth = AtomicInteger(0)
     private var cmdLinePrefix = ':'
 
-    private var keyStrokeProducer: BlockingKeySource? = null
+    private var keyStrokeChannel: Iterator<Key>? = null
     private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
     private val outputBuffer: IJudoBuffer
@@ -614,24 +616,12 @@ class JudoCore(
             currentMode = newMode
         }
 
-        feedKeys(
-            keys.iterator(),
-            remap = remap,
-            fromMap = true
-        )
+        readKeys(keys.iterator(), remap = remap, fromMap = true)
 
         if (mode != "") {
             // restore the old mode (but without calling onEnter and making it
             // reset its state)
             currentMode = oldMode
-        }
-    }
-
-    private fun feedKeys(keys: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
-        readKeys(object : BlockingKeySource {
-            override fun readKey(): Key = keys.next()
-        }, remap = remap, fromMap = fromMap) {
-            keys.hasNext()
         }
     }
 
@@ -657,13 +647,14 @@ class JudoCore(
     }
 
     override fun readKey(): Key {
-        val producer = keyStrokeProducer!!
+        val producer = keyStrokeChannel!! // must be initialized by now
         while (true) {
-            val key = producer.readKey() // must be initialized by now
+            val key = producer.next()
 
             // TODO check for esc/ctrl+c and throw InputInterruptedException...
             // TODO catch that in the feedKey loop
 
+            // STOPSHIP: we need a new mechanism for this:
             if (key == null) {
                 // check the onMainThread-to-UI-thread queue
                 // run a chunk at a time
@@ -672,6 +663,8 @@ class JudoCore(
                     if (runnable != null) runnable.invoke()
                     else break
                 }
+
+                Thread.yield()
             } else {
                 if (key.keyCode !in UNRECORDED_KEY_CODES) {
                     undo.onKeyStroke(key)
@@ -795,20 +788,15 @@ class JudoCore(
      * Read keys forever from the given producer
      */
     fun readKeys(producer: BlockingKeySource) {
-        readKeys(producer, remap = true, fromMap = false) { running }
+        readKeys(producer.toChannelFactory())
     }
 
-    fun readKeys(keysFactory: KeyChannelFactory) = runBlocking(job) {
+    fun readKeys(keysFactory: KeyChannelFactory) {
         val channel = keysFactory.createChannel(job,
             onInterrupt = { interruptCancelables() }
         )
-        while (running) {
-            val key = channel.receive()
-
-            redirectErrors("INTERNAL ERROR: ") {
-                feedKey(key, remap = true, fromMap = false)
-            }
-        }
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        readKeys(channel.asSequence().iterator(), remap = true, fromMap = false)
     }
 
     /**
@@ -884,13 +872,14 @@ class JudoCore(
     }
 
     /**
-     * Read keys from the given producer until [keepReading] returns false
+     * Read all keys from the given [channel]
      */
-    fun readKeys(producer: BlockingKeySource, remap: Boolean, fromMap: Boolean, keepReading: () -> Boolean) {
-        val oldProducer = keyStrokeProducer
+    private fun readKeys(channel: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
+        val oldFlow = keyStrokeChannel
+        keyStrokeChannel = channel
 
-        keyStrokeProducer = producer
-        while (keepReading()) {
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        while (channel.hasNext()) {
             redirectErrors("INTERNAL ERROR: ") {
                 feedKey(readKey(), remap, fromMap)
             }
@@ -898,8 +887,8 @@ class JudoCore(
             Thread.yield()
         }
 
-        if (oldProducer != null) {
-            keyStrokeProducer = oldProducer
+        if (oldFlow != null) {
+            keyStrokeChannel = oldFlow
         }
     }
 
