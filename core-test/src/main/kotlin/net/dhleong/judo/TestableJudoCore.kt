@@ -78,11 +78,11 @@ class TestableJudoCore(
     override fun map(mode: String, from: String, to: () -> Unit, description: String) {
         maps.add(listOf(mode, from, to, false))
         if (mode == normalMode.name) {
-            normalMode.userMappings.map(Keys.parse(from), action(to))
+            normalMode.userMappings.map(Keys.parse(from), action { to() })
         }
     }
 
-    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
         normalMode.feedKey(stroke, remap, fromMap)
     }
 

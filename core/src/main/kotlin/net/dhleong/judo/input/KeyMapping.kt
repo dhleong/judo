@@ -6,9 +6,9 @@ import net.dhleong.judo.IJudoCore
  * @author dhleong
  */
 
-typealias KeyAction = (IJudoCore) -> Unit
+typealias KeyAction = suspend (IJudoCore) -> Unit
 
-inline fun action(crossinline block: () -> Unit): KeyAction = {
+inline fun action(crossinline block: suspend () -> Unit): KeyAction = {
     block()
 }
 

@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.CoroutineDispatcher
 import net.dhleong.judo.alias.IAliasManager
 import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.input.IInputHistory
@@ -17,7 +18,7 @@ import java.net.URI
 
 val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persistentInput")
 
-typealias OperatorFunc = (IntRange) -> Unit
+typealias OperatorFunc = suspend (IntRange) -> Unit
 
 @Suppress("unused")
 open class StateKind<E>(val name: String) {
@@ -64,6 +65,7 @@ class StateMap() {
  * @author dhleong
  */
 interface IJudoCore : IJudoScrollable {
+    val dispatcher: CoroutineDispatcher
 
     val aliases: IAliasManager
     val connection: JudoConnection?
@@ -87,9 +89,9 @@ interface IJudoCore : IJudoScrollable {
     fun connect(uri: URI)
     fun createUserMode(name: String)
     fun disconnect()
-    fun feedKey(stroke: Key, remap: Boolean = true, fromMap: Boolean = false)
-    fun feedKeys(keys: String, remap: Boolean = true, mode: String = "")
-    fun feedKeys(keys: Sequence<Key>, remap: Boolean = true, mode: String = "")
+    suspend fun feedKey(stroke: Key, remap: Boolean = true, fromMap: Boolean = false)
+    suspend fun feedKeys(keys: String, remap: Boolean = true, mode: String = "")
+    suspend fun feedKeys(keys: Sequence<Key>, remap: Boolean = true, mode: String = "")
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
@@ -97,12 +99,12 @@ interface IJudoCore : IJudoScrollable {
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()
-    fun readCommandLineInput(
+    suspend fun readCommandLineInput(
         prefix: Char,
         history: IInputHistory,
         bufferContents: String = ""
     ): String?
-    fun readKey(): Key
+    suspend fun readKey(): Key
     fun reconnect()
     fun redraw()
     fun searchForKeyword(text: CharSequence, direction: Int = 1)

@@ -3,6 +3,7 @@ package net.dhleong.judo.modes.cmd
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
@@ -24,7 +25,7 @@ class CmdModeMappingTest(
             .containsExactly(listOf("normal", "a", "bc", false))
     }
 
-    @Test fun `nnoremap supports functions`() {
+    @Test fun `nnoremap supports functions`() = runBlocking {
         val fnDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
                 function action() {

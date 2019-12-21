@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
 import java.util.concurrent.atomic.AtomicReference
@@ -15,13 +16,15 @@ inline fun assertionsWhileTyping(
     // assertions) and re-throw them later, since feedKeys
     // normally consumes exceptions and prints them to the buffer
     val error = AtomicReference<Throwable>(null)
-    judo.feedKeys(sequence {
-        try {
-            block()
-        } catch (e: Throwable) {
-            error.set(e)
-        }
-    })
+    runBlocking {
+        judo.feedKeys(sequence {
+            try {
+                block()
+            } catch (e: Throwable) {
+                error.set(e)
+            }
+        })
+    }
     error.get()?.let { throw it }
 }
 

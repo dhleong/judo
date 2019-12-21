@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.CountReadingBuffer
@@ -169,7 +170,9 @@ class NormalMode(
             // but maybe not identical; this seems to be what vim does)
             buffer.inChangeSet {
                 // perform the previous change without tracking undo
-                buffer.undoMan.lastChange?.apply(judo)
+                runBlocking {
+                    buffer.undoMan.lastChange?.apply(judo)
+                }
             }
         },
 
@@ -188,7 +191,7 @@ class NormalMode(
 
         keys("\"") to { core ->
             buffer.undoMan.initChange('"')
-            val register = core.readKey()
+            val register = judo.readKey()
             if (register.hasCtrl()
                 || register == Key.ESCAPE) {
                 // TODO beep?
@@ -296,7 +299,7 @@ class NormalMode(
         fromOpMode = false
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         if (key == Key.ENTER) {
             judo.submit(buffer.toString(), fromMap)
             clearBuffer()

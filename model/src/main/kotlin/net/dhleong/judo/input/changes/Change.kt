@@ -26,7 +26,7 @@ class Change {
         undoables.clear()
     }
 
-    fun apply(judo: IJudoCore) {
+    suspend fun apply(judo: IJudoCore) {
         judo.feedKeys(keys.asSequence(), remap = true)
         judo.exitMode() // changes should always end in normal mode
     }

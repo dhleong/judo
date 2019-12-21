@@ -1,5 +1,6 @@
 package net.dhleong.judo.input.changes
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
@@ -140,7 +141,9 @@ class UndoManager {
                 changeHistory.push(redone)
 
                 input.cursor = redone.cursor
-                redone.apply(judo)
+                runBlocking(judo.dispatcher) {
+                    redone.apply(judo)
+                }
             }
         }
     }

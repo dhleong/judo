@@ -55,7 +55,7 @@ class OperatorPendingMode(
         input.clear()
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
 
         // special case for eg dd, cc, etc
         if (key.char == currentFullLineMotionKey) {

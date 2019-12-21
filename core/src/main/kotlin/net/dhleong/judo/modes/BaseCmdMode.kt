@@ -73,7 +73,7 @@ abstract class BaseCmdMode(
         clearBuffer()
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
                 val code = buffer.toString().trim()

@@ -38,7 +38,7 @@ class OutputSearchMode(
 
     private val suggester = CompletionSuggester(completions)
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
                 val searchString = buffer.toString().trim()
