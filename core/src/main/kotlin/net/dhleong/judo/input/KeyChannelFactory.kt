@@ -36,39 +36,55 @@ class BlockingKeySourceChannelAdapter(
     override fun createChannel(job: Job, onInterrupt: InterruptHandler): Channel<Key> {
         val channel = Channel<Key>(capacity = Channel.RENDEZVOUS)
 
-        GlobalScope.launch(Dispatchers.IO + job) {
-            while (!job.isCompleted) {
-                Thread.yield()
+        // ensure the channel gets closed
+        job.invokeOnCompletion {
+            channel.close()
+        }
 
-                val key = keySource.readKey() ?: continue
-                if (key != Key.CTRL_C) {
-                    channel.send(key)
-                    continue
+        // read in a loop on a background thread
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                readKeysInto(job, onInterrupt, channel)
+            } finally {
+                @Suppress("EXPERIMENTAL_API_USAGE")
+                if (!channel.isClosedForReceive) {
+                    channel.close()
                 }
-
-                // ctrl-c is a special case to handle interrupts;
-                select<Unit> {
-                    channel.onSend(key) {
-                        // sent key successfully
-                    }
-
-                    // if we are unable to send the key to the channel
-                    // within some time then *something* is blocking the
-                    // main thread
-                    @Suppress("EXPERIMENTAL_API_USAGE")
-                    onTimeout(interruptTimeoutMillis) {
-                        onInterrupt(CtrlCPressedException(hadPendingKeys = true))
-                    }
-                }
-            }
-
-            @Suppress("EXPERIMENTAL_API_USAGE")
-            if (!channel.isClosedForReceive) {
-                channel.close()
             }
         }
 
         return channel
+    }
+
+    private suspend fun readKeysInto(
+        job: Job,
+        onInterrupt: InterruptHandler,
+        channel: Channel<Key>
+    ) {
+        while (!(job.isCompleted || job.isCancelled || channel.isClosedForSend)) {
+            Thread.yield()
+
+            val key = keySource.readKey() ?: continue
+            if (key != Key.CTRL_C) {
+                channel.send(key)
+                continue
+            }
+
+            // ctrl-c is a special case to handle interrupts;
+            select<Unit> {
+                channel.onSend(key) {
+                    // sent key successfully
+                }
+
+                // if we are unable to send the key to the channel
+                // within some time then *something* is blocking the
+                // main thread
+                @Suppress("EXPERIMENTAL_API_USAGE")
+                onTimeout(interruptTimeoutMillis) {
+                    onInterrupt(CtrlCPressedException(hadPendingKeys = true))
+                }
+            }
+        }
     }
 
 }

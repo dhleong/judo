@@ -705,8 +705,8 @@ class JudoCore(
         running = false
 
         job.apply {
-            cancelChildren()
             complete()
+            cancelChildren()
         }
         dispatcher.close()
     }
@@ -818,8 +818,7 @@ class JudoCore(
             onInterrupt = { interruptCancelables() }
         )
 
-        // NOTE: specifically do NOT run this on the dispatcher
-        runBlocking(job) {
+        runBlocking(dispatcher) {
             @Suppress("EXPERIMENTAL_API_USAGE")
             readKeys(channel, remap = true, fromMap = false)
         }
@@ -909,6 +908,8 @@ class JudoCore(
             redirectErrors("INTERNAL ERROR: ") {
                 try {
                     feedKey(readKey(), remap, fromMap)
+                } catch (e: CancellationException) {
+                    // ignore
                 } catch (e: ClosedReceiveChannelException) {
                     // ignore
                 }
@@ -1110,7 +1111,8 @@ class JudoCore(
         cancellable = Job(parent = job)
         old.cancel()
 
-        // interrupt the main thread to
+        // interrupt the main thread to ensure the runBlocking
+        // of readKeys() stops
         mainThread.interrupt()
     }
 
