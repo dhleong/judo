@@ -990,26 +990,18 @@ class JudoCore(
 
         if (e is ScriptExecutionException) {
             renderer.inTransaction {
-                primaryWindow.appendLine(
-                    "${prefix}ScriptExecutionException:\n"
-                )
+                primaryWindow.appendLine("${prefix}ScriptExecutionException:\n")
                 e.message?.split("\n")?.forEach {
                     primaryWindow.appendLine(it)
                 }
-                e.stackTrace.map { "  $it" }.forEach {
-                    primaryWindow.appendLine(it)
-                }
+                e.appendStackTraceTo(primaryWindow)
             }
             return
         }
 
         renderer.inTransaction {
-            primaryWindow.appendLine(
-                "$prefix${e.javaClass.name}: ${e.message}"
-            )
-            e.stackTrace.map { "  $it" }.forEach {
-                primaryWindow.appendLine(it)
-            }
+            primaryWindow.appendLine("$prefix${e.javaClass.name}: ${e.message}")
+            e.appendStackTraceTo(primaryWindow)
             e.cause?.let {
                 appendError(it, "Caused by: ", isRoot = false)
             }
@@ -1109,3 +1101,42 @@ class JudoCore(
 
 }
 
+private fun Throwable.appendStackTraceTo(window: IJudoWindow) {
+    stackTrace.filterRelevant().map { "  $it" }.forEach {
+        window.appendLine(it)
+    }
+}
+
+private fun Array<StackTraceElement>.filterRelevant(): Sequence<StackTraceElement> =
+    sequence {
+        var lastWasCoroutine = false
+        loop@ for (element in this@filterRelevant) {
+            val isCoroutineLib = element.className.matches(Regex(
+                """^kotlin[x]?\.coroutines.*"""
+            ))
+            when {
+                isCoroutineLib && !lastWasCoroutine -> {
+                    lastWasCoroutine = true
+                    yield(StackTraceElement("...coroutines", "...", null, -1))
+                    continue@loop
+                }
+
+                // ignore all the noisy coroutine libs
+                isCoroutineLib -> continue@loop
+
+                // not useful line:
+                (
+                    element.lineNumber < 0
+                        && element.methodName in setOf("invoke", "invokeSuspend")
+                ) -> continue@loop
+
+                // also unnecessary
+                "BlockingKeySourceChannelAdapter" in element.className -> continue@loop
+
+                lastWasCoroutine -> lastWasCoroutine = false
+            }
+
+            // default to the original element
+            yield(element)
+        }
+    }
