@@ -650,7 +650,6 @@ class JudoCore(
 
     override fun onMainThread(runnable: () -> Unit) {
         // NOTE: wait until there is room in the queue
-//        postToUiQueue.put(runnable)
         GlobalScope.launch(job + dispatcher) {
             runnable()
         }
@@ -663,31 +662,6 @@ class JudoCore(
             undo.onKeyStroke(key)
         }
         return key
-
-//        while (true) {
-//            val key = producer.next()
-//
-//            // TODO check for esc/ctrl+c and throw InputInterruptedException...
-//            // TODO catch that in the feedKey loop
-//
-//            // STOPSHIP: we need a new mechanism for this:
-//            if (key == null) {
-//                // check the onMainThread-to-UI-thread queue
-//                // run a chunk at a time
-//                for (i in 0..8) {
-//                    val runnable = postToUiQueue.poll()
-//                    if (runnable != null) runnable.invoke()
-//                    else break
-//                }
-//
-//                Thread.yield()
-//            } else {
-//                if (key.keyCode !in UNRECORDED_KEY_CODES) {
-//                    undo.onKeyStroke(key)
-//                }
-//                return key
-//            }
-//        }
     }
 
     override fun searchForKeyword(text: CharSequence, direction: Int) {
