@@ -6,6 +6,8 @@ import assertk.assertions.each
 import assertk.assertions.hasLength
 import assertk.assertions.hasSize
 import com.nhaarman.mockito_kotlin.mock
+import kotlinx.coroutines.runBlocking
+import net.dhleong.judo.AssertionContext
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
@@ -13,7 +15,6 @@ import net.dhleong.judo.assertionsWhileTyping
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.cmdMode
 import net.dhleong.judo.emptyBuffer
-import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
@@ -101,7 +102,7 @@ class JudoCoreJLineIntegrationTest {
         }
     }
 
-    @Test fun `Multiline echo() from script`() {
+    @Test fun `Multiline echo() from script`() = runBlocking {
         renderer.forceResize(30, 4)
         judo.feedKeys(":echo(\"mal\\nreynolds\")<cr>")
         assert(display).linesEqual("""
@@ -112,7 +113,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Test fun `Window command mappings`() {
+    @Test fun `Window command mappings`() = runBlocking {
         renderer.forceResize(10, 6)
 
         val buffer = bufferOf("""
@@ -152,7 +153,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Test fun `Send commands to the active window`() {
+    @Test fun `Send commands to the active window`() = runBlocking {
         renderer.forceResize(10, 6)
 
         val buffer = bufferOf("""
@@ -260,7 +261,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Test fun `Redraw clears blocking echo`() {
+    @Test fun `Redraw clears blocking echo`() = runBlocking {
         judo.cmdMode.execute("""
             def echoAndClear():
                 echo("Take my love")
@@ -284,7 +285,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
-    @Test fun `Immediate redraw() clears blocking echo`() {
+    @Test fun `Immediate redraw() clears blocking echo`() = runBlocking {
         judo.cmdMode.execute("""
             def echoAndClear():
                 echo("Take my love")
@@ -359,7 +360,7 @@ class JudoCoreJLineIntegrationTest {
     }
 
     private inline fun assertionsWhileTyping(
-        crossinline block: suspend SequenceScope<Key>.() -> Unit
+        crossinline block: suspend AssertionContext.() -> Unit
     ) = assertionsWhileTyping(judo, block)
 
 }
