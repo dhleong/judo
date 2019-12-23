@@ -3,8 +3,8 @@ package net.dhleong.judo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 import net.dhleong.judo.input.InterruptHandler
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyChannelFactory
@@ -51,8 +51,9 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
     for (k in Keys.parse(keys)) {
         channel.send(k)
 
-        // yield a bunch to ensure the key is completely processed across suspends.
+        // delay to ensure JudoCore has sufficient time to asynchronously
+        // process the key across suspend points.
         // FIXME this is terrible. there has got to be a better way to do do this...
-        for (i in 0..500) { yield() }
+        delay(10)
     }
 }
