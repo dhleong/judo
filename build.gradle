@@ -24,7 +24,7 @@ ext.vs = [
     coroutines: '1.3.3',
 
     guava: '22.0',
-    jline: '3.5.1',
+    jline: '3.11.0',
     jython: '2.7.1',
     moshi: '1.8.0',
 ]
