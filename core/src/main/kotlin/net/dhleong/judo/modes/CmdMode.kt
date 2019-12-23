@@ -322,7 +322,7 @@ class CmdMode(
         """.trimMargin()
                 }
             }
-        ) { args: Array<Any> -> runBlocking {
+        ) { args: Array<Any> -> adaptSuspend {
             if (args.isNotEmpty()) {
                 readInput(args[0] as String)
             } else {
@@ -344,7 +344,7 @@ class CmdMode(
                     False for the second parameter.
                 """.trimMargin() }
             }
-        ) { args: Array<Any> -> runBlocking { feedKeys(args, mode = "normal") } }
+        ) { args: Array<Any> -> adaptSuspend { feedKeys(args, mode = "normal") } }
 
 
         registerFn(
@@ -879,5 +879,18 @@ class CmdMode(
             judo.tabpage.split(newBuffer)
         )
     }
+
+    /**
+     * Adapt a suspending call into JudoCore as for the synchronous
+     * scripting API.
+     */
+    private inline fun <R> adaptSuspend(crossinline block: suspend () -> R): R =
+        // NOTE: we do not run on the JudoCore.dispatcher, since feedKey ensures
+        // keys are processed there, and explicitly providing the dispatcher to
+        // runBlocking can cause deadlocks
+        runBlocking {
+            block()
+        }
+
 }
 

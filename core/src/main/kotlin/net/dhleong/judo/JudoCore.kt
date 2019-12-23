@@ -792,7 +792,7 @@ class JudoCore(
             onInterrupt = { interruptCancelables() }
         )
 
-        runBlocking(dispatcher) {
+        runBlocking {
             @Suppress("EXPERIMENTAL_API_USAGE")
             readKeys(channel, remap = true, fromMap = false)
         }

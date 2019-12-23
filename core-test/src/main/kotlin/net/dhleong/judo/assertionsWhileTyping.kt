@@ -52,7 +52,7 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         channel.send(k)
 
         // yield a bunch to ensure the key is completely processed across suspends.
-        // there doesn't seem to be a better way to do do this...
-        for (i in 0..100) { yield() }
+        // FIXME this is terrible. there has got to be a better way to do do this...
+        for (i in 0..500) { yield() }
     }
 }
