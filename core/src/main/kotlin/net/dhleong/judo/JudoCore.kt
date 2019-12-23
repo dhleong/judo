@@ -223,7 +223,6 @@ class JudoCore(
     private var cmdLinePrefix = ':'
 
     private var keyStrokeChannel: Channel<Key>? = null
-    private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
 
     private val outputBuffer: IJudoBuffer
     private val primaryWindow: PrimaryJudoWindow
