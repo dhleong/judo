@@ -1,5 +1,6 @@
 package net.dhleong.judo.script
 
+import net.dhleong.judo.modes.ScriptExecutionException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -48,24 +49,12 @@ class ScriptExecutionSandbox {
             executor.submit(block).get()
         } catch (e: ExecutionException) {
             if (e.cause !is ThreadDeath) {
-                e.cause?.let { throw it }
-                    ?: throw e
+                val cause = e.cause ?: e
+                throw ScriptExecutionException(cause.message ?: "", cause)
             }
         } finally {
             running.decrementAndGet()
         }
-//        try {
-//            val latch = CountDownLatch(1)
-//            executor.execute {
-//                try {
-//                    block()
-//                } catch (e: Throwable)
-//                latch.countDown()
-//            }
-//            latch.await()
-//        } finally {
-//            running.decrementAndGet()
-//        }
     }
 
 }
