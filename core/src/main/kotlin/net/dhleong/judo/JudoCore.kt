@@ -6,7 +6,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -672,14 +671,16 @@ class JudoCore(
         renderer.setCursorType(type)
 
     override fun quit() {
-        connection?.close()
-        renderer.close()
         running = false
+        connection?.close()
 
         job.apply {
             complete()
             cancelChildren()
         }
+
+        renderer.close()
+
         dispatcher.close()
     }
 
@@ -867,24 +868,18 @@ class JudoCore(
      * Read all keys from the given [channel]
      */
     private suspend fun readKeys(channel: Channel<Key>, remap: Boolean, fromMap: Boolean) {
-        val oldFlow = keyStrokeChannel
+        val oldChannel = keyStrokeChannel
         keyStrokeChannel = channel
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        while (job.isActive && !channel.isClosedForReceive && !Thread.interrupted()) {
+        while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
-                try {
-                    feedKey(readKey(), remap, fromMap)
-                } catch (e: CancellationException) {
-                    // ignore
-                } catch (e: ClosedReceiveChannelException) {
-                    // ignore
-                }
+                feedKey(readKey(), remap, fromMap)
             }
         }
 
-        if (oldFlow != null) {
-            keyStrokeChannel = oldFlow
+        if (oldChannel != null) {
+            keyStrokeChannel = oldChannel
         }
     }
 

@@ -61,9 +61,8 @@ class BlockingKeySourceChannelAdapter(
         onInterrupt: InterruptHandler,
         channel: Channel<Key>
     ) {
+        @Suppress("EXPERIMENTAL_API_USAGE")
         while (!(job.isCompleted || job.isCancelled || channel.isClosedForSend)) {
-            Thread.yield()
-
             val key = keySource.readKey() ?: continue
             if (key != Key.CTRL_C) {
                 channel.send(key)
