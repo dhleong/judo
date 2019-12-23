@@ -323,7 +323,7 @@ class JudoCoreTest {
         assert(judo.buffer.toString()).isNotEmpty()
     }
 
-    @Test fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
+    @Test(timeout = 1000) fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
         yieldKeys(":print(input('test: '))<cr>hi<esc>")
         assert(renderer.outputLines).isEqualTo(listOf("None"))
     }

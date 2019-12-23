@@ -822,12 +822,7 @@ class JudoCore(
         var bufferToRestore: String? = null
         var result: String? = null
         while (true) {
-            val key = try {
-                readKey()
-            } catch (e: NoSuchElementException) {
-                // should just be in tests
-                return null
-            }
+            val key = readKey()
 
             val mode = currentMode
             if (key.keyCode == Key.CODE_ENTER && mode is BaseModeWithBuffer) {
@@ -1098,7 +1093,6 @@ class JudoCore(
         onCanceled?.invoke()
         null
     }
-
 }
 
 private fun Throwable.appendStackTraceTo(window: IJudoWindow) {
