@@ -23,6 +23,7 @@ import org.python.core.JyAttribute
 import org.python.core.Py
 import org.python.core.PyCallIter
 import org.python.core.PyException
+import org.python.core.PyFrame
 import org.python.core.PyFunction
 import org.python.core.PyIterator
 import org.python.core.PyModule
@@ -33,6 +34,7 @@ import org.python.core.PyStringMap
 import org.python.core.PyTuple
 import org.python.core.PyType
 import org.python.core.StdoutWrapper
+import org.python.core.TraceFunction
 import org.python.core.adapter.PyObjectAdapter
 import org.python.modules.sre.MatchObject
 import org.python.modules.sre.PatternObject
@@ -40,8 +42,11 @@ import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
 import java.util.EnumSet
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
+
+private const val INTERRUPTED = Int.MIN_VALUE
 
 /**
  * @author dhleong
@@ -61,6 +66,8 @@ class JythonScriptingEngine : ScriptingEngine {
     private val python = PythonInterpreter()
     private val keepModules = HashSet<String>()
     private val globals = PyGlobals()
+
+    private val executing = AtomicInteger(0)
 
     private lateinit var printFn: (Array<Any?>) -> Unit
 
@@ -130,6 +137,20 @@ class JythonScriptingEngine : ScriptingEngine {
         modules.keys().asIterable().forEach {
             keepModules.add(it.asString())
         }
+
+        Py.getThreadState().tracefunc = object : TraceFunction() {
+            override fun traceReturn(p0: PyFrame?, p1: PyObject?): TraceFunction = this
+
+            override fun traceLine(p0: PyFrame?, p1: Int): TraceFunction = this.also {
+                if (executing.compareAndSet(INTERRUPTED, 0)) {
+                    throw InterruptedException()
+                }
+            }
+
+            override fun traceException(p0: PyFrame?, p1: PyException?): TraceFunction = this
+
+            override fun traceCall(p0: PyFrame?): TraceFunction = this
+        }
     }
 
     override fun register(entity: JudoScriptingEntity) {
@@ -148,23 +169,19 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
+    override fun interrupt() {
+//        org.python.modules.thread.thread.interruptAllThreads()
+//        pythonThread.interrupt()
+        if (executing.get() > 0) {
+            executing.set(INTERRUPTED)
+        }
+    }
+
     override fun execute(code: String) {
         wrapExceptions(lineExecution = true) {
             python.exec(code)
         }
     }
-
-
-//    override fun readFile(file: File, inputStream: InputStream) {
-//        file.parentFile?.let { fileDir ->
-//            python.exec(
-//                """
-//                import sys
-//                sys.path.insert(0, '${fileDir.absolutePath}')
-//                """.trimIndent())
-//        }
-//        super.readFile(file, inputStream)
-//    }
 
     override fun readFile(fileName: String, stream: InputStream) {
         wrapExceptions {
@@ -284,6 +301,7 @@ class JythonScriptingEngine : ScriptingEngine {
 
     private inline fun <R> wrapExceptions(lineExecution: Boolean = false, block: () -> R): R {
         try {
+            executing.incrementAndGet()
             return block()
         } catch (e: PyException) {
             if (lineExecution) {
@@ -295,7 +313,14 @@ class JythonScriptingEngine : ScriptingEngine {
                 }
             }
 
-            throw ScriptExecutionException(e.toString())
+            val interruptedClassName = InterruptedException::class.java.canonicalName
+            val string = e.toString()
+            val interruptedIndex = string.indexOf(interruptedClassName)
+            val message = if (interruptedIndex == -1) string
+                else string.substring(0, interruptedIndex + interruptedClassName.length)
+            throw ScriptExecutionException(message, e.cause)
+        } finally {
+            executing.decrementAndGet()
         }
     }
 

@@ -69,6 +69,10 @@ class CmdMode(
             return myRegisteredVars
         }
 
+    fun interrupt() {
+        engine.interrupt()
+    }
+
     override fun execute(code: String) {
         engine.execute(code)
     }
@@ -892,5 +896,8 @@ class CmdMode(
             block()
         }
 
+    companion object {
+        const val NAME = "cmd"
+    }
 }
 

@@ -74,7 +74,6 @@ import java.io.IOException
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.net.URI
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -872,7 +871,7 @@ class JudoCore(
         keyStrokeChannel = channel
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        while (job.isActive && !channel.isClosedForReceive) {
+        while (job.isActive && !channel.isClosedForReceive && !Thread.interrupted()) {
             redirectErrors("INTERNAL ERROR: ") {
                 try {
                     feedKey(readKey(), remap, fromMap)
@@ -977,6 +976,7 @@ class JudoCore(
     private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
         if (isRoot) {
             PrintWriter(FileOutputStream(debugLogFile, true)).use {
+                it.println("append error (${e.javaClass} / ${e.message}) @$prefix (root=$isRoot)")
                 it.println(prefix)
                 e.printStackTrace(it)
             }
@@ -988,7 +988,9 @@ class JudoCore(
                 e.message?.split("\n")?.forEach {
                     primaryWindow.appendLine(it)
                 }
-                e.appendStackTraceTo(primaryWindow)
+                if (e.cause !is InterruptedException) {
+                    e.appendStackTraceTo(primaryWindow)
+                }
             }
             return
         }
@@ -1067,13 +1069,11 @@ class JudoCore(
     }
 
     private fun interruptCancelables() {
+        (modes[CmdMode.NAME] as CmdMode).interrupt()
+
         val old = cancellable
         cancellable = Job(parent = job)
         old.cancel()
-
-        // interrupt the main thread to ensure the runBlocking
-        // of readKeys() stops
-        mainThread.interrupt()
     }
 
     private fun <R> runCancelable(
