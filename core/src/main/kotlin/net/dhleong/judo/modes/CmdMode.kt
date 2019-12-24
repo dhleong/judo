@@ -22,6 +22,7 @@ import net.dhleong.judo.script.init.initKeymaps
 import net.dhleong.judo.script.init.initModes
 import net.dhleong.judo.script.init.initPrompts
 import net.dhleong.judo.script.init.initTriggers
+import net.dhleong.judo.script.init.initUtil
 import net.dhleong.judo.script.init.initWindows
 import net.dhleong.judo.util.PatternSpec
 import java.io.File
@@ -61,6 +62,8 @@ class CmdMode(
     private val myRegisteredFns = mutableSetOf<String>()
     private val myRegisteredVars = mutableMapOf<String, JudoScriptingEntity>()
 
+    private var currentScriptFile: File? = null
+
     override val registeredFns: MutableSet<String>
         get() {
             engine // ensure initialized
@@ -71,6 +74,29 @@ class CmdMode(
             engine // ensure initialized
             return myRegisteredVars
         }
+
+    private fun ScriptingEngine.init() {
+        val context = ScriptInitContext(
+            judo, this,
+            userConfigFile, this@CmdMode,
+            completionSource, myRegisteredFns, myRegisteredVars
+        )
+        with(context) {
+            initConsts()
+            initCore()
+
+            initAliases()
+            initConnection()
+            initEvents()
+            initFiles()
+            initKeymaps()
+            initModes()
+            initPrompts()
+            initTriggers()
+            initUtil()
+            initWindows()
+        }
+    }
 
     fun interrupt() {
         engine.interrupt()
@@ -84,7 +110,7 @@ class CmdMode(
         engine.execute(engineFactory.formatFnCall(fnName))
     }
 
-    override fun readFile(file: File, inputStream: InputStream) {
+    override fun readFile(file: File, inputStream: InputStream) = withCurrentScriptFile(file) {
         engine.onPreReadFile(file, inputStream)
         super.readFile(file, inputStream)
     }
@@ -220,25 +246,23 @@ class CmdMode(
         return inputMode.awaitResult()
     }
 
-    private fun ScriptingEngine.init() {
-        val context = ScriptInitContext(
-            judo, this,
-            userConfigFile, this@CmdMode,
-            completionSource, myRegisteredFns, myRegisteredVars
-        )
-        with(context) {
-            initConsts()
-            initCore()
+    internal fun expandPath(type: String): String? = when (type) {
+        "<init>" -> userConfigFile.absolutePath
+        "<lastread>" -> lastReadFile?.absolutePath
+        "<sfile>" -> currentScriptFile?.absolutePath
 
-            initAliases()
-            initConnection()
-            initEvents()
-            initFiles()
-            initKeymaps()
-            initModes()
-            initPrompts()
-            initTriggers()
-            initWindows()
+        // TODO: current world URI?
+
+        else -> null
+    }
+
+    private inline fun withCurrentScriptFile(file: File, block: () -> Unit) {
+        val old = currentScriptFile
+        currentScriptFile = file
+        try {
+            block()
+        } finally {
+            currentScriptFile = old
         }
     }
 

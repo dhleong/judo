@@ -67,7 +67,7 @@ abstract class BaseCmdMode(
     )
     private val input = MutableKeys()
 
-    private var lastReadFile: File? = null
+    protected var lastReadFile: File? = null
 
     override fun onEnter() {
         clearBuffer()
