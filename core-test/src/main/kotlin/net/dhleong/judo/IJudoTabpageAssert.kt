@@ -8,7 +8,7 @@ import net.dhleong.judo.render.IJudoTabpage
 /**
  * @author dhleong
  */
-fun Assert<IJudoTabpage>.hasHeight(height: Int) {
+fun Assert<IJudoTabpage>.hasHeight(height: Int) = given { actual ->
     if (actual.height == height) return
     expected("height = ${show(height)} but was ${show(actual.height)}")
 }

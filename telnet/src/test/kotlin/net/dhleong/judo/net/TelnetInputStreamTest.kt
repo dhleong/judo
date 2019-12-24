@@ -2,6 +2,7 @@ package net.dhleong.judo.net
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
@@ -23,7 +24,7 @@ class TelnetInputStreamTest {
 
     @Test fun `Read normal bytes`() {
         val read = readAsString("mreynolds")
-        assert(read).isEqualTo("mreynolds")
+        assertThat(read).isEqualTo("mreynolds")
     }
 
     @Test fun `Dispatch DO,WILL,etc and remove from stream`() {
@@ -42,9 +43,9 @@ class TelnetInputStreamTest {
 
             write("olds")
         }
-        assert(read).isEqualTo("mreynolds")
+        assertThat(read).isEqualTo("mreynolds")
 
-        assert(events).all {
+        assertThat(events).all {
             hasSize(2)
             containsExactly(
                 TelnetEvent(byteArrayOf(TELNET_WILL, TELNET_TELOPT_MSDP)),
@@ -76,9 +77,9 @@ class TelnetInputStreamTest {
 
             write("olds")
         }
-        assert(read).isEqualTo("mreynolds")
+        assertThat(read).isEqualTo("mreynolds")
 
-        assert(events).containsExactly(
+        assertThat(events).containsExactly(
             TelnetEvent(
                 byteArrayOf(TELNET_SB, TELNET_TELOPT_MSDP, MSDP_VAR.toByte()) +
                     "name".toByteArray() +
@@ -97,7 +98,7 @@ class TelnetInputStreamTest {
 
             write("olds")
         }
-        assert(read).isEqualTo(
+        assertThat(read).isEqualTo(
             "mreyn".toByteArray() +
                 byteArrayOf(TELNET_IAC) +
                 "olds".toByteArray()
@@ -118,9 +119,9 @@ class TelnetInputStreamTest {
 
             write("olds")
         }
-        assert(read).isEqualTo("mreynolds")
+        assertThat(read).isEqualTo("mreynolds")
 
-        assert(events).containsExactly(
+        assertThat(events).containsExactly(
             TelnetEvent(
                 byteArrayOf(TELNET_SB, 42, TELNET_IAC)
             )
@@ -135,7 +136,7 @@ class TelnetInputStreamTest {
         toRead.write("mreynolds")
 
         val read = input.bufferedReader().read(buffer)
-        assert(read).isEqualTo(9)
+        assertThat(read).isEqualTo(9)
     }
 
     private fun readAsString(s: String): String = readAsString(s.byteInputStream())

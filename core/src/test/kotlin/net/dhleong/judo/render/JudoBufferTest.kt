@@ -1,6 +1,7 @@
 package net.dhleong.judo.render
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.hasLines
 import org.junit.Test
@@ -16,15 +17,15 @@ class JudoBufferTest {
         b.append("Take my")
         b.append(" land\n")
 
-        assert(b[0].toString()).isEqualTo("Take my love\n")
-        assert(b[1].toString()).isEqualTo("Take my land\n")
+        assertThat(b[0].toString()).isEqualTo("Take my love\n")
+        assertThat(b[1].toString()).isEqualTo("Take my land\n")
     }
 
     @Test fun `append() splits on newlines`() {
         val b = JudoBuffer(IdManager())
         b.append("Take\nmy\nlove\n")
 
-        assert(b).hasLines(
+        assertThat(b).hasLines(
             "Take\n",
             "my\n",
             "love\n"

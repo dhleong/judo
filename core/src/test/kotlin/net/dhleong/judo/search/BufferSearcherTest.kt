@@ -1,7 +1,7 @@
 package net.dhleong.judo.search
 
 import assertk.Assert
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
@@ -30,30 +30,31 @@ class BufferSearcherTest {
         """.trimIndent())
 
         incSearch("m", 1).shouldSucceed()
-        assert(searcher).hasResultAt(2, 5)
+        assertThat(searcher).hasResultAt(2, 5)
 
         incSearch("m", 1).shouldSucceed()
-        assert(searcher).hasResultAt(1, 5)
+        assertThat(searcher).hasResultAt(1, 5)
 
         incSearch("m", 1).shouldSucceed()
-        assert(searcher).hasResultAt(0, 5)
+        assertThat(searcher).hasResultAt(0, 5)
 
         // no more
         incSearch("m", 1).shouldFail()
-        assert(searcher).hasResultAt(0, 5) // don't drop the result
+        assertThat(searcher).hasResultAt(0, 5) // don't drop the result
 
         // now, go back...
         incSearch("m", -1).shouldSucceed()
-        assert(searcher).hasResultAt(1, 5)
+        assertThat(searcher).hasResultAt(1, 5)
 
         incSearch("m", -1).shouldSucceed()
-        assert(searcher).hasResultAt(2, 5)
+        assertThat(searcher).hasResultAt(2, 5)
 
         // no more
         incSearch("m", -1).shouldFail()
-        assert(searcher).hasResultAt(2, 5)
+        assertThat(searcher).hasResultAt(2, 5)
     }
 
+    @Suppress("SameParameterValue")
     private fun incSearch(keyword: CharSequence, direction: Int): Boolean {
         val scrollback = when (searcher.hasResult) {
             true -> buffer.lastIndex - searcher.resultLine
@@ -72,15 +73,15 @@ class BufferSearcherTest {
 private fun Boolean.shouldSucceed() = shouldBe(true)
 private fun Boolean.shouldFail() = shouldBe(false)
 private fun Boolean.shouldBe(expected: Boolean) {
-    assert(this, "search return value").isEqualTo(expected)
+    assertThat(this, "search return value").isEqualTo(expected)
 }
 
-private fun Assert<BufferSearcher>.hasNoResult() {
+private fun Assert<BufferSearcher>.hasNoResult() = given { actual ->
     if (!actual.hasResult) return
     expected("to NOT have a result, but had one at ${show(actual.resultLine to actual.resultOffset)}")
 }
 
-private fun Assert<BufferSearcher>.hasResultAt(line: Int, offset: Int) {
+private fun Assert<BufferSearcher>.hasResultAt(line: Int, offset: Int) = given { actual ->
     if (actual.hasResult && actual.resultLine == line && actual.resultOffset == offset) return
     val result = when {
         !actual.hasResult -> "had no result"

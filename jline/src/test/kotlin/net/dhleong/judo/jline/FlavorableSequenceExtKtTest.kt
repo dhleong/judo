@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.hasLength
 import assertk.assertions.hasToString
 import net.dhleong.judo.render.FlavorableStringBuilder
@@ -20,7 +21,7 @@ class FlavorableSequenceExtKtTest {
             append("Love", SimpleFlavor(isUnderline = true))
         }
         val jline = flavorable.toAttributedString()
-        assert(jline).all {
+        assertThat(jline).all {
             hasToString("Take My Love")
             hasStyleAt(0, AttributedStyle.BOLD)
         }
@@ -31,7 +32,7 @@ class FlavorableSequenceExtKtTest {
             trailingFlavor = SimpleFlavor(isBold = true)
         }
         val attr = flavorable.toAttributedString(10)
-        assert(attr).all {
+        assertThat(attr).all {
             hasLength(1)
             hasStyleAt(0, AttributedStyle.BOLD)
         }

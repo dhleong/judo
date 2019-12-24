@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.each
 import assertk.assertions.hasLength
 import assertk.assertions.hasSize
@@ -61,7 +62,7 @@ class JudoCoreJLineIntegrationTest {
     }
 
     @Test fun `Basic render`() {
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________[NORMAL]
@@ -71,14 +72,14 @@ class JudoCoreJLineIntegrationTest {
 
     @Test fun `Handle terminal width resize`() {
         renderer.forceResize(10, 4)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |__[NORMAL]
             |__________
         """.trimMargin())
 
-        assert(display.toAttributedStrings()).all {
+        assertThat(display.toAttributedStrings()).all {
             hasSize(4)
             each {
                 it.hasLength(10)
@@ -89,12 +90,12 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Handle terminal height resize`() {
         renderer.forceResize(20, 8)
         renderer.forceResize(20, 2)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________[NORMAL]
             |____________________
         """.trimMargin())
 
-        assert(display.toAttributedStrings()).all {
+        assertThat(display.toAttributedStrings()).all {
             hasSize(2)
             each {
                 it.hasLength(20)
@@ -105,7 +106,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Multiline echo() from script`() = runBlocking {
         renderer.forceResize(30, 4)
         judo.feedKeys(":echo(\"mal\\nreynolds\")<cr>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mal___________________________
             |reynolds______________________
             |Press ENTER or type command to
@@ -122,7 +123,7 @@ class JudoCoreJLineIntegrationTest {
         val win = renderer.currentTabpage.hsplit(2, buffer)
         win.updateStatusLine("[status]".toFlavorable())
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |mreynolds_
             |[status]__
@@ -132,7 +133,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         judo.feedKeys("<ctrl-w>j")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |mreynolds_
             |----------
@@ -143,7 +144,7 @@ class JudoCoreJLineIntegrationTest {
 
         // over-count
         judo.feedKeys("2<ctrl-w>k")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |mreynolds_
             |[status]__
@@ -162,7 +163,7 @@ class JudoCoreJLineIntegrationTest {
         val win = renderer.currentTabpage.hsplit(2, buffer)
         win.updateStatusLine("[status]".toFlavorable())
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |cannot____
             |stand_____
             |[status]__
@@ -172,7 +173,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         judo.feedKeys("<ctrl-f>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Take me___
             |where I___
             |[status]__
@@ -188,7 +189,7 @@ class JudoCoreJLineIntegrationTest {
 
         // NOTE: no mappings to print; this is to ensure
         // that we print without error
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |_______________
             |KeyMappings____
             |===========____
@@ -203,7 +204,7 @@ class JudoCoreJLineIntegrationTest {
 
         // NOTE: no mappings to print; this is to ensure
         // that we print without error
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |___________ ________
             |___________ ________
             |___________ ________
@@ -215,7 +216,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Render prompts`() {
         judo.prompts.define("^HP: $1", "HP $1")
         judo.onIncomingBuffer("HP: 42".toFlavorable())
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |HP 42_______[NORMAL]
@@ -233,7 +234,7 @@ class JudoCoreJLineIntegrationTest {
 
         val input = "\u001b[35mHP: \u001b[36m42"
         judo.onIncomingBuffer(input.parseAnsi())
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |____________________
             |____________________
             |$input${ansi(0)}______[NORMAL]
@@ -244,7 +245,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Render while typing in input()`() = assertionsWhileTyping {
         yieldKeys(":print(input(\"input:\"))<cr>")
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |_____________[INPUT]
@@ -253,7 +254,7 @@ class JudoCoreJLineIntegrationTest {
 
         yieldKeys("test")
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |_____________[INPUT]
@@ -269,7 +270,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimIndent())
 
         judo.feedKeys(":echoAndClear()<cr>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Take my love________
             |Take my land________
             |Press ENTER or type_
@@ -277,7 +278,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         judo.cmdMode.execute("redraw()")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________[NORMAL]
@@ -294,7 +295,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimIndent())
 
         judo.feedKeys(":echoAndClear()<cr>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________[NORMAL]
@@ -305,7 +306,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Hitting esc cleanly exits blocking echo`() = runBlocking {
         judo.echo("Take my love\nTake my land")
         judo.feedKeys("<esc>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________[NORMAL]
@@ -316,7 +317,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Command Line Mode from input()`() = assertionsWhileTyping {
         yieldKeys(":print(input(\"m:\"))<cr>rey<ctrl-f>Inolds")
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |_________[CL:INSERT]
@@ -324,7 +325,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         yieldKeys("<cr>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |noldsrey____________
             |____________[NORMAL]
@@ -335,7 +336,7 @@ class JudoCoreJLineIntegrationTest {
     @Test fun `Exiting Command Line Mode hides prompt`() = assertionsWhileTyping {
         yieldKeys(":mrey<ctrl-f>")
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |_________[CL:NORMAL]
@@ -343,7 +344,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         yieldKeys("<ctrl-c>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |:mrey_______________
@@ -354,7 +355,7 @@ class JudoCoreJLineIntegrationTest {
     @Test(timeout = 3000) fun `Hitting ESC in Command Line Mode doesn't result in hang on submit`() = assertionsWhileTyping {
         yieldKeys(":print(\"hi\")<ctrl-f>A<esc>")
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |_________[CL:NORMAL]
@@ -362,7 +363,7 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
 
         yieldKeys("<cr>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |hi__________________
             |____________[NORMAL]

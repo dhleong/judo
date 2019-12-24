@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isTrue
 import net.dhleong.judo.MAX_INPUT_LINES
 import net.dhleong.judo.StateMap
@@ -49,7 +50,7 @@ class JLineRendererTest {
         renderer.updateInputLine("Test", 4)
 
         renderer.render(display)
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |____________________
@@ -76,7 +77,7 @@ class JLineRendererTest {
         renderer.updateInputLine("Take me where I cannot stand", 4)
 
         renderer.render(display)
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |Take my love________
@@ -97,7 +98,7 @@ class JLineRendererTest {
         // changes to primary or buffer should trigger a render
 
         window.updateStatusLine("<status>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -107,7 +108,7 @@ class JLineRendererTest {
         """.trimMargin())
 
         window.appendLine("Take my love")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -125,7 +126,7 @@ class JLineRendererTest {
 
         renderer.forceResize(12, 5)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________
                 |Take my love
@@ -143,7 +144,7 @@ class JLineRendererTest {
 
     @Test fun `Clean re-render of status`() {
         window.updateStatusLine("<status>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -153,7 +154,7 @@ class JLineRendererTest {
         """.trimMargin())
 
         window.updateStatusLine("<>")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -166,7 +167,7 @@ class JLineRendererTest {
     @Test fun `Clean re-render of input`() {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("<input>", 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -176,7 +177,7 @@ class JLineRendererTest {
         """.trimMargin())
 
         renderer.updateInputLine("<>", 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |____________________
             |____________________
             |____________________
@@ -196,7 +197,7 @@ class JLineRendererTest {
         window.appendLine("cannot stand")
         window.appendLine("I don't care")
         window.appendLine("I'm still free")
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Take me where I_____
             |cannot stand________
             |I don't care________
@@ -217,7 +218,7 @@ class JLineRendererTest {
         window.resize(window.width, window.height)
         renderer.updateInputLine("Test", 4)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |Take my love________
@@ -242,7 +243,7 @@ class JLineRendererTest {
         renderer.updateInputLine("Test", 4)
         window.updateStatusLine(":cmdMode", 8)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |Take my love________
@@ -259,7 +260,7 @@ class JLineRendererTest {
         renderer.updateInputLine("<input>", 7)
         window.updateStatusLine("Take me where I cannot stand", 28)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |____________________
@@ -281,7 +282,7 @@ class JLineRendererTest {
         renderer.updateInputLine("Take me where I cannot stand", 4)
         window.updateStatusLine(":cmdMode", 8)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |Take my love________
@@ -298,7 +299,7 @@ class JLineRendererTest {
         window.updateStatusLine("<status>")
         renderer.updateInputLine("Take me where I cannot stand", 28)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |____________________
@@ -314,7 +315,7 @@ class JLineRendererTest {
     @Test fun `Render echo() single-line output`() {
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love"))
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |____________________
@@ -332,7 +333,7 @@ class JLineRendererTest {
         window.scrollPages(1)
 
         // reset to previously-set status
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |____________________
                 |____________________
@@ -349,7 +350,7 @@ class JLineRendererTest {
         window.updateStatusLine("<status>")
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my love\nTake my land"))
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |Mal Reynolds________
                 |<status>____________
@@ -369,7 +370,7 @@ class JLineRendererTest {
         window.updateStatusLine("<status>")
         renderer.echo(FlavorableStringBuilder.withDefaultFlavor("Take my\nlove"))
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |Mal Reynolds________
                 |<status>____________
@@ -394,10 +395,10 @@ class JLineRendererTest {
         val right = renderer.currentTabpage.vsplit(8, splitBuffer)
         right.updateStatusLine("[right]")
 
-        assert(settings[WORD_WRAP]).isTrue()
-        assert(window).hasWidth(11)
+        assertThat(settings[WORD_WRAP]).isTrue()
+        assertThat(window).hasWidth(11)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |___________ ________
                 |___________ ________
@@ -416,7 +417,7 @@ class JLineRendererTest {
         val right = renderer.currentTabpage.vsplit(8, splitBuffer)
         right.updateStatusLine(":right", 6)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |___________ ________
                 |___________ ________
@@ -445,7 +446,7 @@ class JLineRendererTest {
         renderer.currentTabpage.currentWindow = window
         window.updateStatusLine(":prim", 5)
 
-        assert(display).all {
+        assertThat(display).all {
             linesEqual("""
                 |Take my love _______
                 |------------ _______

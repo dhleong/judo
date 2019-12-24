@@ -2,6 +2,7 @@ package net.dhleong.judo.net
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.hasLength
 import assertk.assertions.hasSize
 import assertk.assertions.hasToString
@@ -32,7 +33,7 @@ class AnsiFlavorableStringReaderTest {
 
     @Test fun `Split lines with single newline`() {
         val all = reader.feed("Take my\nlove\n")
-        assert(all.toStringsList()).isEqualTo(listOf(
+        assertThat(all.toStringsList()).isEqualTo(listOf(
             "Take my\n",
             "love\n"
         ))
@@ -40,7 +41,7 @@ class AnsiFlavorableStringReaderTest {
 
     @Test fun `Split lines with crlf`() {
         val all = reader.feed("Take my\r\nlove\r\n")
-        assert(all.toStringsList()).isEqualTo(listOf(
+        assertThat(all.toStringsList()).isEqualTo(listOf(
             // normalize to single \n:
             "Take my\n",
             "love\n"
@@ -49,7 +50,7 @@ class AnsiFlavorableStringReaderTest {
 
     @Test fun `Split lines with lfcr`() {
         val all = reader.feed("Take my\n\rlove\n\r")
-        assert(all.toStringsList()).isEqualTo(listOf(
+        assertThat(all.toStringsList()).isEqualTo(listOf(
             // normalize to single \n:
             "Take my\n",
             "love\n"
@@ -58,7 +59,7 @@ class AnsiFlavorableStringReaderTest {
 
     @Test fun `Normalize linefeed to newline`() {
         val all = reader.feed("Take my love\r")
-        assert(all.toStringsList()).isEqualTo(listOf(
+        assertThat(all.toStringsList()).isEqualTo(listOf(
             "Take my love\n"
         ))
     }
@@ -67,7 +68,7 @@ class AnsiFlavorableStringReaderTest {
         // this test justifies using [ansiToFlavorable] to simplify the following tests
         val line = "${ansi(1,6)}Take my ${ansi(1, 2)}love"
             .parseAnsi()
-        assert(line).isEqualTo(
+        assertThat(line).isEqualTo(
             FlavorableStringBuilder(7).apply {
                 append("Take my ", SimpleFlavor(
                     isBold = true,
@@ -87,12 +88,12 @@ class AnsiFlavorableStringReaderTest {
         val ansi = ansi(1,2)
         val firstHalf = ansi.slice(0..3)
         val secondHalf = ansi.slice(4..ansi.lastIndex)
-        assert("$firstHalf$secondHalf").isEqualTo(ansi.toString())
+        assertThat("$firstHalf$secondHalf").isEqualTo(ansi.toString())
 
         val all = reader.feed("${ansi(1,6)}Take my $firstHalf") +
             reader.feed("${secondHalf}love")
 
-        assert(all.toList()).isEqualTo(listOf(
+        assertThat(all.toList()).isEqualTo(listOf(
             FlavorableStringBuilder(7).apply {
                 append("Take my ", SimpleFlavor(
                     isBold = true,
@@ -115,7 +116,7 @@ class AnsiFlavorableStringReaderTest {
         val all = reader.feed("${ansi(1,6)}Take my ${ansi(1, 2)}") +
             reader.feed("love")
 
-        assert(all.toList()).isEqualTo(listOf(
+        assertThat(all.toList()).isEqualTo(listOf(
             "${ansi(1, 6)}Take my ".parseAnsi(),
             "${ansi(1, 2)}love".parseAnsi()
         ))
@@ -133,14 +134,14 @@ class AnsiFlavorableStringReaderTest {
             foreground = JudoColor.Simple.from(2)
         )
 
-        assert(all).hasSize(2)
-        assert(all[0]).all {
+        assertThat(all).hasSize(2)
+        assertThat(all[0]).all {
             hasFlavor(trailingFlavor, atIndex = 10)
             hasTrailingFlavor(trailingFlavor)
             hasToString("Take my \n")
         }
 
-        assert(all[1]).all {
+        assertThat(all[1]).all {
             doesNotHaveTrailingFlavor()
             hasFlavor(trailingFlavor)
             hasToString("love")
@@ -149,7 +150,7 @@ class AnsiFlavorableStringReaderTest {
 
     @Test fun `Trailing ANSI storage 2`() {
         val raw = "\u001B[48;5;234m  \u001B[0;38;5;007;48;5;000m\r\u001B[38;5;000;48;5;232m"
-        assert(raw.parseAnsi()).all {
+        assertThat(raw.parseAnsi()).all {
             hasLength(4)
             hasTrailingFlavor(SimpleFlavor(
                 hasForeground = true,
@@ -166,7 +167,7 @@ class AnsiFlavorableStringReaderTest {
             .process(original) { _, _, _ ->
                 /* nop */
             }
-        assert(processed).all {
+        assertThat(processed).all {
             hasLength(4)
             hasTrailingFlavor(SimpleFlavor(
                 hasForeground = true,
@@ -178,7 +179,7 @@ class AnsiFlavorableStringReaderTest {
     }
 
     @Test fun `Handle 256 colors`() {
-        assert(
+        assertThat(
             "${27.toChar()}[38;5;200;48;5;180m200color".parseAnsi()
         ).isEqualTo(
             FlavorableStringBuilder(7).apply {
@@ -195,7 +196,7 @@ class AnsiFlavorableStringReaderTest {
     @Test fun `Handle repeated parsing garbage`() {
         val s = "38;5;00700;" // note the garbage from previously parsed output
         val length = 8 // but we're just the first 8 chars
-        assert(
+        assertThat(
             ansiCharsToFlavor(Flavor.default, s.toCharArray(), length)
         ).isEqualTo(
             SimpleFlavor(
@@ -206,7 +207,7 @@ class AnsiFlavorableStringReaderTest {
     }
 
     @Test fun `Read lower-256 colors as Simple`() {
-        assert(
+        assertThat(
             "${27.toChar()}[38;5;15mW${27.toChar()}[38;5;7mw".parseAnsi()
         ).isEqualTo(
             FlavorableStringBuilder(7).apply {
@@ -223,7 +224,7 @@ class AnsiFlavorableStringReaderTest {
     }
 
     @Test fun `Handle RGB color`() {
-        assert(
+        assertThat(
             "${27.toChar()}[38;2;250;50;20mRGB Color".parseAnsi()
         ).isEqualTo(
             FlavorableStringBuilder(7).apply {
@@ -242,7 +243,7 @@ class AnsiFlavorableStringReaderTest {
         val all = reader.feed(lineOne) +
             reader.feed(lineTwo)
 
-        assert(all.toList()).isEqualTo(listOf(
+        assertThat(all.toList()).isEqualTo(listOf(
             "${ansi(1, 1)}\n".parseAnsi(),
             "${ansi(1, 1)}Take my love...\n".parseAnsi()
         ))
@@ -251,7 +252,7 @@ class AnsiFlavorableStringReaderTest {
     @Test fun `Combine successive styles`() {
         val line = "${ansi(fg = 1)}Take ${ansi(bg = 2)}my"
 
-        assert(line.parseAnsi()).isEqualTo(
+        assertThat(line.parseAnsi()).isEqualTo(
             FlavorableStringBuilder(64).apply {
                 append("Take ", SimpleFlavor(
                     hasForeground = true,

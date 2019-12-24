@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.net.options.WindowSizeHandler
 import org.junit.Test
@@ -14,13 +15,13 @@ class WindowSizeHandlerTest {
             onRemoteDo(it)
         }
 
-        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
+        assertThat(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SB)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
-        assert(bytes.short.toInt()).isEqualTo(22)
-        assert(bytes.short.toInt()).isEqualTo(42)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SB)
+        assertThat(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assertThat(bytes.short.toInt()).isEqualTo(22)
+        assertThat(bytes.short.toInt()).isEqualTo(42)
     }
 
     @Test fun `Send large numbers`() {
@@ -28,13 +29,13 @@ class WindowSizeHandlerTest {
             onRemoteDo(it)
         }
 
-        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
+        assertThat(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SB)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
-        assert(bytes.short.toInt()).isEqualTo(422)
-        assert(bytes.short.toInt()).isEqualTo(9001)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SB)
+        assertThat(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assertThat(bytes.short.toInt()).isEqualTo(422)
+        assertThat(bytes.short.toInt()).isEqualTo(9001)
     }
 
     @Test fun `Duplicate IAC as necessary`() {
@@ -42,24 +43,24 @@ class WindowSizeHandlerTest {
             onRemoteDo(it)
         }
 
-        assert(bytes).nextIsWill(TELNET_TELOPT_NAWS)
+        assertThat(bytes).nextIsWill(TELNET_TELOPT_NAWS)
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SB)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SB)
+        assertThat(bytes.get()).isEqualTo(TELNET_TELOPT_NAWS)
 
         // width:
-        assert(bytes.get()).isEqualTo(0.toByte())
+        assertThat(bytes.get()).isEqualTo(0.toByte())
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(255.toByte())
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(255.toByte())
 
         // height:
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
     }
 }
 

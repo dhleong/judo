@@ -1,7 +1,7 @@
 package net.dhleong.judo.jline
 
 import assertk.Assert
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
@@ -46,7 +46,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 3)
             .render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |mreynolds_
             |zoe_______
@@ -62,7 +62,7 @@ class JLineWindowTest {
 
         }.render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Failed__________________________________________________________________________
             |NETWORK ERROR: java.net.ConnectException: Connection refused (Connection_refused
             |)_______________________________________________________________________________
@@ -80,7 +80,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 3)
             .render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mreynolds_
             |__________
             |zoe_______
@@ -98,7 +98,7 @@ class JLineWindowTest {
             render(display, 0, 0)
         }
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |…nolds")__
@@ -129,7 +129,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 2)
             .render(display, 0, 0)
 
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |${ansi(bg = 1)}zoe_${ansi(fg = 2, bg = 9)}w_____${ansi(0)}
             |${ansi(fg = 1)}wash______${ansi(0)}
         """.trimMargin())
@@ -142,7 +142,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 3)
             .render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |_        _
             |__________
@@ -158,7 +158,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 3)
             .render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain mr
             |eynolds___
@@ -174,7 +174,7 @@ class JLineWindowTest {
         windowOf(buffer, 10, 3, wrap = true)
             .render(display, 0, 0)
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |mreynolds_
@@ -190,14 +190,14 @@ class JLineWindowTest {
             mate
             zoe
         """.trimIndent())
-        assert(buffer).hasSize(5)
+        assertThat(buffer).hasSize(5)
 
         val w = windowOf(buffer, 10, 3, wrap = true)
 
         w.scrollLines(4)
         w.render(display, 0, 0)
-        assert(w).hasScrollback(4)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(4)
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -206,8 +206,8 @@ class JLineWindowTest {
         // now scroll back
         w.scrollLines(-4)
         w.render(display, 0, 0)
-        assert(w).hasScrollback(0)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(0)
+        assertThat(display).linesEqual("""
             |first_____
             |mate______
             |zoe_______
@@ -230,7 +230,7 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 4, settings = state)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mreynolds_
             |first_____
             |mate______
@@ -240,8 +240,8 @@ class JLineWindowTest {
         // count is ignored; half window height is used
         w.scrollBySetting(4)
         w.render(display, 0, 0)
-        assert(w).hasScrollback(2)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(2)
+        assertThat(display).linesEqual("""
             |wash______
             |captain___
             |mreynolds_
@@ -252,8 +252,8 @@ class JLineWindowTest {
         state[SCROLL] = 1
         w.scrollBySetting(4)
         w.render(display, 0, 0)
-        assert(w).hasScrollback(3)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(3)
+        assertThat(display).linesEqual("""
             |pilot_____
             |wash______
             |captain___
@@ -270,7 +270,7 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 3, wrap = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mreynolds_
             |first mate
             |zoe_______
@@ -278,16 +278,16 @@ class JLineWindowTest {
 
         w.scrollLines(1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |captain___
             |mreynolds_
             |first mate
         """.trimMargin())
 
         w.scrollLines(1)
-        assert(w).hasScrollback(1) // should be at line 1 now
+        assertThat(w).hasScrollback(1) // should be at line 1 now
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |mreynolds_
@@ -295,7 +295,7 @@ class JLineWindowTest {
 
         w.scrollLines(1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -304,7 +304,7 @@ class JLineWindowTest {
         // don't allow scrolling further
         w.scrollLines(1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -321,7 +321,7 @@ class JLineWindowTest {
 
         w.scrollLines(2)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |my land,__
             |take me___
             |where I___
@@ -329,7 +329,7 @@ class JLineWindowTest {
 
         w.scrollToBottom()
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |where I___
             |cannot____
             |stand_____
@@ -342,14 +342,14 @@ class JLineWindowTest {
             captain
             reynolds
         """.trimIndent())
-        assert(buffer).hasSize(2)
+        assertThat(buffer).hasSize(2)
 
         val w = windowOf(buffer, 10, 3)
         w.scrollPages(1)
-        assert(w).hasScrollback(1)
+        assertThat(w).hasScrollback(1)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -357,10 +357,10 @@ class JLineWindowTest {
 
         // scroll back
         w.scrollPages(-1)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |reynolds__
@@ -368,10 +368,10 @@ class JLineWindowTest {
 
         // prevent scrolling any further (at least one line of content on screen)
         w.scrollPages(-1)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |reynolds__
@@ -384,23 +384,23 @@ class JLineWindowTest {
             captain
             reynolds
         """.trimIndent())
-        assert(buffer).hasSize(2)
+        assertThat(buffer).hasSize(2)
 
         val w = windowOf(buffer, 10, 3)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |reynolds__
         """.trimMargin())
 
         w.scrollPages(1)
-        assert(w).hasScrollback(1)
+        assertThat(w).hasScrollback(1)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -408,10 +408,10 @@ class JLineWindowTest {
 
         // prevent scrolling any further (at least one line of content on screen)
         w.scrollPages(1)
-        assert(w).hasScrollback(1)
+        assertThat(w).hasScrollback(1)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -425,20 +425,20 @@ class JLineWindowTest {
         """.trimIndent())
 
         val w = windowOf(buffer, 10, 3, wrap = true)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |captain___
             |reynolds__
         """.trimMargin())
 
         w.scrollPages(1)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -446,10 +446,10 @@ class JLineWindowTest {
 
         // prevent scrolling any further (at least one line of content on screen)
         w.scrollPages(1)
-        assert(w).hasScrollback(0)
+        assertThat(w).hasScrollback(0)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________
             |__________
             |captain___
@@ -465,25 +465,25 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 1, wrap = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |zoe_______
         """.trimMargin())
 
         w.scrollToBufferLine(line = 1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |first mate
         """.trimMargin())
 
         w.scrollToBufferLine(line = 0, offsetOnLine = 0)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |captain___
         """.trimMargin())
 
         w.scrollToBufferLine(line = 0, offsetOnLine = 8)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mreynolds_
         """.trimMargin())
     }
@@ -498,7 +498,7 @@ class JLineWindowTest {
         val w = windowOf(buffer, 12, 3, focused = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |e I cannot s
             |tand________
             |____________
@@ -506,7 +506,7 @@ class JLineWindowTest {
 
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
             |____________
@@ -515,7 +515,7 @@ class JLineWindowTest {
         // NOTE: we avoid scrolling here since it's on the same page
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |Take ${ansi(inverse = true)}m${ansi(0)}y land
             |Take me wher
             |____________
@@ -524,7 +524,7 @@ class JLineWindowTest {
         // step back
         w.searchForKeyword("m", direction = -1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
             |____________
@@ -534,7 +534,7 @@ class JLineWindowTest {
         w.searchForKeyword("m", direction = 1)
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |____________
             |Take ${ansi(inverse = true)}M${ansi(0)}y love
             |____________
@@ -553,7 +553,7 @@ class JLineWindowTest {
 
         w.searchForKeyword("m", direction = 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             """
             |Take my land
             |Take ${ansi(inverse = true)}m${ansi(0)}e wher
@@ -569,20 +569,20 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 2, wrap = true, focused = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |zoe_______
             |__________
         """.trimMargin())
 
         w.searchForKeyword("rey", 1)
         w.render(display, 0, 0)
-        assert(w).hasScrollback(1)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(1)
+        assertThat(display).linesEqual("""
             |mreynolds_
             |__________
         """.trimMargin())
 
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             buildAnsi {
                 append("m")
                 append("rey", AttributedStyle.INVERSE)
@@ -600,14 +600,14 @@ class JLineWindowTest {
         val w = windowOf(buffer, 26, 2, focused = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             take my love, take my land
             __________________________
         """.trimIndent())
 
         w.searchForKeyword("e", 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             buildAnsi {
                 append("take my love, tak")
                 append("e", AttributedStyle.INVERSE)
@@ -618,7 +618,7 @@ class JLineWindowTest {
 
         w.searchForKeyword("e", 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             buildAnsi {
                 append("take my lov")
                 append("e", AttributedStyle.INVERSE)
@@ -629,7 +629,7 @@ class JLineWindowTest {
 
         w.searchForKeyword("e", 1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             buildAnsi {
                 append("tak")
                 append("e", AttributedStyle.INVERSE)
@@ -640,7 +640,7 @@ class JLineWindowTest {
 
         w.searchForKeyword("e", -1)
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual(
+        assertThat(display).ansiLinesEqual(
             buildAnsi {
                 append("take my lov")
                 append("e", AttributedStyle.INVERSE)
@@ -659,7 +659,7 @@ class JLineWindowTest {
         val w = windowOf(buffer, 24, 1, wrap = true)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |first mate zoe__________
         """.trimMargin())
 
@@ -667,8 +667,8 @@ class JLineWindowTest {
         w.render(display, 0, 0)
 
         // don't go anywhere
-        assert(w).hasScrollback(0)
-        assert(display).linesEqual("""
+        assertThat(w).hasScrollback(0)
+        assertThat(display).linesEqual("""
             |first mate zoe__________
         """.trimMargin())
 
@@ -687,7 +687,7 @@ class JLineWindowTest {
         val w = windowOf(buffer, 42, 2)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Take my land______________________________
             |Take me where I cannot stand______________
         """.trimMargin())
@@ -696,14 +696,14 @@ class JLineWindowTest {
         display.resize(6, 2)
         w.resize(6, 2)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |nnot s
             |tand__
         """.trimMargin())
 
         w.scrollPages(1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |e wher
             |e I ca
         """.trimMargin())
@@ -715,7 +715,7 @@ class JLineWindowTest {
         // since we're scrolled, we should stay
         // where we are
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |e wher
             |e I ca
         """.trimMargin())
@@ -726,11 +726,11 @@ class JLineWindowTest {
         val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor("Take me where"))
         }
-        assert(buffer.size).isEqualTo(1)
+        assertThat(buffer.size).isEqualTo(1)
         val w = windowOf(buffer, 42, 2)
 
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |__________________________________________
             |Take me where_____________________________
         """.trimMargin())
@@ -739,14 +739,14 @@ class JLineWindowTest {
         display.resize(7, 2)
         w.resize(7, 2)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |Take me
             | where_
         """.trimMargin())
 
         w.scrollLines(1)
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |_______
             |Take me
         """.trimMargin())
@@ -757,7 +757,7 @@ class JLineWindowTest {
         // since we're scrolled, we should stay
         // where we are
         w.render(display, 0, 0)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |_______
             |Take me
         """.trimMargin())
@@ -778,11 +778,11 @@ class JLineWindowTest {
                 ))
             })
         }
-        assert(buffer.size).isEqualTo(1)
+        assertThat(buffer.size).isEqualTo(1)
         val w = windowOf(buffer, 10, 1)
 
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |.${ansi(fg=2)}__${ansi(fg=4)}_______${ansi(0)}
         """.trimMargin())
     }
@@ -802,11 +802,11 @@ class JLineWindowTest {
                 )
             })
         }
-        assert(buffer.size).isEqualTo(1)
+        assertThat(buffer.size).isEqualTo(1)
         val w = windowOf(buffer, 10, 1)
 
         w.render(display, 0, 0)
-        assert(display).ansiLinesEqual("""
+        assertThat(display).ansiLinesEqual("""
             |.${ansi(bg=2)}__${ansi(bg=5)}_______${ansi(0)}
         """.trimMargin())
     }
@@ -840,7 +840,7 @@ private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =
         .toAttributedString()
         .toAnsi()
 
-private fun Assert<IJudoWindow>.hasScrollback(lines: Int) {
+private fun Assert<IJudoWindow>.hasScrollback(lines: Int) = given { actual ->
     if (actual.getScrollback() == lines) return
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }

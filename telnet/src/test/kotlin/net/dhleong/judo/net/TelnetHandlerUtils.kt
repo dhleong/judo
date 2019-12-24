@@ -29,7 +29,7 @@ fun TelnetOptionHandler.sentBytesOn(
     }
 }
 
-fun Assert<ByteBuffer>.hasNoMore() {
+fun Assert<ByteBuffer>.hasNoMore() = given { actual ->
     if (!actual.hasRemaining()) return
 
     val remainingBytes = ByteArray(actual.remaining())
@@ -37,26 +37,26 @@ fun Assert<ByteBuffer>.hasNoMore() {
     expected("No more bytes to remain, but was ${show(remainingBytes)}")
 }
 
-fun Assert<ByteBuffer>.nextIsWill(telnetOpt: Byte) {
-    assert(actual).nextIsCmd(TELNET_WILL, telnetOpt)
+fun Assert<ByteBuffer>.nextIsWill(telnetOpt: Byte) = given { actual ->
+    assertThat(actual).nextIsCmd(TELNET_WILL, telnetOpt)
 }
 
-fun Assert<ByteBuffer>.nextIsDo(telnetOpt: Byte) {
-    assert(actual).nextIsCmd(TELNET_DO, telnetOpt)
+fun Assert<ByteBuffer>.nextIsDo(telnetOpt: Byte) = given { actual ->
+    assertThat(actual).nextIsCmd(TELNET_DO, telnetOpt)
 }
 
-fun Assert<ByteBuffer>.nextIsCmd(kind: Byte, telnetOpt: Byte) {
+fun Assert<ByteBuffer>.nextIsCmd(kind: Byte, telnetOpt: Byte) = given { actual ->
     assertAll {
-        assert(actual.get()).isEqualTo(TELNET_IAC)
-        assert(actual.get(), "kind").isEqualTo(kind)
-        assert(actual.get(), "opt").isEqualTo(telnetOpt)
+        assertThat(actual.get()).isEqualTo(TELNET_IAC)
+        assertThat(actual.get(), "kind").isEqualTo(kind)
+        assertThat(actual.get(), "opt").isEqualTo(telnetOpt)
     }
 }
 
-fun Assert<ByteBuffer>.nextIsString(string: String) {
+fun Assert<ByteBuffer>.nextIsString(string: String) = given { actual ->
     val nameBytes = ByteArray(string.length)
     actual.get(nameBytes, 0, string.length)
-    assert(String(nameBytes)).isEqualTo(string)
+    assertThat(String(nameBytes)).isEqualTo(string)
 }
 
 

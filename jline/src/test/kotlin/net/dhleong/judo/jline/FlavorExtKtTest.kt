@@ -2,6 +2,7 @@ package net.dhleong.judo.jline
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import com.nhaarman.mockito_kotlin.doReturn
@@ -18,7 +19,7 @@ import org.junit.Test
 
 class FlavorExtKtTest {
     @Test fun `Single attribute conversion`() {
-        assert(SimpleFlavor(isBold = true).toAttributedStyle())
+        assertThat(SimpleFlavor(isBold = true).toAttributedStyle())
             .isEqualTo(AttributedStyle.BOLD)
     }
 
@@ -36,7 +37,7 @@ class FlavorExtKtTest {
 
         val flavorable = ansi.parseAnsi()
         val parsedForeground = flavorable.getFlavor(0).foreground
-        assert(parsedForeground).isInstanceOf(JudoColor.High256::class.java)
+        assertThat(parsedForeground).isInstanceOf(JudoColor.High256::class.java)
     }
 
     @Test fun `256 color conversion`() {
@@ -51,7 +52,7 @@ class FlavorExtKtTest {
 
         val flavorable = ansi.parseAnsi()
         val parsed = flavorable.getFlavor(0).background
-        assert(parsed).all {
+        assertThat(parsed).all {
             isInstanceOf(JudoColor.High256::class.java)
             isEqualTo(JudoColor.High256(235))
         }

@@ -1,13 +1,15 @@
 package net.dhleong.judo.jline
 
-import assertk.assert
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import org.junit.Test
 
 class JLineDisplayTest {
     @Test fun `Empty display`() {
         val display = JLineDisplay(11, 3)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |___________
             |_         _
             |___________
@@ -20,7 +22,7 @@ class JLineDisplayTest {
             append("mreynolds")
         }
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |___________
             |  mreynolds
             |___________
@@ -29,27 +31,27 @@ class JLineDisplayTest {
 
     @Test fun `Prevent writing out of range`() {
         val display = JLineDisplay(10, 3)
-        assert {
+        assertThat {
             display.withLine(14, 1) {
                 // nop
             }
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IndexOutOfBoundsException::class.java)
         }
 
-        assert {
+        assertThat {
             display.withLine(0, 20) {
                 // nop
             }
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IndexOutOfBoundsException::class.java)
         }
 
-        assert {
+        assertThat {
             display.withLine(4, 1) {
                 append("mreynolds")
             }
-        }.thrownError {
+        }.isFailure().all {
             isInstanceOf(IndexOutOfBoundsException::class.java)
         }
     }
@@ -60,7 +62,7 @@ class JLineDisplayTest {
         display.withLine(0, 1) { append("zoe") }
         display.withLine(0, 2) { append("itskaylee") }
 
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |mreynolds_
             |zoe_______
             |itskaylee_
@@ -70,7 +72,7 @@ class JLineDisplayTest {
 
         // resize since we don't are about the "gone" 2 rows
         display.resize(10, 1)
-        assert(display).linesEqual("""
+        assertThat(display).linesEqual("""
             |itskaylee_
         """.trimMargin())
     }

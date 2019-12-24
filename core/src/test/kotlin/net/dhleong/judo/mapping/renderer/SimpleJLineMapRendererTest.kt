@@ -1,6 +1,7 @@
 package net.dhleong.judo.mapping.renderer
 
 import assertk.assert
+import assertk.assertThat
 import net.dhleong.judo.hasLinesSomewhere
 import net.dhleong.judo.mapping.JudoMap
 import net.dhleong.judo.mapping.JudoRoom
@@ -57,7 +58,7 @@ class SimpleBufferMapRendererTest {
 
         // render and verify
         renderer.appendGridInto(map, grid, buffer)
-        assert(buffer).hasLinesSomewhere(
+        assertThat(buffer).hasLinesSomewhere(
             "                [ ]           \n",
             "                 |            \n",
             "                 |+           \n",
@@ -97,7 +98,7 @@ class SimpleBufferMapRendererTest {
 
         // render and verify
         renderer.appendGridInto(map, grid, buffer)
-        assert(buffer).hasLinesSomewhere(
+        assertThat(buffer).hasLinesSomewhere(
             " [#]       [ ]      \n",
             " -         -        \n"
         )

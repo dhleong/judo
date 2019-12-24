@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
@@ -39,10 +40,10 @@ class CmdModeTriggerTest(
                 });
             """.trimIndent()
         })
-        assert(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.prints).containsExactly("awesome")
+        assertThat(judo.prints).containsExactly("awesome")
     }
 
     @Test fun `trigger() as decorator`() {
@@ -54,10 +55,10 @@ class CmdModeTriggerTest(
 
             SupportedScriptTypes.JS -> return
         })
-        assert(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.prints).containsExactly("awesome")
+        assertThat(judo.prints).containsExactly("awesome")
     }
 
     @Test fun `trigger() with regex`() {
@@ -76,7 +77,7 @@ class CmdModeTriggerTest(
         })
 
         judo.triggers.process("cool story bro")
-        assert(judo.prints).containsExactly("awesome story bro")
+        assertThat(judo.prints).containsExactly("awesome story bro")
     }
 
     @Test fun `trigger() strips color by default`() {
@@ -94,7 +95,7 @@ class CmdModeTriggerTest(
         })
 
         judo.triggers.process(`cool story`())
-        assert(judo.prints).containsExactly("awesome story")
+        assertThat(judo.prints).containsExactly("awesome story")
     }
 
     @Test fun `trigger(_, 'color') preserves ANSI`() {
@@ -112,8 +113,8 @@ class CmdModeTriggerTest(
         })
 
         judo.triggers.process(`cool story`())
-        assert(judo.prints).hasSize(1)
-        assert(judo.prints[0] as String).isEqualTo(
+        assertThat(judo.prints).hasSize(1)
+        assertThat(judo.prints[0] as String).isEqualTo(
             "awesome ${ansi(1,2)}st${ansi(fg=3)}or${ansi(fg=4)}y${ansi(0)}")
     }
 
@@ -130,10 +131,10 @@ class CmdModeTriggerTest(
                 });
             """.trimIndent()
         })
-        assert(judo.triggers.hasTriggerFor("cool.")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("cool.")).isTrue()
 
         judo.triggers.process("cool.")
-        assert(judo.prints).containsExactly("awesome.")
+        assertThat(judo.prints).containsExactly("awesome.")
     }
 
     @Test fun `trigger() supports multiple decorators`() {
@@ -147,14 +148,14 @@ class CmdModeTriggerTest(
             // no decorator support:
             SupportedScriptTypes.JS -> return
         })
-        assert(judo.triggers.hasTriggerFor("cool")).isTrue()
-        assert(judo.triggers.hasTriggerFor("shiny")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("shiny")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.prints).containsExactly("awesome")
+        assertThat(judo.prints).containsExactly("awesome")
 
         judo.triggers.process("this is shiny")
-        assert(judo.prints).containsExactly("awesome", "awesome")
+        assertThat(judo.prints).containsExactly("awesome", "awesome")
     }
 
     @Test fun `trigger() and alias() decorators stack`() {
@@ -169,17 +170,17 @@ class CmdModeTriggerTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.triggers.hasTriggerFor("cool")).isTrue()
-        assert(judo.triggers.hasTriggerFor("shiny")).isFalse()
-        assert(judo.aliases.hasAliasFor("cool")).isFalse()
-        assert(judo.aliases.hasAliasFor("shiny")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
+        assertThat(judo.triggers.hasTriggerFor("shiny")).isFalse()
+        assertThat(judo.aliases.hasAliasFor("cool")).isFalse()
+        assertThat(judo.aliases.hasAliasFor("shiny")).isTrue()
 
         judo.triggers.process("this is cool")
-        assert(judo.prints).containsExactly("awesome")
+        assertThat(judo.prints).containsExactly("awesome")
 
         judo.submit("shiny", fromMap = false)
-        assert(judo.sends).isEmpty()
-        assert(judo.prints).containsExactly("awesome", "awesome")
+        assertThat(judo.sends).isEmpty()
+        assertThat(judo.prints).containsExactly("awesome", "awesome")
     }
 
     @Test fun `trigger() only matches complete lines`() {
@@ -203,7 +204,7 @@ class CmdModeTriggerTest(
             removeTrailingNewline()
             append("bro\n")
         })
-        assert(judo.prints).containsExactly("awesome storybro")
+        assertThat(judo.prints).containsExactly("awesome storybro")
     }
 
     private fun `cool story`() = FlavorableStringBuilder(64).apply {

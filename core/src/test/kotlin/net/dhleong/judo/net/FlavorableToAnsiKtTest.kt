@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.SimpleFlavor
@@ -14,7 +15,7 @@ class FlavorableToAnsiKtTest {
     @Test fun `Handle default flavor`() {
         val result = FlavorableStringBuilder.withDefaultFlavor("Take my love").toAnsi()
 
-        assert(result).isEqualTo(
+        assertThat(result).isEqualTo(
             "${ansi(0)}Take my love"
         )
     }
@@ -26,7 +27,7 @@ class FlavorableToAnsiKtTest {
             append("love", SimpleFlavor(isItalic = true))
         }.toAnsi()
 
-        assert(result).isEqualTo(
+        assertThat(result).isEqualTo(
             "${ansi(1)}Take ${ansi(3)}my ${ansi(21)}love${ansi(0)}"
         )
     }

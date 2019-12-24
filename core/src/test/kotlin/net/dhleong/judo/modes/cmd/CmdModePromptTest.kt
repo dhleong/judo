@@ -1,11 +1,13 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.Assert
-import assertk.assert
+import assertk.all
 import assertk.assertAll
+import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNotNull
 import assertk.assertions.message
 import assertk.assertions.support.expected
@@ -30,9 +32,9 @@ class CmdModePromptTest(
     @Test fun prompt() {
         mode.execute(fnCall("prompt", "^Input($1)", "prompt $1>"))
 
-        assert(judo.prints).isEmpty()
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
+        assertThat(judo.prints).isEmpty()
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
     }
 
     @Test fun `prompt() handles 'color' flag`() {
@@ -41,23 +43,23 @@ class CmdModePromptTest(
             "^Input($1)", "color", "prompt $1>"
         ))
 
-        assert(judo.prints).isEmpty()
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes(
+        assertThat(judo.prints).isEmpty()
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes(
             "Input(${ansi(1,2)}42)".parseAnsi(),
             into = "prompt ${ansi(1,2)}42${ansi(0)}>"
         )
     }
 
     @Test fun `prompt() rejects illegal group id`() {
-        assert {
+        assertThat {
             mode.execute(fnCall(
                 "prompt",
                 -2, "^Input($1)", "prompt $1>"
             ))
-        }.thrownError {
-            message().isNotNull {
-                it.contains("group must be > 0")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("group must be > 0")
             }
         }
     }
@@ -68,9 +70,9 @@ class CmdModePromptTest(
             22, "^Input($1)", "prompt $1>"
         ))
 
-        assert(judo.prints).isEmpty()
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
+        assertThat(judo.prints).isEmpty()
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
     }
 
     @Test fun `prompt() handles group with flags`() {
@@ -79,9 +81,9 @@ class CmdModePromptTest(
             2, "^Input($1)", "color", "prompt $1>"
         ))
 
-        assert(judo.prints).isEmpty()
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes(
+        assertThat(judo.prints).isEmpty()
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes(
             "Input(${ansi(1,2)}42)".parseAnsi(),
             into = "prompt ${ansi(1,2)}42${ansi(0)}>"
         )
@@ -98,8 +100,8 @@ class CmdModePromptTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes(
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes(
             "hp: 42".parseAnsi(),
             into = "awesome 42"
         )
@@ -116,8 +118,8 @@ class CmdModePromptTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes(
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes(
             "hp: 42".parseAnsi(),
             into = "awesome 42"
         )
@@ -134,8 +136,8 @@ class CmdModePromptTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.prompts).hasSize(1)
-        assert(judo.prompts).processes(
+        assertThat(judo.prompts).hasSize(1)
+        assertThat(judo.prompts).processes(
             "hp: ${ansi(1,2)}42".parseAnsi(),
             into = "awesome ${ansi(1,2)}42${ansi(0)}"
         )
@@ -143,17 +145,17 @@ class CmdModePromptTest(
 
 }
 
-private fun Assert<IPromptManager>.hasSize(size: Int) {
+private fun Assert<IPromptManager>.hasSize(size: Int) = given { actual ->
     if (actual.size == size) return
     expected("size = ${show(size)} but was ${show(actual.size)}")
 }
-private fun Assert<IPromptManager>.processes(line: FlavorableCharSequence, into: String) {
+private fun Assert<IPromptManager>.processes(line: FlavorableCharSequence, into: String) = given { actual ->
     var lastPrompt: String? = null
     val result = actual.process(line) { _, prompt, _ ->
         lastPrompt = prompt
     }
     assertAll {
-        assert(result, "result").isEmpty()
-        assert(lastPrompt, "processed prompt").isEqualTo(into)
+        assertThat(result, "result").isEmpty()
+        assertThat(lastPrompt, "processed prompt").isEqualTo(into)
     }
 }

@@ -1,13 +1,16 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.Assert
-import assertk.assert
+import assertk.all
+import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
+import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
 import assertk.assertions.message
 import assertk.assertions.support.expected
@@ -38,13 +41,13 @@ class CmdModeCoreTest(
     @Test fun print() {
         mode.execute("print('test', 2)")
 
-        assert(judo.prints).containsExactly("test", 2)
+        assertThat(judo.prints).containsExactly("test", 2)
     }
 
     @Test fun globals() {
         mode.execute("print(MYJUDORC)")
 
-        assert(judo.prints).containsExactly(mode.userConfigFile.absolutePath)
+        assertThat(judo.prints).containsExactly(mode.userConfigFile.absolutePath)
     }
 
     @Test fun `var definitions are shared across execute() calls`() {
@@ -57,65 +60,65 @@ class CmdModeCoreTest(
             print(value)
         """.trimIndent())
 
-        assert(judo.prints).containsExactly("magic")
+        assertThat(judo.prints).containsExactly("magic")
     }
 
     @Test fun `Complain with unexpected number of args`() {
-        assert {
+        assertThat {
             mode.execute(fnCall("send", "mreynolds"))
-            assert(judo.sends).containsExactly("mreynolds")
-        }.doesNotThrowAnyException()
+            assertThat(judo.sends).containsExactly("mreynolds")
+        }.isSuccess()
 
-        assert {
+        assertThat {
             mode.execute(fnCall("send"))
-        }.thrownError {
-            message().isNotNull {
-                it.contains("arguments")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("arguments")
             }
         }
 
-        assert {
+        assertThat {
             mode.execute(fnCall("send", "niska", 2))
-        }.thrownError {
-            message().isNotNull {
-                it.contains("arguments")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("arguments")
             }
         }
     }
 
     @Test fun settings() {
-        assert(WORD_WRAP !in judo.state).isTrue()
+        assertThat(WORD_WRAP !in judo.state).isTrue()
 
-        assert {
+        assertThat {
             mode.execute(fnCall("config", "nonsense", true))
-        }.thrownError {
-            message().isNotNull {
-                it.contains("No such setting")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("No such setting")
             }
         }
 
-        assert {
+        assertThat {
             mode.execute(fnCall("config", "wordwrap", "string?"))
-        }.thrownError {
-            message().isNotNull {
-                it.contains("is invalid for")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("is invalid for")
             }
         }
 
         mode.execute(fnCall("config", "wordwrap", true))
 
-        assert(judo.state[WORD_WRAP]).isEqualTo(true)
+        assertThat(judo.state[WORD_WRAP]).isEqualTo(true)
     }
 
     @Test fun `config('setting') prints its value`() {
-        assert(WORD_WRAP !in judo.state).isTrue()
+        assertThat(WORD_WRAP !in judo.state).isTrue()
 
         mode.execute(fnCall("config", "wordwrap"))
-        assert(judo.prints).containsExactly("wordwrap = true (default)")
+        assertThat(judo.prints).containsExactly("wordwrap = true (default)")
         judo.prints.clear()
 
         mode.execute(fnCall("config", "wordwrap", false))
-        assert(judo.prints).containsExactly("wordwrap = false")
+        assertThat(judo.prints).containsExactly("wordwrap = false")
     }
 
     @Test fun `Don't allow builtins to get overridden`() {
@@ -132,7 +135,7 @@ class CmdModeCoreTest(
         }
 
         mode.execute(fnCall("print", "magic"))
-        assert(judo.prints)
+        assertThat(judo.prints)
             .containsExactly("magic")
     }
 
@@ -163,12 +166,12 @@ class CmdModeCoreTest(
             """.trimIndent())
         }
 
-        assert(judo.aliases.hasAliasFor("shiny $1")).isTrue()
-        assert(judo.events.has("CONNECTED")).isTrue()
-        assert(judo.events.has("DISCONNECTED")).isFalse()
-        assert(judo.prompts.size).isEqualTo(1)
-        assert(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
-        assert(judo.triggers.hasTriggerFor("foo")).isTrue()
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assertThat(judo.events.has("CONNECTED")).isTrue()
+        assertThat(judo.events.has("DISCONNECTED")).isFalse()
+        assertThat(judo.prompts.size).isEqualTo(1)
+        assertThat(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
 
         // read a different file, and no change to original
         when (scriptType()) {
@@ -181,25 +184,25 @@ class CmdModeCoreTest(
                 event("DISCONNECTED", function onDisconnect() {});
             """.trimIndent())
         }
-        assert(judo.aliases.hasAliasFor("shiny $1")).isTrue()
-        assert(judo.events.has("CONNECTED")).isTrue()
-        assert(judo.events.has("DISCONNECTED")).isTrue()
-        assert(judo.prompts.size).isEqualTo(1)
-        assert(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
-        assert(judo.triggers.hasTriggerFor("foo")).isTrue()
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isTrue()
+        assertThat(judo.events.has("CONNECTED")).isTrue()
+        assertThat(judo.events.has("DISCONNECTED")).isTrue()
+        assertThat(judo.prompts.size).isEqualTo(1)
+        assertThat(judo.maps).contains(listOf("normal", "gkf", "ikeep flyin<cr>", true))
+        assertThat(judo.triggers.hasTriggerFor("foo")).isTrue()
 
         // read the original file (which is now inexplicably empty) and
         // clear out the things it created...
         val ext = scriptType().name.toLowerCase()
         mode.readLikeFile("test.$ext","")
-        assert(judo.aliases.hasAliasFor("shiny $1")).isFalse()
-        assert(judo.events.has("CONNECTED")).isFalse()
-        assert(judo.maps).isEmpty()
-        assert(judo.prompts.size).isEqualTo(0)
-        assert(judo.triggers.hasTriggerFor("foo")).isFalse()
+        assertThat(judo.aliases.hasAliasFor("shiny $1")).isFalse()
+        assertThat(judo.events.has("CONNECTED")).isFalse()
+        assertThat(judo.maps).isEmpty()
+        assertThat(judo.prompts.size).isEqualTo(0)
+        assertThat(judo.triggers.hasTriggerFor("foo")).isFalse()
 
         // ... but the other file is intact
-        assert(judo.events.has("DISCONNECTED")).isTrue()
+        assertThat(judo.events.has("DISCONNECTED")).isTrue()
     }
 
     @Test fun `Render help items in columns`() {
@@ -208,13 +211,13 @@ class CmdModeCoreTest(
 
         mode.showHelp()
 
-        assert(judo.prints)
+        assertThat(judo.prints)
             .startsWith("alias           cmap            ")
     }
 
     @Test fun `Render help for vars`() {
         mode.showHelp("judo")
-        assert(judo.prints)
+        assertThat(judo.prints)
             .startsWith(
                 "judo",
                 "===="
@@ -226,7 +229,7 @@ class CmdModeCoreTest(
             connect("host", 23)
         """.trimIndent())
 
-        assert(judo.connects).containsExactly(
+        assertThat(judo.connects).containsExactly(
             createURI("host:23")
         )
     }
@@ -236,7 +239,7 @@ class CmdModeCoreTest(
             connect("host:port")
         """.trimIndent())
 
-        assert(judo.connects).containsExactly(
+        assertThat(judo.connects).containsExactly(
             createURI("host:port")
         )
     }
@@ -246,7 +249,7 @@ class CmdModeCoreTest(
             connect("ssl://host:port")
         """.trimIndent())
 
-        assert(judo.connects).containsExactly(
+        assertThat(judo.connects).containsExactly(
             createURI("ssl://host:port")
         )
     }
@@ -281,11 +284,11 @@ class CmdModeCoreTest(
 
         // ensure scripting isn't broken
         mode.execute(fnCall("print", "mreynolds"))
-        assert(judo.prints).containsExactly("mreynolds")
+        assertThat(judo.prints).containsExactly("mreynolds")
     }
 }
 
-private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) {
+private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) = given { actual ->
     val actualFirstSequence = actual.take(sequence.size)
     if (actualFirstSequence == sequence.asList()) return
     expected("to start with ${show(sequence)}, but was ${show(actualFirstSequence)}")

@@ -1,9 +1,14 @@
 package net.dhleong.judo
 
-import assertk.assert
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.exists
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
+import assertk.assertions.text
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.IInputHistory
@@ -18,7 +23,6 @@ import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.SimpleFlavor
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.ansi
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -53,10 +57,10 @@ class JudoCoreTest {
 
     @Test fun `print() handles ansi codes in strings`() {
         judo.print("${ansi(1)}Mal ${ansi(3)}Reynolds")
-        assert(renderer.outputLines).containsExactly(
+        assertThat(renderer.outputLines).containsExactly(
             "Mal Reynolds"
         )
-        assert(renderer.flavoredOutputLines).containsExactly(
+        assertThat(renderer.flavoredOutputLines).containsExactly(
             FlavorableStringBuilder(16).apply {
                 append("Mal ", SimpleFlavor(isBold = true))
                 append("Reynolds", SimpleFlavor(isBold = true, isItalic = true))
@@ -108,7 +112,7 @@ class JudoCoreTest {
         val prompt = "${ansi(1,3)}HP: ${ansi(1,6)}42\r\n"
         val first = prompt.substring(0..8)
         val second = prompt.substring(9..prompt.lastIndex)
-        assert("$first$second").isEqualTo(prompt)
+        assertThat("$first$second").isEqualTo(prompt)
 
         val reader = AnsiFlavorableStringReader()
         val sequences = reader.feed(first.toCharArray()) +
@@ -119,7 +123,7 @@ class JudoCoreTest {
         }
 
         val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
-        assert(buffer).hasLines(
+        assertThat(buffer).hasLines(
             ""
         )
     }
@@ -149,29 +153,29 @@ class JudoCoreTest {
         judo.prompts.define("^HP $1>", "<$1>")
 
         judo.onIncomingBuffer("HP 42>\n".toFlavorable())
-        assert(promptBuffer).hasLines(
+        assertThat(promptBuffer).hasLines(
             "<42>\n"
         )
 
         judo.onIncomingBuffer("HP[42]>\n".toFlavorable())
-        assert(promptBuffer).hasLines(
+        assertThat(promptBuffer).hasLines(
             "HP: 42\n"
         )
 
         judo.onIncomingBuffer("Ammo: 22>\n".toFlavorable())
-        assert(promptBuffer).hasLines(
+        assertThat(promptBuffer).hasLines(
             "HP: 42\n",
             "Ammo: 22\n"
         )
 
         // back to group -1
         judo.onIncomingBuffer("HP 32>\n".toFlavorable())
-        assert(promptBuffer).hasLines(
+        assertThat(promptBuffer).hasLines(
             "<32>\n"
         )
     }
 
-    @Test fun feedKeys() = runBlocking<Unit> {
+    @Test fun feedKeys() = runBlocking {
         judo.buffer.set("my love,")
         judo.buffer.cursor = 0
 
@@ -226,14 +230,15 @@ class JudoCoreTest {
 
         judo.onDisconnect(DumbProxy())
 
-        assertThat(tmpFile)
-            .exists()
-            .hasContent("take love\ntake land")
+        assertThat(tmpFile).all {
+            exists()
+            text().transform { it.trim() }.isEqualTo("take love\ntake land")
+        }
 
         tmpFile.deleteOnExit()
     }
 
-    @Test fun resetCompletionOnModeChange() = runBlocking<Unit> {
+    @Test fun resetCompletionOnModeChange() = runBlocking {
         // seed completion
         judo.seedCompletion("take love")
 
@@ -265,29 +270,29 @@ class JudoCoreTest {
     @Test fun `Passthrough keypress from blocking echo mode`() = runBlocking {
         judo.enterMode(BlockingEchoMode(judo, renderer))
         judo.feedKeys("i")
-        assert(judo).isInMode("insert")
+        assertThat(judo).isInMode("insert")
 
         // and make sure the mode stack is as expected
         judo.feedKeys("<esc>")
-        assert(judo).isInMode("normal")
+        assertThat(judo).isInMode("normal")
     }
 
     @Test fun `Invalid commands still get added to command mode history`() = runBlocking {
         judo.feedKeys(":echo()<cr>:<up>")
-        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+        assertThat(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
         judo.feedKeys("<esc>")
 
         judo.feedKeys(":doesNotExist()<cr>:<up>")
-        assert(judo.cmdMode.buffer.toString()).isEqualTo("doesNotExist()")
+        assertThat(judo.cmdMode.buffer.toString()).isEqualTo("doesNotExist()")
     }
 
     @Test fun `Blank commands do NOT get added to command mode history`() = runBlocking {
         judo.feedKeys(":echo()<cr>:<up>")
-        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+        assertThat(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
         judo.feedKeys("<esc>")
 
         judo.feedKeys(":<cr>:<up>")
-        assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
+        assertThat(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
     }
 
     @Test fun `readCommandLineInput switches to relevant history`() = assertionsWhileTyping(judo) {
@@ -297,12 +302,12 @@ class JudoCoreTest {
         (judo.currentMode as CmdMode).history.push("Cmd")
 
         yieldKeys("<ctrl-f>k")
-        assert((judo.currentMode as NormalMode).buffer.toString())
+        assertThat((judo.currentMode as NormalMode).buffer.toString())
             .isEqualTo("Cmd")
 
         // when we pop back to normal mode, its history should return
         yieldKeys("<ctrl-c><esc>k")
-        assert((judo.currentMode as NormalMode).buffer.toString())
+        assertThat((judo.currentMode as NormalMode).buffer.toString())
             .isEqualTo("Normal")
     }
 
@@ -310,22 +315,22 @@ class JudoCoreTest {
         judo.connection = mock {  }
         judo.feedKeys("ihelp news<cr>")
         judo.feedKeys("h<tab> n<tab><cr>")
-        assert(renderer.outputLines).containsExactly(
+        assertThat(renderer.outputLines).containsExactly(
             "help news",
             "help news"
         )
 
         judo.feedKeys("<tab>")
-        assert(renderer.outputLines).isEqualTo(listOf(
+        assertThat(renderer.outputLines).isEqualTo(listOf(
             "help news",
             "help news"
         ))
-        assert(judo.buffer.toString()).isNotEmpty()
+        assertThat(judo.buffer.toString()).isNotEmpty()
     }
 
     @Test(timeout = 10_000) fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
         yieldKeys(":print(input('test: '))<cr>hi<esc>")
-        assert(renderer.outputLines).isEqualTo(listOf("None"))
+        assertThat(renderer.outputLines).isEqualTo(listOf("None"))
     }
 }
 

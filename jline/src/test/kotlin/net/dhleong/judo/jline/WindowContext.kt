@@ -1,6 +1,7 @@
 package net.dhleong.judo.jline
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.show
 import net.dhleong.judo.render.FlavorableCharSequence
@@ -16,7 +17,7 @@ class WindowContext(
     private val preserveWhitespace: Boolean
 ) {
     fun FlavorableStringBuilder.hasRenderedLinesCount(count: Int) {
-        assert(
+        assertThat(
             computeRenderedLinesCount(windowWidth, wordWrap),
             describe("rendered lines count")
         ).isEqualTo(count)
@@ -27,7 +28,7 @@ class WindowContext(
         forEachRenderedLine(windowWidth, wordWrap, preserveWhitespace) { start, end ->
             actual += substring(start, end)
         }
-        assert(
+        assertThat(
             actual,
             describe("rendered lines")
         ).isEqualTo(lines.toList())

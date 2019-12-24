@@ -1,6 +1,7 @@
 package net.dhleong.judo.net.options
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
@@ -37,25 +38,25 @@ class MttsTermTypeHandlerTest {
             )))
         }
 
-        assert(bytes).nextIsWill(TELNET_TELOPT_TERMINAL_TYPE)
+        assertThat(bytes).nextIsWill(TELNET_TELOPT_TERMINAL_TYPE)
 
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SB)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
-        assert(bytes.get()).isEqualTo(TELNET_IS)
-        assert(bytes).nextIsString(JudoCore.CLIENT_NAME.toUpperCase())
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SE)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SB)
+        assertThat(bytes.get()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
+        assertThat(bytes.get()).isEqualTo(TELNET_IS)
+        assertThat(bytes).nextIsString(JudoCore.CLIENT_NAME.toUpperCase())
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SE)
 
         // rotate on second request
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SB)
-        assert(bytes.get()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
-        assert(bytes.get()).isEqualTo(TELNET_IS)
-        assert(bytes).nextIsString("Serenity")
-        assert(bytes.get()).isEqualTo(TELNET_IAC)
-        assert(bytes.get()).isEqualTo(TELNET_SE)
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SB)
+        assertThat(bytes.get()).isEqualTo(TELNET_TELOPT_TERMINAL_TYPE)
+        assertThat(bytes.get()).isEqualTo(TELNET_IS)
+        assertThat(bytes).nextIsString("Serenity")
+        assertThat(bytes.get()).isEqualTo(TELNET_IAC)
+        assertThat(bytes.get()).isEqualTo(TELNET_SE)
 
-        assert(bytes).hasNoMore()
+        assertThat(bytes).hasNoMore()
     }
 }

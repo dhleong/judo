@@ -1,6 +1,7 @@
 package net.dhleong.judo.jline
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.MAX_INPUT_LINES
@@ -34,26 +35,26 @@ class TerminalInputLineHelperTest {
 
         renderer.updateInputLine("Take my love, Take my land... ", 0)
         renderer.fitInputLineToWindow().let { (line, cursor) ->
-            assert(line.toString()).isEqualTo("Take my lov…")
-            assert(cursor).isEqualTo(0)
+            assertThat(line.toString()).isEqualTo("Take my lov…")
+            assertThat(cursor).isEqualTo(0)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 14)
         renderer.fitInputLineToWindow().let { (line, cursor) ->
-            assert(line.toString()).isEqualTo("… love, Tak…")
-            assert(cursor).isEqualTo(8)
+            assertThat(line.toString()).isEqualTo("… love, Tak…")
+            assertThat(cursor).isEqualTo(8)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 19)
         renderer.fitInputLineToWindow().let { (line, cursor) ->
-            assert(line.toString()).isEqualTo("… Take my l…")
-            assert(cursor).isEqualTo(7)
+            assertThat(line.toString()).isEqualTo("… Take my l…")
+            assertThat(cursor).isEqualTo(7)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 30)
         renderer.fitInputLineToWindow().let { (line, cursor) ->
-            assert(line.toString()).isEqualTo("…d... ")
-            assert(cursor).isEqualTo(6)
+            assertThat(line.toString()).isEqualTo("…d... ")
+            assertThat(cursor).isEqualTo(6)
         }
     }
 
@@ -99,30 +100,30 @@ class TerminalInputLineHelperTest {
 
         renderer.updateInputLine("Take my love, Take my land... ", 0)
         renderer.fitInputLinesToWindow().let { (lines, cursor) ->
-            assert(lines.map { it.toString() })
+            assertThat(lines.map { it.toString() })
                 .containsExactly("Take my love", ", Take my l…")
-            assert(cursor).isEqualTo(0 to 0)
+            assertThat(cursor).isEqualTo(0 to 0)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 14)
         renderer.fitInputLinesToWindow().let { (lines, cursor) ->
-            assert(lines.map { it.toString() })
+            assertThat(lines.map { it.toString() })
                 .containsExactly("Take my love", ", Take my l…")
-            assert(cursor).isEqualTo(1 to 2)
+            assertThat(cursor).isEqualTo(1 to 2)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 19)
         renderer.fitInputLinesToWindow().let { (lines, cursor) ->
-            assert(lines.map { it.toString() })
+            assertThat(lines.map { it.toString() })
                 .containsExactly("Take my love", ", Take my l…")
-            assert(cursor).isEqualTo(1 to 7)
+            assertThat(cursor).isEqualTo(1 to 7)
         }
 
         renderer.updateInputLine("Take my love, Take my land... ", 30)
         renderer.fitInputLinesToWindow().let { (lines, cursor) ->
-            assert(lines.map { it.toString() })
+            assertThat(lines.map { it.toString() })
                 .containsExactly("… Take my la", "nd... ")
-            assert(cursor).isEqualTo(1 to 6)
+            assertThat(cursor).isEqualTo(1 to 6)
         }
     }
 
@@ -153,13 +154,13 @@ class TerminalInputLineHelperTest {
 
         renderer.updateInputLine(text, 0)
         renderer.fitInputLinesToWindow().let { (lines, cursor) ->
-            assert(lines.map { it.toString() })
+            assertThat(lines.map { it.toString() })
                 .containsExactly(
                     "The quick red fox ",
                     "jumped over the lazy",
                     " brown dog. The ",
                     "quick red fox jumped")
-            assert(cursor).isEqualTo(0 to 0)
+            assertThat(cursor).isEqualTo(0 to 0)
         }
     }
 
@@ -198,7 +199,7 @@ class TerminalInputLineHelperTest {
 
         val (line, cursor) = fitInputLineToWindow()
 
-        assert(line.toString() to cursor).isEqualTo(expected)
+        assertThat(line.toString() to cursor).isEqualTo(expected)
     }
 
     private fun InputLine.typeMultiAndFit(text: String, expected: Pair<List<String>, Pair<Int, Int>>) {
@@ -206,7 +207,7 @@ class TerminalInputLineHelperTest {
 
         val (lines, cursor) = fitInputLinesToWindow()
 
-        assert(lines.map { it.toString() } to cursor)
+        assertThat(lines.map { it.toString() } to cursor)
             .isEqualTo(expected)
     }
 }

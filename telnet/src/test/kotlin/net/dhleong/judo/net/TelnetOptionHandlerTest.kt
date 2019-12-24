@@ -2,6 +2,7 @@ package net.dhleong.judo.net
 
 import assertk.all
 import assertk.assert
+import assertk.assertThat
 import org.junit.Test
 
 /**
@@ -20,7 +21,7 @@ class TelnetOptionHandlerTest {
             onRemoteDo(it)
         }
 
-        assert(bytes).all {
+        assertThat(bytes).all {
             nextIsWill(42)
             hasNoMore()
         }
@@ -36,7 +37,7 @@ class TelnetOptionHandlerTest {
         val attach = handler.sentBytesOn {
             onAttach(it)
         }
-        assert(attach).all {
+        assertThat(attach).all {
             hasNoMore()
         }
 
@@ -44,7 +45,7 @@ class TelnetOptionHandlerTest {
         val bytes = handler.sentBytesOn {
             onRemoteDo(it)
         }
-        assert(bytes).all {
+        assertThat(bytes).all {
             nextIsWill(42)
             hasNoMore()
         }
@@ -62,7 +63,7 @@ class TelnetOptionHandlerTest {
             onRemoteWill(it)
         }
 
-        assert(bytes).all {
+        assertThat(bytes).all {
             nextIsDo(42)
             hasNoMore()
         }

@@ -2,8 +2,8 @@ package net.dhleong.judo.modes.cmd
 
 import assertk.Assert
 import assertk.all
-import assertk.assert
 import assertk.assertAll
+import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
@@ -11,10 +11,12 @@ import assertk.assertions.hasSize
 import assertk.assertions.hasToString
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotSameAs
 import assertk.assertions.isSameAs
+import assertk.assertions.isSuccess
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import net.dhleong.judo.hasHeight
@@ -48,13 +50,13 @@ class CmdModeObjectInteropTest(
             newWin.resize(newWin.width, 4)
         """.trimIndent())
 
-        assert(judo.prints).isNotEmpty()
+        assertThat(judo.prints).isNotEmpty()
 
         val splitHeight = judo.prints[2] as Int
-        assert(splitHeight, "split height").isEqualTo(20)
+        assertThat(splitHeight, "split height").isEqualTo(20)
 
         val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
-        assert(window).hasHeight(4)
+        assertThat(window).hasHeight(4)
 
         // NOTE: the tests below are no longer useful since core is no longer
         // bundled with a functioning renderer:
@@ -76,13 +78,13 @@ class CmdModeObjectInteropTest(
             newWin.resize(4, newWin.height)
         """.trimIndent())
 
-        assert(judo.prints).isNotEmpty()
+        assertThat(judo.prints).isNotEmpty()
 
         val splitWidth = judo.prints[2] as Int
-        assert(splitWidth, "split width").isEqualTo(20)
+        assertThat(splitWidth, "split width").isEqualTo(20)
 
         val window = judo.tabpage.findWindowById(judo.prints[0] as Int)!!
-        assert(window).hasWidth(4)
+        assertThat(window).hasWidth(4)
     }
 
     @Test fun `Set current window by scripting`() {
@@ -93,38 +95,38 @@ class CmdModeObjectInteropTest(
             print(newWin.id)
         """.trimIndent())
 
-        assert(judo.prints).isNotEmpty()
+        assertThat(judo.prints).isNotEmpty()
         val primaryId = judo.prints[0] as Int
         val newWinId = judo.prints[1] as Int
-        assert(judo.renderer.currentTabpage.currentWindow).hasId(newWinId)
+        assertThat(judo.renderer.currentTabpage.currentWindow).hasId(newWinId)
 
         mode.execute("""
             judo.current.window = primary
         """.trimIndent())
 
-        assert(judo.renderer.currentTabpage.currentWindow).hasId(primaryId)
+        assertThat(judo.renderer.currentTabpage.currentWindow).hasId(primaryId)
     }
 
     @Test fun `Prevent access to non-exposed methods`() {
-        assert {
+        assertThat {
             // clearTestable is a public fn on TestableJudoCore, but not in IScriptJudo
             mode.execute("""
                 judo.clearTestable()
             """.trimIndent())
-        }.thrownError {
-            message().isNotNull {
-                it.contains("clearTestable")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("clearTestable")
             }
         }
 
-        assert {
+        assertThat {
             // clearTestable is a public fn on IJudoCore, but not in IScriptJudo
             mode.execute("""
                 judo.print("hi")
             """.trimIndent())
-        }.thrownError {
-            message().isNotNull {
-                it.contains("print")
+        }.isFailure().all {
+            message().isNotNull().all {
+                contains("print")
             }
         }
     }
@@ -132,13 +134,13 @@ class CmdModeObjectInteropTest(
     @Test fun `Mapper works`() {
         val file = File("test.map")
         if (file.exists()) file.delete()
-        assert(file).doesNotExist()
+        assertThat(file).doesNotExist()
 
         mode.execute("""
             judo.mapper.createEmpty()
             judo.mapper.saveAs("${file.absolutePath}")
             """.trimIndent())
-        assert(file).exists()
+        assertThat(file).exists()
 
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
@@ -150,7 +152,7 @@ class CmdModeObjectInteropTest(
             """.trimIndent()
         })
 
-        assert(judo.prints).containsExactly(true)
+        assertThat(judo.prints).containsExactly(true)
         file.delete()
     }
 
@@ -171,9 +173,9 @@ class CmdModeObjectInteropTest(
         """.trimIndent())
 
         val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
-        assert(buffer).hasSize(1)
+        assertThat(buffer).hasSize(1)
 
-        assert(buffer[0]).all {
+        assertThat(buffer[0]).all {
             hasToString("ANSI\n")
             hasFlavor(SimpleFlavor(
                 hasForeground = true,
@@ -201,20 +203,20 @@ class CmdModeObjectInteropTest(
             """.trimIndent()
         })
 
-        assert(judo.prints).isEmpty()
+        assertThat(judo.prints).isEmpty()
 
         judo.submit("mreynolds", fromMap = false)
         assertAll {
-            assert(judo.sends, "sends").isEmpty()
-            assert(judo.prints, "prints").containsExactly("Submitted mreynolds")
+            assertThat(judo.sends, "sends").isEmpty()
+            assertThat(judo.prints, "prints").containsExactly("Submitted mreynolds")
         }
 
         // after onSubmit we clear the handler
         judo.prints.clear()
         judo.submit("mreynolds", fromMap = false)
         assertAll {
-            assert(judo.prints, "prints").isEmpty()
-            assert(judo.sends, "sends").containsExactly("mreynolds")
+            assertThat(judo.prints, "prints").isEmpty()
+            assertThat(judo.sends, "sends").containsExactly("mreynolds")
         }
     }
 
@@ -230,23 +232,23 @@ class CmdModeObjectInteropTest(
         """.trimIndent())
 
         val splitWindow = judo.tabpage.currentWindow
-        assert(splitWindow).isNotSameAs(primary)
-        assert(judo.prints).containsExactly(
+        assertThat(splitWindow).isNotSameAs(primary)
+        assertThat(judo.prints).containsExactly(
             primary.id,
             splitWindow.id
         )
-        assert(judo.mapper.window).isSameAs(splitWindow)
+        assertThat(judo.mapper.window).isSameAs(splitWindow)
     }
 
     @Test fun `Scrolling via Judo object`() {
         val window = judo.renderer.currentTabpage.currentWindow
-        assert(window.getScrollback()).isEqualTo(0)
+        assertThat(window.getScrollback()).isEqualTo(0)
 
         mode.execute("""
             judo.scrollLines(1)
         """.trimIndent())
 
-        assert(window.getScrollback()).isEqualTo(1)
+        assertThat(window.getScrollback()).isEqualTo(1)
     }
 
     @Test fun `Gracefully handle null values`() {
@@ -254,8 +256,8 @@ class CmdModeObjectInteropTest(
             print(expandpath("<sfile>"))
         """.trimIndent())
 
-        assert(judo.prints).hasSize(1)
-        assert(judo.prints[0]?.toString() ?: "null").isEqualTo(when (scriptType()) {
+        assertThat(judo.prints).hasSize(1)
+        assertThat(judo.prints[0]?.toString() ?: "null").isEqualTo(when (scriptType()) {
             SupportedScriptTypes.PY -> "None"
             else -> "null"
         })
@@ -263,23 +265,23 @@ class CmdModeObjectInteropTest(
         if (scriptType() == SupportedScriptTypes.PY) {
             judo.prints.clear()
             mode.execute("""print(expandpath("<sfile>") is None)""")
-            assert(judo.prints).containsExactly(true)
+            assertThat(judo.prints).containsExactly(true)
         }
 
 
-        assert {
+        assertThat {
             mode.execute("""
                 echo(expandpath("<sfile>"))
             """.trimIndent())
-        }.doesNotThrowAnyException()
+        }.isSuccess()
 
-        assert(judo.echos).hasSize(1)
-        assert(judo.echos[0]?.toString() ?: "null").isEqualTo("null")
+        assertThat(judo.echos).hasSize(1)
+        assertThat(judo.echos[0]?.toString() ?: "null").isEqualTo("null")
 
     }
 }
 
-private fun Assert<File>.doesNotExist() {
+private fun Assert<File>.doesNotExist() = given { actual ->
     if (!actual.exists()) return
     expected("to not exist")
 }

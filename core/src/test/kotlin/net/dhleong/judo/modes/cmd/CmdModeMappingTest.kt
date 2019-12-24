@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import kotlinx.coroutines.runBlocking
@@ -21,7 +22,7 @@ class CmdModeMappingTest(
     @Test fun `nnoremap creates maps`() {
         mode.execute(fnCall("nnoremap", "a", "bc"))
 
-        assert(judo.maps)
+        assertThat(judo.maps)
             .containsExactly(listOf("normal", "a", "bc", false))
     }
 
@@ -42,13 +43,13 @@ class CmdModeMappingTest(
 
         judo.feedKey(Key.ofChar('a'))
 
-        assert(judo.prints).containsExactly("mapped!")
+        assertThat(judo.prints).containsExactly("mapped!")
     }
 
     @Test fun `createMap creates custom mode maps`() {
         mode.execute(fnCall("createMap", "custom", "a", "bc", true))
 
-        assert(judo.maps)
+        assertThat(judo.maps)
             .containsExactly(listOf("custom", "a", "bc", true))
     }
 
@@ -56,14 +57,14 @@ class CmdModeMappingTest(
         mode.execute(fnCall("map", "a", "b"))
         mode.execute(fnCall("unmap", "a"))
 
-        assert(judo.maps).isEmpty()
+        assertThat(judo.maps).isEmpty()
     }
 
     @Test fun `deleteMap removes mappings`() {
         mode.execute(fnCall("createMap", "custom", "a", "bc", true))
         mode.execute(fnCall("deleteMap", "custom", "a"))
 
-        assert(judo.maps).isEmpty()
+        assertThat(judo.maps).isEmpty()
     }
 
 }

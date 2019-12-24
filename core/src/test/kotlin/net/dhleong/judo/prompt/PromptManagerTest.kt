@@ -1,12 +1,11 @@
 package net.dhleong.judo.prompt
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ansi
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 
@@ -38,7 +37,6 @@ class PromptManagerTest {
     }
 
     @Test fun stripAnsiPrompt() {
-
         prompts.define("^HP[$1] Ammo: $2>", "<$1> <$2>")
         assertThat(process("${ansi(1, 6)}HP[${ansi(1, 2)}||||  ] Ammo: 42> \n"))
             .isEqualTo(" \n")
@@ -50,24 +48,24 @@ class PromptManagerTest {
         prompts.define("^HP[$1] Ammo: $2>", "<$1> Combat: <$2>")
         prompts.define("^HP[$1]>", "<$1>")
 
-        assert(process("HP[||||  ] Ammo: 42> \n")).isEqualTo(" \n")
-        assert(extractedPrompts).containsExactly(-1 to "<||||  > Combat: <42>" to 0)
+        assertThat(process("HP[||||  ] Ammo: 42> \n")).isEqualTo(" \n")
+        assertThat(extractedPrompts).containsExactly(-1 to "<||||  > Combat: <42>" to 0)
         extractedPrompts.clear()
 
-        assert(process("HP[||||  ]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(-2 to "<||||  >" to 0)
+        assertThat(process("HP[||||  ]>\n")).isEqualTo("")
+        assertThat(extractedPrompts).containsExactly(-2 to "<||||  >" to 0)
     }
 
     @Test fun `Multiple prompts in a group`() {
         prompts.define("^HP[$1]>", "HP: <$1>", group = 1)
         prompts.define("^Ammo: $1>", "Ammo: $1", group = 1)
 
-        assert(process("HP[||||  ]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(1 to "HP: <||||  >" to 0)
+        assertThat(process("HP[||||  ]>\n")).isEqualTo("")
+        assertThat(extractedPrompts).containsExactly(1 to "HP: <||||  >" to 0)
         extractedPrompts.clear()
 
-        assert(process("Ammo: 42>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(1 to "Ammo: 42" to 1)
+        assertThat(process("Ammo: 42>\n")).isEqualTo("")
+        assertThat(extractedPrompts).containsExactly(1 to "Ammo: 42" to 1)
     }
 
     @Test fun `Strip prompts that resolve to empty`() {
@@ -86,27 +84,27 @@ class PromptManagerTest {
         }, group = 1)
 
         // since HP resolves to the empty string, we don't count it
-        assert(process("HP[10]>\n")).isEqualTo("")
-        assert(extractedPrompts).isEmpty()
-        assert(hp).isEqualTo("10")
+        assertThat(process("HP[10]>\n")).isEqualTo("")
+        assertThat(extractedPrompts).isEmpty()
+        assertThat(hp).isEqualTo("10")
 
         // note that even though HP is first, because it doesn't produce output
         // it is not counted when computing index
-        assert(process("MP[20]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<>" to 0)
+        assertThat(process("MP[20]>\n")).isEqualTo("")
+        assertThat(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<>" to 0)
         extractedPrompts.clear()
 
         // Ammo also doesn't produce any output, but it should re-render MP
         // (and not cause an infinite loop with HP)
-        assert(process("Ammo[11]>\n")).isEqualTo("")
-        assert(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<11>" to 0)
+        assertThat(process("Ammo[11]>\n")).isEqualTo("")
+        assertThat(extractedPrompts).containsExactly(1 to "HP<10> MP<20> Ammo<11>" to 0)
         extractedPrompts.clear()
 
         // when we see HP again, since it doesn't produce output,
         // the OTHER prompts are re-triggered
-        assert(process("HP[42]>\n")).isEqualTo("")
-        assert(hp).isEqualTo("42")
-        assert(extractedPrompts).containsExactly(1 to "HP<42> MP<20> Ammo<11>" to 0)
+        assertThat(process("HP[42]>\n")).isEqualTo("")
+        assertThat(hp).isEqualTo("42")
+        assertThat(extractedPrompts).containsExactly(1 to "HP<42> MP<20> Ammo<11>" to 0)
     }
 
     private fun process(input: String): String =

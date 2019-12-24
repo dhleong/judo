@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes.cmd
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isTrue
 import kotlinx.coroutines.runBlocking
@@ -31,10 +32,10 @@ class CmdModeEventsTest(
             """.trimIndent()
         })
 
-        assert(judo.events.has("cool")).isTrue()
+        assertThat(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", "cold")
-        assert(judo.prints)
+        assertThat(judo.prints)
             .containsExactly("awesome")
     }
 
@@ -53,10 +54,10 @@ class CmdModeEventsTest(
             """.trimIndent()
         })
 
-        assert(judo.events.has("cool")).isTrue()
+        assertThat(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", "colder")
-        assert(judo.prints)
+        assertThat(judo.prints)
             .containsExactly("awesome colder")
     }
 
@@ -75,14 +76,14 @@ class CmdModeEventsTest(
             """.trimIndent()
         })
 
-        assert(judo.events.has("cool")).isTrue()
+        assertThat(judo.events.has("cool")).isTrue()
 
         val nullName = when (scriptType()) {
             SupportedScriptTypes.PY -> "None"
             else -> "null"
         }
         judo.events.raise("cool")
-        assert(judo.prints)
+        assertThat(judo.prints)
             .containsExactly("awesome $nullName")
     }
 
@@ -101,10 +102,10 @@ class CmdModeEventsTest(
             """.trimIndent()
         })
 
-        assert(judo.events.has("cool")).isTrue()
+        assertThat(judo.events.has("cool")).isTrue()
 
         judo.events.raise("cool", arrayOf("cold", "colder"))
-        assert(judo.prints)
+        assertThat(judo.prints)
             .containsExactly("awesome cold:colder")
     }
 

@@ -1,6 +1,6 @@
 package net.dhleong.judo.modes.cmd
 
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
@@ -21,8 +21,8 @@ class CmdModeAliasTest(
     @Test fun `alias() static`() {
         mode.execute("alias('fun', 'fancy')")
 
-        assert(judo.aliases.hasAliasFor("fun")).isTrue()
-        assert(judo.aliases.process("That was fun").toString())
+        assertThat(judo.aliases.hasAliasFor("fun")).isTrue()
+        assertThat(judo.aliases.process("That was fun").toString())
             .isEqualTo("That was fancy")
     }
 
@@ -44,8 +44,8 @@ class CmdModeAliasTest(
             ${fnCall("alias", "cool", Var("handleAlias"))}
             """.trimIndent())
 
-        assert(judo.aliases.hasAliasFor("cool")).isTrue()
-        assert(judo.aliases.process("this is cool").toString())
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("this is cool").toString())
             .isEqualTo("this is awesome")
     }
 
@@ -60,8 +60,8 @@ class CmdModeAliasTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.aliases.hasAliasFor("cool")).isTrue()
-        assert(judo.aliases.process("this is cool").toString())
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("this is cool").toString())
             .isEqualTo("this is awesome")
     }
 
@@ -77,12 +77,12 @@ class CmdModeAliasTest(
             SupportedScriptTypes.JS -> return
         })
 
-        assert(judo.aliases.hasAliasFor("cool")).isTrue()
-        assert(judo.aliases.hasAliasFor("shiny")).isTrue()
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.hasAliasFor("shiny")).isTrue()
 
-        assert(judo.aliases.process("this is cool").toString())
+        assertThat(judo.aliases.process("this is cool").toString())
             .isEqualTo("this is awesome")
-        assert(judo.aliases.process("this is shiny").toString())
+        assertThat(judo.aliases.process("this is shiny").toString())
             .isEqualTo("this is awesome")
     }
 
@@ -98,8 +98,8 @@ class CmdModeAliasTest(
             """.trimIndent()
         })
 
-        assert(judo.aliases.hasAliasFor("cool")).isTrue()
-        assert(judo.aliases.process("cool").toString())
+        assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
+        assertThat(judo.aliases.process("cool").toString())
             .isEmpty()
     }
 
@@ -137,9 +137,9 @@ class CmdModeAliasTest(
         )}
         """.trimMargin())
 
-        assert(judo.aliases.process("keep flyin'").toString())
+        assertThat(judo.aliases.process("keep flyin'").toString())
             .isEmpty()
-        assert(judo.prints).containsExactly("flyin'")
+        assertThat(judo.prints).containsExactly("flyin'")
     }
 
     @Test fun `alias() with Python-only Regex`() {
@@ -160,9 +160,9 @@ class CmdModeAliasTest(
             |def handleAlias(arg): print(arg.strip())
             """.trimMargin())
 
-        assert(judo.aliases.process("cool cool story bro").toString())
+        assertThat(judo.aliases.process("cool cool story bro").toString())
             .isEmpty()
-        assert(judo.prints).containsExactly("cool story bro")
+        assertThat(judo.prints).containsExactly("cool story bro")
     }
 
 }

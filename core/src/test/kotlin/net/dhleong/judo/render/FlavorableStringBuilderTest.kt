@@ -1,32 +1,33 @@
 package net.dhleong.judo.render
 
 import assertk.all
-import assertk.assert
+import assertk.assertThat
 import assertk.assertions.hasLength
 import assertk.assertions.hasToString
+import assertk.assertions.isSuccess
 import org.junit.Test
 
 class FlavorableStringBuilderTest {
     @Test fun `Basic toString()`() {
-        assert(FlavorableStringBuilder.fromString("mreynolds"))
+        assertThat(FlavorableStringBuilder.fromString("mreynolds"))
             .hasToString("mreynolds")
     }
 
     @Test fun `Basic append`() {
         val b = FlavorableStringBuilder.fromString("Mal")
         b += " Reynolds"
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Mal Reynolds")
             hasLength(12)
         }
     }
 
     @Test fun `append empty FSB`() {
-        assert {
+        assertThat {
             val b = FlavorableStringBuilder(1)
             b.append('m', Flavor.default)
             b.append(FlavorableStringBuilder.EMPTY)
-        }.doesNotThrowAnyException()
+        }.isSuccess()
     }
 
     @Test fun `Append subsequence with flavor`() {
@@ -34,7 +35,7 @@ class FlavorableStringBuilderTest {
             append("bla bla mal reynolds", 8, 20, SimpleFlavor(isBold = true))
         }
 
-        assert(b).all {
+        assertThat(b).all {
             hasToString("mal reynolds")
             hasFlavor(SimpleFlavor(isBold = true))
         }
@@ -44,7 +45,7 @@ class FlavorableStringBuilderTest {
         val b = FlavorableStringBuilder(16).apply {
             this += "mal\treynolds"
         }
-        assert(b).all {
+        assertThat(b).all {
             hasToString("mal  reynolds")
         }
     }
@@ -54,7 +55,7 @@ class FlavorableStringBuilderTest {
         b.beginFlavor(SimpleFlavor(isBold = true), 0)
 
         b += " Reynolds"
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Mal Reynolds")
             hasFlavor(SimpleFlavor(isBold = true))
             hasLength(12)
@@ -66,7 +67,7 @@ class FlavorableStringBuilderTest {
         b.beginFlavor(SimpleFlavor(isBold = true), 0)
 
         b += FlavorableStringBuilder.fromString(" Reynolds")
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Mal Reynolds")
             hasFlavor(SimpleFlavor(isBold = true))
             hasLength(12)
@@ -81,7 +82,7 @@ class FlavorableStringBuilderTest {
         b += FlavorableStringBuilder.fromString(" Reynolds").apply {
             beginFlavor(SimpleFlavor(isItalic = true), 0)
         }
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Mal Reynolds")
             hasFlavor(SimpleFlavor(isBold = true), untilIndex = 3)
             hasFlavor(SimpleFlavor(isItalic = true), atIndex = 3)
@@ -97,7 +98,7 @@ class FlavorableStringBuilderTest {
         b += FlavorableStringBuilder.fromString(" Reynolds").apply {
             beginFlavor(SimpleFlavor(isItalic = true), 4)
         }
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Mal Reynolds")
             hasFlavor(SimpleFlavor(isBold = true), untilIndex = 7)
             hasFlavor(SimpleFlavor(isItalic = true), atIndex = 7)
@@ -108,14 +109,14 @@ class FlavorableStringBuilderTest {
     @Test fun `subSequence works as expected`() {
         val b = FlavorableStringBuilder.fromString("mreynolds")
         val sub = b.subSequence(1, 4)
-        assert(sub).hasToString("rey")
+        assertThat(sub).hasToString("rey")
     }
 
     @Test fun `append to subSequence works as expected`() {
         val b = FlavorableStringBuilder.fromString("mreynolds")
         val sub = b.subSequence(1, 4)
         sub += "noldo"
-        assert(sub).hasToString("reynoldo")
+        assertThat(sub).hasToString("reynoldo")
     }
 
     @Test fun `append subSequence to subSequence works as expected`() {
@@ -124,47 +125,47 @@ class FlavorableStringBuilderTest {
         val sub2 = b.subSequence(4, 8)
 
         sub1 += sub2
-        assert(sub1).hasToString("reynold")
+        assertThat(sub1).hasToString("reynold")
     }
 
     @Test fun `subSequence edge cases`() {
         val b = FlavorableStringBuilder.fromString("mreynolds")
-        assert(b.subSequence(0, 0)).hasToString("")
-        assert(b.subSequence(0, 9)).hasToString("mreynolds")
-        assert(b.subSequence(9, 9)).hasToString("")
+        assertThat(b.subSequence(0, 0)).hasToString("")
+        assertThat(b.subSequence(0, 9)).hasToString("mreynolds")
+        assertThat(b.subSequence(9, 9)).hasToString("")
     }
 
     @Test fun `splitAtNewlines() handles the empty string`() {
         val b = FlavorableStringBuilder.fromString("")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             ""
         )
     }
 
     @Test fun `splitAtNewlines() handles only newline`() {
         val b = FlavorableStringBuilder.fromString("\n")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "\n"
         )
     }
 
     @Test fun `splitAtNewlines() handles the no-newline case`() {
         val b = FlavorableStringBuilder.fromString("Take my love")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "Take my love"
         )
     }
 
     @Test fun `splitAtNewlines() handles the single-newline case`() {
         val b = FlavorableStringBuilder.fromString("Take my love\n")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "Take my love\n"
         )
     }
 
     @Test fun `splitAtNewlines() includes the newlines`() {
         val b = FlavorableStringBuilder.fromString("Take\nmy\nlove\n")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "Take\n",
             "my\n",
             "love\n"
@@ -173,7 +174,7 @@ class FlavorableStringBuilderTest {
 
     @Test fun `splitAtNewlines() can continue a single line`() {
         val b = FlavorableStringBuilder.fromString(" love")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "Take my love",
             continueLines = mutableListOf("Take my")
         )
@@ -181,7 +182,7 @@ class FlavorableStringBuilderTest {
 
     @Test fun `splitAtNewlines() can continue multiple lines`() {
         val b = FlavorableStringBuilder.fromString("ke\nmy\nlove\n")
-        assert(b).splitsAtNewlinesToStrings(
+        assertThat(b).splitsAtNewlinesToStrings(
             "Take\n",
             "my\n",
             "love\n",
@@ -192,7 +193,7 @@ class FlavorableStringBuilderTest {
     @Test fun `replace() at beginning`() {
         val b = FlavorableStringBuilder.fromString("Took my love")
         b.replace(0, 4, "Take")
-        assert(b).hasToString("Take my love")
+        assertThat(b).hasToString("Take my love")
     }
 
     @Test fun `replace() at beginning with more characters`() {
@@ -202,7 +203,7 @@ class FlavorableStringBuilderTest {
         }
 
         b.replace(0, 2, "Take")
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Take my love")
 
             hasFlavor(SimpleFlavor(isBold = true), untilIndex = 4)
@@ -217,7 +218,7 @@ class FlavorableStringBuilderTest {
         }
 
         b.replace(0, 4, "Oh")
-        assert(b).all {
+        assertThat(b).all {
             hasToString("Oh my love")
 
             hasFlavor(SimpleFlavor(isBold = true), untilIndex = 2)
@@ -227,7 +228,7 @@ class FlavorableStringBuilderTest {
 
     @Test fun `Deep copy empty FSB`() {
         val b = FlavorableStringBuilder(FlavorableStringBuilder.EMPTY)
-        assert(b).all {
+        assertThat(b).all {
             hasToString("")
             hasLength(0)
         }

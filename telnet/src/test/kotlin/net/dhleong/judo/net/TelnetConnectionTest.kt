@@ -1,6 +1,7 @@
 package net.dhleong.judo.net
 
-import assertk.assert
+import assertk.all
+import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -52,7 +53,7 @@ class TelnetConnectionTest {
             conn.close()
             verify(socket, times(1)).close()
         }
-        assert(reason).isNull()
+        assertThat(reason).isNull()
     }
 
     @Test(timeout = 2000) fun `Cleanly handle socket reset`() {
@@ -73,8 +74,8 @@ class TelnetConnectionTest {
         val reason = conn.doReadingTest {
             // should get disconnected as a result of the exception
         }
-        assert(reason).isNotNull {
-            it.hasMessage("Connection Reset")
+        assertThat(reason).isNotNull().all {
+            hasMessage("Connection Reset")
         }
     }
 
@@ -110,7 +111,7 @@ class TelnetConnectionTest {
         disconnectorBlock()
 
         finishLatch.await()
-        assert(calledOnDisconnect.get(), "called onDisconnect").isTrue()
+        assertThat(calledOnDisconnect.get(), "called onDisconnect").isTrue()
 
         return disconnectReason.get()
     }

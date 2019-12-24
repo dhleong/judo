@@ -1,6 +1,7 @@
 package net.dhleong.judo.net.options
 
 import assertk.assert
+import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.TestableJudoCore
@@ -36,11 +37,11 @@ class GmcpHandlerTest {
         gmcp.subnegotiate("net.dhleong.judo")
 
         val catchall = judo.raised.removeAt(0)
-        assert(catchall.first).isEqualTo("GMCP")
-        assert(catchall.second as Array<Any?>)
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>)
             .containsExactly("net.dhleong.judo", null)
 
-        assert(judo.raised)
+        assertThat(judo.raised)
             .containsExactly(
                 "GMCP:net.dhleong.judo" to null)
     }
@@ -50,11 +51,11 @@ class GmcpHandlerTest {
         gmcp.subnegotiate(" net.dhleong.judo ")
 
         val catchall = judo.raised.removeAt(0)
-        assert(catchall.first).isEqualTo("GMCP")
-        assert(catchall.second as Array<Any?>)
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>)
             .containsExactly("net.dhleong.judo", null)
 
-        assert(judo.raised)
+        assertThat(judo.raised)
             .containsExactly(
                 "GMCP:net.dhleong.judo" to null)
     }
@@ -63,10 +64,10 @@ class GmcpHandlerTest {
         gmcp.subnegotiate("""net.dhleong.judo true""")
 
         val catchall = judo.raised.removeAt(0)
-        assert(catchall.first).isEqualTo("GMCP")
-        assert(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", true)
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", true)
 
-        assert(judo.raised)
+        assertThat(judo.raised)
             .containsExactly(
                 "GMCP:net.dhleong.judo" to true)
     }
@@ -75,10 +76,10 @@ class GmcpHandlerTest {
         gmcp.subnegotiate("""net.dhleong.judo "string"""")
 
         val catchall = judo.raised.removeAt(0)
-        assert(catchall.first).isEqualTo("GMCP")
-        assert(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", "string")
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>).containsExactly("net.dhleong.judo", "string")
 
-        assert(judo.raised)
+        assertThat(judo.raised)
             .containsExactly(
                 "GMCP:net.dhleong.judo" to "string")
     }
@@ -87,11 +88,11 @@ class GmcpHandlerTest {
         gmcp.subnegotiate("""net.dhleong.judo {"foo": "bar"}""")
 
         val catchall = judo.raised.removeAt(0)
-        assert(catchall.first).isEqualTo("GMCP")
-        assert(catchall.second as Array<Any?>)
+        assertThat(catchall.first).isEqualTo("GMCP")
+        assertThat(catchall.second as Array<Any?>)
             .containsExactly("net.dhleong.judo", mapOf("foo" to "bar"))
 
-        assert(judo.raised)
+        assertThat(judo.raised)
             .containsExactly(
                 "GMCP:net.dhleong.judo" to mapOf("foo" to "bar"))
     }
