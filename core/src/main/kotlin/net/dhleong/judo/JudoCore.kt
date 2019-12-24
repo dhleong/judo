@@ -681,7 +681,6 @@ class JudoCore(
         }
 
         renderer.close()
-
         dispatcher.close()
     }
 
