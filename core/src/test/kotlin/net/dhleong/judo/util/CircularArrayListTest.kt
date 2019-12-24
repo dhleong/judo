@@ -1,7 +1,11 @@
 package net.dhleong.judo.util
 
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
 import org.junit.Test
 
 /**
@@ -91,9 +95,9 @@ class CircularArrayListTest {
             arrayOf(1, 2, 3, 4, 5),
             2, 3, size = 1
         )
-        assertThatThrownBy {
+        assertThat {
             list3[1]
-        }.isInstanceOf(IndexOutOfBoundsException::class.java)
+        }.isFailure().isInstanceOf(IndexOutOfBoundsException::class.java)
     }
 
     @Test fun iterator() {
@@ -101,14 +105,14 @@ class CircularArrayListTest {
             arrayOf(1, 2, 3, 4, 5),
             0, 4, size = 4
         )
-        assertThat(list1.iterator())
+        assertThat(list1.iterator().asSequence().toList())
             .containsExactly(1, 2, 3, 4)
 
         val list2 = CircularArrayList<Int>(
             arrayOf(1, 2, 3, 4, 5),
             2, 1, size = 4
         )
-        assertThat(list2.iterator())
+        assertThat(list2.iterator().asSequence().toList())
             .containsExactly(3, 4, 5, 1)
     }
 

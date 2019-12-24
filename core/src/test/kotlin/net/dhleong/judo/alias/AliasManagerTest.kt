@@ -1,8 +1,14 @@
 package net.dhleong.judo.alias
 
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isFalse
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isTrue
+import assertk.assertions.messageContains
 import net.dhleong.judo.render.FlavorableStringBuilder
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Before
 import org.junit.Test
 
@@ -69,10 +75,12 @@ class AliasManagerTest {
     @Test fun detectInfiniteRecursion() {
         aliases.define("cool", "VERY cool")
 
-        assertThatThrownBy {
+        assertThat {
             process("This is cool")
-        }.isInstanceOf(AliasProcessingException::class.java)
-            .hasMessageContaining("Infinite recursion")
+        }.isFailure().all {
+            isInstanceOf(AliasProcessingException::class.java)
+            messageContains("Infinite recursion")
+        }
     }
 
     @Test fun replaceWithOneVar() {

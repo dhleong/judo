@@ -1,10 +1,11 @@
 package net.dhleong.judo.motions
 
+import assertk.assertThat
+import assertk.assertions.isEmpty
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.TestableJudoRenderer
-import net.dhleong.judo.assertThat
 import org.junit.After
 import org.junit.Before
 

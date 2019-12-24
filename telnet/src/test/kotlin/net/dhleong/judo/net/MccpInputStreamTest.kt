@@ -1,7 +1,11 @@
 package net.dhleong.judo.net
 
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import net.dhleong.judo.net.options.MccpInputStream
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import java.io.ByteArrayInputStream
 
@@ -65,13 +69,20 @@ class MccpInputStreamTest {
 
 }
 
+private fun <T> Assert<List<T>>.endsWith(
+    vararg entries: T
+) = given { actual ->
+    assertThat(actual)
+        .transform("last ${entries.size} entries") { it.takeLast(entries.size) }
+        .containsExactly(*entries)
+}
+
 private fun Byte.toUInt(): Int = toInt() and 0xff
 
 private fun MccpInputStream.readByte(): Byte {
     val singleByte = ByteArray(1)
     val read = read(singleByte)
-    assertThat(read)
-        .overridingErrorMessage("Expected to read exactly one byte, but read $read")
+    assertThat(read, "read byte count")
         .isEqualTo(1)
     return singleByte[0]
 }

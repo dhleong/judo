@@ -1,7 +1,8 @@
 package net.dhleong.judo.motions
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 /**

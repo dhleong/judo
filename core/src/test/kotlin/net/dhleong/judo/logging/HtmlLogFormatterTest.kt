@@ -1,8 +1,9 @@
 package net.dhleong.judo.logging
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.util.ESCAPE_CHAR
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 import java.io.StringWriter

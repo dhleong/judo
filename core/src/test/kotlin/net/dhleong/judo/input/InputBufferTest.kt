@@ -1,8 +1,10 @@
 package net.dhleong.judo.input
 
+import assertk.assertThat
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.register.RegisterManager
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 
@@ -11,7 +13,7 @@ import org.junit.Test
  */
 class InputBufferTest {
 
-    val registers = RegisterManager(StateMap())
+    private val registers = RegisterManager(StateMap())
     val buffer = InputBuffer(registers)
 
     @Before fun setUp() {
@@ -109,7 +111,7 @@ class InputBufferTest {
         buffer.set("Abcd eFgH JkLMno")
         buffer.cursor = 0
 
-        buffer.replaceWithCursor(0..5) { it -> it.toString().toUpperCase() }
+        buffer.replaceWithCursor(0..5) { it.toString().toUpperCase() }
         buffer.switchCaseWithCursor(5..9)
         assertThat(buffer.undoMan.size).isEqualTo(2)
         assertThat(buffer.toString()).isEqualTo("ABCD EfGh JkLMno")

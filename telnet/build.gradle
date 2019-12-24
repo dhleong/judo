@@ -11,7 +11,6 @@ dependencies {
     compile deps.kotlin.core
 
     testCompile deps.test.junit
-    testCompile deps.test.assertj
     testCompile deps.test.assertk
     testCompile deps.test.mockitok
     testCompile project(':core-test')

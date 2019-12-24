@@ -1,8 +1,10 @@
 package net.dhleong.judo.mapping
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import net.dhleong.judo.TestableJudoCore
 import net.dhleong.judo.TestableJudoRenderer
-import net.dhleong.judo.assertThat
 import org.junit.Before
 import org.junit.Test
 
@@ -16,7 +18,8 @@ class DirectionalMapStrategyTest {
     lateinit var strategy: MapStrategy
     lateinit var map: JudoMap
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         judo = TestableJudoCore(TestableJudoRenderer())
         mapper = AutomagicMapper(judo, judo.mapper)
         strategy = DirectionalMapStrategy(mapper)
@@ -27,7 +30,8 @@ class DirectionalMapStrategyTest {
         map.add(JudoRoom(0, "0"))
     }
 
-    @Test fun simpleFollow() {
+    @Test
+    fun simpleFollow() {
         val firstRoom = map[0]!!
         assertThat(firstRoom.exits.size).isEqualTo(0)
 

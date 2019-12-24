@@ -1,7 +1,8 @@
 package net.dhleong.judo.complete
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import net.dhleong.judo.input.InputBuffer
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 

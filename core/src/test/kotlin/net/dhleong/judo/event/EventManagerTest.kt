@@ -1,8 +1,11 @@
 package net.dhleong.judo.event
 
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.isFailure
+import assertk.assertions.isFalse
+import assertk.assertions.messageContains
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
@@ -22,22 +25,22 @@ class EventManagerTest {
         var failed = true
         thread {
             try {
-                assertThatThrownBy {
+                assertThat {
                     runBlocking {
                         events.raise("wrongThread", "arg")
                     }
-                }.hasMessageContaining("wrongThread")
-                    .hasMessageContaining("non-event thread")
+                }.isFailure().all {
+                    messageContains("wrongThread")
+                    messageContains("non-event thread")
 
-                failed = false
+                    failed = false
+                }
             } finally {
                 latch.countDown()
             }
         }
 
         latch.await()
-        assertThat(failed)
-            .overridingErrorMessage("Failed to catch wrong thread usage")
-            .isFalse()
+        assertThat(failed, "Failed to catch wrong thread usage").isFalse()
     }
 }

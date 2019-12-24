@@ -1,7 +1,10 @@
 package net.dhleong.judo.input
 
-import net.dhleong.judo.input.assertThat
-import org.assertj.core.api.Assertions.assertThat
+import assertk.all
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import org.junit.Test
 
 /**
@@ -25,39 +28,48 @@ class KeyTest {
     }
 
     @Test fun parseSingleModifier() {
-        assertThat(key("shift a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.SHIFT)
-        assertThat(key("ctrl a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL)
-        assertThat(key("ctrl-a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL)
+        assertThat(key("shift a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.SHIFT)
+        }
+        assertThat(key("ctrl a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL)
+        }
+        assertThat(key("ctrl-a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL)
+        }
     }
 
     @Test fun parseMultipleModifiers() {
-        assertThat(key("ctrl shift a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL, Modifier.SHIFT)
-        assertThat(key("ctrl-alt-a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL, Modifier.ALT)
-        assertThat(key("ctrl shift tab"))
-            .hasKeyCode(Key.CODE_TAB)
-            .hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        assertThat(key("ctrl shift a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        }
+        assertThat(key("ctrl-alt-a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL, Modifier.ALT)
+        }
+        assertThat(key("ctrl shift tab")).all {
+            hasKeyCode(Key.CODE_TAB)
+            hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        }
     }
 
     @Test fun abbreviatedModifiers() {
-        assertThat(key("c s a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL, Modifier.SHIFT)
-        assertThat(key("c-a-a"))
-            .hasChar('a')
-            .hasModifiers(Modifier.CTRL, Modifier.ALT)
-        assertThat(key("c s tab"))
-            .hasKeyCode(Key.CODE_TAB)
-            .hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        assertThat(key("c s a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        }
+        assertThat(key("c-a-a")).all {
+            hasChar('a')
+            hasModifiers(Modifier.CTRL, Modifier.ALT)
+        }
+        assertThat(key("c s tab")).all {
+            hasKeyCode(Key.CODE_TAB)
+            hasModifiers(Modifier.CTRL, Modifier.SHIFT)
+        }
     }
 
     @Test fun describeBasic() {

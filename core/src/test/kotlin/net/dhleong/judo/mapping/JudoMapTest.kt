@@ -1,6 +1,8 @@
 package net.dhleong.judo.mapping
 
-import org.assertj.core.api.Assertions.assertThat
+import assertk.assertThat
+import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import org.junit.Test
 
 /**
@@ -16,8 +18,8 @@ class JudoMapTest {
         map.add(center)
         map.dig(center, "w", left)
         map.dig(center, "e", right)
-        assertThat(left.exits.asIterable()).hasSize(1)
-        assertThat(right.exits.asIterable()).hasSize(1)
+        assertThat(left.exits.toList()).hasSize(1)
+        assertThat(right.exits.toList()).hasSize(1)
 
         // delete and verify
         map.deleteRoom(center.id)

@@ -1,6 +1,9 @@
 package net.dhleong.judo.mapping
 
-import org.assertj.core.api.Assertions.assertThat
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
+import assertk.assertions.isSameAs
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 

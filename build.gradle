@@ -54,7 +54,6 @@ ext.deps = [
     moshi: "com.squareup.moshi:moshi:${vs.moshi}",
 
     test: [
-        assertj: 'org.assertj:assertj-core:2.4.1',
         assertk: 'com.willowtreeapps.assertk:assertk-jvm:0.20',
         mockitok: 'com.nhaarman:mockito-kotlin:1.5.0',
         junit: 'junit:junit:4.12',

@@ -1,6 +1,8 @@
 package net.dhleong.judo.complete
 
-import org.assertj.core.api.Assertions.assertThat
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.containsOnly
 import org.junit.Before
 import org.junit.Test
 
@@ -39,7 +41,7 @@ class MarkovCompletionSourceTest {
 
         assertThat(source.suggest("take my l", 8..8).toList())
             // no particular order here since use counts are the same:
-            .containsExactlyInAnyOrder("land", "love")
+            .containsOnly("land", "love")
     }
 
     @Test fun ignoreStopWords() {

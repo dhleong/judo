@@ -1,10 +1,12 @@
 package net.dhleong.judo.motions
 
+import assertk.assertThat
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.DUMMY_JUDO_CORE
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.type
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
 

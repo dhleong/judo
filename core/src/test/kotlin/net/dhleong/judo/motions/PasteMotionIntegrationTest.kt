@@ -1,9 +1,10 @@
 package net.dhleong.judo.motions
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.setInput
 import net.dhleong.judo.type
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 /**

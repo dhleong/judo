@@ -26,7 +26,6 @@ dependencies {
     compile deps.moshi
 
     testCompile deps.test.junit
-    testCompile deps.test.assertj
     testCompile deps.test.assertk
     testCompile project(':core-test')
 }

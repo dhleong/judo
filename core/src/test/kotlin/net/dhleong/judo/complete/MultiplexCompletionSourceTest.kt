@@ -1,7 +1,9 @@
 package net.dhleong.judo.complete
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import net.dhleong.judo.complete.multiplex.WeightedRandomSelector
-import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 /**

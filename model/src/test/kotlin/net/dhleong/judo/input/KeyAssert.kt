@@ -1,42 +1,18 @@
 package net.dhleong.judo.input
 
-import org.assertj.core.api.AbstractAssert
-import org.assertj.core.api.Assertions
+import assertk.Assert
+import assertk.assertions.containsOnly
+import assertk.assertions.isEqualTo
 
-/**
- * @author dhleong
- */
-class KeyAssert(actual: Key)
-    : AbstractAssert<KeyAssert, Key>(actual, KeyAssert::class.java) {
-
-    fun hasChar(expected: Char): KeyAssert {
-        isNotNull
-
-        Assertions.assertThat(actual.char)
-            .describedAs("char")
-            .isEqualTo(expected)
-
-        return myself
-    }
-
-    fun hasModifiers(vararg modifiers: Modifier): KeyAssert {
-        isNotNull
-
-        Assertions.assertThat(actual.modifiers)
-            .containsExactlyInAnyOrder(*modifiers)
-
-        return myself
-    }
-
-    fun hasKeyCode(expected: Int): KeyAssert {
-        isNotNull
-
-        Assertions.assertThat(actual.keyCode)
-            .describedAs("keyCode")
-            .isEqualTo(expected)
-
-        return myself
-    }
+fun Assert<Key>.hasChar(expected: Char) = given { actual ->
+    assertThat(actual.char, "char").isEqualTo(expected)
 }
 
-fun assertThat(actual: Key) = KeyAssert(actual)
+fun Assert<Key>.hasModifiers(vararg modifiers: Modifier) = given { actual ->
+    assertThat(actual.modifiers, "modifiers")
+        .containsOnly(*modifiers)
+}
+
+fun Assert<Key>.hasKeyCode(expected: Int) = given { actual ->
+    assertThat(actual.keyCode, "keyCode").isEqualTo(expected)
+}
