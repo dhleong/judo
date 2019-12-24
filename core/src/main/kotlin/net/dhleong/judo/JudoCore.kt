@@ -6,6 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -874,7 +875,11 @@ class JudoCore(
         @Suppress("EXPERIMENTAL_API_USAGE")
         while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
-                feedKey(readKey(), remap, fromMap)
+                try {
+                    feedKey(readKey(), remap, fromMap)
+                } catch (e: ClosedReceiveChannelException) {
+                    // should only happen in tests
+                }
             }
         }
 
