@@ -1,6 +1,7 @@
 package net.dhleong.judo
 
 import com.nhaarman.mockito_kotlin.mock
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.event.IEventManager
@@ -33,7 +34,7 @@ class TestableJudoCore(
 
     private val actualEvents = EventManager()
     inner class TestableEventManager : IEventManager by actualEvents {
-        override fun raise(eventName: String, data: Any?) {
+        override suspend fun raise(eventName: String, data: Any?) {
             raised.add(eventName to data)
             actualEvents.raise(eventName, data)
         }
@@ -90,8 +91,9 @@ class TestableJudoCore(
         maps.removeIf { it[0] == mode && it[1] == from }
     }
 
-
-    override fun onMainThread(runnable: () -> Unit) = runnable()
+    override fun onMainThread(runnable: suspend () -> Unit) = runBlocking {
+        runnable()
+    }
 
     override fun send(text: String, fromMap: Boolean) {
         val processed = aliases.process(text)

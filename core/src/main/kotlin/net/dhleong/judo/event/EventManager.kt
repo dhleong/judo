@@ -1,6 +1,9 @@
 package net.dhleong.judo.event
 
 import com.google.common.collect.HashMultimap
+import net.dhleong.judo.util.JudoMainDispatcher
+import kotlin.coroutines.ContinuationInterceptor
+import kotlin.coroutines.coroutineContext
 
 
 /**
@@ -27,8 +30,11 @@ class EventManager : IEventManager {
         events.remove(eventName, handler)
     }
 
-    override fun raise(eventName: String, data: Any?) {
-        if (Thread.currentThread().id != eventThreadId) {
+    override suspend fun raise(eventName: String, data: Any?) {
+        if (
+            coroutineContext[ContinuationInterceptor] !is JudoMainDispatcher
+            && Thread.currentThread().id != eventThreadId
+        ) {
             throw IllegalStateException(
                 "Attempting to raise $eventName on non-event thread ${Thread.currentThread()}")
         }

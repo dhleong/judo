@@ -13,7 +13,7 @@ inline fun handler(crossinline block: () -> Unit): EventHandler = {
  */
 interface IEventManager : Clearable<Pair<String, EventHandler>> {
     fun has(eventName: String): Boolean
-    fun raise(eventName: String, data: Any? = null)
+    suspend fun raise(eventName: String, data: Any? = null)
     fun register(eventName: String, handler: EventHandler)
     fun unregister(eventName: String, handler: EventHandler)
 }

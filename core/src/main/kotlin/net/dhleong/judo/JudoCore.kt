@@ -210,7 +210,6 @@ class JudoCore(
 
     private val job = Job()
     private var cancellable = Job(parent = job)
-    private val mainThread = Thread.currentThread()
     internal var running = true
     internal var doEcho = true
 
@@ -294,7 +293,9 @@ class JudoCore(
         }
 
         this.connection = connection
-        events.raise("CONNECTED")
+        runBlocking(dispatcher) {
+            events.raise("CONNECTED")
+        }
     }
 
     override fun createUserMode(name: String) {
@@ -646,10 +647,12 @@ class JudoCore(
         }
     }
 
-    override fun onMainThread(runnable: () -> Unit) {
+    override fun onMainThread(runnable: suspend () -> Unit) {
         // NOTE: wait until there is room in the queue
         GlobalScope.launch(job + dispatcher) {
-            runnable()
+            redirectErrors {
+                runnable()
+            }
         }
     }
 
@@ -795,6 +798,8 @@ class JudoCore(
             @Suppress("EXPERIMENTAL_API_USAGE")
             readKeys(channel, remap = true, fromMap = false)
         }
+
+        println("stopped")
     }
 
     /**

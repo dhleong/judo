@@ -3,6 +3,7 @@ package net.dhleong.judo.modes.cmd
 import assertk.assert
 import assertk.assertions.containsExactly
 import assertk.assertions.isTrue
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,7 +17,7 @@ class CmdModeEventsTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun `event() with function0`() {
+    @Test fun `event() with function0`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |def handleEvent(): print("awesome")
@@ -37,7 +38,7 @@ class CmdModeEventsTest(
             .containsExactly("awesome")
     }
 
-    @Test fun `event() with single arg`() {
+    @Test fun `event() with single arg`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 @event("cool")
@@ -59,7 +60,7 @@ class CmdModeEventsTest(
             .containsExactly("awesome colder")
     }
 
-    @Test fun `event() with single null argument`() {
+    @Test fun `event() with single null argument`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 @event("cool")
@@ -85,7 +86,7 @@ class CmdModeEventsTest(
             .containsExactly("awesome $nullName")
     }
 
-    @Test fun `event() with destructuring`() {
+    @Test fun `event() with destructuring`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 @event("cool")

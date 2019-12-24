@@ -1,5 +1,6 @@
 package net.dhleong.judo.event
 
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
@@ -12,14 +13,19 @@ import kotlin.concurrent.thread
 class EventManagerTest {
     @Test fun enforceEventThread() {
         val events = EventManager()
-        events.raise("event", "arg") // no problem
+
+        runBlocking {
+            events.raise("event", "arg") // no problem
+        }
 
         val latch = CountDownLatch(1)
         var failed = true
         thread {
             try {
                 assertThatThrownBy {
-                    events.raise("wrongThread", "arg")
+                    runBlocking {
+                        events.raise("wrongThread", "arg")
+                    }
                 }.hasMessageContaining("wrongThread")
                     .hasMessageContaining("non-event thread")
 

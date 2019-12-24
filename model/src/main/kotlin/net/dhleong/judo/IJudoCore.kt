@@ -95,7 +95,7 @@ interface IJudoCore : IJudoScrollable {
     fun isConnected(): Boolean
     fun map(mode: String, from: String, to: String, remap: Boolean)
     fun map(mode: String, from: String, to: () -> Unit, description: String = "")
-    fun onMainThread(runnable: () -> Unit)
+    fun onMainThread(runnable: suspend () -> Unit)
     fun persistInput(file: File)
     fun printMappings(mode: String)
     fun quit()
