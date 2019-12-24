@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.toChannelFactory
 import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
@@ -99,8 +100,10 @@ fun main(args: Array<String>) {
     )
 
     // connect or read a world file based on the init strategy
-    if (!init.perform(judo)) {
-        closed = true
+    runBlocking(judo.dispatcher) {
+        if (!init.perform(judo)) {
+            closed = true
+        }
     }
 
     // if they want to use the clipboard as the unnamed register, warm it up;
