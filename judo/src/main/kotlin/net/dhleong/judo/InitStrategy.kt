@@ -14,11 +14,21 @@ sealed class InitStrategy(
     fun perform(judo: JudoCore): Boolean {
 
         // if they have a global init.py, read it
+        var isLoading = true
         if (config.userConfigFile.exists()) {
             judo.readFile(config.userConfigFile)
+
+            // we should be good to go; hide any splash screen we may have been showing
+            judo.renderer.setLoading(false)
+            isLoading = false
         }
 
-        return doPerform(judo)
+        return doPerform(judo).also {
+            if (isLoading) {
+                // if we haven't already hidden the splash screen, do it now
+                judo.renderer.setLoading(false)
+            }
+        }
     }
 
     abstract fun doPerform(judo: JudoCore): Boolean

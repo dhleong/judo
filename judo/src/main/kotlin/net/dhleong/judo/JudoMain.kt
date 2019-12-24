@@ -114,9 +114,6 @@ fun main(args: Array<String>) {
         judo.registers['*'].value
     }
 
-    // we should be good to go; hide any splash screen we may have been showing
-    renderer.setLoading(false)
-
     // finally, start handling user input
     judo.readKeys(renderer.toChannelFactory())
 }
