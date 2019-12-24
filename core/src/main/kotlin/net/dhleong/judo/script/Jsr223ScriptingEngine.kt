@@ -169,7 +169,7 @@ class Jsr223JudoCore(
         get() = judo.renderer.currentTabpage.currentWindow.let { w ->
             Jsr223Buffer(w, w.currentBuffer)
         }
-        set(value) {
+        set(_) {
             throw UnsupportedOperationException("TODO change buffer in Window")
         }
 }
