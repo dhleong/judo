@@ -46,7 +46,7 @@ abstract class BaseCmdMode(
     StatusBufferProvider {
 
     override val userMappings = KeyMapping()
-    override val name = "cmd"
+    override val name = CmdMode.NAME
 
     private val mapClearable = MapClearable(judo)
     private val clearQueue = ArrayList<QueuedClear<*>>()
@@ -73,7 +73,7 @@ abstract class BaseCmdMode(
         clearBuffer()
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
                 val code = buffer.toString().trim()
@@ -143,10 +143,22 @@ abstract class BaseCmdMode(
         } else if (!(code.contains('(') && code.contains(')')) && code !in registeredFns) {
             showHelp(code)
         } else if (code in registeredFns) {
-            // no args needed, so just implicitly handle for convenience
-            executeImplicit(code)
+            handlingInterruption {
+                // no args needed, so just implicitly handle for convenience
+                executeImplicit(code)
+            }
         } else {
-            execute(code)
+            handlingInterruption {
+                execute(code)
+            }
+        }
+    }
+
+    private inline fun handlingInterruption(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: InterruptedException) {
+            judo.print("Script execution interrupted")
         }
     }
 
@@ -515,9 +527,10 @@ abstract class BaseCmdMode(
 
 }
 
-class ScriptExecutionException(traceback: String)
-    : RuntimeException(traceback)
-
+class ScriptExecutionException(
+    traceback: String,
+    override val cause: Throwable? = null
+) : RuntimeException(traceback)
 
 internal class MapClearable(private val judo: IJudoCore) : Clearable<Pair<String, String>> {
     override fun clear() {

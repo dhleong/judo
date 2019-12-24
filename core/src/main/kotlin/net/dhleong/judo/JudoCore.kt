@@ -1,7 +1,15 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import net.dhleong.judo.alias.AliasManager
 import net.dhleong.judo.alias.AliasProcessingException
 import net.dhleong.judo.complete.DEFAULT_STOP_WORDS
@@ -14,9 +22,11 @@ import net.dhleong.judo.event.EventManager
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyChannelFactory
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.changes.UndoManager
+import net.dhleong.judo.input.toChannelFactory
 import net.dhleong.judo.logging.LogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
@@ -54,16 +64,19 @@ import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.JudoMainDispatcher
 import net.dhleong.judo.util.SubstitutableInputHistory
 import net.dhleong.judo.util.VisibleForTesting
+import net.dhleong.judo.util.asChannel
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.io.PrintWriter
 import java.net.URI
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * @author dhleong
@@ -98,6 +111,8 @@ class JudoCore(
         const val CLIENT_NAME = BuildConfig.NAME
         const val CLIENT_VERSION = BuildConfig.VERSION
     }
+
+    override val dispatcher = JudoMainDispatcher()
 
     override val aliases = AliasManager()
     override val events = EventManager()
@@ -193,6 +208,9 @@ class JudoCore(
     internal var currentMode: Mode = normalMode
     private val modeStack = ArrayList<Mode>()
 
+    private val job = Job()
+    private var cancellable = Job(parent = job)
+    private val mainThread = Thread.currentThread()
     internal var running = true
     internal var doEcho = true
 
@@ -203,8 +221,7 @@ class JudoCore(
     private val cmdLineModeDepth = AtomicInteger(0)
     private var cmdLinePrefix = ':'
 
-    private var keyStrokeProducer: BlockingKeySource? = null
-    private val postToUiQueue = ArrayBlockingQueue<() -> Unit>(64)
+    private var keyStrokeChannel: Channel<Key>? = null
 
     private val outputBuffer: IJudoBuffer
     private val primaryWindow: PrimaryJudoWindow
@@ -247,18 +264,22 @@ class JudoCore(
 
         lastConnect = uri
 
-        val connection: JudoConnection
-        try {
-            connection = connections.create(this, uri)
-                ?: return doPrint(false,
-                    "Don't know how to connect to $uri"
-                )
-            print("Connected.")
-        } catch (e: IOException) {
-            appendError(e, "Failed.\nNETWORK ERROR: ")
-            return
-        }
+        val connection = runCancelable(Dispatchers.IO,
+            onCanceled = { print("Connection canceled.") }
+        ) {
+            try {
+                connections.create(this, uri)
+                    ?: null.also {
+                        // no connection created
+                        doPrint(false, "Don't know how to connect to $uri")
+                    }
+            } catch (e: IOException) {
+                appendError(e, "Failed.\nNETWORK ERROR: ")
+                null
+            }
+        } ?: return
 
+        print("Connected.")
         connection.setWindowSize(renderer.windowWidth, renderer.windowHeight)
         connection.onDisconnect = this::onDisconnect
         connection.onEchoStateChanged = { doEcho ->
@@ -383,7 +404,7 @@ class JudoCore(
             }
 
             val fromKeys = Keys.parse(from)
-            modeObj.userMappings.map(fromKeys, action(to), description)
+            modeObj.userMappings.map(fromKeys, action { to() }, description)
             return
         }
 
@@ -528,7 +549,7 @@ class JudoCore(
         onSubmit(text)
     }
 
-    override fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(stroke: Key, remap: Boolean, fromMap: Boolean) = withContext(dispatcher) {
         when (stroke.keyCode) {
             Key.CODE_ESCAPE -> renderer.inTransaction {
                 // reset the current register
@@ -553,16 +574,16 @@ class JudoCore(
                     }
                     activateMode(normalMode)
                 }
-                return
+                return@withContext
             }
 
             Key.CODE_PAGE_UP -> renderer.inTransaction {
                 tabpage.currentWindow.scrollLines(1)
-                return
+                return@withContext
             }
             Key.CODE_PAGE_DOWN -> renderer.inTransaction {
                 tabpage.currentWindow.scrollLines(-1)
-                return
+                return@withContext
             }
         }
 
@@ -582,7 +603,7 @@ class JudoCore(
         }
     }
 
-    override fun feedKeys(keys: String, remap: Boolean, mode: String) {
+    override suspend fun feedKeys(keys: String, remap: Boolean, mode: String) {
         feedKeys(
             Keys.parse(keys).asSequence(),
             remap = remap,
@@ -590,7 +611,7 @@ class JudoCore(
         )
     }
 
-    override fun feedKeys(keys: Sequence<Key>, remap: Boolean, mode: String) {
+    override suspend fun feedKeys(keys: Sequence<Key>, remap: Boolean, mode: String) {
         val oldMode = currentMode
 
         if (mode != "") {
@@ -600,24 +621,12 @@ class JudoCore(
             currentMode = newMode
         }
 
-        feedKeys(
-            keys.iterator(),
-            remap = remap,
-            fromMap = true
-        )
+        readKeys(keys.asChannel(), remap = remap, fromMap = true)
 
         if (mode != "") {
             // restore the old mode (but without calling onEnter and making it
             // reset its state)
             currentMode = oldMode
-        }
-    }
-
-    private fun feedKeys(keys: Iterator<Key>, remap: Boolean, fromMap: Boolean) {
-        readKeys(object : BlockingKeySource {
-            override fun readKey(): Key = keys.next()
-        }, remap = remap, fromMap = fromMap) {
-            keys.hasNext()
         }
     }
 
@@ -639,32 +648,18 @@ class JudoCore(
 
     override fun onMainThread(runnable: () -> Unit) {
         // NOTE: wait until there is room in the queue
-        postToUiQueue.put(runnable)
+        GlobalScope.launch(job + dispatcher) {
+            runnable()
+        }
     }
 
-    override fun readKey(): Key {
-        val producer = keyStrokeProducer!!
-        while (true) {
-            val key = producer.readKey() // must be initialized by now
-
-            // TODO check for esc/ctrl+c and throw InputInterruptedException...
-            // TODO catch that in the feedKey loop
-
-            if (key == null) {
-                // check the onMainThread-to-UI-thread queue
-                // run a chunk at a time
-                for (i in 0..8) {
-                    val runnable = postToUiQueue.poll()
-                    if (runnable != null) runnable.invoke()
-                    else break
-                }
-            } else {
-                if (key.keyCode !in UNRECORDED_KEY_CODES) {
-                    undo.onKeyStroke(key)
-                }
-                return key
-            }
+    override suspend fun readKey(): Key {
+        val producer = keyStrokeChannel!! // must be initialized by now
+        val key = producer.receive()
+        if (key.keyCode !in UNRECORDED_KEY_CODES) {
+            undo.onKeyStroke(key)
         }
+        return key
     }
 
     override fun searchForKeyword(text: CharSequence, direction: Int) {
@@ -677,9 +672,16 @@ class JudoCore(
         renderer.setCursorType(type)
 
     override fun quit() {
-        connection?.close()
-        renderer.close()
         running = false
+        connection?.close()
+
+        job.apply {
+            complete()
+            cancelChildren()
+        }
+
+        renderer.close()
+        dispatcher.close()
     }
 
     override fun unmap(mode: String, from: String) {
@@ -737,6 +739,7 @@ class JudoCore(
             }
 
             onMainThread {
+                print("DISCONNECTED")
                 events.raise("DISCONNECTED")
                 events.clear()
 
@@ -780,14 +783,25 @@ class JudoCore(
      * Read keys forever from the given producer
      */
     fun readKeys(producer: BlockingKeySource) {
-        readKeys(producer, remap = true, fromMap = false) { running }
+        readKeys(producer.toChannelFactory())
+    }
+
+    fun readKeys(keysFactory: KeyChannelFactory) {
+        val channel = keysFactory.createChannel(job,
+            onInterrupt = { interruptCancelables() }
+        )
+
+        runBlocking {
+            @Suppress("EXPERIMENTAL_API_USAGE")
+            readKeys(channel, remap = true, fromMap = false)
+        }
     }
 
     /**
      * Read a line of input from the user in "Command Line" mode
      * (not to be confused with "Command Mode")
      */
-    override fun readCommandLineInput(
+    override suspend fun readCommandLineInput(
         prefix: Char,
         history: IInputHistory,
         bufferContents: String
@@ -807,12 +821,7 @@ class JudoCore(
         var bufferToRestore: String? = null
         var result: String? = null
         while (true) {
-            val key = try {
-                readKey()
-            } catch (e: NoSuchElementException) {
-                // should just be in tests
-                return null
-            }
+            val key = readKey()
 
             val mode = currentMode
             if (key.keyCode == Key.CODE_ENTER && mode is BaseModeWithBuffer) {
@@ -856,22 +865,25 @@ class JudoCore(
     }
 
     /**
-     * Read keys from the given producer until [keepReading] returns false
+     * Read all keys from the given [channel]
      */
-    fun readKeys(producer: BlockingKeySource, remap: Boolean, fromMap: Boolean, keepReading: () -> Boolean) {
-        val oldProducer = keyStrokeProducer
+    private suspend fun readKeys(channel: Channel<Key>, remap: Boolean, fromMap: Boolean) {
+        val oldChannel = keyStrokeChannel
+        keyStrokeChannel = channel
 
-        keyStrokeProducer = producer
-        while (keepReading()) {
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
-                feedKey(readKey(), remap, fromMap)
+                try {
+                    feedKey(readKey(), remap, fromMap)
+                } catch (e: ClosedReceiveChannelException) {
+                    // should only happen in tests
+                }
             }
-
-            Thread.yield()
         }
 
-        if (oldProducer != null) {
-            keyStrokeProducer = oldProducer
+        if (oldChannel != null) {
+            keyStrokeChannel = oldChannel
         }
     }
 
@@ -963,6 +975,7 @@ class JudoCore(
     private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
         if (isRoot) {
             PrintWriter(FileOutputStream(debugLogFile, true)).use {
+                it.println("append error (${e.javaClass} / ${e.message}) @$prefix (root=$isRoot)")
                 it.println(prefix)
                 e.printStackTrace(it)
             }
@@ -970,26 +983,20 @@ class JudoCore(
 
         if (e is ScriptExecutionException) {
             renderer.inTransaction {
-                primaryWindow.appendLine(
-                    "${prefix}ScriptExecutionException:\n"
-                )
+                primaryWindow.appendLine("${prefix}ScriptExecutionException:\n")
                 e.message?.split("\n")?.forEach {
                     primaryWindow.appendLine(it)
                 }
-                e.stackTrace.map { "  $it" }.forEach {
-                    primaryWindow.appendLine(it)
+                if (e.cause !is InterruptedException) {
+                    e.appendStackTraceTo(primaryWindow)
                 }
             }
             return
         }
 
         renderer.inTransaction {
-            primaryWindow.appendLine(
-                "$prefix${e.javaClass.name}: ${e.message}"
-            )
-            e.stackTrace.map { "  $it" }.forEach {
-                primaryWindow.appendLine(it)
-            }
+            primaryWindow.appendLine("$prefix${e.javaClass.name}: ${e.message}")
+            e.appendStackTraceTo(primaryWindow)
             e.cause?.let {
                 appendError(it, "Caused by: ", isRoot = false)
             }
@@ -1059,5 +1066,69 @@ class JudoCore(
             appendError(e, prefix)
         }
     }
+
+    private fun interruptCancelables() {
+        (modes[CmdMode.NAME] as CmdMode).interrupt()
+
+        val old = cancellable
+        cancellable = Job(parent = job)
+        old.cancel()
+    }
+
+    private fun <R> runCancelable(
+        context: CoroutineContext = EmptyCoroutineContext,
+        onCanceled: (() -> Unit)? = null,
+        block: suspend () -> R
+    ): R? = try {
+        runBlocking(context + cancellable) {
+            block()
+        }
+    } catch (e: InterruptedException) {
+        Thread.interrupted() // clear the flag
+        onCanceled?.invoke()
+        null
+    } catch (e: CancellationException) {
+        onCanceled?.invoke()
+        null
+    }
 }
 
+private fun Throwable.appendStackTraceTo(window: IJudoWindow) {
+    stackTrace.filterRelevant().map { "  $it" }.forEach {
+        window.appendLine(it)
+    }
+}
+
+private fun Array<StackTraceElement>.filterRelevant(): Sequence<StackTraceElement> =
+    sequence {
+        var lastWasCoroutine = false
+        loop@ for (element in this@filterRelevant) {
+            val isCoroutineLib = element.className.matches(Regex(
+                """^kotlin[x]?\.coroutines.*"""
+            ))
+            when {
+                isCoroutineLib && !lastWasCoroutine -> {
+                    lastWasCoroutine = true
+                    yield(StackTraceElement("...coroutines", "...", null, -1))
+                    continue@loop
+                }
+
+                // ignore all the noisy coroutine libs
+                isCoroutineLib -> continue@loop
+
+                // not useful line:
+                (
+                    element.lineNumber < 0
+                        && element.methodName in setOf("invoke", "invokeSuspend")
+                ) -> continue@loop
+
+                // also unnecessary
+                "BlockingKeySourceChannelAdapter" in element.className -> continue@loop
+
+                lastWasCoroutine -> lastWasCoroutine = false
+            }
+
+            // default to the original element
+            yield(element)
+        }
+    }

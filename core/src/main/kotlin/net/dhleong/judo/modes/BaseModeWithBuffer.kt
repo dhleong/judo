@@ -15,7 +15,7 @@ import net.dhleong.judo.motions.normalizeForMotion
  * @author dhleong
  */
 
-typealias KeyActionOnRange = (IJudoCore, IntRange) -> Unit
+typealias KeyActionOnRange = suspend (IJudoCore, IntRange) -> Unit
 
 abstract class BaseModeWithBuffer(
     val judo: IJudoCore,
@@ -34,7 +34,7 @@ abstract class BaseModeWithBuffer(
             }
         }
 
-    protected fun applyMotion(motion: Motion, clampCursor: Boolean = true) {
+    protected suspend fun applyMotion(motion: Motion, clampCursor: Boolean = true) {
         motion.applyTo(judo, buffer)
         if (clampCursor) {
             clampCursor(buffer)
@@ -54,12 +54,12 @@ abstract class BaseModeWithBuffer(
     protected fun motionAction(motion: Motion): KeyAction =
         { applyMotion(motion) }
 
-    protected fun rangeOf(motion: Motion) =
+    protected suspend fun rangeOf(motion: Motion) =
         motion.calculate(judo, buffer)
             .normalizeForMotion(motion)
 
     /** @return True if we handled it as a mapping (or might yet) */
-    protected fun tryMappings(
+    protected suspend fun tryMappings(
         key: Key, allowRemap: Boolean,
         input: MutableKeys,
         originalMaps: KeyMapping, remaps: KeyMapping?

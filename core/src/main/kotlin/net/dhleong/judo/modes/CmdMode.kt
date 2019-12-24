@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.alias.AliasProcesser
@@ -67,6 +68,10 @@ class CmdMode(
             engine // ensure initialized
             return myRegisteredVars
         }
+
+    fun interrupt() {
+        engine.interrupt()
+    }
 
     override fun execute(code: String) {
         engine.execute(code)
@@ -191,7 +196,7 @@ class CmdMode(
         }
     }
 
-    private fun feedKeys(userInput: Array<Any>, mode: String) {
+    private suspend fun feedKeys(userInput: Array<Any>, mode: String) {
         val keys = userInput[0] as? String ?: throw IllegalArgumentException("[keys] must be a String")
 
         val remap =
@@ -201,7 +206,7 @@ class CmdMode(
         judo.feedKeys(keys, remap, mode)
     }
 
-    private fun readInput(prompt: String): String? {
+    private suspend fun readInput(prompt: String): String? {
         // TODO user-provided completions?
         val inputMode = ScriptInputMode(
             judo, completions,
@@ -321,13 +326,13 @@ class CmdMode(
         """.trimMargin()
                 }
             }
-        ) { args: Array<Any> ->
+        ) { args: Array<Any> -> adaptSuspend {
             if (args.isNotEmpty()) {
                 readInput(args[0] as String)
             } else {
                 readInput("")
             }
-        }
+        } }
 
         registerFn<Unit>(
             "normal",
@@ -343,7 +348,7 @@ class CmdMode(
                     False for the second parameter.
                 """.trimMargin() }
             }
-        ) { args: Array<Any> -> feedKeys(args, mode = "normal") }
+        ) { args: Array<Any> -> adaptSuspend { feedKeys(args, mode = "normal") } }
 
 
         registerFn(
@@ -877,6 +882,22 @@ class CmdMode(
             judo.tabpage,
             judo.tabpage.split(newBuffer)
         )
+    }
+
+    /**
+     * Adapt a suspending call into JudoCore as for the synchronous
+     * scripting API.
+     */
+    private inline fun <R> adaptSuspend(crossinline block: suspend () -> R): R =
+        // NOTE: we do not run on the JudoCore.dispatcher, since feedKey ensures
+        // keys are processed there, and explicitly providing the dispatcher to
+        // runBlocking can cause deadlocks
+        runBlocking {
+            block()
+        }
+
+    companion object {
+        const val NAME = "cmd"
     }
 }
 

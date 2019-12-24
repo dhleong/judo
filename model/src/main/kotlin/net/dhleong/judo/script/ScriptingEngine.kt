@@ -38,6 +38,7 @@ interface ScriptingEngine {
     /** @see [onPreRegister] */
     fun onPostRegister() {}
 
+    fun interrupt()
     fun execute(code: String)
     fun readFile(fileName: String, stream: InputStream)
 

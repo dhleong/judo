@@ -53,7 +53,7 @@ class ScriptInputMode(
         exitted = true
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
                 submitted = true
@@ -108,7 +108,7 @@ class ScriptInputMode(
         suggester.reset()
     }
 
-    fun awaitResult(): String? {
+    suspend fun awaitResult(): String? {
         while (true) {
             val stroke = judo.readKey()
             judo.feedKey(stroke)

@@ -20,7 +20,7 @@ class UserCreatedMode(
         input.clear()
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         input.push(key)
 
         userMappings.match(input)?.let {

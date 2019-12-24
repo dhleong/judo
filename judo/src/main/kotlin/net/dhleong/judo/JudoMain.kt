@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import net.dhleong.judo.input.toChannelFactory
 import net.dhleong.judo.jline.JLineRenderer
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.mapping.renderer.DelegateMapRenderer
@@ -117,5 +118,5 @@ fun main(args: Array<String>) {
     renderer.setLoading(false)
 
     // finally, start handling user input
-    judo.readKeys(renderer)
+    judo.readKeys(renderer.toChannelFactory())
 }

@@ -10,7 +10,7 @@ import java.util.EnumSet
  */
 
 typealias MotionCalculator =
-    (core: IJudoCore, buffer: CharSequence, cursor: Int) -> IntRange
+    suspend (core: IJudoCore, buffer: CharSequence, cursor: Int) -> IntRange
 
 interface Motion {
     enum class Flags {
@@ -26,21 +26,21 @@ interface Motion {
     val isTextObject: Boolean
         get() = flags.contains(Flags.TEXT_OBJECT)
 
-    fun applyTo(core: IJudoCore, buffer: InputBuffer) {
+    suspend fun applyTo(core: IJudoCore, buffer: InputBuffer) {
         val end = calculate(
             core, buffer.toChars(), buffer.cursor
-        ).endInclusive
+        ).last
 
         buffer.cursor = minOf(buffer.size, maxOf(0, end))
     }
 
-    fun calculate(core: IJudoCore, buffer: InputBuffer) =
+    suspend fun calculate(core: IJudoCore, buffer: InputBuffer) =
         calculate(core, buffer.toChars(), buffer.cursor)
 
-    fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange
+    suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange
 
     /** NOTE: Use ONLY when ABSOLUTELY SURE the motion won't need readKey */
-    fun calculate(input: CharSequence, cursor: Int) =
+    suspend fun calculate(input: CharSequence, cursor: Int) =
         calculate(DUMMY_JUDO_CORE, input, cursor)
 
     /**
@@ -59,31 +59,29 @@ fun IntRange.normalizeForMotion(motion: Motion): IntRange =
     }
 
 internal fun createMotion(
-        flag: Motion.Flags,
-        calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =
-    createMotion(listOf(flag), calculate)
-internal fun createMotion(
-        flags: List<Motion.Flags> = emptyList(),
-        calculate: (buffer: CharSequence, cursor: Int) -> IntRange): Motion =
-    createMotion(flags) { _, buffer, cursor ->
-        calculate(buffer, cursor)
-    }
+    flag: Motion.Flags,
+    calculate: suspend (buffer: CharSequence, cursor: Int) -> IntRange
+): Motion = createMotion(listOf(flag), calculate)
 internal fun createMotion(
     flags: List<Motion.Flags> = emptyList(),
-    calculate: MotionCalculator): Motion {
-
-    return object : Motion {
-        override val flags: EnumSet<Motion.Flags> = EnumSet(flags)
-        override fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
-            calculate(core, buffer, cursor)
-    }
+    calculate: suspend (buffer: CharSequence, cursor: Int) -> IntRange
+): Motion = createMotion(flags) { _, buffer, cursor ->
+    calculate(buffer, cursor)
+}
+internal fun createMotion(
+    flags: List<Motion.Flags> = emptyList(),
+    calculate: MotionCalculator
+): Motion = object : Motion {
+    override val flags: EnumSet<Motion.Flags> = EnumSet(flags)
+    override suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+        calculate(core, buffer, cursor)
 }
 
 internal infix fun Motion.repeatWith(repeatable: Motion): Motion {
     val original = this
     return object : Motion {
         override val flags = original.flags
-        override fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+        override suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
             original.calculate(core, buffer, cursor)
 
         override fun toRepeatable(): Motion = repeatable

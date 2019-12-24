@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
 import com.nhaarman.mockito_kotlin.mock
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.modes.BlockingEchoMode
 import net.dhleong.judo.modes.CmdMode
@@ -170,7 +171,7 @@ class JudoCoreTest {
         )
     }
 
-    @Test fun feedKeys() {
+    @Test fun feedKeys() = runBlocking<Unit> {
         judo.buffer.set("my love,")
         judo.buffer.cursor = 0
 
@@ -232,7 +233,7 @@ class JudoCoreTest {
         tmpFile.deleteOnExit()
     }
 
-    @Test fun resetCompletionOnModeChange() {
+    @Test fun resetCompletionOnModeChange() = runBlocking<Unit> {
         // seed completion
         judo.seedCompletion("take love")
 
@@ -261,7 +262,7 @@ class JudoCoreTest {
             .contains("TypeError: my_trigger() takes exactly 2 arguments (1 given)")
     }
     
-    @Test fun `Passthrough keypress from blocking echo mode`() {
+    @Test fun `Passthrough keypress from blocking echo mode`() = runBlocking {
         judo.enterMode(BlockingEchoMode(judo, renderer))
         judo.feedKeys("i")
         assert(judo).isInMode("insert")
@@ -271,7 +272,7 @@ class JudoCoreTest {
         assert(judo).isInMode("normal")
     }
 
-    @Test fun `Invalid commands still get added to command mode history`() {
+    @Test fun `Invalid commands still get added to command mode history`() = runBlocking {
         judo.feedKeys(":echo()<cr>:<up>")
         assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
         judo.feedKeys("<esc>")
@@ -280,7 +281,7 @@ class JudoCoreTest {
         assert(judo.cmdMode.buffer.toString()).isEqualTo("doesNotExist()")
     }
 
-    @Test fun `Blank commands do NOT get added to command mode history`() {
+    @Test fun `Blank commands do NOT get added to command mode history`() = runBlocking {
         judo.feedKeys(":echo()<cr>:<up>")
         assert(judo.cmdMode.buffer.toString()).isEqualTo("echo()")
         judo.feedKeys("<esc>")
@@ -305,7 +306,7 @@ class JudoCoreTest {
             .isEqualTo("Normal")
     }
 
-    @Test fun `Complete empty buffer after submit input`() {
+    @Test fun `Complete empty buffer after submit input`() = runBlocking {
         judo.connection = mock {  }
         judo.feedKeys("ihelp news<cr>")
         judo.feedKeys("h<tab> n<tab><cr>")
@@ -322,7 +323,7 @@ class JudoCoreTest {
         assert(judo.buffer.toString()).isNotEmpty()
     }
 
-    @Test fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
+    @Test(timeout = 10_000) fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
         yieldKeys(":print(input('test: '))<cr>hi<esc>")
         assert(renderer.outputLines).isEqualTo(listOf("None"))
     }

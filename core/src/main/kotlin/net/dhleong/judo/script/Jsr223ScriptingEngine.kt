@@ -38,6 +38,8 @@ abstract class Jsr223ScriptingEngine(
         override fun supportsFileType(ext: String): Boolean = ext == forExtension
     }
 
+    private val sandbox = ScriptExecutionSandbox()
+
     protected val engine = ScriptEngineManager()
         .getEngineByExtension(extension).also {
             if (it !is Invocable) {
@@ -59,11 +61,15 @@ abstract class Jsr223ScriptingEngine(
         }
     }
 
-    override fun execute(code: String) {
+    override fun interrupt() {
+        sandbox.interrupt()
+    }
+
+    override fun execute(code: String) = sandbox.execute {
         engine.eval(code)
     }
 
-    override fun readFile(fileName: String, stream: InputStream) {
+    override fun readFile(fileName: String, stream: InputStream) = sandbox.execute {
         engine.eval(stream.bufferedReader())
     }
 

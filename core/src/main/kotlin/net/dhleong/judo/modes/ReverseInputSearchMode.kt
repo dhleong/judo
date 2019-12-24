@@ -25,7 +25,7 @@ class ReverseInputSearchMode(
         sendHistory.resetHistoryOffset()
     }
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         when {
             key == Key.ENTER -> {
                 judo.submit(buffer.toString(), fromMap)

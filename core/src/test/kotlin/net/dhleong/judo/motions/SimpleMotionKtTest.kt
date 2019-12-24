@@ -1,5 +1,6 @@
 package net.dhleong.judo.motions
 
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
@@ -8,7 +9,7 @@ import org.junit.Test
  */
 class SimpleMotionKtTest {
 
-    @Test fun charMotionBack() {
+    @Test fun charMotionBack() = runBlocking<Unit> {
         val motion = charMotion(-1)
 //        assertThat(motion.calculate("", 0))
 //            .isEqualTo(0..-1)
@@ -25,7 +26,7 @@ class SimpleMotionKtTest {
             .isEqualTo(2..1)
     }
 
-    @Test fun charMotionForward() {
+    @Test fun charMotionForward() = runBlocking<Unit> {
         val motion = charMotion(1)
 //        assertThat(motion.calculate("", 0))
 //            .isEqualTo(0..-1)

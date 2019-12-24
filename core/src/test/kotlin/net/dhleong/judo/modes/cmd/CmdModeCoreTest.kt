@@ -12,6 +12,10 @@ import assertk.assertions.isTrue
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.modes.CmdMode
 import net.dhleong.judo.modes.ScriptExecutionException
@@ -247,6 +251,38 @@ class CmdModeCoreTest(
         )
     }
 
+    @Test(timeout = 10_000) fun `Support interrupt`() = runBlocking {
+        // warm up the engine
+        mode.execute("")
+
+        GlobalScope.launch {
+            delay(50)
+            mode.interrupt()
+        }
+
+        try {
+            when (scriptType()) {
+                SupportedScriptTypes.PY -> mode.execute("""
+                    loops = 1
+                    while True:
+                        loops += 1
+                """.trimIndent())
+
+                SupportedScriptTypes.JS -> mode.execute("""
+                    var loops = 1
+                    while (true) {
+                        ++loops;
+                    }
+                """.trimIndent())
+            }
+        } catch (e: ScriptExecutionException) {
+            // normal; carry on
+        }
+
+        // ensure scripting isn't broken
+        mode.execute(fnCall("print", "mreynolds"))
+        assert(judo.prints).containsExactly("mreynolds")
+    }
 }
 
 private fun <T> Assert<List<T>>.startsWith(vararg sequence: T) {

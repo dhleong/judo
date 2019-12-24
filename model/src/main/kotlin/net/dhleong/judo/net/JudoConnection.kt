@@ -11,7 +11,7 @@ import java.net.URI
  */
 interface JudoConnection : Closeable {
     interface Factory {
-        fun create(judo: IJudoCore, uri: URI): JudoConnection?
+        suspend fun create(judo: IJudoCore, uri: URI): JudoConnection?
     }
 
     val isMsdpEnabled: Boolean

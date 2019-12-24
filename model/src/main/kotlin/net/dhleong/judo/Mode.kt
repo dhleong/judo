@@ -9,7 +9,7 @@ import net.dhleong.judo.input.Key
 interface Mode {
     val name: String
 
-    fun feedKey(key: Key, remap: Boolean = true, fromMap: Boolean = false)
+    suspend fun feedKey(key: Key, remap: Boolean = true, fromMap: Boolean = false)
     fun onEnter()
 
     fun onExit() {

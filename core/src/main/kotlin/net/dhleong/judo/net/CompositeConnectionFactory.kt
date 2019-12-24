@@ -9,7 +9,7 @@ import java.net.URI
 class CompositeConnectionFactory(
     private val candidates: List<JudoConnection.Factory>
 ) : JudoConnection.Factory {
-    override fun create(judo: IJudoCore, uri: URI): JudoConnection? {
+    override suspend fun create(judo: IJudoCore, uri: URI): JudoConnection? {
         for (candidate in candidates) {
             candidate.create(judo, uri)?.let {
                 // success!

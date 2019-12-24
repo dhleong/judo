@@ -1,5 +1,6 @@
 package net.dhleong.judo.complete
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.motions.wordMotion
 
@@ -64,7 +65,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
         pendingSuggestions != null
 
     fun initialize(input: CharSequence, cursor: Int) {
-        val wordRange = calculateWordRange(input, cursor)
+        val wordRange = runBlocking { calculateWordRange(input, cursor) }
         val word = input.subSequence(wordRange)
         originalWord = word
         suggestedWordStart = wordRange.first
@@ -72,7 +73,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
         pendingSuggestions = completions.suggest(input, wordRange).iterator()
     }
 
-    private fun calculateWordRange(input: CharSequence, cursor: Int): IntRange {
+    private suspend fun calculateWordRange(input: CharSequence, cursor: Int): IntRange {
         if (cursor > 0 && Character.isWhitespace(input[cursor - 1])) {
             return cursor..cursor-1
         }

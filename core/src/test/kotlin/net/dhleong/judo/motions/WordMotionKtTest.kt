@@ -1,5 +1,6 @@
 package net.dhleong.judo.motions
 
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.DUMMY_JUDO_CORE
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.type
@@ -145,6 +146,7 @@ class WordMotionKtTest {
     }
 }
 
-private fun Motion.applyTo(buffer: InputBuffer) =
+private fun Motion.applyTo(buffer: InputBuffer) = runBlocking {
     applyTo(DUMMY_JUDO_CORE, buffer)
+}
 

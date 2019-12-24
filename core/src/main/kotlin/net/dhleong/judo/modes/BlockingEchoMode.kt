@@ -14,7 +14,7 @@ class BlockingEchoMode(
 ) : Mode {
     override val name: String = "BlockingEcho"
 
-    override fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
+    override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
         renderer.clearEcho()
         judo.exitMode()
         if (key != Key.ENTER) {
