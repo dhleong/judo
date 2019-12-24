@@ -233,7 +233,7 @@ abstract class BaseCmdMode(
         judo.print("No files read; nothing to reload")
     }
 
-    protected fun config(args: Array<Any>) =
+    internal fun config(args: Array<Any>) =
         when (args.size) {
             1 -> printSettingValue(args[0] as String)
             2 -> {
@@ -278,7 +278,7 @@ abstract class BaseCmdMode(
         }
     }
 
-    protected fun defineAlias(alias: PatternSpec, handler: Any) {
+    internal fun defineAlias(alias: PatternSpec, handler: Any) {
         queueAlias(alias.original)
         if (handler is String) {
             judo.aliases.define(alias, handler)
