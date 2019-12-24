@@ -35,7 +35,7 @@ class TelnetConnection internal constructor(
     ) : JudoConnection.Factory {
         override suspend fun create(judo: IJudoCore, uri: URI): JudoConnection? =
             whenTrue(uri.scheme == "telnet") {
-                judo.connectCancellable(
+                connectCancellable(
                     socketFactory = { Socket(uri.host, uri.port) }
                 ) { socket ->
                     TelnetConnection(
@@ -55,7 +55,7 @@ class TelnetConnection internal constructor(
     ) : JudoConnection.Factory {
         override suspend fun create(judo: IJudoCore, uri: URI): JudoConnection? =
             whenTrue(uri.scheme == "ssl") {
-                judo.connectCancellable(
+                connectCancellable(
                     socketFactory = {
                         SSLSocketFactory.getDefault().createSocket(
                             uri.host, uri.port
@@ -152,20 +152,17 @@ class TelnetConnection internal constructor(
 
 }
 
-private suspend inline fun IJudoCore.connectCancellable(
+private suspend inline fun connectCancellable(
     crossinline socketFactory: () -> Socket,
     crossinline connectionFactory: (Socket) -> JudoConnection
 ) = coroutineScope {
     val socket = async(Dispatchers.IO, start = CoroutineStart.LAZY) {
-        print("opening connection")
         socketFactory().also {
             if (!isActive) {
-                print("Closing canceled connection")
                 it.close()
             }
         }
     }
 
-    print("wait for socket...")
     connectionFactory(socket.await())
 }
