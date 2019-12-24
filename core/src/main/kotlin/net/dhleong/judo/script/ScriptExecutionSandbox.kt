@@ -13,6 +13,7 @@ class ScriptExecutionSandbox {
     private var threads = mutableSetOf<Thread>()
     private var executor = Executors.newCachedThreadPool { task ->
         Thread(task, "sandbox:${threads.size}").also {
+            it.isDaemon = true
             threads.add(it)
         }
     }
