@@ -7,6 +7,7 @@ import assertk.assertAll
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.exists
+import assertk.assertions.hasSize
 import assertk.assertions.hasToString
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
@@ -246,6 +247,35 @@ class CmdModeObjectInteropTest(
         """.trimIndent())
 
         assert(window.getScrollback()).isEqualTo(1)
+    }
+
+    @Test fun `Gracefully handle null values`() {
+        mode.execute("""
+            print(expandpath("<sfile>"))
+        """.trimIndent())
+
+        assert(judo.prints).hasSize(1)
+        assert(judo.prints[0]?.toString() ?: "null").isEqualTo(when (scriptType()) {
+            SupportedScriptTypes.PY -> "None"
+            else -> "null"
+        })
+
+        if (scriptType() == SupportedScriptTypes.PY) {
+            judo.prints.clear()
+            mode.execute("""print(expandpath("<sfile>") is None)""")
+            assert(judo.prints).containsExactly(true)
+        }
+
+
+        assert {
+            mode.execute("""
+                echo(expandpath("<sfile>"))
+            """.trimIndent())
+        }.doesNotThrowAnyException()
+
+        assert(judo.echos).hasSize(1)
+        assert(judo.echos[0]?.toString() ?: "null").isEqualTo("null")
+
     }
 }
 

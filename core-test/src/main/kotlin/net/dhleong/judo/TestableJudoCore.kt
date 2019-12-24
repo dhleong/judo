@@ -40,6 +40,7 @@ class TestableJudoCore(
         }
     }
 
+    val echos = ArrayList<Any?>()
     val prints = ArrayList<Any?>()
     val sends = ArrayList<String>()
     val maps = ArrayList<List<Any>>()
@@ -114,6 +115,10 @@ class TestableJudoCore(
         window?.onSubmitFn?.let {
             it(text)
         } ?: send(text, fromMap)
+    }
+
+    override fun echo(vararg objects: Any?) {
+        objects.forEach { echos.add(it) }
     }
 
     override fun print(vararg objects: Any?) {

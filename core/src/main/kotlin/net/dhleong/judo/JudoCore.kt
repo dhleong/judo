@@ -797,8 +797,6 @@ class JudoCore(
             @Suppress("EXPERIMENTAL_API_USAGE")
             readKeys(channel, remap = true, fromMap = false)
         }
-
-        println("stopped")
     }
 
     /**

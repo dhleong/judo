@@ -44,7 +44,7 @@ class JreJsScriptingEngine : Jsr223ScriptingEngine(extension = "js") {
         }
     }
 
-    override fun callableToFunctionN(fromScript: Any): (Array<Any>) -> Any? {
+    override fun callableToFunctionN(fromScript: Any): (Array<Any?>) -> Any? {
         return { args ->
             (engine as Invocable).invokeMethod(
                 fromScript, "call", fromScript, *toScript(args)

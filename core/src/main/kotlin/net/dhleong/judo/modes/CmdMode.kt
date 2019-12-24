@@ -189,7 +189,7 @@ class CmdMode(
                         }
 
                         @Suppress("UNCHECKED_CAST")
-                        fnN(rawArg as Array<Any>)
+                        fnN(rawArg as Array<Any?>)
                     }
                 }
             }
@@ -221,7 +221,7 @@ class CmdMode(
         val fn = engine.callableToFunctionN(handler)
         judo.triggers.define(trigger) { args ->
             @Suppress("UNCHECKED_CAST")
-            fn(args as Array<Any>)
+            fn(args as Array<Any?>)
         }
     }
 

@@ -225,7 +225,7 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
-    override fun callableToFunctionN(fromScript: Any): (Array<Any>) -> Any? = { rawArg ->
+    override fun callableToFunctionN(fromScript: Any): (Array<Any?>) -> Any? = { rawArg ->
         wrapExceptions {
             val pythonArgs = Array<PyObject>(rawArg.size) { index ->
                 Py.java2py(rawArg[index])
@@ -485,12 +485,13 @@ private inline fun <reified T: Any, reified R> asPyFn(
             if (takeArgs == 0) emptyArray()
             else {
                 args.take(takeArgs)
-                    .map<PyObject, T> { T::class.java.cast(it.__tojava__(T::class.java)) }
+                    .map<PyObject, T?> { T::class.java.cast(it.__tojava__(T::class.java)) }
                     .toTypedArray()
             }
 
-        val result = fn(typedArgs)
-        if (T::class == Unit::class) {
+        @Suppress("UNCHECKED_CAST")
+        val result = fn(typedArgs as Array<T>)
+        if (T::class == Unit::class || result == null) {
             return Py.None
         }
 

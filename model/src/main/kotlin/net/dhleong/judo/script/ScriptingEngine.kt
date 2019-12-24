@@ -45,7 +45,7 @@ interface ScriptingEngine {
     fun callableToAliasProcessor(fromScript: Any): AliasProcesser
     fun <R> callableToFunction0(fromScript: Any): Function0<R>
     fun callableToFunction1(fromScript: Any): Function1<Any?, Any?>
-    fun callableToFunctionN(fromScript: Any): Function1<Array<Any>, Any?>
+    fun callableToFunctionN(fromScript: Any): Function1<Array<Any?>, Any?>
 
     /**
      * Return the number of arguments the given callable expects
@@ -67,16 +67,16 @@ interface ScriptingEngine {
 
     /** Coerce a script-engine type to Java */
     fun toJava(fromScript: Any): Any = fromScript
-    fun toJava(fromScriptArray: Array<Any>): Array<Any> =
+    fun toJava(fromScriptArray: Array<Any?>): Array<Any?> =
         Array(fromScriptArray.size) { i ->
-            toJava(fromScriptArray[i])
+            fromScriptArray[i]?.let { toJava(it) }
         }
 
     /** Coerce a Java type to the Script engine */
     fun toScript(fromJava: Any): Any = fromJava
-    fun toScript(fromJavaArray: Array<Any>): Array<Any> =
+    fun toScript(fromJavaArray: Array<Any?>): Array<Any?> =
         Array(fromJavaArray.size) { i ->
-            toScript(fromJavaArray[i])
+            fromJavaArray[i]?.let { toScript(it) }
         }
 
     fun wrapCore(judo: IJudoCore): Any
