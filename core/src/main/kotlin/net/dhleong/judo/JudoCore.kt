@@ -123,14 +123,14 @@ class JudoCore(
     override val registers = RegisterManager(settings)
     override val state = settings
 
-    internal val undo = UndoManager()
+    private val undo = UndoManager()
 
     private val parsedPrompts = ArrayList<FlavorableCharSequence>(2)
     private var lastPromptGroup = AUTO_UNIQUE_GROUP_ID
 
     internal val buffer = InputBuffer(registers, undo)
-    internal val cmdBuffer = InputBuffer()
-    internal val inputCmdBuffer = InputBuffer()
+    private val cmdBuffer = InputBuffer()
+    private val inputCmdBuffer = InputBuffer()
 
     private val sendHistory = SubstitutableInputHistory(InputHistory(buffer))
     private val inputCmdHistory = InputHistory(inputCmdBuffer)
@@ -210,8 +210,8 @@ class JudoCore(
 
     private val job = Job()
     private var cancellable = Job(parent = job)
-    internal var running = true
-    internal var doEcho = true
+    private var running = true
+    private var doEcho = true
 
     override var connection: JudoConnection? = null
     private var lastConnect: URI? = null
@@ -259,7 +259,7 @@ class JudoCore(
 
     override fun connect(uri: URI) {
         disconnect()
-        doPrint(false, "Connecting to $uri... ")
+        printUnprocessed("Connecting to $uri... ")
 
         lastConnect = uri
 
@@ -270,7 +270,7 @@ class JudoCore(
                 connections.create(this, uri)
                     ?: null.also {
                         // no connection created
-                        doPrint(false, "Don't know how to connect to $uri")
+                        printUnprocessed("Don't know how to connect to $uri")
                     }
             } catch (e: IOException) {
                 appendError(e, "Failed.\nNETWORK ERROR: ")
@@ -310,8 +310,8 @@ class JudoCore(
         renderer.echo(objects.toFlavoredSequence())
     }
 
-    override fun print(vararg objects: Any?) = doPrint(true, objects.toFlavoredSequence())
-    override fun printRaw(vararg objects: Any?) = doPrint(false, objects.toFlavoredSequence())
+    override fun print(vararg objects: Any?) = doPrint(objects.toFlavoredSequence(), process = true)
+    override fun printRaw(vararg objects: Any?) = doPrint(objects.toFlavoredSequence(), process = false)
 
     override fun redraw() = renderer.inTransaction {
         if (currentMode is BlockingEchoMode) {
@@ -320,9 +320,9 @@ class JudoCore(
         renderer.redraw()
     }
 
-    private fun doPrint(process: Boolean, asString: String) =
-        doPrint(process, FlavorableStringBuilder.withDefaultFlavor(asString))
-    private fun doPrint(process: Boolean, flavorable: FlavorableCharSequence) {
+    private fun printUnprocessed(asString: String) =
+        doPrint(FlavorableStringBuilder.withDefaultFlavor(asString), process = false)
+    private fun doPrint(flavorable: FlavorableCharSequence, process: Boolean) {
         appendOutput(when {
             flavorable.endsWith('\n') -> flavorable
             else -> flavorable + "\n"
@@ -362,7 +362,7 @@ class JudoCore(
             return
         }
 
-        if (state[MODE_STACK] && !stack.isEmpty()) {
+        if (state[MODE_STACK] && stack.isNotEmpty()) {
             // actually, return to the previous mode
             val previousMode = stack.removeAt(stack.lastIndex)
             activateMode(previousMode)
@@ -497,7 +497,7 @@ class JudoCore(
         } else {
             try {
                 val processed = aliases.process(text)
-                if (!text.isEmpty() && processed.isEmpty()) {
+                if (text.isNotEmpty() && processed.isEmpty()) {
                     // if the original text was empty, it's okay to
                     // send it; if it *became* empty, however, we
                     // probably don't want to (EG: an alias to a
@@ -519,7 +519,7 @@ class JudoCore(
             print(toSend) // TODO color?
         }
 
-        if (!fromMap && !text.isEmpty()) {
+        if (!fromMap && text.isNotEmpty()) {
             // record it even if we couldn't send it
             sendHistory.push(text)
             sendHistory.resetHistoryOffset() // start back from most recent
@@ -784,6 +784,7 @@ class JudoCore(
     /**
      * Read keys forever from the given producer
      */
+    @Suppress("unused")
     fun readKeys(producer: BlockingKeySource) {
         readKeys(producer.toChannelFactory())
     }
@@ -889,7 +890,7 @@ class JudoCore(
         }
     }
 
-    internal fun processOutput(line: FlavorableCharSequence) {
+    private fun processOutput(line: FlavorableCharSequence) {
         outputCompletions.process(line)
         triggers.process(line)
         processAndStripPrompt(line)
