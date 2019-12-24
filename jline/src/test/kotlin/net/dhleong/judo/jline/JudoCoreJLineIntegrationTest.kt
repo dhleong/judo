@@ -302,6 +302,17 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `Hitting esc cleanly exits blocking echo`() = runBlocking {
+        judo.echo("Take my love\nTake my land")
+        judo.feedKeys("<esc>")
+        assert(display).linesEqual("""
+            |____________________
+            |____________________
+            |____________[NORMAL]
+            |____________________
+        """.trimMargin())
+    }
+
     @Test fun `Command Line Mode from input()`() = assertionsWhileTyping {
         yieldKeys(":print(input(\"m:\"))<cr>rey<ctrl-f>Inolds")
 
