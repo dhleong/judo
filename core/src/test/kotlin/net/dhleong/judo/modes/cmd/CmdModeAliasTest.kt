@@ -5,6 +5,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,7 +19,7 @@ class CmdModeAliasTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun `alias() static`() {
+    @Test fun `alias() static`() = runBlocking {
         mode.execute("alias('fun', 'fancy')")
 
         assertThat(judo.aliases.hasAliasFor("fun")).isTrue()
@@ -26,7 +27,7 @@ class CmdModeAliasTest(
             .isEqualTo("That was fancy")
     }
 
-    @Test fun `alias() with function`() {
+    @Test fun `alias() with function`() = runBlocking {
         val funcDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
                 function handleAlias() {
@@ -49,7 +50,7 @@ class CmdModeAliasTest(
             .isEqualTo("this is awesome")
     }
 
-    @Test fun `alias() as function decorator`() {
+    @Test fun `alias() as function decorator`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@alias('cool')
@@ -57,7 +58,7 @@ class CmdModeAliasTest(
             """.trimMargin()
 
             // Most languages, sadly, don't support decorators:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
@@ -65,7 +66,7 @@ class CmdModeAliasTest(
             .isEqualTo("this is awesome")
     }
 
-    @Test fun `alias() with multiple decorators`() {
+    @Test fun `alias() with multiple decorators`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@alias('cool')
@@ -74,7 +75,7 @@ class CmdModeAliasTest(
             """.trimMargin()
 
             // Most languages, sadly, don't support decorators:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
@@ -86,7 +87,7 @@ class CmdModeAliasTest(
             .isEqualTo("this is awesome")
     }
 
-    @Test fun `alias() with empty-return function`() {
+    @Test fun `alias() with empty-return function`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@alias('cool')
@@ -103,7 +104,7 @@ class CmdModeAliasTest(
             .isEmpty()
     }
 
-    @Test fun `alias() with Regex`() {
+    @Test fun `alias() with Regex`() = runBlocking {
         val regex = "^keep(.*)"
         val regexDef = when (scriptType()) {
             SupportedScriptTypes.JS -> """
@@ -142,10 +143,10 @@ class CmdModeAliasTest(
         assertThat(judo.prints).containsExactly("flyin'")
     }
 
-    @Test fun `alias() with Python-only Regex`() {
+    @Test fun `alias() with Python-only Regex`() = runBlocking {
         if (scriptType() != SupportedScriptTypes.PY) {
             // skip!
-            return
+            return@runBlocking
         }
 
         // NOTE: breaking the black box a bit here for thorough testing;

@@ -1,6 +1,5 @@
 package net.dhleong.judo.modes.cmd
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEmpty
@@ -19,7 +18,7 @@ class CmdModeMappingTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun `nnoremap creates maps`() {
+    @Test fun `nnoremap creates maps`() = runBlocking {
         mode.execute(fnCall("nnoremap", "a", "bc"))
 
         assertThat(judo.maps)
@@ -46,21 +45,21 @@ class CmdModeMappingTest(
         assertThat(judo.prints).containsExactly("mapped!")
     }
 
-    @Test fun `createMap creates custom mode maps`() {
+    @Test fun `createMap creates custom mode maps`() = runBlocking {
         mode.execute(fnCall("createMap", "custom", "a", "bc", true))
 
         assertThat(judo.maps)
             .containsExactly(listOf("custom", "a", "bc", true))
     }
 
-    @Test fun `unmap removes mappings`() {
+    @Test fun `unmap removes mappings`() = runBlocking {
         mode.execute(fnCall("map", "a", "b"))
         mode.execute(fnCall("unmap", "a"))
 
         assertThat(judo.maps).isEmpty()
     }
 
-    @Test fun `deleteMap removes mappings`() {
+    @Test fun `deleteMap removes mappings`() = runBlocking {
         mode.execute(fnCall("createMap", "custom", "a", "bc", true))
         mode.execute(fnCall("deleteMap", "custom", "a"))
 

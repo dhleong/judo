@@ -19,6 +19,7 @@ import assertk.assertions.isSameAs
 import assertk.assertions.isSuccess
 import assertk.assertions.message
 import assertk.assertions.support.expected
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.hasId
 import net.dhleong.judo.hasSize
@@ -40,7 +41,7 @@ class CmdModeObjectInteropTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun `hsplit() returns an object supporting resize()`() {
+    @Test fun `hsplit() returns an object supporting resize()`() = runBlocking {
         mode.execute("""
             newWin = hsplit(20)
             print(newWin.id)
@@ -68,7 +69,7 @@ class CmdModeObjectInteropTest(
 //        }
     }
 
-    @Test fun `vsplit() returns an object supporting resize()`() {
+    @Test fun `vsplit() returns an object supporting resize()`() = runBlocking {
         mode.execute("""
             newWin = vsplit(20)
             print(newWin.id)
@@ -87,7 +88,7 @@ class CmdModeObjectInteropTest(
         assertThat(window).hasWidth(4)
     }
 
-    @Test fun `Set current window by scripting`() {
+    @Test fun `Set current window by scripting`() = runBlocking {
         mode.execute("""
             primary = judo.current.window
             print(primary.id)
@@ -107,7 +108,7 @@ class CmdModeObjectInteropTest(
         assertThat(judo.renderer.currentTabpage.currentWindow).hasId(primaryId)
     }
 
-    @Test fun `Prevent access to non-exposed methods`() {
+    @Test fun `Prevent access to non-exposed methods`() = runBlocking {
         assertThat {
             // clearTestable is a public fn on TestableJudoCore, but not in IScriptJudo
             mode.execute("""
@@ -131,7 +132,7 @@ class CmdModeObjectInteropTest(
         }
     }
 
-    @Test fun `Mapper works`() {
+    @Test fun `Mapper works`() = runBlocking<Unit> {
         val file = File("test.map")
         if (file.exists()) file.delete()
         assertThat(file).doesNotExist()
@@ -156,7 +157,7 @@ class CmdModeObjectInteropTest(
         file.delete()
     }
 
-    @Test fun `Buffer append handles ANSI`() {
+    @Test fun `Buffer append handles ANSI`() = runBlocking {
 
         val esc = "\\u001b"
         var string = """
@@ -184,7 +185,7 @@ class CmdModeObjectInteropTest(
         }
     }
 
-    @Test fun `onSubmit handlers`() {
+    @Test fun `onSubmit handlers`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 newWin = vsplit(20)
@@ -220,7 +221,7 @@ class CmdModeObjectInteropTest(
         }
     }
 
-    @Test fun `Mapper window binding`() {
+    @Test fun `Mapper window binding`() = runBlocking {
         val primary = judo.renderer.currentTabpage.currentWindow
         mode.execute("""
             judo.mapper.createEmpty()
@@ -240,7 +241,7 @@ class CmdModeObjectInteropTest(
         assertThat(judo.mapper.window).isSameAs(splitWindow)
     }
 
-    @Test fun `Scrolling via Judo object`() {
+    @Test fun `Scrolling via Judo object`() = runBlocking {
         val window = judo.renderer.currentTabpage.currentWindow
         assertThat(window.getScrollback()).isEqualTo(0)
 
@@ -251,7 +252,7 @@ class CmdModeObjectInteropTest(
         assertThat(window.getScrollback()).isEqualTo(1)
     }
 
-    @Test fun `Gracefully handle null values`() {
+    @Test fun `Gracefully handle null values`() = runBlocking {
         mode.execute("""
             print(expandpath("<sfile>"))
         """.trimIndent())

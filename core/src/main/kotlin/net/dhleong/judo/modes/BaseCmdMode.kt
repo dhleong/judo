@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import kotlinx.coroutines.withContext
 import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
@@ -117,7 +118,7 @@ abstract class BaseCmdMode(
         insertChar(key)
     }
 
-    private fun handleEnteredCommand(code: String) {
+    private suspend fun handleEnteredCommand(code: String) {
         when (code) {
             "q", "q!", "qa", "qa!" -> {
                 judo.quit()
@@ -154,7 +155,9 @@ abstract class BaseCmdMode(
         }
     }
 
-    private inline fun handlingInterruption(block: () -> Unit) {
+    private suspend inline fun handlingInterruption(
+        crossinline block: suspend () -> Unit
+    ) = withContext(judo.dispatcher) {
         try {
             block()
         } catch (e: InterruptedException) {
@@ -409,8 +412,8 @@ abstract class BaseCmdMode(
         }
     }
 
-    abstract fun execute(code: String)
-    abstract fun executeImplicit(fnName: String)
+    abstract suspend fun execute(code: String)
+    abstract suspend fun executeImplicit(fnName: String)
 
     protected abstract val supportsDecorators: Boolean
 

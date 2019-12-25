@@ -10,6 +10,8 @@ import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyChannelFactory
 import net.dhleong.judo.input.Keys
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class AssertionContext(
     internal val judo: JudoCore,
@@ -55,5 +57,10 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         // process the key across suspend points.
         // FIXME this is terrible. there has got to be a better way to do do this...
         delay(10)
+
+        // wait until the main thread is idle (ish)
+        suspendCoroutine<Unit> { cont ->
+            judo.onMainThread { cont.resume(Unit) }
+        }
     }
 }

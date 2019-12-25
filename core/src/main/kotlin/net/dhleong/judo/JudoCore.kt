@@ -776,7 +776,7 @@ class JudoCore(
      * Execute some script in command mode;
      * this is for testing purposes
      */
-    internal fun executeScript(code: String) {
+    internal suspend fun executeScript(code: String) {
         val cmdMode = modes["cmd"] as BaseCmdMode
         cmdMode.execute(code)
     }

@@ -1,6 +1,5 @@
 package net.dhleong.judo.modes.cmd
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
@@ -8,6 +7,7 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.render.Flavor
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
@@ -27,7 +27,7 @@ class CmdModeTriggerTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun `trigger() basic`() {
+    @Test fun `trigger() basic`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |def handleTrigger(): print("awesome")
@@ -46,14 +46,14 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome")
     }
 
-    @Test fun `trigger() as decorator`() {
+    @Test fun `trigger() as decorator`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
                 |def handleTrigger(): print("awesome")
             """.trimMargin()
 
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
         assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
 
@@ -61,7 +61,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome")
     }
 
-    @Test fun `trigger() with regex`() {
+    @Test fun `trigger() with regex`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
             import re
@@ -80,7 +80,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome story bro")
     }
 
-    @Test fun `trigger() strips color by default`() {
+    @Test fun `trigger() strips color by default`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool $1')
@@ -98,7 +98,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome story")
     }
 
-    @Test fun `trigger(_, 'color') preserves ANSI`() {
+    @Test fun `trigger(_, 'color') preserves ANSI`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool $1', 'color')
@@ -118,7 +118,7 @@ class CmdModeTriggerTest(
             "awesome ${ansi(1,2)}st${ansi(fg=3)}or${ansi(fg=4)}y${ansi(0)}")
     }
 
-    @Test fun `trigger() ending in dot works`() {
+    @Test fun `trigger() ending in dot works`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool.')
@@ -137,7 +137,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome.")
     }
 
-    @Test fun `trigger() supports multiple decorators`() {
+    @Test fun `trigger() supports multiple decorators`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
@@ -146,7 +146,7 @@ class CmdModeTriggerTest(
             """.trimMargin()
 
             // no decorator support:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
         assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
         assertThat(judo.triggers.hasTriggerFor("shiny")).isTrue()
@@ -158,7 +158,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome", "awesome")
     }
 
-    @Test fun `trigger() and alias() decorators stack`() {
+    @Test fun `trigger() and alias() decorators stack`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool')
@@ -167,7 +167,7 @@ class CmdModeTriggerTest(
             """.trimMargin()
 
             // no decorators
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.triggers.hasTriggerFor("cool")).isTrue()
@@ -183,7 +183,7 @@ class CmdModeTriggerTest(
         assertThat(judo.prints).containsExactly("awesome", "awesome")
     }
 
-    @Test fun `trigger() only matches complete lines`() {
+    @Test fun `trigger() only matches complete lines`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@trigger('cool $1')

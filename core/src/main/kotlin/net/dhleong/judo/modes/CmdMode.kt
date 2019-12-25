@@ -102,11 +102,11 @@ class CmdMode(
         engine.interrupt()
     }
 
-    override fun execute(code: String) {
+    override suspend fun execute(code: String) {
         engine.execute(code)
     }
 
-    override fun executeImplicit(fnName: String) {
+    override suspend fun executeImplicit(fnName: String) {
         engine.execute(engineFactory.formatFnCall(fnName))
     }
 

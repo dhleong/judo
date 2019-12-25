@@ -254,7 +254,7 @@ class JudoCoreTest {
             .isEqualTo("take" to 4)
     }
 
-    @Test fun triggerScriptingError() {
+    @Test fun triggerScriptingError() = runBlocking {
         judo.executeScript("""
             import re
             @trigger(re.compile("(take.*)"))

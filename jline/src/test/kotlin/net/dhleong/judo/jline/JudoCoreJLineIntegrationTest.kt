@@ -1,7 +1,6 @@
 package net.dhleong.judo.jline
 
 import assertk.all
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.each
 import assertk.assertions.hasLength
@@ -243,6 +242,9 @@ class JudoCoreJLineIntegrationTest {
     }
 
     @Test fun `Render while typing in input()`() = assertionsWhileTyping {
+        // ensure the scripting engine is warm
+        judo.cmdMode.execute("")
+
         yieldKeys(":print(input(\"input:\"))<cr>")
 
         assertThat(display).linesEqual("""

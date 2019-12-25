@@ -38,20 +38,19 @@ class CmdModeCoreTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun print() {
+    @Test fun print() = runBlocking {
         mode.execute("print('test', 2)")
 
         assertThat(judo.prints).containsExactly("test", 2)
     }
 
-    @Test fun globals() {
+    @Test fun globals() = runBlocking {
         mode.execute("print(MYJUDORC)")
 
         assertThat(judo.prints).containsExactly(mode.userConfigFile.absolutePath)
     }
 
-    @Test fun `var definitions are shared across execute() calls`() {
-
+    @Test fun `var definitions are shared across execute() calls`() = runBlocking {
         mode.execute("""
             value = "magic"
         """.trimIndent())
@@ -63,7 +62,7 @@ class CmdModeCoreTest(
         assertThat(judo.prints).containsExactly("magic")
     }
 
-    @Test fun `Complain with unexpected number of args`() {
+    @Test fun `Complain with unexpected number of args`() = runBlocking {
         assertThat {
             mode.execute(fnCall("send", "mreynolds"))
             assertThat(judo.sends).containsExactly("mreynolds")
@@ -86,7 +85,7 @@ class CmdModeCoreTest(
         }
     }
 
-    @Test fun settings() {
+    @Test fun settings() = runBlocking {
         assertThat(WORD_WRAP !in judo.state).isTrue()
 
         assertThat {
@@ -110,7 +109,7 @@ class CmdModeCoreTest(
         assertThat(judo.state[WORD_WRAP]).isEqualTo(true)
     }
 
-    @Test fun `config('setting') prints its value`() {
+    @Test fun `config('setting') prints its value`() = runBlocking {
         assertThat(WORD_WRAP !in judo.state).isTrue()
 
         mode.execute(fnCall("config", "wordwrap"))
@@ -121,17 +120,17 @@ class CmdModeCoreTest(
         assertThat(judo.prints).containsExactly("wordwrap = false")
     }
 
-    @Test fun `Don't allow builtins to get overridden`() {
+    @Test fun `Don't allow builtins to get overridden`() = runBlocking {
         try {
             mode.execute(when (scriptType()) {
                 SupportedScriptTypes.PY -> "def print(): pass"
 
                 // Javascript doesn't seem to have a way to protect against this...
-                SupportedScriptTypes.JS -> return
+                SupportedScriptTypes.JS -> return@runBlocking
             })
         } catch (e: ScriptExecutionException) {
             // an error in the attempt is also acceptable
-            return
+            return@runBlocking
         }
 
         mode.execute(fnCall("print", "magic"))
@@ -224,7 +223,7 @@ class CmdModeCoreTest(
             )
     }
 
-    @Test fun `Support connect() with host and port`() {
+    @Test fun `Support connect() with host and port`() = runBlocking {
         mode.execute("""
             connect("host", 23)
         """.trimIndent())
@@ -234,7 +233,7 @@ class CmdModeCoreTest(
         )
     }
 
-    @Test fun `Support connect() with schema-less URI`() {
+    @Test fun `Support connect() with schema-less URI`() = runBlocking {
         mode.execute("""
             connect("host:port")
         """.trimIndent())
@@ -244,7 +243,7 @@ class CmdModeCoreTest(
         )
     }
 
-    @Test fun `Support connect() with SSL schema URI`() {
+    @Test fun `Support connect() with SSL schema URI`() = runBlocking {
         mode.execute("""
             connect("ssl://host:port")
         """.trimIndent())

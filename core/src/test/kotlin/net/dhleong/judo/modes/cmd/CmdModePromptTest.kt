@@ -12,6 +12,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.parseAnsi
@@ -29,7 +30,7 @@ class CmdModePromptTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
 
-    @Test fun prompt() {
+    @Test fun prompt() = runBlocking {
         mode.execute(fnCall("prompt", "^Input($1)", "prompt $1>"))
 
         assertThat(judo.prints).isEmpty()
@@ -37,7 +38,7 @@ class CmdModePromptTest(
         assertThat(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
     }
 
-    @Test fun `prompt() handles 'color' flag`() {
+    @Test fun `prompt() handles 'color' flag`() = runBlocking {
         mode.execute(fnCall(
             "prompt",
             "^Input($1)", "color", "prompt $1>"
@@ -51,7 +52,7 @@ class CmdModePromptTest(
         )
     }
 
-    @Test fun `prompt() rejects illegal group id`() {
+    @Test fun `prompt() rejects illegal group id`() = runBlocking {
         assertThat {
             mode.execute(fnCall(
                 "prompt",
@@ -64,7 +65,7 @@ class CmdModePromptTest(
         }
     }
 
-    @Test fun `prompt() handles groups`() {
+    @Test fun `prompt() handles groups`() = runBlocking {
         mode.execute(fnCall(
             "prompt",
             22, "^Input($1)", "prompt $1>"
@@ -75,7 +76,7 @@ class CmdModePromptTest(
         assertThat(judo.prompts).processes("Input(42)".parseAnsi(), into = "prompt 42>")
     }
 
-    @Test fun `prompt() handles group with flags`() {
+    @Test fun `prompt() handles group with flags`() = runBlocking {
         mode.execute(fnCall(
             "prompt",
             2, "^Input($1)", "color", "prompt $1>"
@@ -89,7 +90,7 @@ class CmdModePromptTest(
         )
     }
 
-    @Test fun `prompt() as function decorator`() {
+    @Test fun `prompt() as function decorator`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@prompt('^hp: $1')
@@ -97,7 +98,7 @@ class CmdModePromptTest(
             """.trimMargin()
 
             // Most languages, sadly, don't support decorators:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.prompts).hasSize(1)
@@ -107,7 +108,7 @@ class CmdModePromptTest(
         )
     }
 
-    @Test fun `prompt() with group as function decorator`() {
+    @Test fun `prompt() with group as function decorator`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@prompt(42, '^hp: $1')
@@ -115,7 +116,7 @@ class CmdModePromptTest(
             """.trimMargin()
 
             // Most languages, sadly, don't support decorators:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.prompts).hasSize(1)
@@ -125,7 +126,7 @@ class CmdModePromptTest(
         )
     }
 
-    @Test fun `prompt() with group and flags as function decorator`() {
+    @Test fun `prompt() with group and flags as function decorator`() = runBlocking {
         mode.execute(when (scriptType()) {
             SupportedScriptTypes.PY -> """
                 |@prompt(42, '^hp: $1', 'color')
@@ -133,7 +134,7 @@ class CmdModePromptTest(
             """.trimMargin()
 
             // Most languages, sadly, don't support decorators:
-            SupportedScriptTypes.JS -> return
+            SupportedScriptTypes.JS -> return@runBlocking
         })
 
         assertThat(judo.prompts).hasSize(1)
