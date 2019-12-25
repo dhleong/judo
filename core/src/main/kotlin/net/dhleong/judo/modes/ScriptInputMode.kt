@@ -1,5 +1,8 @@
 package net.dhleong.judo.modes
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.launch
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
@@ -15,6 +18,8 @@ import net.dhleong.judo.motions.toStartMotion
 import net.dhleong.judo.motions.wordMotion
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.toFlavorable
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * @author dhleong
@@ -108,16 +113,24 @@ class ScriptInputMode(
         suggester.reset()
     }
 
-    suspend fun awaitResult(): String? {
-        while (true) {
-            val stroke = judo.readKey()
-            judo.feedKey(stroke)
-
-            if (exitted && !submitted) {
-                return null
-            } else if (exitted) {
-                return buffer.toString()
+    suspend fun awaitResult(): String? = suspendCoroutine { cont ->
+        GlobalScope.launch {
+            while (!exitted) {
+                val stroke = try {
+                    judo.readKey()
+                } catch (e: ClosedReceiveChannelException) {
+                    // NOTE: should be unit tests only
+                    // FIXME: can we handle this better? cancel the scope maybe?
+                    cont.resume(null)
+                    return@launch
+                }
+                judo.feedKey(stroke)
             }
+
+            cont.resume(
+                if (!submitted) null
+                else buffer.toString()
+            )
         }
     }
 }

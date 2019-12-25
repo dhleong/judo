@@ -140,8 +140,10 @@ class UndoManager {
                 val redone = redoStack.pop()
                 changeHistory.push(redone)
 
+                // NOTE: this should already be on the main dispatcher; if we
+                // try to re-dispatch there it seems to deadlock sometimes
                 input.cursor = redone.cursor
-                runBlocking(judo.dispatcher) {
+                runBlocking {
                     redone.apply(judo)
                 }
             }

@@ -262,6 +262,7 @@ class JudoCoreJLineIntegrationTest {
             |_____________[INPUT]
             |input:test__________
         """.trimMargin())
+        println("??")
     }
 
     @Test fun `Redraw clears blocking echo`() = runBlocking {

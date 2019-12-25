@@ -51,10 +51,12 @@ class UndoableIntegrationTest : AbstractMotionIntegrationTest() {
         assertThat(renderer.inputLine)
             .isEqualTo("word2 word3" to 0)
 
+        println("undo")
         judo.type(keys("u\$"))
         assertThat(renderer.inputLine)
             .isEqualTo("word word2 word3" to 15)
 
+        println("redo")
         judo.type(keys("<ctrl r>"))
         assertThat(renderer.inputLine)
             .isEqualTo("word2 word3" to 0)
