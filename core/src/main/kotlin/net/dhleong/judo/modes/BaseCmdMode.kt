@@ -25,6 +25,7 @@ import net.dhleong.judo.script.JudoScriptInvocation
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.util.Clearable
 import net.dhleong.judo.util.PatternSpec
+import net.dhleong.judo.util.SingleThreadDispatcher
 import net.dhleong.judo.util.VisibleForTesting
 import net.dhleong.judo.util.hash
 import java.io.File
@@ -58,6 +59,8 @@ abstract class BaseCmdMode(
 
     protected abstract val registeredFns: MutableSet<String>
     protected abstract val registeredVars: MutableMap<String, JudoScriptingEntity>
+
+    private val dispatcher = SingleThreadDispatcher("judo:cmd")
 
     val mapping = KeyMapping(
         keys("<up>") to action { history.scroll(-1, clampCursor = false) },
@@ -157,7 +160,7 @@ abstract class BaseCmdMode(
 
     private suspend inline fun handlingInterruption(
         crossinline block: suspend () -> Unit
-    ) = withContext(judo.dispatcher) {
+    ) = withContext(dispatcher) {
         try {
             block()
         } catch (e: InterruptedException) {

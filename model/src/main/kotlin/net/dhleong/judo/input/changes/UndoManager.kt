@@ -1,6 +1,5 @@
 package net.dhleong.judo.input.changes
 
-import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
@@ -132,7 +131,7 @@ class UndoManager {
         }
     }
 
-    fun redo(judo: IJudoCore, input: InputBuffer) {
+    suspend fun redo(judo: IJudoCore, input: InputBuffer) {
         withoutTrackingChanges(input) {
             if (redoStack.isEmpty()) {
                 // nothing to redo
@@ -140,10 +139,10 @@ class UndoManager {
                 val redone = redoStack.pop()
                 changeHistory.push(redone)
 
+                // NOTE: this should already be on the main dispatcher; if we
+                // try to re-dispatch there it seems to deadlock sometimes
                 input.cursor = redone.cursor
-                runBlocking(judo.dispatcher) {
-                    redone.apply(judo)
-                }
+                redone.apply(judo)
             }
         }
     }
@@ -152,7 +151,7 @@ class UndoManager {
      * Perform block() without tracking changes (IE the
      * undo history will not be affected)
      */
-    fun withoutTrackingChanges(buffer: InputBuffer, block: () -> Unit) {
+    private inline fun withoutTrackingChanges(buffer: InputBuffer, block: () -> Unit) {
         inChangeSet(buffer) {
             try {
                 block()

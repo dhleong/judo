@@ -1,5 +1,6 @@
 package net.dhleong.judo.script
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
@@ -43,10 +44,10 @@ internal fun ScriptInitContext.compilePatternSpec(fromScript: Any, flags: String
  * scripting API.
  */
 internal inline fun <R> ScriptInitContext.adaptSuspend(crossinline block: suspend () -> R): R =
-// NOTE: we do not run on the JudoCore.dispatcher, since feedKey ensures
-// keys are processed there, and explicitly providing the dispatcher to
+    // NOTE: we do not run on the JudoCore.dispatcher, since feedKey ensures
+    // keys are processed there, and explicitly providing the dispatcher to
     // runBlocking can cause deadlocks
-    runBlocking {
+    runBlocking(Dispatchers.IO) {
         block()
     }
 
