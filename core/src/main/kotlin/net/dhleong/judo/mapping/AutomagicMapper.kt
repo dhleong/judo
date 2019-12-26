@@ -39,7 +39,7 @@ class AutomagicMapper(
     private var mapStrategy: MapStrategy? = null
 
     fun clear() {
-        registered.forEach { k, v ->
+        registered.forEach { (k, v) ->
             judo.events.unregister(k, v)
         }
         registered.clear()
@@ -267,7 +267,7 @@ internal class EasyMapStrategy(private val mapper: AutomagicMapper) : MapStrateg
         val map = mapper.mapper.current!!
         if (vnum !in map) {
             val actualExits = JudoExits()
-            exits.forEach { exit, exitVnumStr ->
+            exits.forEach { (exit, exitVnumStr) ->
                 val exitVnum = (exitVnumStr as String).toInt()
                 if (exitVnum in map) {
                     actualExits[exit] = map[exitVnum]!!

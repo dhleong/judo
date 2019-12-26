@@ -1,20 +1,21 @@
 package net.dhleong.judo.complete.multiplex
 
 import net.dhleong.judo.complete.MultiplexSelector
+import kotlin.math.abs
 
 /**
  * @author dhleong
  */
 class WeightedRandomSelector(
-    val weights: DoubleArray,
-    val random: () -> Double = Math::random
+    private val weights: DoubleArray,
+    private val random: () -> Double = Math::random
 ) : MultiplexSelector {
 
     companion object {
         fun distributeByWordIndex(vararg weights: DoubleArray): (Int) -> WeightedRandomSelector {
             // verify weights
             weights.forEach { weightArray ->
-                if (Math.abs(weightArray.sum() - 1f) > 0.001f) {
+                if (abs(weightArray.sum() - 1f) > 0.001f) {
                     throw IllegalArgumentException(
                         "Weights in $weightArray do not sum to 1f")
                 }
@@ -30,7 +31,7 @@ class WeightedRandomSelector(
         }
     }
 
-    val weightsSorting = (0..weights.size - 1).sortedBy { weights[it] }
+    private val weightsSorting = weights.indices.sortedBy { weights[it] }
 
     override fun select(candidates: List<String>): Int {
         var dieRoll = random()
@@ -38,7 +39,7 @@ class WeightedRandomSelector(
         do {
             var emptyWeight = 0.0
             var lastWeight = 0.0
-            for (i in 0..weights.size - 1) {
+            for (i in weights.indices) {
                 val weightIndex = weightsSorting[i]
                 val weight = weights[weightIndex]
                 val totalWeight = lastWeight + weight

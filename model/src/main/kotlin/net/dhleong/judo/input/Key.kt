@@ -183,18 +183,18 @@ class Key private constructor(
     fun describeTo(out: Appendable) {
         val specialKey = when (keyCode) {
             ' '.toInt() -> "space"
-            Key.CODE_BACKSPACE -> "bs"
-            Key.CODE_ENTER -> "cr"
-            Key.CODE_ESCAPE -> "esc"
-            Key.CODE_TAB -> "tab"
+            CODE_BACKSPACE -> "bs"
+            CODE_ENTER -> "cr"
+            CODE_ESCAPE -> "esc"
+            CODE_TAB -> "tab"
 
-            Key.CODE_LEFT -> "left"
-            Key.CODE_UP -> "up"
-            Key.CODE_RIGHT -> "right"
-            Key.CODE_DOWN -> "down"
+            CODE_LEFT -> "left"
+            CODE_UP -> "up"
+            CODE_RIGHT -> "right"
+            CODE_DOWN -> "down"
 
-            Key.CODE_PAGE_UP -> "PageUp"
-            Key.CODE_PAGE_DOWN -> "PageDown"
+            CODE_PAGE_UP -> "PageUp"
+            CODE_PAGE_DOWN -> "PageDown"
 
             else -> null
         }
@@ -215,12 +215,13 @@ class Key private constructor(
         if (inBrackets) out.append('>')
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     fun hasAlt() = Modifier.ALT in modifiers
     fun hasCtrl() = Modifier.CTRL in modifiers
     fun hasShift() = Modifier.SHIFT in modifiers
 
     /** @return True if this key functions as tab */
-    fun isTab() = keyCode == Key.CODE_TAB
+    fun isTab() = keyCode == CODE_TAB
         || char == 'i' && hasCtrl() // NOTE: ctrl+i == tab
 }
 

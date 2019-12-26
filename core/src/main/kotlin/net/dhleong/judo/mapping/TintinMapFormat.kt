@@ -3,6 +3,9 @@ package net.dhleong.judo.mapping
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.PrintWriter
+import kotlin.math.ceil
+
+private const val BASE_MAP_CAPACITY = 50000
 
 /**
  * A MapFormat that can read and write in a format compatible with TinTin++
@@ -12,8 +15,6 @@ import java.io.PrintWriter
 class TintinMapFormat(utf8: Boolean = true) : MapFormat {
 
     override val name = "tintin"
-
-    private val BASE_MAP_CAPACITY = 50000
 
     // FIXME TODO easier way to specify colors
     val exitColor = 278
@@ -91,7 +92,7 @@ class TintinMapFormat(utf8: Boolean = true) : MapFormat {
     }
 
     override fun write(map: IJudoMap, out: OutputStream) {
-        val mapCapacity: Int = (Math.ceil(map.size / BASE_MAP_CAPACITY.toDouble()) * BASE_MAP_CAPACITY).toInt()
+        val mapCapacity: Int = (ceil(map.size / BASE_MAP_CAPACITY.toDouble()) * BASE_MAP_CAPACITY).toInt()
 
         with(PrintWriter(out.bufferedWriter())) {
             println("C $mapCapacity")

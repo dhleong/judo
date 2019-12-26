@@ -10,6 +10,7 @@ import net.dhleong.judo.render.IdManager
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
+import kotlin.math.abs
 
 /**
  * @author dhleong
@@ -246,7 +247,7 @@ class JLineWindow(
         }
 
         val width = this.width
-        val desired = Math.abs(count)
+        val desired = abs(count)
         val step = count / desired
         val end = buffer.lastIndex
 
@@ -344,7 +345,7 @@ class JLineWindow(
         var renderedLines = 0
         var foundOnLine = -1
         buffer[line].forEachRenderedLine(width, wordWrap) { start, end ->
-            if (offsetOnLine in start..(end - 1)) {
+            if (offsetOnLine in start until end) {
                 foundOnLine = renderedLines
             }
 

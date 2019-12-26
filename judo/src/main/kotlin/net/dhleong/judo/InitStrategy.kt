@@ -4,6 +4,7 @@ import net.dhleong.judo.net.createURI
 import java.io.File
 import java.net.URI
 import java.net.URISyntaxException
+import kotlin.system.exitProcess
 
 /**
  * @author dhleong
@@ -50,8 +51,7 @@ sealed class InitStrategy(
                 judo.renderer.close()
 
                 System.err.println("Unable to open world file $worldScriptFile")
-                System.exit(2)
-                return false
+                exitProcess(2)
             }
 
             judo.readFile(worldScriptFile)

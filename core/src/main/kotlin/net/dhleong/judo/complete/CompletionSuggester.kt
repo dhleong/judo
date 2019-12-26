@@ -9,8 +9,7 @@ internal interface CapitalizationStrategy {
         fun detect(original: CharSequence): CapitalizationStrategy {
             if (original.isEmpty()) return AsIsCapitalization()
 
-            val capitals = original.filter { Character.isUpperCase(it) }.sumBy { 1 }
-            return when (capitals) {
+            return when (original.filter { Character.isUpperCase(it) }.sumBy { 1 }) {
                 1 -> TitleCaseCapitalization()
                 original.length -> AllCapsCapitalization()
                 else -> AsIsCapitalization()
@@ -79,7 +78,7 @@ class CompletionSuggester(private val completions: CompletionSource) {
         }
 
         val move = wordStartMovement.calculate(input, cursor)
-        val wordStart = move.endInclusive
+        val wordStart = move.last
 
         return if (wordStart < 0) {
             0 until cursor

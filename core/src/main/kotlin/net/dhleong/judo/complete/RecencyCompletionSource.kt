@@ -31,7 +31,7 @@ class RecencyCompletionSource(
     }
 }
 
-internal class LruCache<K, V>(val maxCapacity: Int)
+internal class LruCache<K, V>(private val maxCapacity: Int)
     // NOTE: loadFactor > 1f so we don't have to re-hash; since input history is
     // persisted, it is probably more likely that we will have large amount of
     // entries, so it makes sense not to waste allocations with a smaller array
@@ -42,7 +42,7 @@ internal class LruCache<K, V>(val maxCapacity: Int)
     // ArrayList every time something changes, but... why? Let's just use reflection
     // and iterate ourselves. The overhead of reflection should be negligible here
     // since we're caching the Fields and not using them in a perf-sensitive path.
-    val tailField = LinkedHashMap::class.java.getDeclaredField("tail")!!.apply {
+    private val tailField = LinkedHashMap::class.java.getDeclaredField("tail")!!.apply {
         isAccessible = true
     }
 

@@ -34,7 +34,7 @@ sealed class JudoColor {
         }
 
         companion object {
-            fun from(value: Int) = JudoColor.Simple(when (value) {
+            fun from(value: Int) = Simple(when (value) {
                 0 -> Color.BLACK
                 1 -> Color.RED
                 2 -> Color.GREEN

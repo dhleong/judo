@@ -27,14 +27,6 @@ class GmcpHandler(
     var isGmcpEnabled = false
         private set
 
-    private val GMCP_HELLO = buildGmcpRequest(
-        "Core.Hello",
-        mapOf(
-            "client" to JudoCore.CLIENT_NAME,
-            "version" to JudoCore.CLIENT_VERSION
-        )
-    )
-
     override fun onSubnegotiation(client: TelnetClient, event: TelnetEvent) {
         // NOTE suboptionData[0] == SB *always*
         //  and suboptionData[1] == MSDP *always*
@@ -93,36 +85,23 @@ class GmcpHandler(
         }
 
         client.sendSubnegotiation {
-            write(GMCP_HELLO)
+            write(gmcpRequest(
+                "Core.Hello",
+                mapOf(
+                    "client" to JudoCore.CLIENT_NAME,
+                    "version" to JudoCore.CLIENT_VERSION
+                )
+            ))
         }
     }
 
-    fun buildGmcpRequest(packageName: String, value: Any?) =
-        ByteArrayOutputStream(packageName.length + 32).apply {
-            write(packageName)
-            if (value != null) {
-                write(' '.toByte())
-                write(Json.write(value))
-            }
-        }.toByteArray()
 }
 
-fun IntArray.indexOf(element: Int, startIndex: Int = 0): Int {
-    @Suppress("LoopToCallChain")
-    for (index in startIndex..(size - 1)) {
-        if (element == this[index]) {
-            return index
+fun gmcpRequest(packageName: String, value: Any?): ByteArray =
+    ByteArrayOutputStream(packageName.length + 32).apply {
+        write(packageName)
+        if (value != null) {
+            write(' '.toByte())
+            write(Json.write(value))
         }
-    }
-    return -1
-}
-
-inline fun IntArray.indexOfFirst(startIndex: Int = 0, predicate: (Int) -> Boolean): Int {
-    @Suppress("LoopToCallChain")
-    for (index in startIndex..(size - 1)) {
-        if (predicate(this[index])) {
-            return index
-        }
-    }
-    return -1
-}
+    }.toByteArray()

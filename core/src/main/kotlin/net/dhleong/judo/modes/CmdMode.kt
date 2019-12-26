@@ -8,7 +8,6 @@ import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
-import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingEngine
@@ -33,9 +32,8 @@ import java.io.InputStream
  */
 class CmdMode(
     judo: IJudoCore,
-    private val ids: IdManager,
     inputBuffer: InputBuffer,
-    private val renderer: JudoRenderer,
+    renderer: JudoRenderer,
     history: IInputHistory,
     private var completions: CompletionSource,
     userConfigDir: File,
@@ -164,8 +162,7 @@ class CmdMode(
     }
 
     internal fun defineEvent(eventName: String, handlerFromScript: Any) {
-        val argCount = engine.callableArgsCount(handlerFromScript)
-        val handler: EventHandler = when (argCount) {
+        val handler: EventHandler = when (val argCount = engine.callableArgsCount(handlerFromScript)) {
             0 -> {
                 val fn0 = engine.callableToFunction0<Any>(handlerFromScript)
                 handler { fn0() }

@@ -135,7 +135,7 @@ class AnsiFlavorableStringReader {
             }
         }
 
-        if (!builder.isEmpty()) {
+        if (builder.isNotEmpty()) {
             if (builder.last() == '\r') {
                 // normalize
                 builder[builder.lastIndex] = '\n'
@@ -165,8 +165,7 @@ internal fun ansiCharsToFlavor(
 
     val params = ansiParameters(ansi, length)
     while (params.hasNext()) {
-        val p = params.next()
-        when (p) {
+        when (val p = params.next()) {
             0 -> flavor.reset()
             1 -> flavor.isBold = true
             2 -> flavor.isFaint = true

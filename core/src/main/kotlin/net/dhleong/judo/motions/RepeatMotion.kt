@@ -13,13 +13,13 @@ fun repeat(motion: Motion, count: Int): Motion {
         var end = start
         for (i in 1..count) {
             val intermediate = currentMotion.calculate(readKey, buffer, end)
-            start = if (intermediate.start < intermediate.endInclusive) {
-                minOf(start, intermediate.start)
+            start = if (intermediate.first < intermediate.last) {
+                minOf(start, intermediate.first)
             } else {
-                maxOf(start, intermediate.start)
+                maxOf(start, intermediate.first)
             }
 
-            end = intermediate.endInclusive
+            end = intermediate.last
             currentMotion = currentMotion.toRepeatable()
         }
 

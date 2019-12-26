@@ -10,10 +10,10 @@ fun wordsBeforeFactory(wordCountFactory: (Int) -> WeightedRandomSelector): Multi
 
         val wordsBefore =
             // convenient shortcut
-            if (wordRange.start == 0) 0
+            if (wordRange.first == 0) 0
 
             // TODO: optimize and fix (double whitespace anyone?)
-            else string.subSequence(0, wordRange.start)
+            else string.subSequence(0, wordRange.first)
                 .count { Character.isWhitespace(it) }
 
         wordCountFactory(wordsBefore)

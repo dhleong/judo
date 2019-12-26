@@ -190,7 +190,7 @@ class JudoCore(
         opMode,
         OutputSearchMode(this, outputCompletions),
         CmdMode(
-            this, ids, cmdBuffer, renderer, cmdHistory, completions,
+            this, cmdBuffer, renderer, cmdHistory, completions,
             userConfigDir,
             userConfigFile,
             scripting,

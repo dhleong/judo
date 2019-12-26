@@ -19,6 +19,7 @@ import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import javax.script.Bindings
 import javax.script.Invocable
+import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 
 /**
@@ -40,7 +41,7 @@ abstract class Jsr223ScriptingEngine(
 
     private val sandbox = ScriptExecutionSandbox()
 
-    protected val engine = ScriptEngineManager()
+    protected val engine: ScriptEngine = ScriptEngineManager()
         .getEngineByExtension(extension).also {
             if (it !is Invocable) {
                 throw IllegalArgumentException(

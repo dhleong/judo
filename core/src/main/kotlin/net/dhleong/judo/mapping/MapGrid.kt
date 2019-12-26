@@ -7,6 +7,8 @@ private const val FLAG_VISITED = 32
 const val DEFAULT_MIN_MAP_HEIGHT = 9
 const val DEFAULT_MIN_MAP_WIDTH = 6
 
+private const val MAX_Z_DISTANCE = 2
+
 /**
  * @author dhleong
  */
@@ -14,8 +16,6 @@ class MapGrid(
     val width: Int,
     val height: Int
 ) {
-
-    private val MAX_Z_DISTANCE = 2
 
     private val grid = arrayOfNulls<IJudoRoom>(width * height)
     private val buildQueue = ArrayDeque<BuildNode>(maxOf(width, height))
@@ -43,7 +43,7 @@ class MapGrid(
         while (buildQueue.isNotEmpty()) {
             val node = buildQueue.pop()
 
-            if (node.x in 0..(width - 1) && node.y in 0..(height - 1) && node.z == 0) {
+            if (node.x in 0 until width && node.y in 0 until height && node.z == 0) {
                 if (this[node] != null) continue
 
                 this[node] = node.room

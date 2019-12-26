@@ -22,7 +22,7 @@ interface Keys : Collection<Key> {
             val buffer: StringBuilder by lazy { StringBuilder() }
 
             var inSpecial = false
-            for (i in 0 until rawKeys.length) {
+            for (i in rawKeys.indices) {
                 if (!inSpecial && startSpecial(rawKeys, i)) {
                     inSpecial = true
                 } else if (inSpecial && rawKeys[i] == '>' && buffer[buffer.length-1] != '\\') {

@@ -29,7 +29,7 @@ abstract class BaseModeWithBuffer(
     protected fun actionOn(motion: Motion, action: KeyActionOnRange): KeyAction =
         { judo ->
             val range = rangeOf(motion)
-            if (range.endInclusive >= 0) {
+            if (range.last >= 0) {
                 action(judo, range)
             }
         }

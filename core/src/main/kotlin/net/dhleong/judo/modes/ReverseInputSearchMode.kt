@@ -7,6 +7,9 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.toFlavorable
 
+private const val SEARCH_BUFFER_PREFIX = "(reverse-i-search)`"
+private const val SEARCH_BUFFER_SUFFIX = "': "
+
 class ReverseInputSearchMode(
     val judo: IJudoCore,
     val buffer: InputBuffer,
@@ -15,10 +18,7 @@ class ReverseInputSearchMode(
 
     override val name = "rsearch"
 
-    private val SEARCH_BUFFER_PREFIX = "(reverse-i-search)`"
-    private val SEARCH_BUFFER_SUFFIX = "': "
-
-    val searchBuffer = InputBuffer()
+    private val searchBuffer = InputBuffer()
 
     override fun onEnter() {
         searchBuffer.clear()

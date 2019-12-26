@@ -21,7 +21,7 @@ typealias MultiplexSelectorFactory = (string: CharSequence, wordRange: IntRange)
  * @author dhleong
  */
 class MultiplexCompletionSource(
-    val sources: List<CompletionSource>,
+    private val sources: List<CompletionSource>,
     val selectorFactory: MultiplexSelectorFactory
 ) : CompletionSource {
 
@@ -39,7 +39,7 @@ class MultiplexCompletionSource(
         var currentEmpty = 0
 
         @Suppress("LoopToCallChain")
-        for (i in 0..count-1) {
+        for (i in 0 until count) {
             val seq = sourceSequences[i]
             if (seq.hasNext()) {
                 workspace.add(seq.next())

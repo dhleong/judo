@@ -45,7 +45,7 @@ fun findMotion(step: Int): Motion {
 
 fun calculateTil(step: Int, target: Char, buffer: CharSequence, start: Int): IntRange {
     val baseRange = calculateFind(step, target, buffer, start)
-    return baseRange.start..(baseRange.endInclusive - step)
+    return baseRange.first..(baseRange.last - step)
 }
 
 fun tilMotion(step: Int): Motion {

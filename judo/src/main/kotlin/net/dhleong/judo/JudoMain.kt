@@ -11,6 +11,7 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.TelnetConnection
 import net.dhleong.judo.render.IdManager
 import java.io.File
+import kotlin.system.exitProcess
 
 /**
  * @author dhleong
@@ -65,8 +66,7 @@ fun main(args: Array<String>) {
     } catch (e: Exception) {
         // unable to pick a strategy
         println(e.message)
-        System.exit(1)
-        return
+        exitProcess(1)
     }
 
     // make sure we can render

@@ -127,7 +127,7 @@ class NormalMode(
                 // TODO beep?
             } else if (!buffer.isEmpty()) {
                 val char = replacement.char.toString()
-                buffer.replace(range, char.repeat(range.endInclusive - range.start + 1))
+                buffer.replace(range, char.repeat(range.last - range.first + 1))
             }
         },
 
@@ -143,7 +143,7 @@ class NormalMode(
         keys("X") to actionOnCount(::xCharMotion, -1) { _, range ->
             buffer.undoMan.initChange('X')
             buffer.delete(range)
-            buffer.cursor = range.endInclusive
+            buffer.cursor = range.last
         },
 
         keys("y") to action {
@@ -175,9 +175,9 @@ class NormalMode(
 
         keys("~") to actionOnCount(::charMotion, 1) { _, range ->
             buffer.undoMan.initChange('~')
-            if (range.start <= buffer.lastIndex) { // TODO can we generalize this?
+            if (range.first <= buffer.lastIndex) { // TODO can we generalize this?
                 buffer.switchCaseWithCursor(range)
-                buffer.cursor = minOf(buffer.lastIndex, range.endInclusive)
+                buffer.cursor = minOf(buffer.lastIndex, range.last)
             }
         },
         keys("g~") to action {

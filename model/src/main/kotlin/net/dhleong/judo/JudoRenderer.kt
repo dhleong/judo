@@ -8,6 +8,7 @@ import java.util.EnumSet
 
 typealias OnRendererEventListener = (event: JudoRendererEvent) -> Unit
 
+@Suppress("unused")
 enum class CursorType(ansiCode: Int) {
 
     BLOCK_BLINK(1),
@@ -79,7 +80,7 @@ interface JudoRenderer : JudoRendererInfo, WindowCommandHandler, Closeable {
      * single write, but in general subsequent [echo] calls will
      * replace earlier calls.
      *
-     * A [EchoType.BLOCKING] echo may be cleared with [clearEcho]
+     * A blocking echo may be cleared with [clearEcho]
      */
     fun echo(text: FlavorableCharSequence)
     fun clearEcho()

@@ -46,7 +46,7 @@ class SimpleBufferMapRenderer(
         currentGrid = grid
         currentRoomId = map.inRoom ?: map.lastRoom
 
-        for (y in 0..(grid.height - 1)) {
+        for (y in 0 until grid.height) {
             window.appendLine(buildLineTop(y))
             window.appendLine(buildLineCenter(y))
             window.appendLine(buildLineBottom(y))
@@ -131,7 +131,7 @@ class SimpleBufferMapRenderer(
         }
 
     private inline fun MapGrid.forEachCol(block: (col: Int) -> Unit) {
-        for (x in 0..(width - 1)) {
+        for (x in 0 until width) {
             block(x)
         }
     }

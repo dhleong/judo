@@ -760,7 +760,7 @@ class InterfaceAdapter : PyObjectAdapter {
 
     private fun findInterfaceFor(obj: Any?): Class<*>? {
         if (obj == null) return null
-        return InterfaceAdapter.exposedInterfaces.firstOrNull {
+        return exposedInterfaces.firstOrNull {
             it.isInstance(obj)
         }
     }

@@ -101,22 +101,22 @@ class InputBuffer(
         registers?.let {
             it.current.copyFrom(
                 buffer,
-                range.start,
-                minOf(buffer.length, range.endInclusive + 1)
+                range.first,
+                minOf(buffer.length, range.last + 1)
             )
 
             inChangeSet {
                 val insertValue = it.current.value.toString()
                 undoMan.current.addUndoAction { input ->
-                    input.buffer.insert(range.start, insertValue)
-                    input.cursor = range.start
+                    input.buffer.insert(range.first, insertValue)
+                    input.cursor = range.first
                 }
             }
 
             it.resetCurrent()
         }
 
-        buffer.delete(range.start, range.endInclusive + 1)
+        buffer.delete(range.first, range.last + 1)
     }
 
     fun deleteWithCursor(range: IntRange, clampCursor: Boolean = true): Boolean {
@@ -149,7 +149,7 @@ class InputBuffer(
             val old = buffer.substring(normalRange)
             undoMan.current.addUndoAction {
                 it.buffer.replace(normalRange, old)
-                it.cursor = normalRange.start
+                it.cursor = normalRange.first
             }
         }
 
@@ -157,7 +157,7 @@ class InputBuffer(
     }
 
     fun replace(range: IntRange, transformer: (CharSequence) -> CharSequence) {
-        val old = buffer.subSequence(range.start, range.endInclusive + 1)
+        val old = buffer.subSequence(range.first, range.last + 1)
         val new = transformer(old).toString()
         replace(range, new)
     }
@@ -226,17 +226,17 @@ class InputBuffer(
 
     private fun normalizeRange(range: IntRange): Pair<IntRange, Int>? {
         val bufferEnd = maxOf(0, buffer.lastIndex)
-        if (range.start < range.endInclusive) {
+        if (range.first < range.last) {
             // forward delete
-            val end = (range.endInclusive - 1)
+            val end = (range.last - 1)
             if (end < 0) return null
 
-            return (range.start..end) to minOf(bufferEnd, range.start)
+            return (range.first..end) to minOf(bufferEnd, range.first)
         } else {
-            val end = (range.start - 1)
+            val end = (range.first - 1)
             if (end < 0) return null
 
-            return (range.endInclusive..end) to minOf(bufferEnd, range.endInclusive)
+            return (range.last..end) to minOf(bufferEnd, range.last)
         }
     }
 

@@ -372,7 +372,7 @@ abstract class BaseCmdMode(
         var word = 0
         for (name in commands) {
             line.append(name)
-            for (i in 0..(colWidth - name.length - 1)) {
+            for (i in 0 until colWidth - name.length) {
                 line.append(' ')
             }
 

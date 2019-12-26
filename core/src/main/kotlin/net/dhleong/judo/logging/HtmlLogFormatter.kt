@@ -9,19 +9,7 @@ import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.Date
 
-
-
-/**
- * @author dhleong
- */
-class HtmlLogFormatter : ILogFormatter {
-
-    override val format = ILogManager.Format.HTML
-
-    private val dateFormatter = SimpleDateFormat(DATE_FORMAT)
-
-    private val STYLES =
-        """
+private val STYLES = """
         body {
             background-color: #000;
             color: #CCC;
@@ -42,6 +30,19 @@ class HtmlLogFormatter : ILogFormatter {
         .d9 { color: #FFF; } .l9 { color: #FFF; } .b49 { background-color: #000; } .b59 { background-color: #000 }
         """.trimIndent()
 
+private val COLOR_256_BLOCKS = charArrayOf('0', '5', '8', 'B', 'D', 'F')
+
+
+/**
+ * @author dhleong
+ */
+class HtmlLogFormatter : ILogFormatter {
+
+    override val format = ILogManager.Format.HTML
+
+    private val dateFormatter = SimpleDateFormat(DATE_FORMAT)
+
+    @Suppress("PrivatePropertyName")
     private val HEADER_FORMAT =
         """
         <!doctype html>
@@ -66,6 +67,7 @@ $STYLES
     // NOTE: we put the <span> at the beginning of the line so the
     // first line renders properly (living inside a <pre> as it does)
 
+    @Suppress("PrivatePropertyName")
     private val FOOTER = """
 </span>"""
     // NOTE: if we print these in the footer, it breaks append mode;
@@ -75,8 +77,6 @@ $STYLES
 //          </body>
 //        </html>
 //        """
-
-    private val COLOR_256_BLOCKS = charArrayOf('0', '5', '8', 'B', 'D', 'F')
 
     override fun writeHeader(out: Writer) {
         out.append(HEADER_FORMAT.format(dateFormatter.format(Date())))
@@ -93,8 +93,7 @@ $STYLES
             }
 
             for (i in startIndex until endIndex) {
-                val ch = input[i]
-                when (ch) {
+                when (val ch = input[i]) {
                     '&' -> out.append("&amp;")
                     '<' -> out.append("&lt;")
                     '>' -> out.append("&gt;")

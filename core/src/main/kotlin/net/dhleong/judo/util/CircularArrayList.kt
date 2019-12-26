@@ -2,13 +2,13 @@ package net.dhleong.judo.util
 
 import java.util.ConcurrentModificationException
 
+private const val MAX_SIZE_INCREMENT = 2048
+
 /**
  * Size-limited FIFO array-list
  * @author dhleong
  */
 class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
-
-    private val MAX_SIZE_INCREMENT = 2048
 
     private val maxCapacity: Int
     private var array: Array<Any?>
@@ -126,10 +126,10 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
             )
         }
 
-        val sliceLength = range.endInclusive - range.start + 1
+        val sliceLength = range.last - range.first + 1
 
-        val actualStart = actualIndexOf(range.start)
-        var actualEnd = actualIndexOf(range.endInclusive) + 1
+        val actualStart = actualIndexOf(range.first)
+        var actualEnd = actualIndexOf(range.last) + 1
         if (actualEnd >= array.size) {
             actualEnd = 0
         }

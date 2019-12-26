@@ -5,7 +5,6 @@ import net.dhleong.judo.TestableJudoRenderer
 import net.dhleong.judo.complete.DumbCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.modes.CmdMode
-import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.script.JreJsScriptingEngine
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
@@ -39,7 +38,7 @@ abstract class AbstractCmdModeTest(
     protected val renderer = TestableJudoRenderer()
     protected val judo = TestableJudoCore(renderer)
     protected val mode = CmdMode(
-        judo, IdManager(), input,
+        judo, input,
         renderer,
         InputHistory(input),
         DumbCompletionSource(),

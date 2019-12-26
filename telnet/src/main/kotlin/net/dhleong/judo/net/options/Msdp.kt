@@ -17,7 +17,7 @@ import java.io.ByteArrayOutputStream
 
 
 private const val INITIAL_LIST = "COMMANDS"
-private val MSDP_LIST_COMMANDS = buildMsdpRequest("LIST", INITIAL_LIST)
+private val MSDP_LIST_COMMANDS = msdpRequest("LIST", INITIAL_LIST)
 
 class MsdpHandler(
     private val judo: IJudoCore,
@@ -82,7 +82,7 @@ class MsdpHandler(
     }
 }
 
-fun buildMsdpRequest(key: String, value: String) =
+fun msdpRequest(key: String, value: String): ByteArray =
     ByteArrayOutputStream(3 + key.length + value.length).apply {
         write(MSDP_VAR)
         write(key)
@@ -118,7 +118,7 @@ class MsdpReader() {
         }
     }
 
-    internal fun readArray(): List<Any> {
+    private fun readArray(): List<Any> {
         val result = ArrayList<Any>()
 
         while (event[index] != MSDP_ARRAY_CLOSE) {
@@ -148,7 +148,7 @@ class MsdpReader() {
         return event.toString(start, index - start)
     }
 
-    internal fun readTable(): Map<String, Any> {
+    private fun readTable(): Map<String, Any> {
         val result = HashMap<String, Any>()
 
         while (event[index] != MSDP_TABLE_CLOSE) {

@@ -45,7 +45,7 @@ class KeyMapping() {
             if (it.isEmpty()) "(fn)"
             else it
         })
-        (0 until from.size).forEach { mapEnd ->
+        for (mapEnd in from.indices) {
             addPossible(from.slice(0..mapEnd), 1)
         }
     }
@@ -56,7 +56,7 @@ class KeyMapping() {
     fun unmap(from: Keys) {
         keysMap.remove(from)
 
-        (0 until from.size).forEach { mapEnd ->
+        for (mapEnd in from.indices) {
             addPossible(from.slice(0..mapEnd), -1)
         }
     }
@@ -67,7 +67,7 @@ class KeyMapping() {
         StringBuilder(1024).apply {
             append(prefix)
             appendln("KeyMappings")
-            for (i in 0 until prefix.length) {
+            for (i in prefix.indices) {
                 append("=")
             }
             appendln("===========")

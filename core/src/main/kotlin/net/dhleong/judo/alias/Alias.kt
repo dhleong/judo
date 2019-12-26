@@ -69,9 +69,9 @@ fun compileSimplePatternSpec(
         }
 
         withVars.append(Regex.escape(
-            spec.substring(lastEnd, matchResult.range.start)
+            spec.substring(lastEnd, matchResult.range.first)
         ))
-        lastEnd = matchResult.range.endInclusive + 1
+        lastEnd = matchResult.range.last + 1
 
         val baseName =
             if (raw[0] == '{') raw.substring(1..raw.length - 2)

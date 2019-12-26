@@ -100,7 +100,7 @@ class TestableJudoCore(
 
     override fun send(text: String, fromMap: Boolean) {
         val processed = aliases.process(text)
-        if (!processed.isEmpty()) {
+        if (processed.isNotEmpty()) {
             sends.add(processed.toString())
         }
     }

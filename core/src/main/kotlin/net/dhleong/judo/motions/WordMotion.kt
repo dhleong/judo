@@ -31,7 +31,7 @@ fun wordMotion(step: Int, bigWord: Boolean): Motion {
 
         if (!(wasOnBoundary && end < buffer.length && end >= 0 && !isWordBoundary(buffer[end]))) {
             // find the next word boundary
-            while (end in 0 until buffer.length && !isWordBoundary(buffer[end])) {
+            while (end in buffer.indices && !isWordBoundary(buffer[end])) {
                 end += step
             }
         }

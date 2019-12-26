@@ -183,7 +183,7 @@ class FlavorableStringBuilder private constructor(
         continueIncompleteLines: Boolean
     ) {
         if (!continueIncompleteLines && isEmpty()) {
-            destination.add(FlavorableStringBuilder.EMPTY)
+            destination.add(EMPTY)
             return
         }
 
@@ -224,7 +224,7 @@ class FlavorableStringBuilder private constructor(
         if (
             continueIncompleteLines
             && start == 0 // only the first line can continue a previous one
-            && !destination.isEmpty()
+            && destination.isNotEmpty()
             && !destination.last().endsWith('\n')
         ) {
             destination.last() += text

@@ -110,8 +110,8 @@ class VariableOutputProcessor(outputSpec: String) {
         var lastEnd = 0
         VAR_REGEX.findAll(outputSpec)
             .forEach { match ->
-                val before = outputSpec.substring(lastEnd until match.range.start)
-                lastEnd = match.range.endInclusive + 1
+                val before = outputSpec.substring(lastEnd until match.range.first)
+                lastEnd = match.range.last + 1
 
                 processors.add { before }
 

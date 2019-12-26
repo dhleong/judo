@@ -19,6 +19,7 @@ import java.util.ConcurrentModificationException
  * @param iterableSource Factory for Iterable instances that generally
  *  return the same sequence
  */
+@Suppress("FunctionName")
 fun <T : Any> ForgivingSequence(iterableSource: () -> Iterable<T>): Sequence<T> {
     var currentIterator = iterableSource.invoke().iterator()
     var iterated = 0
