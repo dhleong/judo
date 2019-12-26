@@ -10,6 +10,8 @@ import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyChannelFactory
 import net.dhleong.judo.input.Keys
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class AssertionContext(
     internal val judo: JudoCore,
@@ -36,10 +38,7 @@ inline fun assertionsWhileTyping(
         } catch (e: Throwable) {
             error.set(e)
         } finally {
-            @Suppress("EXPERIMENTAL_API_USAGE")
-            if (!channel.isClosedForReceive) {
-                channel.close()
-            }
+            channel.close()
         }
     }
 
@@ -60,9 +59,9 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         delay(10)
 
         // wait until the main thread is idle (ish)
-//        suspendCoroutine<Unit> { cont ->
-//            judo.onMainThread { cont.resume(Unit) }
-//        }
+        suspendCoroutine<Unit> { cont ->
+            judo.onMainThread { cont.resume(Unit) }
+        }
     }
 
 }
