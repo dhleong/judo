@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.StateKind
@@ -53,6 +54,7 @@ class OperatorPendingMode(
         fullLineMotionKey = 0.toChar()
 
         input.clear()
+        judo.setCursorType(CursorType.UNDERSCORE_BLINK)
     }
 
     override suspend fun feedKey(key: Key, remap: Boolean, fromMap: Boolean) {
