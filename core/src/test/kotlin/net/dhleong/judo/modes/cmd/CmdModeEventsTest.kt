@@ -1,10 +1,10 @@
 package net.dhleong.judo.modes.cmd
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isTrue
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +34,9 @@ class CmdModeEventsTest(
 
         assertThat(judo.events.has("cool")).isTrue()
 
-        judo.events.raise("cool", "cold")
+        withContext(judo.dispatcher) {
+            judo.events.raise("cool", "cold")
+        }
         assertThat(judo.prints)
             .containsExactly("awesome")
     }
@@ -56,7 +58,9 @@ class CmdModeEventsTest(
 
         assertThat(judo.events.has("cool")).isTrue()
 
-        judo.events.raise("cool", "colder")
+        withContext(judo.dispatcher) {
+            judo.events.raise("cool", "colder")
+        }
         assertThat(judo.prints)
             .containsExactly("awesome colder")
     }
@@ -82,7 +86,9 @@ class CmdModeEventsTest(
             SupportedScriptTypes.PY -> "None"
             else -> "null"
         }
-        judo.events.raise("cool")
+        withContext(judo.dispatcher) {
+            judo.events.raise("cool")
+        }
         assertThat(judo.prints)
             .containsExactly("awesome $nullName")
     }
@@ -104,7 +110,9 @@ class CmdModeEventsTest(
 
         assertThat(judo.events.has("cool")).isTrue()
 
-        judo.events.raise("cool", arrayOf("cold", "colder"))
+        withContext(judo.dispatcher) {
+            judo.events.raise("cool", arrayOf("cold", "colder"))
+        }
         assertThat(judo.prints)
             .containsExactly("awesome cold:colder")
     }

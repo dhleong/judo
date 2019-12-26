@@ -22,6 +22,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
+import net.dhleong.judo.util.JudoMainDispatcher
 import java.net.URI
 
 /**
@@ -49,6 +50,7 @@ class TestableJudoCore(
 
     private val mapRenderer = Proxy<MapRenderer> { _, _ -> }
 
+    override val dispatcher = JudoMainDispatcher()
     override val state = StateMap()
 
     override val aliases = AliasManager()
@@ -92,7 +94,7 @@ class TestableJudoCore(
         maps.removeIf { it[0] == mode && it[1] == from }
     }
 
-    override fun onMainThread(runnable: suspend () -> Unit) = runBlocking {
+    override fun onMainThread(runnable: suspend () -> Unit) = runBlocking(dispatcher) {
         runnable()
     }
 

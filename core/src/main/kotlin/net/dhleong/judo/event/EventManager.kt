@@ -1,7 +1,7 @@
 package net.dhleong.judo.event
 
 import com.google.common.collect.HashMultimap
-import net.dhleong.judo.util.JudoMainDispatcher
+import net.dhleong.judo.util.SingleThreadDispatcher
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.coroutineContext
 
@@ -13,7 +13,6 @@ class EventManager : IEventManager {
 
     // NOTE: we now support a multiple handlers per event
     private val events = HashMultimap.create<String, EventHandler>()
-    private val eventThreadId = Thread.currentThread().id
 
     private val raiseEventsWorkspace = ArrayList<EventHandler>()
 
@@ -32,8 +31,8 @@ class EventManager : IEventManager {
 
     override suspend fun raise(eventName: String, data: Any?) {
         if (
-            coroutineContext[ContinuationInterceptor] !is JudoMainDispatcher
-            && Thread.currentThread().id != eventThreadId
+            (coroutineContext[ContinuationInterceptor] as? SingleThreadDispatcher)
+                ?.isDispatchNeeded(coroutineContext) != false
         ) {
             throw IllegalStateException(
                 "Attempting to raise $eventName on non-event thread ${Thread.currentThread()}")

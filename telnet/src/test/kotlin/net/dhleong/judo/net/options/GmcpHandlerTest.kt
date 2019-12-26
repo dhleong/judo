@@ -1,6 +1,5 @@
 package net.dhleong.judo.net.options
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
