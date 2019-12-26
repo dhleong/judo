@@ -47,7 +47,7 @@ internal inline fun <R> ScriptInitContext.adaptSuspend(crossinline block: suspen
     // NOTE: we do not run on the JudoCore.dispatcher, since feedKey ensures
     // keys are processed there, and explicitly providing the dispatcher to
     // runBlocking can cause deadlocks
-    runBlocking(Dispatchers.Default) {
+    runBlocking(Dispatchers.IO) {
         block()
     }
 

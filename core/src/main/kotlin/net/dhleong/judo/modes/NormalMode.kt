@@ -1,6 +1,5 @@
 package net.dhleong.judo.modes
 
-import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.input.CountReadingBuffer
@@ -170,9 +169,7 @@ class NormalMode(
             // but maybe not identical; this seems to be what vim does)
             buffer.inChangeSet {
                 // perform the previous change without tracking undo
-                runBlocking {
-                    buffer.undoMan.lastChange?.apply(judo)
-                }
+                buffer.undoMan.lastChange?.apply(judo)
             }
         },
 

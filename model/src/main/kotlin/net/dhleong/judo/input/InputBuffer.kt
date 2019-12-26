@@ -24,7 +24,7 @@ class InputBuffer(
     private val buffer = StringBuilder(128)
 
     fun beginChangeSet() = undoMan.beginChangeSet(this)
-    fun inChangeSet(block: () -> Unit) = undoMan.inChangeSet(this, block)
+    inline fun inChangeSet(block: () -> Unit) = undoMan.inChangeSet(this, block)
 
     fun clear() {
         buffer.setLength(0)
