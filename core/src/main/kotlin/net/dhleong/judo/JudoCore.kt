@@ -874,7 +874,6 @@ class JudoCore(
         val oldChannel = keyStrokeChannel
         keyStrokeChannel = channel
 
-        println("read from $channel")
         @Suppress("EXPERIMENTAL_API_USAGE")
         while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
@@ -886,7 +885,6 @@ class JudoCore(
                 }
             }
         }
-        println("read all from $channel")
 
         if (oldChannel != null) {
             keyStrokeChannel = oldChannel

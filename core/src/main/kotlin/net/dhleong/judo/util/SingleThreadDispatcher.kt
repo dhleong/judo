@@ -19,7 +19,6 @@ open class SingleThreadDispatcher(
     private var threadId: Long = UNSET_THREAD_ID
 
     private val myExecutor = Executors.newSingleThreadExecutor { task ->
-        println("CREATE THREAD FOR $task")
         Thread(task, threadName).apply {
             isDaemon = true
             threadId = id
