@@ -48,7 +48,10 @@ ext.deps = [
 
     guava: "com.google.guava:guava:${vs.guava}",
 
-    jline: "org.jline:jline:${vs.jline}",
+    jline: [
+        terminal: "org.jline:jline-terminal:${vs.jline}",
+        jansi: "org.jline:jline-terminal-jansi:${vs.jline}",
+    ],
     jython: "org.python:jython-standalone:${vs.jython}",
 
     moshi: "com.squareup.moshi:moshi:${vs.moshi}",
