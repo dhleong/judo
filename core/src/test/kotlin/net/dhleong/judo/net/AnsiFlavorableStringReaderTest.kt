@@ -7,10 +7,10 @@ import assertk.assertions.hasSize
 import assertk.assertions.hasToString
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.prompt.PromptManager
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.doesNotHaveTrailingFlavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.hasFlavor
 import net.dhleong.judo.render.hasTrailingFlavor
@@ -100,8 +100,7 @@ class AnsiFlavorableStringReaderTest {
                     isBold = true,
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(6)
-                )
-                )
+                ))
             },
 
             FlavorableStringBuilder(4).apply {
@@ -109,8 +108,7 @@ class AnsiFlavorableStringReaderTest {
                     isBold = true,
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                )
-                )
+                ))
             }
         ))
     }
@@ -222,13 +220,11 @@ class AnsiFlavorableStringReaderTest {
                 append("W", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_WHITE)
-                )
-                )
+                ))
                 append("w", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
-                )
-                )
+                ))
             }
         )
     }
@@ -237,12 +233,11 @@ class AnsiFlavorableStringReaderTest {
         assertThat(
             "${27.toChar()}[38;2;250;50;20mRGB Color".parseAnsi()
         ).isEqualTo(
-            FlavorableStringBuilder(7).apply {
+            FlavorableStringBuilder(9).apply {
                 append("RGB Color", flavor(
                     hasForeground = true,
                     foreground = JudoColor.FullRGB(250, 50, 20)
-                )
-                )
+                ))
             }
         )
     }

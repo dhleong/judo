@@ -39,6 +39,16 @@ data class SimpleFlavor(
         background = other.background
     )
 
+    override fun equals(other: Any?): Boolean = areFlavorsEqual(this, other)
+    override fun hashCode(): Int = hash()
+
+    fun optimize() = if (
+        foreground !is JudoColor.FullRGB
+        && background !is JudoColor.FullRGB
+    ) {
+        IntFlavor(this)
+    } else this
+
     fun reset() {
         isBold = false
         isFaint = false
@@ -56,4 +66,5 @@ data class SimpleFlavor(
         foreground = JudoColor.Default
         background = JudoColor.Default
     }
+
 }

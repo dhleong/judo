@@ -1,9 +1,9 @@
 package net.dhleong.judo.net
 
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.SimpleFlavor
 
 private enum class AnsiState {
@@ -220,7 +220,7 @@ internal fun ansiCharsToFlavor(
         }
     }
 
-    return flavor
+    return flavor.optimize()
 }
 
 private fun Iterator<Int>.readHighColor(): JudoColor? {
