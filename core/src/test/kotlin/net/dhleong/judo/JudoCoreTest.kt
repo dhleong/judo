@@ -20,7 +20,7 @@ import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.ansi
 import org.junit.Before
@@ -62,8 +62,15 @@ class JudoCoreTest {
         )
         assertThat(renderer.flavoredOutputLines).containsExactly(
             FlavorableStringBuilder(16).apply {
-                append("Mal ", SimpleFlavor(isBold = true))
-                append("Reynolds", SimpleFlavor(isBold = true, isItalic = true))
+                append("Mal ",
+                    flavor(isBold = true)
+                )
+                append("Reynolds",
+                    flavor(
+                        isBold = true,
+                        isItalic = true
+                    )
+                )
             }
         )
     }

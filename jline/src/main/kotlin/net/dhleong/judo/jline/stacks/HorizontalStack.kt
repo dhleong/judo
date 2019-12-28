@@ -3,7 +3,7 @@ package net.dhleong.judo.jline.stacks
 import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
 import net.dhleong.judo.jline.toAttributedStyle
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import org.jline.utils.AttributedString
 
 const val WINDOW_MIN_WIDTH = 2

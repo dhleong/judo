@@ -5,12 +5,12 @@ import net.dhleong.judo.mapping.DEFAULT_MIN_MAP_WIDTH
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IJudoRoom
 import net.dhleong.judo.mapping.MapGrid
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoAppendable
 import net.dhleong.judo.render.JudoColor
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 
 /**
  * @author dhleong
@@ -23,16 +23,18 @@ class SimpleBufferMapRenderer(
     override val charsPerX = 5
     override val charsPerY = 3
 
-    internal val roadColor = SimpleFlavor(foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE))
-    internal val stairColor = SimpleFlavor(
+    internal val roadColor = flavor(
+        foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
+    )
+    internal val stairColor = flavor(
         isBold = true,
         foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
     )
-    internal val wallColor = SimpleFlavor(
+    internal val wallColor = flavor(
         isBold = true,
         foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
     )
-    internal val hereColor = SimpleFlavor(
+    internal val hereColor = flavor(
         isBold = true,
         foreground = JudoColor.Simple(JudoColor.Simple.Color.RED)
     )

@@ -1,6 +1,8 @@
 package net.dhleong.judo.render
 
 import net.dhleong.judo.net.AnsiFlavorableStringReader
+import net.dhleong.judo.render.flavor.Flavor
+import net.dhleong.judo.render.flavor.plus
 
 /**
  * @author dhleong

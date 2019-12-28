@@ -1,6 +1,6 @@
 package net.dhleong.judo.net
 
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.JudoColor
 

@@ -5,6 +5,8 @@ import assertk.assertThat
 import assertk.assertions.hasLength
 import assertk.assertions.hasToString
 import assertk.assertions.isSuccess
+import net.dhleong.judo.render.flavor.Flavor
+import net.dhleong.judo.render.flavor.flavor
 import org.junit.Test
 
 class FlavorableStringBuilderTest {
@@ -32,12 +34,14 @@ class FlavorableStringBuilderTest {
 
     @Test fun `Append subsequence with flavor`() {
         val b = FlavorableStringBuilder(1).apply {
-            append("bla bla mal reynolds", 8, 20, SimpleFlavor(isBold = true))
+            append("bla bla mal reynolds", 8, 20,
+                flavor(isBold = true)
+            )
         }
 
         assertThat(b).all {
             hasToString("mal reynolds")
-            hasFlavor(SimpleFlavor(isBold = true))
+            hasFlavor(flavor(isBold = true))
         }
     }
 
@@ -52,56 +56,56 @@ class FlavorableStringBuilderTest {
 
     @Test fun `Continue old flavor if not otherwise specified in append (String)`() {
         val b = FlavorableStringBuilder.fromString("Mal")
-        b.beginFlavor(SimpleFlavor(isBold = true), 0)
+        b.beginFlavor(flavor(isBold = true), 0)
 
         b += " Reynolds"
         assertThat(b).all {
             hasToString("Mal Reynolds")
-            hasFlavor(SimpleFlavor(isBold = true))
+            hasFlavor(flavor(isBold = true))
             hasLength(12)
         }
     }
 
     @Test fun `Continue old flavor if not otherwise specified in append (Flavorable)`() {
         val b = FlavorableStringBuilder.fromString("Mal")
-        b.beginFlavor(SimpleFlavor(isBold = true), 0)
+        b.beginFlavor(flavor(isBold = true), 0)
 
         b += FlavorableStringBuilder.fromString(" Reynolds")
         assertThat(b).all {
             hasToString("Mal Reynolds")
-            hasFlavor(SimpleFlavor(isBold = true))
+            hasFlavor(flavor(isBold = true))
             hasLength(12)
         }
     }
 
     @Test fun `Keep new flavor in append`() {
         val b = FlavorableStringBuilder.fromString("Mal").apply {
-            beginFlavor(SimpleFlavor(isBold = true), 0)
+            beginFlavor(flavor(isBold = true), 0)
         }
 
         b += FlavorableStringBuilder.fromString(" Reynolds").apply {
-            beginFlavor(SimpleFlavor(isItalic = true), 0)
+            beginFlavor(flavor(isItalic = true), 0)
         }
         assertThat(b).all {
             hasToString("Mal Reynolds")
-            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 3)
-            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 3)
+            hasFlavor(flavor(isBold = true), untilIndex = 3)
+            hasFlavor(flavor(isItalic = true), atIndex = 3)
             hasLength(12)
         }
     }
 
     @Test fun `Keep partial new flavor in append`() {
         val b = FlavorableStringBuilder.fromString("Mal").apply {
-            beginFlavor(SimpleFlavor(isBold = true), 0)
+            beginFlavor(flavor(isBold = true), 0)
         }
 
         b += FlavorableStringBuilder.fromString(" Reynolds").apply {
-            beginFlavor(SimpleFlavor(isItalic = true), 4)
+            beginFlavor(flavor(isItalic = true), 4)
         }
         assertThat(b).all {
             hasToString("Mal Reynolds")
-            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 7)
-            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 7)
+            hasFlavor(flavor(isBold = true), untilIndex = 7)
+            hasFlavor(flavor(isItalic = true), atIndex = 7)
             hasLength(12)
         }
     }
@@ -198,31 +202,31 @@ class FlavorableStringBuilderTest {
 
     @Test fun `replace() at beginning with more characters`() {
         val b = FlavorableStringBuilder.fromString("Oh my love").apply {
-            beginFlavor(SimpleFlavor(isItalic = true), 2)
-            beginFlavor(SimpleFlavor(isBold = true), 0)
+            beginFlavor(flavor(isItalic = true), 2)
+            beginFlavor(flavor(isBold = true), 0)
         }
 
         b.replace(0, 2, "Take")
         assertThat(b).all {
             hasToString("Take my love")
 
-            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 4)
-            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 4)
+            hasFlavor(flavor(isBold = true), untilIndex = 4)
+            hasFlavor(flavor(isItalic = true), atIndex = 4)
         }
     }
 
     @Test fun `replace() at beginning with fewer characters`() {
         val b = FlavorableStringBuilder.fromString("Take my love").apply {
-            beginFlavor(SimpleFlavor(isItalic = true), 4)
-            beginFlavor(SimpleFlavor(isBold = true), 0)
+            beginFlavor(flavor(isItalic = true), 4)
+            beginFlavor(flavor(isBold = true), 0)
         }
 
         b.replace(0, 4, "Oh")
         assertThat(b).all {
             hasToString("Oh my love")
 
-            hasFlavor(SimpleFlavor(isBold = true), untilIndex = 2)
-            hasFlavor(SimpleFlavor(isItalic = true), atIndex = 2)
+            hasFlavor(flavor(isBold = true), untilIndex = 2)
+            hasFlavor(flavor(isItalic = true), atIndex = 2)
         }
     }
 
