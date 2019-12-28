@@ -3,7 +3,8 @@ package net.dhleong.judo.render.flavor
 import net.dhleong.judo.render.JudoColor
 
 /**
- * Flavor can be applied to spans within a [FlavorableCharSequence]
+ * Flavor can be applied to spans within a
+ * [net.dhleong.judo.render.FlavorableCharSequence]
  */
 interface Flavor {
     val isBold: Boolean
@@ -101,8 +102,34 @@ fun flavor(
         background = background
     )
 
-    // fallback to SimpleFlavor
-    else -> SimpleFlavor(
+    // fallback to ExplicitFlavor
+    else -> WrappedFlavor(IntFlavor(
+        isBold = isBold,
+        isFaint = isFaint,
+        isItalic = isItalic,
+        isUnderline = isUnderline,
+        isBlink = isBlink,
+        isInverse = isInverse,
+        isConceal = isConceal,
+        isStrikeThrough = isStrikeThrough,
+        isHidden = isHidden,
+
+        hasForeground = hasForeground,
+        hasBackground = hasBackground
+    ), fg = foreground, bg = background)
+}
+
+fun Flavor.copy(): Flavor = when {
+    // copying a Wrapped or IntFlavor is pointless; they're immutable
+    this is IntFlavor -> this
+    this is WrappedFlavor -> this
+
+    (
+        foreground !is JudoColor.FullRGB
+            && background !is JudoColor.FullRGB
+    ) -> IntFlavor(this)
+
+    else -> flavor(
         isBold = isBold,
         isFaint = isFaint,
         isItalic = isItalic,
@@ -119,18 +146,6 @@ fun flavor(
         foreground = foreground,
         background = background
     )
-}
-
-fun copyOf(old: Flavor): Flavor = when {
-    // copying an IntFlavor is pointless; it's immutable
-    old is IntFlavor -> old
-
-    (
-        old.foreground !is JudoColor.FullRGB
-            && old.background !is JudoColor.FullRGB
-    ) -> IntFlavor(old)
-
-    else -> SimpleFlavor(old)
 }
 
 fun areFlavorsEqual(a: Flavor, other: Any?): Boolean {

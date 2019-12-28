@@ -3,8 +3,8 @@ package net.dhleong.judo.net
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.ExplicitFlavor
 import net.dhleong.judo.render.flavor.Flavor
-import net.dhleong.judo.render.flavor.SimpleFlavor
 
 private enum class AnsiState {
     OFF,
@@ -161,7 +161,7 @@ internal fun ansiCharsToFlavor(
     length: Int
 ): Flavor {
     // there's probably a better way to do this...
-    val flavor = SimpleFlavor(last)
+    val flavor = ExplicitFlavor(last)
 
     val params = ansiParameters(ansi, length)
     while (params.hasNext()) {

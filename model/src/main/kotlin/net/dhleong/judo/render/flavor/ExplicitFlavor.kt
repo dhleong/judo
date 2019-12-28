@@ -2,9 +2,10 @@ package net.dhleong.judo.render.flavor
 
 import net.dhleong.judo.render.JudoColor
 
-// TODO: we could implement Flavor as an inline class using a representation
-// like JLine's and be much more memory efficient...
-data class SimpleFlavor(
+/**
+ * An explicit [Flavor] implementation using a data class.
+ */
+data class ExplicitFlavor(
     override var isBold: Boolean = false,
     override var isFaint: Boolean = false,
     override var isItalic: Boolean = false,
@@ -42,12 +43,7 @@ data class SimpleFlavor(
     override fun equals(other: Any?): Boolean = areFlavorsEqual(this, other)
     override fun hashCode(): Int = hash()
 
-    fun optimize() = if (
-        foreground !is JudoColor.FullRGB
-        && background !is JudoColor.FullRGB
-    ) {
-        IntFlavor(this)
-    } else this
+    fun optimize() = (this as Flavor).copy()
 
     fun reset() {
         isBold = false
