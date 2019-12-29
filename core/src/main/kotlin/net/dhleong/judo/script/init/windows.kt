@@ -24,7 +24,14 @@ fun ScriptInitContext.initWindows() {
                 id - The buffer's unique, numeric ID
                 append(line: String) - Append a line to the buffer
                 clear() - Remove all lines from the buffer
-                set(lines: String[]) - Replace the buffer's contents
+                deleteLast() - Remove the last (most-recently added) line 
+                               in the buffer
+                get(index: Int[, flags: String]) - Get a line from the buffer
+                               by 0-based index. If `flags` includes "color"
+                               the returned String will include ANSI color codes
+                set(index: Int, line: String) - Replace the contents of a line
+                               in the buffer by 0-based index
+                set(lines: String[]) - Replace the buffer's entire contents
                                        with the given lines list
             Buffer also supports len() to get the number of lines
         """.trimIndent()

@@ -25,6 +25,7 @@ import org.python.core.PyCallIter
 import org.python.core.PyException
 import org.python.core.PyFrame
 import org.python.core.PyFunction
+import org.python.core.PyInteger
 import org.python.core.PyIterator
 import org.python.core.PyModule
 import org.python.core.PyNone
@@ -630,37 +631,30 @@ internal fun createPyBuffer(
     window: IJudoWindow,
     buffer: IJudoBuffer
 ): PyObject {
-    val append = asPyFn<String, Unit>("append", 1) {
-        it[0].appendAsFlavorableTo(window)
-    }
-    val clear = asPyFn<Any, Unit>("clear") {
-        buffer.clear()
-    }
-    val set = asPyFn<List<String>, Unit>("set", 1) {
-        buffer.set(it[0].toFlavorableList())
-    }
+    val jsrBase = Jsr223Buffer(window, buffer)
+    val base = Py.java2py(jsrBase)
+    return JythonBuffer(buffer, jsrBase, base)
+}
 
-    return object : PyObject() {
-        override fun __len__(): Int {
-            return buffer.size
+private class JythonBuffer(
+    private val buffer: IJudoBuffer,
+    private val jsrBase: Jsr223Buffer,
+    private val base: PyObject
+) : PyObject() {
+    override fun __len__(): Int = buffer.size
+    override fun __getitem__(key: Int): PyObject = Py.java2py(jsrBase.get(key))
+    override fun __getitem__(key: PyObject?): PyObject =
+        if (key is PyInteger) this.__getitem__(key.value)
+        else super.__getitem__(key)
+
+    override fun __findattr_ex__(name: String?): PyObject =
+        base.__findattr_ex__(name)
+
+    override fun __tojava__(c: Class<*>?): Any {
+        if (c === IJudoBuffer::class.java || c === Object::class.java) {
+            return buffer
         }
-
-        override fun __findattr_ex__(name: String?): PyObject =
-            when (name ?: "") {
-                "append" -> append
-                "clear" -> clear
-                "set" -> set
-                "id" -> Py.java2py(buffer.id)
-
-                else -> super.__findattr_ex__(name)
-            }
-
-        override fun __tojava__(c: Class<*>?): Any {
-            if (c === IJudoBuffer::class.java || c === Object::class.java) {
-                return buffer
-            }
-            return super.__tojava__(c)
-        }
+        return super.__tojava__(c)
     }
 }
 

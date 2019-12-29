@@ -8,10 +8,12 @@ import net.dhleong.judo.event.IEventManager
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.IJudoMap
 import net.dhleong.judo.mapping.IMapManagerPublic
+import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
+import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternSpec
 import java.io.InputStream
@@ -221,8 +223,23 @@ class Jsr223Buffer(
         buffer.clear()
     }
 
+    override fun deleteLast() {
+        buffer.deleteLast()
+    }
+
+    override fun get(index: Int, flags: String): String {
+        val line = buffer[index]
+        return if ("color" in flags) {
+            line.toAnsi()
+        } else line.toString()
+    }
+
     override fun set(contents: List<String>) {
         buffer.set(contents.toFlavorableList())
+    }
+
+    override fun set(index: Int, contents: String) {
+        buffer[index] = contents.toFlavorable()
     }
 
 }

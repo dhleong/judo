@@ -197,10 +197,13 @@ Name                   | Returned Type | Description
 id                     | `Int`         | The buffer's unique, numeric ID
 `append(line: String)` | `None`        | Append a line of text to the buffer
 `clear()`              | `None`        | Clear all text from the buffer
+`deleteLast()`         | `None`        | Delete the last (most-recently appended) line
+`get(index: Int[, flags: String])`  | `String`      | Get a single line from the buffer. If `color` is included in the optional `flags` String, the ANSI colors are included.
+`set(index: Int, lines: String)`    | `None`        | Replace the contents of a single line
 `set(lines: String[])` | `None`        | Replace the entire contents of the buffer
 
-`Buffer` also supports the `len()` function, which will return how many
-lines of text it contains.
+In Python `Buffer` also supports the `len()` function, which will return how many
+lines of text it contains, and the subscript operator (eg: `buffer[0]`) as an alias for `get()`.
 
 ## Window focus APIs
 

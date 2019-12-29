@@ -28,11 +28,19 @@ class JLineBuffer(
         super.clear()
     }
 
+    override fun deleteLast(): FlavorableCharSequence  = renderer.inTransaction {
+        return super.deleteLast()
+    }
+
     override fun replaceLastLine(result: FlavorableCharSequence) = renderer.inTransaction {
         super.replaceLastLine(result)
     }
 
     override fun set(newContents: List<FlavorableCharSequence>) = renderer.inTransaction {
         super.set(newContents)
+    }
+
+    override fun set(index: Int, line: FlavorableCharSequence) = renderer.inTransaction {
+        super.set(index, line)
     }
 }
