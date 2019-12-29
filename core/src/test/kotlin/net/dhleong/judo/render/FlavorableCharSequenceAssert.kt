@@ -4,6 +4,7 @@ import assertk.Assert
 import assertk.assertions.isEqualTo
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import net.dhleong.judo.render.flavor.Flavor
 
 /**
  * @author dhleong

@@ -1,10 +1,9 @@
 package net.dhleong.judo.net
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.util.ansi
 import org.junit.Test
 
@@ -22,9 +21,16 @@ class FlavorableToAnsiKtTest {
 
     @Test fun `Changing flags`() {
         val result = FlavorableStringBuilder(64).apply {
-            append("Take ", SimpleFlavor(isBold = true))
-            append("my ", SimpleFlavor(isBold = true, isItalic = true))
-            append("love", SimpleFlavor(isItalic = true))
+            append("Take ", flavor(isBold = true))
+            append("my ",
+                flavor(
+                    isBold = true,
+                    isItalic = true
+                )
+            )
+            append("love",
+                flavor(isItalic = true)
+            )
         }.toAnsi()
 
         assertThat(result).isEqualTo(

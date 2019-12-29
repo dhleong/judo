@@ -25,7 +25,7 @@ import net.dhleong.judo.hasId
 import net.dhleong.judo.hasSize
 import net.dhleong.judo.hasWidth
 import net.dhleong.judo.render.JudoColor
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.hasFlavor
 import net.dhleong.judo.script.ScriptingEngine
 import org.junit.Test
@@ -178,10 +178,12 @@ class CmdModeObjectInteropTest(
 
         assertThat(buffer[0]).all {
             hasToString("ANSI\n")
-            hasFlavor(SimpleFlavor(
-                hasForeground = true,
-                foreground = JudoColor.Simple.from(3)
-            ))
+            hasFlavor(
+                flavor(
+                    hasForeground = true,
+                    foreground = JudoColor.Simple.from(3)
+                )
+            )
         }
     }
 

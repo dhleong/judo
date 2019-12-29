@@ -1,12 +1,11 @@
 package net.dhleong.judo.mapping.renderer
 
-import assertk.assert
 import assertk.assertThat
 import net.dhleong.judo.hasLinesSomewhere
 import net.dhleong.judo.mapping.JudoMap
 import net.dhleong.judo.mapping.JudoRoom
 import net.dhleong.judo.mapping.MapGrid
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import org.junit.Before

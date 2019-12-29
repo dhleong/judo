@@ -49,7 +49,7 @@ import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.AUTO_UNIQUE_GROUP_ID
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
@@ -57,7 +57,7 @@ import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
@@ -934,7 +934,9 @@ class JudoCore(
 
         if (cmdLineModeDepth.get() > 0) {
             val prefixed = FlavorableStringBuilder(inputLine.length + 1)
-            prefixed.append(cmdLinePrefix, SimpleFlavor(isFaint = true))
+            prefixed.append(cmdLinePrefix,
+                flavor(isFaint = true)
+            )
             prefixed.append(inputLine)
             renderer.updateInputLine(prefixed, cursor + 1)
         } else {

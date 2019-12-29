@@ -1,7 +1,7 @@
 package net.dhleong.judo.logging
 
 import net.dhleong.judo.JudoCore
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.forEachChunk

@@ -20,7 +20,7 @@ import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.render.JudoColor
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.util.ansi
 import org.jline.utils.AttributedStringBuilder
@@ -109,20 +109,23 @@ class JLineWindowTest {
         val display = JLineDisplay(10, 2)
         val buffer = bufferOf(
             FlavorableStringBuilder(10).apply {
-                append("zoe ", SimpleFlavor(
+                append("zoe ", flavor(
                     hasBackground = true,
                     background = JudoColor.Simple.from(1)
-                ))
-                append("w", SimpleFlavor(
+                )
+                )
+                append("w", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                ))
+                )
+                )
             },
             FlavorableStringBuilder(10).apply {
-                append("wash", SimpleFlavor(
+                append("wash", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(1)
-                ))
+                )
+                )
             }
         )
 
@@ -768,14 +771,16 @@ class JLineWindowTest {
         val display = JLineDisplay(10, 1)
         val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
-                append("  ", SimpleFlavor(
+                append("  ", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                ))
-                append("  ", SimpleFlavor(
+                )
+                )
+                append("  ", flavor(
                     hasForeground = true,
                     foreground = JudoColor.Simple.from(4)
-                ))
+                )
+                )
             })
         }
         assertThat(buffer.size).isEqualTo(1)
@@ -792,11 +797,12 @@ class JLineWindowTest {
         val display = JLineDisplay(10, 1)
         val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
-                append("  ", SimpleFlavor(
+                append("  ", flavor(
                     hasBackground = true,
                     background = JudoColor.Simple.from(2)
-                ))
-                trailingFlavor = SimpleFlavor(
+                )
+                )
+                trailingFlavor = flavor(
                     hasBackground = true,
                     background = JudoColor.Simple.from(5)
                 )

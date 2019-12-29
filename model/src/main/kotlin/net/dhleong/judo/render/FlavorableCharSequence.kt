@@ -1,5 +1,7 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.render.flavor.Flavor
+
 /**
  * A [FlavorableCharSequence] is a type of [CharSequence] that may have [Flavor]
  * applied to "spans" within the content.

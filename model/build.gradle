@@ -12,3 +12,9 @@ dependencies {
     testCompile deps.test.junit
     testCompile deps.test.assertk
 }
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-XXLanguage:+InlineClasses"]
+    }
+}

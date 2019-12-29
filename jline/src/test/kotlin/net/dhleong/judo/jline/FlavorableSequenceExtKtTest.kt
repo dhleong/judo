@@ -1,12 +1,11 @@
 package net.dhleong.judo.jline
 
 import assertk.all
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.hasLength
 import assertk.assertions.hasToString
 import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.SimpleFlavor
+import net.dhleong.judo.render.flavor.flavor
 import org.jline.utils.AttributedStyle
 import org.junit.Test
 
@@ -16,9 +15,11 @@ import org.junit.Test
 class FlavorableSequenceExtKtTest {
     @Test fun `Flavorable to JLine string`() {
         val flavorable = FlavorableStringBuilder(64).apply {
-            append("Take ", SimpleFlavor(isBold = true))
-            append("My ", SimpleFlavor(isItalic = true))
-            append("Love", SimpleFlavor(isUnderline = true))
+            append("Take ", flavor(isBold = true))
+            append("My ", flavor(isItalic = true))
+            append("Love",
+                flavor(isUnderline = true)
+            )
         }
         val jline = flavorable.toAttributedString()
         assertThat(jline).all {
@@ -29,7 +30,7 @@ class FlavorableSequenceExtKtTest {
 
     @Test(timeout = 2000) fun `Convert empty sequence with trailing flavor to JLine`() {
         val flavorable = FlavorableStringBuilder(16).apply {
-            trailingFlavor = SimpleFlavor(isBold = true)
+            trailingFlavor = flavor(isBold = true)
         }
         val attr = flavorable.toAttributedString(10)
         assertThat(attr).all {

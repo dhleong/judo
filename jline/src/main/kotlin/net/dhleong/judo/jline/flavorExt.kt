@@ -1,6 +1,6 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.render.Flavor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.JudoColor
 import org.jline.utils.AttributedStyle
 
