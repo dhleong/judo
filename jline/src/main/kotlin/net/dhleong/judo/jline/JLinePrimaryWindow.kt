@@ -53,6 +53,10 @@ class JLinePrimaryWindow(
         statusLineOverlaysOutput
     )
 
+    override fun append(text: FlavorableCharSequence) = renderer.inTransaction {
+        super.append(text)
+    }
+
     override fun resize(width: Int, height: Int) = renderer.inTransaction {
         super.resize(width, height)
     }
