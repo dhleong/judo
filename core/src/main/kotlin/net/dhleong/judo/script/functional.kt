@@ -76,7 +76,7 @@ private abstract class FnBase(
         }
 
         @Suppress("UNCHECKED_CAST")
-        return engine.toJava(result as Any) as R
+        return engine.toScript(result as Any) as R
     }
 }
 

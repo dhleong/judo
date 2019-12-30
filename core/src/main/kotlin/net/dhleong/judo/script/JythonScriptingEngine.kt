@@ -276,7 +276,7 @@ class JythonScriptingEngine : ScriptingEngine {
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
-    ) = createPyWindow(this, tabpage, window)
+    ): PyObject = JythonWindow.from(this, tabpage, window)
 
     override fun onPreReadFile(file: File, inputStream: InputStream) {
         file.parentFile?.let { fileDir ->
@@ -517,12 +517,12 @@ internal fun createPyCore(
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
                 "tabpage" -> createPyTabpage(judo.renderer.currentTabpage)
-                "window" -> createPyWindow(
+                "window" -> JythonWindow.from(
                     engine,
                     judo.renderer.currentTabpage,
                     judo.renderer.currentTabpage.currentWindow
                 )
-                "buffer" -> createPyBuffer(
+                "buffer" -> JythonBuffer.from(
                     judo.renderer.currentTabpage.currentWindow,
                     judo.renderer.currentTabpage.currentWindow.currentBuffer
                 )
@@ -584,6 +584,7 @@ internal fun createPyTabpage(tabpage: IJudoTabpage) = object : PyObject() {
     }
 }
 
+@Deprecated("Use JythonWindow.from()")
 internal fun createPyWindow(
     engine: JythonScriptingEngine,
     tabpage: IJudoTabpage,
@@ -596,7 +597,7 @@ internal fun createPyWindow(
     return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-                "buffer" -> createPyBuffer(window, window.currentBuffer) // cache?
+                "buffer" -> JythonBuffer.from(window, window.currentBuffer) // cache?
                 "height" -> Py.java2py(window.visibleHeight)
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
@@ -636,20 +637,39 @@ internal fun createPyWindow(
     }
 }
 
-internal fun createPyBuffer(
-    window: IJudoWindow,
-    buffer: IJudoBuffer
-): PyObject {
-    val jsrBase = Jsr223Buffer(window, buffer)
-    val base = Py.java2py(jsrBase)
-    return JythonBuffer(buffer, jsrBase, base)
+private class JythonWindow(
+    private val window: IJudoWindow,
+    private val base: PyObject
+) : JythonWrapperPyObject<IJudoWindow>(window, IJudoWindow::class.java) {
+
+    override fun __findattr_ex__(name: String?): PyObject = when (name) {
+        "buffer" -> JythonBuffer.from(window, window.currentBuffer) // cache?
+
+        else -> base.__findattr_ex__(name)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun __setattr__(name: String?, value: PyObject?) {
+        base.__setattr__(name, value)
+    }
+
+    companion object {
+        fun from(
+            engine: ScriptingEngine,
+            tabpage: IJudoTabpage,
+            window: IJudoWindow
+        ): JythonWindow {
+            val jsrRaw = Jsr223Window(engine, tabpage, window)
+            return JythonWindow(window, Py.java2py(jsrRaw))
+        }
+    }
 }
 
 private class JythonBuffer(
     private val buffer: IJudoBuffer,
     private val jsrBase: Jsr223Buffer,
     private val base: PyObject
-) : PyObject() {
+) : JythonWrapperPyObject<IJudoBuffer>(buffer, IJudoBuffer::class.java) {
     override fun __len__(): Int = buffer.size
     override fun __getitem__(key: Int): PyObject = Py.java2py(jsrBase.get(key))
     override fun __getitem__(key: PyObject?): PyObject =
@@ -659,12 +679,30 @@ private class JythonBuffer(
     override fun __findattr_ex__(name: String?): PyObject =
         base.__findattr_ex__(name)
 
+    companion object {
+        fun from(
+            window: IJudoWindow,
+            buffer: IJudoBuffer
+        ): PyObject {
+            val jsrBase = Jsr223Buffer(window, buffer)
+            val base = Py.java2py(jsrBase)
+            return JythonBuffer(buffer, jsrBase, base)
+        }
+    }
+}
+
+private abstract class JythonWrapperPyObject<T : Any>(
+    val wrappedObject: T,
+    val wrappedObjectClass: Class<T>
+) : PyObject() {
+
     override fun __tojava__(c: Class<*>?): Any {
-        if (c === IJudoBuffer::class.java || c === Object::class.java) {
-            return buffer
+        if (c === wrappedObjectClass || c === Object::class.java) {
+            return wrappedObject
         }
         return super.__tojava__(c)
     }
+
 }
 
 /**
