@@ -213,26 +213,31 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
-    override fun <R> callableToFunction0(fromScript: Any): () -> R = {
+    override fun <R> callableToFunction0(fromScript: Any): () -> R = fromScript.asFn { fn -> {
         wrapExceptions {
             @Suppress("UNCHECKED_CAST")
-            (fromScript as PyFunction).__call__() as R
+            fn.__call__() as R
         }
+    } }
+
+    override fun callableToFunction1(fromScript: Any): (Any?) -> Any? = fromScript.asFn { fn ->
+        { arg -> wrapExceptions {
+            fn.__call__(Py.java2py(arg))
+        } }
     }
 
-    override fun callableToFunction1(fromScript: Any): (Any?) -> Any? = { arg ->
-        wrapExceptions {
-            (fromScript as PyFunction).__call__(Py.java2py(arg))
-        }
-    }
-
-    override fun callableToFunctionN(fromScript: Any): (Array<Any?>) -> Any? = { rawArg ->
-        wrapExceptions {
+    override fun callableToFunctionN(fromScript: Any): (Array<Any?>) -> Any? = fromScript.asFn { fn ->
+        { rawArg -> wrapExceptions {
             val pythonArgs = Array<PyObject>(rawArg.size) { index ->
                 Py.java2py(rawArg[index])
             }
-            (fromScript as PyFunction).__call__(pythonArgs)
-        }
+            fn.__call__(pythonArgs)
+        } }
+    }
+
+    private inline fun <R> Any.asFn(block: (PyFunction) -> R): R {
+        val fn = this as? PyFunction ?: throw IllegalArgumentException("$this is not a Fn")
+        return block(fn)
     }
 
     override fun compilePatternSpec(fromScript: Any, flags: String): PatternSpec {
