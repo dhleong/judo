@@ -19,6 +19,7 @@ import net.dhleong.judo.script.init.initEvents
 import net.dhleong.judo.script.init.initFiles
 import net.dhleong.judo.script.init.initKeymaps
 import net.dhleong.judo.script.init.initModes
+import net.dhleong.judo.script.init.initMultiTriggers
 import net.dhleong.judo.script.init.initPrompts
 import net.dhleong.judo.script.init.initTriggers
 import net.dhleong.judo.script.init.initUtil
@@ -89,6 +90,7 @@ class CmdMode(
             initFiles()
             initKeymaps()
             initModes()
+            initMultiTriggers()
             initPrompts()
             initTriggers()
             initUtil()

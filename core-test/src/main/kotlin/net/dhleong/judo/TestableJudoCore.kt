@@ -20,6 +20,7 @@ import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.trigger.MultiTriggerManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.JudoMainDispatcher
@@ -56,6 +57,7 @@ class TestableJudoCore(
     override val aliases = AliasManager()
     override val events = TestableEventManager()
     override val mapper = MapManager(this, state, mapRenderer)
+    override val multiTriggers = MultiTriggerManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
 

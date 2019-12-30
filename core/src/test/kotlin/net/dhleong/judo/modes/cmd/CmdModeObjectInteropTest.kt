@@ -22,6 +22,7 @@ import assertk.assertions.support.expected
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.hasHeight
 import net.dhleong.judo.hasId
+import net.dhleong.judo.hasLines
 import net.dhleong.judo.hasSize
 import net.dhleong.judo.hasWidth
 import net.dhleong.judo.render.JudoColor
@@ -271,7 +272,6 @@ class CmdModeObjectInteropTest(
             assertThat(judo.prints).containsExactly(true)
         }
 
-
         assertThat {
             mode.execute("""
                 echo(expandpath("<sfile>"))
@@ -281,6 +281,60 @@ class CmdModeObjectInteropTest(
         assertThat(judo.echos).hasSize(1)
         assertThat(judo.echos[0]?.toString() ?: "null").isEqualTo("null")
 
+    }
+
+    @Test fun `Buffer interop`() = runBlocking {
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        val string1 = """
+            "Take my love"
+        """.trimIndent()
+        val string2 = """
+            "Take my land"
+        """.trimIndent()
+
+        mode.execute("""
+            judo.current.buffer.append($string1)
+            judo.current.buffer.append($string2)
+        """.trimIndent())
+        assertThat(buffer).hasLines(
+            "Take my love\n",
+            "Take my land\n"
+        )
+
+        mode.execute("""
+            judo.current.buffer.deleteLast()
+        """.trimIndent())
+        assertThat(buffer).hasLines(
+            "Take my love\n"
+        )
+
+        // two arities of set()
+        mode.execute("""
+            judo.current.buffer.set(0, $string2)
+        """.trimIndent())
+        assertThat(buffer).hasLines(
+            "Take my land\n"
+        )
+
+        mode.execute("""
+            judo.current.buffer.set([$string1, $string2])
+        """.trimIndent())
+        assertThat(buffer).hasLines(
+            "Take my love\n",
+            "Take my land\n"
+        )
+
+        // special language-specific interop:
+        if (scriptType() == SupportedScriptTypes.PY) {
+            mode.execute("""
+                echo(len(judo.current.buffer))
+                echo(judo.current.buffer[1])
+            """.trimIndent())
+            assertThat(judo.echos).containsExactly(
+                2,
+                "Take my land\n"
+            )
+        }
     }
 }
 

@@ -18,7 +18,13 @@ enum class PatternProcessingFlags(
      * the processor function; this flag can be used
      * to prevent that.
      */
-    KEEP_COLOR("color");
+    KEEP_COLOR("color"),
+
+    /**
+     * Multi triggers support this option for deleting
+     * the matched lines
+     */
+    DELETE("delete");
 
     override fun toString(): String = stringForm
 

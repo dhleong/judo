@@ -22,9 +22,11 @@ interface IJudoBuffer : IJudoAppendable {
     operator fun get(index: Int): FlavorableCharSequence
 
     fun clear()
+    fun deleteLast(): FlavorableCharSequence
     fun replaceLastLine(result: FlavorableCharSequence)
 
     fun set(newContents: List<FlavorableCharSequence>)
+    operator fun set(index: Int, line: FlavorableCharSequence)
 }
 
 interface IJudoWindow : IJudoAppendable, IJudoScrollable {

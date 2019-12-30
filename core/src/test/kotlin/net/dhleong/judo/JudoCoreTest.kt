@@ -130,9 +130,7 @@ class JudoCoreTest {
         }
 
         val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
-        assertThat(buffer).hasLines(
-            ""
-        )
+        assertThat(buffer).hasSize(0)
     }
 
     @Test fun buildPromptWithAnsi() {

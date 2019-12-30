@@ -12,6 +12,7 @@ import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.script.IJudoScrollable
+import net.dhleong.judo.trigger.IMultiTriggerManager
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
 import java.net.URI
@@ -75,6 +76,7 @@ interface IJudoCore : IJudoScrollable {
     val prompts: IPromptManager
     val registers: IRegisterManager
     val triggers: ITriggerManager
+    val multiTriggers: IMultiTriggerManager
     val state: StateMap
     val renderer: JudoRenderer
     val tabpage: IJudoTabpage

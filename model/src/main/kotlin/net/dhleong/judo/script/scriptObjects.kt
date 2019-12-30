@@ -45,5 +45,8 @@ interface IScriptBuffer {
 
     fun append(line: String)
     fun clear()
+    fun get(index: Int, flags: String = ""): String
+    fun deleteLast()
     fun set(contents: List<String>)
+    fun set(index: Int, contents: String)
 }

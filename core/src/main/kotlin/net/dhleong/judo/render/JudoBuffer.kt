@@ -3,11 +3,14 @@ package net.dhleong.judo.render
 import net.dhleong.judo.util.CircularArrayList
 
 open class JudoBuffer(
-    ids: IdManager,
+    override val id: Int,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
 
-    override val id: Int = ids.newBuffer()
+    constructor(
+        ids: IdManager,
+        scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
+    ) : this(ids.newBuffer(), scrollbackSize)
 
     private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
 
@@ -37,6 +40,10 @@ open class JudoBuffer(
     }
 
     @Synchronized
+    override fun deleteLast() =
+        contents.removeLast()
+
+    @Synchronized
     override fun replaceLastLine(result: FlavorableCharSequence) {
         contents[contents.lastIndex] = result
     }
@@ -45,6 +52,18 @@ open class JudoBuffer(
     override fun set(newContents: List<FlavorableCharSequence>) {
         clear()
         newContents.forEach(this::appendLine)
+    }
+
+    @Synchronized
+    override fun set(index: Int, line: FlavorableCharSequence) {
+        val newLine = line.indexOf('\n')
+        require(newLine == -1 || newLine == line.lastIndex) {
+            "Line must not have any newline characters in it"
+        }
+        if (!line.endsWith("\n")) {
+            line += '\n'
+        }
+        contents[index] = line
     }
 
     companion object {

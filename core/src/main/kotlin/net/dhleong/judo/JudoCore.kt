@@ -49,7 +49,6 @@ import net.dhleong.judo.net.isTelnetSubsequence
 import net.dhleong.judo.prompt.AUTO_UNIQUE_GROUP_ID
 import net.dhleong.judo.prompt.PromptManager
 import net.dhleong.judo.register.RegisterManager
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
@@ -57,12 +56,16 @@ import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
+import net.dhleong.judo.trigger.MultiTriggerManager
+import net.dhleong.judo.trigger.MultiTriggerResult
 import net.dhleong.judo.trigger.TriggerManager
+import net.dhleong.judo.trigger.processMultiTriggers
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.JudoMainDispatcher
 import net.dhleong.judo.util.SubstitutableInputHistory
@@ -119,6 +122,7 @@ class JudoCore(
     override val logging = LogManager()
     override val mapper = MapManager(this, settings, mapRenderer)
     override val triggers = TriggerManager()
+    override val multiTriggers = MultiTriggerManager()
     override val prompts = PromptManager()
     override val registers = RegisterManager(settings)
     override val state = settings
@@ -890,7 +894,9 @@ class JudoCore(
         }
     }
 
-    private fun processOutput(line: FlavorableCharSequence) {
+    private fun IJudoBuffer.processOutput(line: FlavorableCharSequence) {
+        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) return
+
         outputCompletions.process(line)
         triggers.process(line)
         processAndStripPrompt(line)
@@ -1018,12 +1024,12 @@ class JudoCore(
     @Synchronized internal fun appendOutput(
         output: FlavorableCharSequence,
         process: Boolean = true
-    ) {
+    ) = renderer.inTransaction {
         val buffer = primaryWindow.currentBuffer
         primaryWindow.append(output)
         if (process) {
             val actualLine = buffer[buffer.lastIndex]
-            processOutput(actualLine)
+            buffer.processOutput(actualLine)
         }
     }
 
@@ -1033,7 +1039,11 @@ class JudoCore(
         if (result.length != originalLength) {
             renderer.inTransaction {
                 // we found a prompt! clean up the output
-                outputBuffer.replaceLastLine(result.toFlavorable())
+                if (result.isEmpty()) {
+                    outputBuffer.deleteLast()
+                } else {
+                    outputBuffer.replaceLastLine(result.toFlavorable())
+                }
             }
         }
 
