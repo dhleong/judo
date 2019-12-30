@@ -63,7 +63,6 @@ import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.MultiTriggerManager
-import net.dhleong.judo.trigger.MultiTriggerResult
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.trigger.processMultiTriggers
 import net.dhleong.judo.util.InputHistory

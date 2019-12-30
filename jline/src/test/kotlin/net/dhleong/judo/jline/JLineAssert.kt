@@ -6,6 +6,7 @@ import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import org.jline.utils.AttributedCharSequence
 import org.jline.utils.AttributedStyle
+import org.junit.ComparisonFailure
 
 /**
  * Assert that the lines in the display match those in the
@@ -19,8 +20,15 @@ fun Assert<JLineDisplay>.linesEqual(expected: String) = given { actual ->
         // allow using underscore to visually indicate spaces
         .replace(" ", "_")
 
-    assertThat(asString).isEqualTo(
-        expected.replace(" ", "_")
+    val expectedClean = expected.replace(" ", "_")
+    if (asString == expectedClean) return
+
+    // using junit's ComparisonFailure seems to enable intellij to let us
+    // see a nice side-by-side, like assertj used to give us
+    throw ComparisonFailure(
+        "",
+        expectedClean,
+        asString
     )
 }
 

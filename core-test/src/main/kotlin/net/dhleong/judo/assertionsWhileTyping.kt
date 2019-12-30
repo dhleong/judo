@@ -1,5 +1,6 @@
 package net.dhleong.judo
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -32,7 +33,7 @@ inline fun assertionsWhileTyping(
     val channel = Channel<Key>()
     val context = AssertionContext(judo, channel)
 
-    GlobalScope.launch {
+    GlobalScope.launch(Dispatchers.IO) {
         try {
             context.block()
         } catch (e: Throwable) {
@@ -53,15 +54,19 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
     for (k in Keys.parse(keys)) {
         channel.send(k)
 
-        // delay to ensure JudoCore has sufficient time to asynchronously
-        // process the key across suspend points.
-        // FIXME this is terrible. there has got to be a better way to do do this...
-        delay(10)
-
         // wait until the main thread is idle (ish)
-        suspendCoroutine<Unit> { cont ->
-            judo.onMainThread { cont.resume(Unit) }
-        }
+        awaitIdleMainThread()
     }
 
+    // delay to ensure JudoCore has sufficient time to asynchronously
+    // process the keys across suspend points.
+    // FIXME this is terrible. there has got to be a better way to do do this...
+
+    delay(10)
+    awaitIdleMainThread()
 }
+
+private suspend fun AssertionContext.awaitIdleMainThread() =
+    suspendCoroutine<Unit> { cont ->
+        judo.onMainThread { cont.resume(Unit) }
+    }
