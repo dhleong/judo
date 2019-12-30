@@ -8,6 +8,7 @@ import net.dhleong.judo.util.PatternSpec
 
 interface MultiTrigger {
     val id: String
+    val options: MultiTriggerOptions
     fun process(line: FlavorableCharSequence): MultiTriggerResult
 }
 
@@ -59,6 +60,7 @@ class MultiTriggerManager : IMultiTriggerManager {
 
     override fun clear(entry: String) = undefine(entry)
 
+    operator fun get(id: String) = triggers.first { it.id == id }
 }
 
 fun IMultiTriggerManager.processMultiTriggers(

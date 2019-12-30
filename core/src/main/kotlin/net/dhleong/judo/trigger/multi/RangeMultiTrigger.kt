@@ -19,7 +19,7 @@ private val MultiTriggerOptions.consumeResult: MultiTriggerResult
  */
 class RangeMultiTrigger(
     override val id: String,
-    private val options: MultiTriggerOptions,
+    override val options: MultiTriggerOptions,
     private val start: PatternSpec,
     private val stop: PatternSpec,
     private val processor: MultiTriggerProcessor

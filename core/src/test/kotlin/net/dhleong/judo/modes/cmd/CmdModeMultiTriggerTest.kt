@@ -1,16 +1,22 @@
 package net.dhleong.judo.modes.cmd
 
+import assertk.Assert
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.hasLines
 import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.MultiTriggerManager
+import net.dhleong.judo.trigger.MultiTriggerOptions
 import net.dhleong.judo.trigger.processMultiTriggers
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -22,6 +28,84 @@ import org.junit.runners.Parameterized
 class CmdModeMultiTriggerTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
+    @Ignore("TODO")
+    @Test fun `multitrigger detects runaway trigger`() = runBlocking {
+    }
+
+    @Test fun `multitrigger accepts an options map`() = runBlocking {
+        registerMultiTrigger(
+            id = "deleteFlags",
+            optionsMap = "{'maxLines': 1}",
+            flags = "delete"
+        )
+        assertThat(judo.multiTriggers["deleteFlags"].options).all {
+            hasMaxLines(1)
+            isNotColor()
+            isDelete()
+        }
+    }
+
+    @Test fun `multitrigger options map merges with flags`() = runBlocking {
+        registerMultiTrigger(
+            id = "deleteFlags",
+            optionsMap = "{'maxLines': 1, 'color': true}",
+            flags = "delete"
+        )
+        assertThat(judo.multiTriggers["deleteFlags"].options).all {
+            hasMaxLines(1)
+            isColor()
+            isDelete()
+        }
+
+        registerMultiTrigger(
+            id = "colorFlags",
+            optionsMap = "{'maxLines': 1, 'delete': true}",
+            flags = "color"
+        )
+        assertThat(judo.multiTriggers["deleteFlags"].options).all {
+            hasMaxLines(1)
+            isColor()
+            isDelete()
+        }
+    }
+
+    @Test fun `multitrigger handles options map with NO flags`() = runBlocking {
+        registerMultiTrigger(
+            id = "deleteFlags",
+            optionsMap = "{'maxLines': 1, 'delete': true}",
+            flags = null
+        )
+        assertThat(judo.multiTriggers["deleteFlags"].options).all {
+            hasMaxLines(1)
+            isNotColor()
+            isDelete()
+        }
+    }
+
+    private suspend fun registerMultiTrigger(
+        id: String,
+        optionsMap: String,
+        flags: String?
+    ) {
+        val flagsString = flags?.let { ", '$it'" } ?: ""
+        mode.execute(when (scriptType()) {
+            SupportedScriptTypes.PY -> """
+                import re
+                @multitrigger('$id', 'range', ${optionsMap.replace("true", "True")}, [
+                   "Take my love",
+                   "Take me where",
+                ]$flagsString)
+                def handleTrigger(lines): pass
+            """.trimIndent()
+
+            SupportedScriptTypes.JS -> """
+                multitrigger('$id', 'range', $optionsMap, [
+                   "Take my love",
+                   "Take me where",
+                ]$flagsString, function(lines) {});
+            """.trimIndent()
+        })
+    }
 
     @Test fun `RangeMultiTrigger extracts all lines`() = runBlocking {
         mode.execute(when (scriptType()) {
@@ -123,4 +207,24 @@ class CmdModeMultiTriggerTest(
 
         processMultiTriggers(buffer, judo, line)
     }
+}
+
+private fun Assert<MultiTriggerOptions>.hasMaxLines(lines: Int) = given { actual ->
+    if (actual.maxLines == lines) return
+    expected("maxLines == ${show(lines)} but was ${show(actual.maxLines)}")
+}
+
+private fun Assert<MultiTriggerOptions>.isColor() = given { actual ->
+    if (actual.color) return
+    expected("color but did not have color")
+}
+
+private fun Assert<MultiTriggerOptions>.isNotColor() = given { actual ->
+    if (!actual.color) return
+    expected("NOT color but have color")
+}
+
+private fun Assert<MultiTriggerOptions>.isDelete() = given { actual ->
+    if (actual.delete) return
+    expected("delete but did not have delete")
 }
