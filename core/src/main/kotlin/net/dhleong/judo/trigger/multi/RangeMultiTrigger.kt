@@ -6,8 +6,8 @@ import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.trigger.MultiTrigger
 import net.dhleong.judo.trigger.MultiTriggerOptions
+import net.dhleong.judo.trigger.MultiTriggerProcessor
 import net.dhleong.judo.trigger.MultiTriggerResult
-import net.dhleong.judo.trigger.TriggerProcessor
 import net.dhleong.judo.util.PatternSpec
 
 /**
@@ -18,7 +18,7 @@ class RangeMultiTrigger(
     private val options: MultiTriggerOptions,
     private val start: PatternSpec,
     private val stop: PatternSpec,
-    private val processor: TriggerProcessor
+    private val processor: MultiTriggerProcessor
 ) : MultiTrigger {
 
     private var reading = false
@@ -45,7 +45,7 @@ class RangeMultiTrigger(
             reading = false
             buffer.append(line)
 
-            val lines = buffer.consumeLines()
+            val lines = buffer.consumeStringLines()
 
             this.processor(lines)
 
@@ -57,7 +57,7 @@ class RangeMultiTrigger(
         return when {
             giveUp && options.delete -> MultiTriggerResult.Restore(
                 id,
-                buffer.copyLines()
+                buffer.consumeLines()
             )
 
             giveUp -> {
@@ -73,13 +73,13 @@ class RangeMultiTrigger(
         }
     }
 
-    private fun IJudoBuffer.consumeLines(): Array<String> =
-        Array(size) {
+    private fun IJudoBuffer.consumeStringLines(): List<String> =
+        List(size) {
             if (options.color) this[it].toAnsi()
             else this[it].toString()
         }.also { clear() }
 
-    private fun IJudoBuffer.copyLines(): List<FlavorableCharSequence> =
+    private fun IJudoBuffer.consumeLines(): List<FlavorableCharSequence> =
         List(size) { this[it] }
             .also { clear() }
 }

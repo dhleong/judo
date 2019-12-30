@@ -23,7 +23,7 @@ class MultiTriggerManager : IMultiTriggerManager {
         type: MultiTriggerType,
         options: MultiTriggerOptions,
         patterns: List<PatternSpec>,
-        processor: TriggerProcessor
+        processor: MultiTriggerProcessor
     ) {
         undefine(id)
 

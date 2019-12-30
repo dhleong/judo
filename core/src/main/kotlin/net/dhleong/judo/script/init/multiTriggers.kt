@@ -53,10 +53,7 @@ fun ScriptInitContext.initMultiTriggers() = with(mode) {
                 delete = "delete" in flags
             ),
             patterns = patterns,
-            processor = {
-                @Suppress("UNCHECKED_CAST")
-                fn(it as Array<Any?>)
-            }
+            processor = { fn(it) }
         )
     }
 }

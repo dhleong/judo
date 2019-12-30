@@ -377,7 +377,11 @@ private inline fun flagCheckerFor(type: Class<out Enum<*>>?): (String) -> Boolea
             it.get(type).toString().toLowerCase()
         }.toSet()
 
-        return { input -> stringTypes.contains(input.toLowerCase()) }
+        // input *only* contains items of stringTypes
+        return { input ->
+            input.splitToSequence(" ")
+                .all { it.toLowerCase() in stringTypes }
+        }
     }
 }
 

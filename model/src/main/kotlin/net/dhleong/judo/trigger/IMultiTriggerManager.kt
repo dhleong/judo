@@ -52,6 +52,8 @@ sealed class MultiTriggerResult {
     ) : MultiTriggerResult()
 }
 
+typealias MultiTriggerProcessor = (args: List<String>) -> Unit
+
 /**
  * @author dhleong
  */
@@ -61,7 +63,7 @@ interface IMultiTriggerManager : Clearable<String> {
         type: MultiTriggerType,
         options: MultiTriggerOptions,
         patterns: List<PatternSpec>,
-        processor: TriggerProcessor
+        processor: MultiTriggerProcessor
     )
 
     fun process(input: FlavorableCharSequence): MultiTriggerResult
