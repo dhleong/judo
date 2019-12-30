@@ -10,6 +10,10 @@ import net.dhleong.judo.trigger.MultiTriggerProcessor
 import net.dhleong.judo.trigger.MultiTriggerResult
 import net.dhleong.judo.util.PatternSpec
 
+private val MultiTriggerOptions.consumeResult: MultiTriggerResult
+    get() = if (delete) MultiTriggerResult.Delete
+        else MultiTriggerResult.Consume
+
 /**
  * @author dhleong
  */
@@ -33,11 +37,7 @@ class RangeMultiTrigger(
 
         reading = true
         buffer.append(line)
-        if (options.delete) {
-            return MultiTriggerResult.Delete
-        }
-
-        return MultiTriggerResult.Consume
+        return options.consumeResult
     }
 
     private fun processEnd(line: FlavorableCharSequence): MultiTriggerResult {
@@ -47,10 +47,11 @@ class RangeMultiTrigger(
 
             val lines = buffer.consumeStringLines()
 
-            this.processor(lines)
-
-            return if (options.delete) MultiTriggerResult.Delete
-                else MultiTriggerResult.Consume
+            return MultiTriggerResult.Process(
+                processor,
+                lines,
+                options.consumeResult
+            )
         }
 
         val giveUp = buffer.size >= options.maxLines
@@ -67,8 +68,7 @@ class RangeMultiTrigger(
 
             else -> {
                 buffer.append(line)
-                if (options.delete) MultiTriggerResult.Consume
-                else MultiTriggerResult.Delete
+                options.consumeResult
             }
         }
     }

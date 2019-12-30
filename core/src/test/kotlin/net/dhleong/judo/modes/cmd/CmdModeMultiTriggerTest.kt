@@ -10,6 +10,7 @@ import net.dhleong.judo.hasSize
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.MultiTriggerManager
+import net.dhleong.judo.trigger.processMultiTriggers
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -27,21 +28,21 @@ class CmdModeMultiTriggerTest(
             SupportedScriptTypes.PY -> """
                 import re
                 @multitrigger('id', 'range', [
-                   re.compile(r'^Take my love'),
-                   re.compile(r'^Take me where'),
+                   "Take my love",
+                   "I cannot stand",
                 ], 'delete')
                 def handleTrigger(lines): 
                     for l in lines:
-                        print(l)
+                        echo(l)
             """.trimIndent()
 
             SupportedScriptTypes.JS -> """
                 multitrigger('id', 'range', [
                    "Take my love",
-                   "Take me where",
+                   "I cannot stand",
                 ], 'delete', function(lines) {
                     for (i=0; i < lines.length; ++i) {
-                        print(lines[i]);
+                        echo(lines[i]);
                     }
                 });
             """.trimIndent()
@@ -51,20 +52,23 @@ class CmdModeMultiTriggerTest(
         judo.multiTriggers.apply {
             process("Take my love")
             process("Take my land")
+            process("Take me where")
 
-            // multi trigger is consuming
+            // multi trigger is deleting the lines
             assertThat(buffer).hasSize(0)
             assertThat(judo.prints).isEmpty()
 
-            process("Take me where")
+            process("I cannot stand")
         }
-        assertThat(judo.prints).hasSize(3)
+        assertThat(buffer).hasSize(0)
+        assertThat(judo.echos).hasSize(4)
 
         @Suppress("UNCHECKED_CAST")
-        assertThat(judo.prints).containsExactly(
+        assertThat(judo.echos).containsExactly(
             "Take my love\n",
             "Take my land\n",
-            "Take me where\n"
+            "Take me where\n",
+            "I cannot stand\n"
         )
     }
 
@@ -103,15 +107,20 @@ class CmdModeMultiTriggerTest(
         }
         assertThat(buffer).hasSize(3)
 
-        @Suppress("UNCHECKED_CAST")
         assertThat(buffer).hasLines(
             "Take my love\n",
             "Take my land\n",
             "Take me where\n"
         )
     }
-}
 
-fun MultiTriggerManager.process(string: String) = process(FlavorableStringBuilder.withDefaultFlavor(
-    string + "\n"
-))
+    fun MultiTriggerManager.process(string: String) {
+        // it might be nice to have an integration test with JudoCore.onIncomingBuffer,
+        // but this is close enough:
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        val line = FlavorableStringBuilder.withDefaultFlavor(string + "\n")
+        buffer.append(line)
+
+        processMultiTriggers(buffer, judo, line)
+    }
+}

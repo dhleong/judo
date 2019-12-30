@@ -50,6 +50,23 @@ sealed class MultiTriggerResult {
     class Error(
         val triggerId: String
     ) : MultiTriggerResult()
+
+    /**
+     * The MultiTrigger has successfully finished consuming
+     * lines, and after handling the [result] the *caller*
+     * should process the collected [lines]. This is done
+     * so that any flag-required delete can happen *before*
+     * the processing takes place, for a consistent result.
+     */
+    class Process(
+        val processor: MultiTriggerProcessor,
+        val lines: List<String>,
+        val result: MultiTriggerResult
+    ) : MultiTriggerResult() {
+        fun process() {
+            processor(lines)
+        }
+    }
 }
 
 typealias MultiTriggerProcessor = (args: List<String>) -> Unit

@@ -902,33 +902,6 @@ class JudoCore(
         processAndStripPrompt(line)
     }
 
-    private fun IJudoBuffer.processMultiTriggers(input: FlavorableCharSequence): Boolean {
-        when (val result = multiTriggers.process(input)) {
-            is MultiTriggerResult.Restore -> {
-                deleteLast()
-                for (l in result.lines) {
-                    appendLine(l)
-                }
-                appendLine(input)
-                printUnprocessed("ERROR: processing multi-trigger ${result.triggerId}")
-                return false // "unhandled"; allow other processing
-            }
-
-            is MultiTriggerResult.Error -> {
-                printUnprocessed("ERROR: processing multi-trigger ${result.triggerId}")
-                return false
-            }
-
-            is MultiTriggerResult.Delete -> {
-                deleteLast()
-                return true // stop processing
-            }
-
-            is MultiTriggerResult.Consume -> return true
-            is MultiTriggerResult.Ignore -> return false
-        }
-    }
-
     private fun activateMode(mode: Mode) = renderer.inTransaction {
         renderer.setCursorType(CursorType.BLOCK)
 

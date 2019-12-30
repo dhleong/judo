@@ -87,6 +87,14 @@ fun IMultiTriggerManager.processMultiTriggers(
             return true // stop processing
         }
 
+        is MultiTriggerResult.Process -> {
+            if (result.result is MultiTriggerResult.Delete) {
+                buffer.deleteLast()
+            }
+            result.process()
+            return true
+        }
+
         is MultiTriggerResult.Consume -> return true
         is MultiTriggerResult.Ignore -> return false
     }
