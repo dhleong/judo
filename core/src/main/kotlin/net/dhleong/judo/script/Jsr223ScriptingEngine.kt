@@ -106,6 +106,16 @@ abstract class Jsr223ScriptingEngine(
         }
     }
 
+    override fun toJava(fromScript: Any): Any {
+        if (fromScript is Bindings) {
+            val length = fromScript["length"]
+            if ("call" !in fromScript && length is Int) {
+                return Jsr223List(fromScript, length)
+            }
+        }
+        return super.toJava(fromScript)
+    }
+
     override fun toScript(fromJava: Any): Any = when (fromJava) {
         is JudoScriptingEntity.Function<*> ->
             fromJava.toFunctionalInterface(this)
@@ -146,6 +156,16 @@ abstract class Jsr223ScriptingEngine(
         tabpage: IJudoTabpage,
         window: IJudoWindow
     ): IScriptWindow = Jsr223Window(this, tabpage, window)
+}
+
+class Jsr223List(
+    private val fromScript: Bindings, length: Int
+) : AbstractList<Any?>() {
+
+    override val size: Int = length
+
+    override fun get(index: Int): Any? = fromScript[index.toString()]
+
 }
 
 class Jsr223JudoCore(

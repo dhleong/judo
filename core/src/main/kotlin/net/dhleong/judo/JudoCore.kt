@@ -62,7 +62,10 @@ import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
 import net.dhleong.judo.script.JythonScriptingEngine
 import net.dhleong.judo.script.ScriptingEngine
+import net.dhleong.judo.trigger.MultiTriggerManager
+import net.dhleong.judo.trigger.MultiTriggerResult
 import net.dhleong.judo.trigger.TriggerManager
+import net.dhleong.judo.trigger.processMultiTriggers
 import net.dhleong.judo.util.InputHistory
 import net.dhleong.judo.util.JudoMainDispatcher
 import net.dhleong.judo.util.SubstitutableInputHistory
@@ -119,6 +122,7 @@ class JudoCore(
     override val logging = LogManager()
     override val mapper = MapManager(this, settings, mapRenderer)
     override val triggers = TriggerManager()
+    override val multiTriggers = MultiTriggerManager()
     override val prompts = PromptManager()
     override val registers = RegisterManager(settings)
     override val state = settings
@@ -890,10 +894,39 @@ class JudoCore(
         }
     }
 
-    private fun processOutput(line: FlavorableCharSequence) {
+    private fun IJudoBuffer.processOutput(line: FlavorableCharSequence) {
+        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) return
+
         outputCompletions.process(line)
         triggers.process(line)
         processAndStripPrompt(line)
+    }
+
+    private fun IJudoBuffer.processMultiTriggers(input: FlavorableCharSequence): Boolean {
+        when (val result = multiTriggers.process(input)) {
+            is MultiTriggerResult.Restore -> {
+                deleteLast()
+                for (l in result.lines) {
+                    appendLine(l)
+                }
+                appendLine(input)
+                printUnprocessed("ERROR: processing multi-trigger ${result.triggerId}")
+                return false // "unhandled"; allow other processing
+            }
+
+            is MultiTriggerResult.Error -> {
+                printUnprocessed("ERROR: processing multi-trigger ${result.triggerId}")
+                return false
+            }
+
+            is MultiTriggerResult.Delete -> {
+                deleteLast()
+                return true // stop processing
+            }
+
+            is MultiTriggerResult.Consume -> return true
+            is MultiTriggerResult.Ignore -> return false
+        }
     }
 
     private fun activateMode(mode: Mode) = renderer.inTransaction {
@@ -1023,7 +1056,7 @@ class JudoCore(
         primaryWindow.append(output)
         if (process) {
             val actualLine = buffer[buffer.lastIndex]
-            processOutput(actualLine)
+            buffer.processOutput(actualLine)
         }
     }
 

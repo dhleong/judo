@@ -516,6 +516,9 @@ abstract class BaseCmdMode(
     protected fun queueTrigger(spec: String) =
         enqueueClear(judo.triggers, spec)
 
+    internal fun queueMultiTrigger(id: String) =
+        enqueueClear(judo.multiTriggers, id)
+
     private fun <T> enqueueClear(source: Clearable<T>, entry: T) =
         currentClearableContext?.let {
             clearQueue.add(QueuedClear(it, source, entry))

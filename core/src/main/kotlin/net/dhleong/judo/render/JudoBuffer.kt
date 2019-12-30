@@ -3,11 +3,14 @@ package net.dhleong.judo.render
 import net.dhleong.judo.util.CircularArrayList
 
 open class JudoBuffer(
-    ids: IdManager,
+    override val id: Int,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
 
-    override val id: Int = ids.newBuffer()
+    constructor(
+        ids: IdManager,
+        scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
+    ) : this(ids.newBuffer(), scrollbackSize)
 
     private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
 
