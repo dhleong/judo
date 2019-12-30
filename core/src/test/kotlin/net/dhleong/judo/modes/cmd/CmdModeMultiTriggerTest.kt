@@ -3,7 +3,10 @@ package net.dhleong.judo.modes.cmd
 import assertk.Assert
 import assertk.all
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.exactly
+import assertk.assertions.extracting
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.support.expected
@@ -16,7 +19,6 @@ import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.MultiTriggerManager
 import net.dhleong.judo.trigger.MultiTriggerOptions
 import net.dhleong.judo.trigger.processMultiTriggers
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -28,8 +30,48 @@ import org.junit.runners.Parameterized
 class CmdModeMultiTriggerTest(
     factory: ScriptingEngine.Factory
 ) : AbstractCmdModeTest(factory) {
-    @Ignore("TODO")
     @Test fun `multitrigger detects runaway trigger`() = runBlocking {
+        registerMultiTrigger(
+            id = "deleteFlags",
+            optionsMap = "{'maxLines': 2}",
+            flags = "delete"
+        )
+        judo.multiTriggers.apply {
+            process("Take my love")
+            process("Take my land")
+            process("Take my other land")
+        }
+
+        assertThat(judo.prints)
+            .extracting { it.toString() }
+            .exactly(1) {
+                it.all {
+                    contains("ERROR:")
+                    contains("after 2 lines")
+                }
+            }
+    }
+
+    @Test fun `multitrigger detects runaway without delete flag`() = runBlocking {
+        registerMultiTrigger(
+            id = "id",
+            optionsMap = "{'maxLines': 2}",
+            flags = "color"
+        )
+        judo.multiTriggers.apply {
+            process("Take my love")
+            process("Take my land")
+            process("Take my other land")
+        }
+
+        assertThat(judo.prints)
+            .extracting { it.toString() }
+            .exactly(1) {
+                it.all {
+                    contains("ERROR:")
+                    contains("after 2 lines")
+                }
+            }
     }
 
     @Test fun `multitrigger accepts an options map`() = runBlocking {

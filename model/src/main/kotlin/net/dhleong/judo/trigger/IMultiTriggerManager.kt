@@ -40,6 +40,7 @@ sealed class MultiTriggerResult {
      */
     class Restore(
         val triggerId: String,
+        val reason: String,
         val lines: List<FlavorableCharSequence>
     ) : MultiTriggerResult()
 
@@ -48,7 +49,8 @@ sealed class MultiTriggerResult {
      * with the given [triggerId]
      */
     class Error(
-        val triggerId: String
+        val triggerId: String,
+        val reason: String
     ) : MultiTriggerResult()
 
     /**

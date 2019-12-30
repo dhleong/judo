@@ -58,12 +58,16 @@ class RangeMultiTrigger(
         return when {
             giveUp && options.delete -> MultiTriggerResult.Restore(
                 id,
+                "end not found after ${options.maxLines} lines",
                 buffer.consumeLines()
             )
 
             giveUp -> {
                 buffer.clear()
-                MultiTriggerResult.Consume
+                MultiTriggerResult.Error(
+                    id,
+                    "end not found after ${options.maxLines} lines"
+                )
             }
 
             else -> {

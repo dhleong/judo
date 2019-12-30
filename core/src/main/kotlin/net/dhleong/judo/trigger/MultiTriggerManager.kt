@@ -75,12 +75,12 @@ fun IMultiTriggerManager.processMultiTriggers(
                 buffer.appendLine(l)
             }
             buffer.appendLine(input)
-            judo.printRaw("ERROR: processing multi-trigger ${result.triggerId}")
+            judo.printRaw("ERROR: processing multi-trigger ${result.triggerId}: ${result.reason}")
             return false // "unhandled"; allow other processing
         }
 
         is MultiTriggerResult.Error -> {
-            judo.printRaw("ERROR: processing multi-trigger ${result.triggerId}")
+            judo.printRaw("ERROR: processing multi-trigger ${result.triggerId}: ${result.reason}")
             return false
         }
 
