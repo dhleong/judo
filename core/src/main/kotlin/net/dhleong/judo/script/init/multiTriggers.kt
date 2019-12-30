@@ -28,6 +28,11 @@ fun ScriptInitContext.initMultiTriggers() = with(mode) {
             body { """
                 Declare a multitrigger. See :help alias for more about inputSpec.
                 
+                `type` must be one of:
+                    "range" - expects two values for inputSpecs: a *start* and an *end*.
+                              The multitrigger will start collecting lines when *start*
+                              matches and stop when *end* matches, and all matched lines
+                              will be sent to the handler in a list
                 `config` is an optional map with keys:
                     maxLines - the most lines that should be captured by this multitrigger;
                                if more get captured we will stop processing and print an error
