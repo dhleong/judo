@@ -16,7 +16,13 @@ abstract class BaseStack(
             it.lastResizeRequest
         }?.lastResizeRequest ?: 0L
 
+    override val isHidden: Boolean
+        get() = contents.all { it.isHidden }
+
     internal val contents = ArrayList<IStack>(4)
+
+    internal val visibleContentsCount: Int
+        get() = contents.sumBy { if (it.isHidden) 0 else 1 }
 
     override fun getCollapseChild(): IStack? {
         if (contents.size == 1) {
@@ -51,11 +57,11 @@ abstract class BaseStack(
         getDimension: (IStack) -> Int,
         setDimension: IStack.(Int) -> Unit
     ) {
-        val itemsCount = contents.size
+        val itemsCount = visibleContentsCount
         var freeSpace = available
 
         var remainingItems = itemsCount - 1
-        for (item in contents.sortedByDescending { it.lastResizeRequest }) {
+        for (item in contents.filter { !it.isHidden }.sortedByDescending { it.lastResizeRequest }) {
             val requested = getDimension(item)
             val allotted =
                 if (remainingItems == 0) freeSpace

@@ -38,6 +38,14 @@ class JLineWindow(
             else -> height
         }
 
+    override var isHidden: Boolean
+        get() = super.isHidden
+        set(value) {
+            if (value != isHidden) renderer.inTransaction {
+                super.isHidden = value
+            }
+        }
+
     override var lastResizeRequest: Long = ids.newTimestamp()
 
     private var echoLine: FlavorableCharSequence? = null

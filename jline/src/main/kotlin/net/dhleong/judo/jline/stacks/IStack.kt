@@ -15,6 +15,7 @@ interface IStack : StackWindowCommandHandler {
     val height: Int
     val parent: IStack
     val lastResizeRequest: Long
+    val isHidden: Boolean
 
     fun add(item: IStack)
     fun stackWithWindow(predicate: (IJLineWindow) -> Boolean): WindowStack?
