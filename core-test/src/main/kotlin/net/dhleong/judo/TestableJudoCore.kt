@@ -183,6 +183,8 @@ fun createWindowMock(
             else -> height
         }
 
+    override var isWindowHidden: Boolean = false
+
     override var onSubmitFn: ((String) -> Unit)? = null
 
     override var currentBuffer: IJudoBuffer

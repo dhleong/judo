@@ -11,18 +11,18 @@ class WindowStack(
     val window: IJLineWindow
 ) : IStack {
     override val width: Int
-        get() = if (window.isHidden) 0
+        get() = if (window.isWindowHidden) 0
             else window.width
 
     override val height: Int
-        get() = if (window.isHidden) 0
+        get() = if (window.isWindowHidden) 0
             else window.height
 
     override val lastResizeRequest: Long
         get() = window.lastResizeRequest
 
     override val isHidden: Boolean
-        get() = window.isHidden
+        get() = window.isWindowHidden
 
     override fun add(item: IStack) = throw UnsupportedOperationException()
     override fun getCollapseChild(): IStack? = null
@@ -36,7 +36,7 @@ class WindowStack(
         else null
 
     override fun render(display: JLineDisplay, x: Int, y: Int) {
-        if (window.isHidden) return
+        if (window.isWindowHidden) return
         window.render(display, x, y)
     }
 

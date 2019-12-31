@@ -53,7 +53,7 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
      * constantly moving and resizing windows as you might when
      * editing text/code.
      */
-    var isHidden: Boolean
+    var isWindowHidden: Boolean
 
     var currentBuffer: IJudoBuffer
 

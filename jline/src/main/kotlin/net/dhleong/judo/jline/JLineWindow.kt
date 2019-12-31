@@ -38,11 +38,11 @@ class JLineWindow(
             else -> height
         }
 
-    override var isHidden: Boolean
-        get() = super.isHidden
+    override var isWindowHidden: Boolean
+        get() = super.isWindowHidden
         set(value) {
-            if (value != isHidden) renderer.inTransaction {
-                super.isHidden = value
+            if (value != isWindowHidden) renderer.inTransaction {
+                super.isWindowHidden = value
             }
         }
 

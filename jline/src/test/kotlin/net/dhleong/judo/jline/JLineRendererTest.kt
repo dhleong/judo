@@ -464,14 +464,14 @@ class JLineRendererTest {
             Take my land
         """.trimIndent())
         renderer.currentTabpage.vsplit(7, rightBuffer)
-            .apply { isHidden = true }
+            .apply { isWindowHidden = true }
 
         renderer.currentTabpage.currentWindow = window
         val topBuffer = bufferOf("""
             Take my love
         """.trimIndent())
         val topWindow = renderer.currentTabpage.hsplit(1, topBuffer)
-            .apply { isHidden = true }
+            .apply { isWindowHidden = true }
 
         renderer.currentTabpage.currentWindow = window
         window.updateStatusLine(":prim", 5)
@@ -489,7 +489,7 @@ class JLineRendererTest {
             hasCursor(4, 5)
         }
 
-        topWindow.isHidden = false
+        topWindow.isWindowHidden = false
         assertThat(display).linesEqual("""
                 |Take my love________
                 |--------------------
