@@ -37,15 +37,15 @@ class JudoMainDispatcher(
     suspend fun awaitDispatch() {
         val ch = dispatch ?: throw UnsupportedOperationException("awaitDispatch not enabled")
 
-        withTimeoutOrNull(100) {
+        withTimeoutOrNull(500) {
             ch.receive()
 
             // NOTE: this *might* be received from isDispatchNeeded, in which case
             // the code in question will probably run *after* we receive; we delay
             // here to give it some time to do that first
             delay(1)
-
-            awaitIdle()
         }
+
+        awaitIdle()
     }
 }

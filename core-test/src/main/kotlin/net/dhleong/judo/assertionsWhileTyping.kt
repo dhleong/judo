@@ -6,6 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 import net.dhleong.judo.input.InterruptHandler
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyChannelFactory
@@ -58,15 +59,17 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         awaitIdleMainThread()
     }
 
+    // delay to ensure JudoCore has sufficient time to asynchronously
+    // process the keys across all suspend points.
+    // FIXME this is terrible. there has got to be a better way to do do this...
+    delay(10)
+
     // add one more wait now that we've submitted everything
     awaitIdleMainThread()
 }
 
 private suspend fun AssertionContext.awaitIdleMainThread() {
-    // delay to ensure JudoCore has sufficient time to asynchronously
-    // process the keys across suspend points.
-    // FIXME this is terrible. there has got to be a better way to do do this...
-    delay(1)
+    yield()
 
     // wait for the key to get dispatched
     judo.dispatcher.awaitDispatch()
