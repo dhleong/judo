@@ -40,9 +40,15 @@ class JLineWindow(
 
     override var isWindowHidden: Boolean
         get() = super.isWindowHidden
-        set(value) {
-            if (value != isWindowHidden) renderer.inTransaction {
-                super.isWindowHidden = value
+        set(nowHidden) {
+            if (nowHidden != isWindowHidden) renderer.inTransaction {
+                super.isWindowHidden = nowHidden
+
+                if (!nowHidden) {
+                    // re-showing; trigger other windows to resize
+                    lastResizeRequest = ids.newTimestamp()
+                    renderer.onWindowResized(this)
+                }
             }
         }
 

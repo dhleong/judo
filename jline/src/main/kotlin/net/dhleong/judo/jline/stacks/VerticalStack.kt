@@ -74,6 +74,7 @@ class VerticalStack(
     }
 
     override fun resize(width: Int, height: Int) = doResize(
+        width, height,
         available = height,
         minDimension = WINDOW_MIN_HEIGHT,
         getDimension = { it.height },

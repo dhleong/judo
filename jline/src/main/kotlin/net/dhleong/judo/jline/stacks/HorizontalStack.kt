@@ -83,6 +83,7 @@ class HorizontalStack(
     }
 
     override fun resize(width: Int, height: Int) = doResize(
+        width, height,
         available = width - (visibleContentsCount - 1).coerceAtLeast(0), // leave room for separators
         minDimension = WINDOW_MIN_WIDTH,
         getDimension = { it.width },

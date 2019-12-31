@@ -52,11 +52,14 @@ abstract class BaseStack(
     }
 
     internal inline fun doResize(
+        width: Int, height: Int,
         available: Int,
         minDimension: Int,
         getDimension: (IStack) -> Int,
         setDimension: IStack.(Int) -> Unit
     ) {
+        this.width = width
+        this.height = height
         val itemsCount = visibleContentsCount
         var freeSpace = available
 

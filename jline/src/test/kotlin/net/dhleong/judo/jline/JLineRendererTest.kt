@@ -463,7 +463,7 @@ class JLineRendererTest {
         val rightBuffer = bufferOf("""
             Take my land
         """.trimIndent())
-        renderer.currentTabpage.vsplit(7, rightBuffer)
+        val rightWindow = renderer.currentTabpage.vsplit(7, rightBuffer)
             .apply { isWindowHidden = true }
 
         renderer.currentTabpage.currentWindow = window
@@ -497,6 +497,16 @@ class JLineRendererTest {
                 |____________________
                 |:prim_______________
                 |____________________
+            """.trimMargin())
+
+        rightWindow.isWindowHidden = false
+        assertThat(display).linesEqual("""
+                |Take my love _______
+                |------------ _______
+                |____________ Take my
+                |____________ land___
+                |:prim_______ -------
+                |____________ _______
             """.trimMargin())
     }
 }
