@@ -2,19 +2,21 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.forEachChunk
+import net.dhleong.judo.theme.ColorTheme
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.WCWidth
 
 fun FlavorableCharSequence.toAttributedString(
-    widthForTrailingFlavor: Int = -1
+    widthForTrailingFlavor: Int = -1,
+    colorTheme: ColorTheme? = null
 ): AttributedString = AttributedStringBuilder(
     // NOTE JLine 3.5.1 has an error where appending to a 0-capacity
     // Builder will hang forever; we also may need room to handle
     // trailing flavor anyway, so... add 1
     length + 1
 ).also { result ->
-    appendTo(result)
+    appendTo(result, colorTheme)
 
     // if there's no room for the trailing flavor... it doesn't matter,
     // because it wouldn't be seen anyway
@@ -23,16 +25,17 @@ fun FlavorableCharSequence.toAttributedString(
         && result.length < widthForTrailingFlavor
     ) {
         trailingFlavor?.let { flavor ->
-            result.append(" ", flavor.toAttributedStyle())
+            result.append(" ", flavor.toAttributedStyle(colorTheme))
         }
     }
 }.toAttributedString()
 
 fun FlavorableCharSequence.appendTo(
-    builder: AttributedStringBuilder
+    builder: AttributedStringBuilder,
+    colorTheme: ColorTheme? = null
 ) {
     forEachChunk { startIndex, endIndex, flavor ->
-        builder.append(subSequence(startIndex, endIndex), flavor.toAttributedStyle())
+        builder.append(subSequence(startIndex, endIndex), flavor.toAttributedStyle(colorTheme))
     }
 }
 

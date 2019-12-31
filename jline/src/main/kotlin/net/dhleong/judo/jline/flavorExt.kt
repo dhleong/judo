@@ -1,7 +1,9 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.Flavor
+import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.transformForeground
 import org.jline.utils.AttributedStyle
 
 // from AttributedStyle source, since they're not public...
@@ -17,7 +19,9 @@ private const val F_FOREGROUND = 0x00000100
 private const val F_BACKGROUND = 0x00000200
 private const val F_HIDDEN = 0x00000400
 
-fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
+fun Flavor.toAttributedStyle(
+    colorTheme: ColorTheme? = null
+): AttributedStyle = createAttributedStyle(
     0 or isBold.toFlag(F_BOLD)
         or isFaint.toFlag(F_FAINT)
         or isItalic.toFlag(F_ITALIC)
@@ -34,17 +38,19 @@ fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
     // TODO do this without these extra allocations?
     var style = base
     if (hasForeground) {
-        style = if (foreground is JudoColor.Default) {
+        val fg = colorTheme.transformForeground(foreground)
+        style = if (fg is JudoColor.Default) {
             style.foregroundDefault()
         } else {
-            style.foreground(foreground.toAnsiInt())
+            style.foreground(fg.toAnsiInt())
         }
     }
     if (hasBackground) {
-        style = if (background is JudoColor.Default) {
+        val bg = colorTheme.transformForeground(background)
+        style = if (bg is JudoColor.Default) {
             style.backgroundDefault()
         } else {
-            style.background(background.toAnsiInt())
+            style.background(bg.toAnsiInt())
         }
     }
 

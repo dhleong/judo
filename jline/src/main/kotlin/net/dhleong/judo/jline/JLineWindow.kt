@@ -7,6 +7,7 @@ import net.dhleong.judo.render.BaseJudoWindow
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.theme.ColorTheme
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -427,11 +428,13 @@ class JLineWindow(
 internal fun FlavorableCharSequence.splitAttributedLinesInto(
     target: MutableList<AttributedString>,
     windowWidth: Int,
-    wordWrap: Boolean
+    wordWrap: Boolean,
+    colorTheme: ColorTheme? = null
 ) {
     forEachRenderedLine(windowWidth, wordWrap) { start, end ->
         target.add(subSequence(start, end).toAttributedString(
-            widthForTrailingFlavor = windowWidth
+            widthForTrailingFlavor = windowWidth,
+            colorTheme = colorTheme
         ))
     }
 }

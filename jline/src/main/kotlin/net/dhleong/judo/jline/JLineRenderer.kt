@@ -4,6 +4,7 @@ import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.JudoRendererEvent
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.OnRendererEventListener
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
@@ -347,7 +348,7 @@ class JLineRenderer(
         for (i in renderedInput.indices) {
             val line = renderedInput[i]
             display.withLine(0, inputY + i, lineWidth = windowWidth) {
-                line.appendTo(this)
+                line.appendTo(this, colorTheme = settings[KEY_COLOR_THEME])
             }
         }
 

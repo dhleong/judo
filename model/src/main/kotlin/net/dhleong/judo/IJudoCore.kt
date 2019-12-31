@@ -12,12 +12,14 @@ import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.script.IJudoScrollable
+import net.dhleong.judo.theme.ColorTheme
 import net.dhleong.judo.trigger.IMultiTriggerManager
 import net.dhleong.judo.trigger.ITriggerManager
 import java.io.File
 import java.net.URI
 
 val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persistentInput")
+val KEY_COLOR_THEME = StateKind<ColorTheme>("net.dhleong.judo.colorTheme")
 
 typealias OperatorFunc = suspend (IntRange) -> Unit
 
