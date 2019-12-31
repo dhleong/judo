@@ -90,4 +90,14 @@ fun ScriptInitContext.initMultiTriggers() = with(mode) {
             processor = { fn(it) }
         )
     }
+
+    registerFn<Unit>(
+        "unmultitrigger",
+        doc {
+            usage { arg("id", "String") }
+            body { "Delete the multitrigger with the specified id" }
+        }
+    ) { id: String ->
+        judo.multiTriggers.undefine(id)
+    }
 }
