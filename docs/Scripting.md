@@ -184,6 +184,7 @@ Name      | Returned Type | Description
 id        | `Int`         | The window's unique, numeric ID
 buffer    | `Buffer`      | The window's underlying `Buffer` object
 height    | `Int`         | The height of the window in rows
+hidden    | `Boolean`     | Whether or not the window should be hidden
 width     | `Int`         | The width of the window in columns
 onSubmit  | `(String) -> Unit` | A function to call when input is submitted while this window is focused
 `close()` | `None`        | Close the window
