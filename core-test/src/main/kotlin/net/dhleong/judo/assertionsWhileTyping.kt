@@ -58,15 +58,21 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         awaitIdleMainThread()
     }
 
-    // delay to ensure JudoCore has sufficient time to asynchronously
-    // process the keys across suspend points.
-    // FIXME this is terrible. there has got to be a better way to do do this...
-
-    delay(10)
+    // add one more wait now that we've submitted everything
     awaitIdleMainThread()
 }
 
-private suspend fun AssertionContext.awaitIdleMainThread() =
+private suspend fun AssertionContext.awaitIdleMainThread() {
+    // delay to ensure JudoCore has sufficient time to asynchronously
+    // process the keys across suspend points.
+    // FIXME this is terrible. there has got to be a better way to do do this...
+    delay(1)
+
+    // wait for the key to get dispatched
+    judo.dispatcher.awaitDispatch()
+
+    // and one more hop to the main thread just inc ase
     suspendCoroutine<Unit> { cont ->
         judo.onMainThread { cont.resume(Unit) }
     }
+}

@@ -39,7 +39,8 @@ class JudoCoreTest {
         renderer.output.clear()
         judo = JudoCore(
             renderer, renderer.mapRenderer, StateMap(),
-            connections = DummyConnectionFactory
+            connections = DummyConnectionFactory,
+            debug = DebugLevel.NORMAL
         )
     }
 

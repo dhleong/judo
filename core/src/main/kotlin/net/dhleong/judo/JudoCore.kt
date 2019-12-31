@@ -114,7 +114,7 @@ class JudoCore(
         const val CLIENT_VERSION = BuildConfig.VERSION
     }
 
-    override val dispatcher = JudoMainDispatcher()
+    override val dispatcher = JudoMainDispatcher(awaitEnabled = debug.isEnabled)
 
     override val aliases = AliasManager()
     override val events = EventManager()

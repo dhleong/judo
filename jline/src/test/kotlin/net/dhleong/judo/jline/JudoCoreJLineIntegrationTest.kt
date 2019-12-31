@@ -8,6 +8,7 @@ import assertk.assertions.hasSize
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.AssertionContext
+import net.dhleong.judo.DebugLevel
 import net.dhleong.judo.DummyConnectionFactory
 import net.dhleong.judo.JudoCore
 import net.dhleong.judo.StateMap
@@ -56,7 +57,8 @@ class JudoCoreJLineIntegrationTest {
         judo = JudoCore(
             renderer, mock {  },
             settings,
-            connections = DummyConnectionFactory
+            connections = DummyConnectionFactory,
+            debug = DebugLevel.NORMAL
         )
     }
 
