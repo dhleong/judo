@@ -20,14 +20,14 @@ class HorizontalStack(
     override fun add(item: IStack) {
         if (contents.isNotEmpty()) {
             // -1 for each separator (and an extra for the new item)
-            var available = width - contents.size
+            var available = width - visibleContentsCount
             for (row in contents) {
                 available -= row.width
             }
 
             // reduce the size of other buffers to make room for the new item
             if (available < item.width) {
-                val otherWidthDelta = (item.width - available) / contents.size
+                val otherWidthDelta = (item.width - available) / visibleContentsCount.coerceAtLeast(1)
                 for (row in contents) {
                     row.resize(maxOf(
                         WINDOW_MIN_WIDTH,
@@ -46,13 +46,14 @@ class HorizontalStack(
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // horizontal stack needs separators
         var col = x
-        for (i in contents.indices) {
-            if (i > 0) {
+        var i = 0
+        for (win in contents) {
+            if (win.isHidden) continue
+            if (i++ > 0) {
                 display.renderSeparator(x + col, y, height)
                 ++col
             }
 
-            val win = contents[i]
             win.render(display, col, y)
             col += win.width
         }
@@ -82,7 +83,8 @@ class HorizontalStack(
     }
 
     override fun resize(width: Int, height: Int) = doResize(
-        available = width - (contents.size - 1), // leave room for separators
+        width, height,
+        available = width - (visibleContentsCount - 1).coerceAtLeast(0), // leave room for separators
         minDimension = WINDOW_MIN_WIDTH,
         getDimension = { it.width },
         setDimension = { w -> resize(w, height) }

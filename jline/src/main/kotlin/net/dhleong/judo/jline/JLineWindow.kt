@@ -38,6 +38,20 @@ class JLineWindow(
             else -> height
         }
 
+    override var isWindowHidden: Boolean
+        get() = super.isWindowHidden
+        set(nowHidden) {
+            if (nowHidden != isWindowHidden) renderer.inTransaction {
+                super.isWindowHidden = nowHidden
+
+                if (!nowHidden) {
+                    // re-showing; trigger other windows to resize
+                    lastResizeRequest = ids.newTimestamp()
+                    renderer.onWindowResized(this)
+                }
+            }
+        }
+
     override var lastResizeRequest: Long = ids.newTimestamp()
 
     private var echoLine: FlavorableCharSequence? = null

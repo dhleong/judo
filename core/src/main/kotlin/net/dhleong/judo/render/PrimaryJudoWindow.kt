@@ -27,6 +27,12 @@ abstract class PrimaryJudoWindow(
         }
     override val isFocusable = true // primary window is ALWAYS focusable
 
+    override var isWindowHidden: Boolean
+        get() = false
+        set(_) {
+            throw UnsupportedOperationException("You may not hide the primary window")
+        }
+
     override var currentBuffer: IJudoBuffer
         get() = outputWindow.currentBuffer
         set(value) {

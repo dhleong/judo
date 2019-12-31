@@ -9,6 +9,8 @@ import net.dhleong.judo.jline.JLineTabpage
  */
 class RootStack(private var tabpage: JLineTabpage) : IStack {
 
+    override val isHidden: Boolean = false
+
     override val parent: IStack = this
     lateinit var child: IStack
 

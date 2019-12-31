@@ -6,17 +6,21 @@ import assertk.assertAll
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.each
 import assertk.assertions.exists
+import assertk.assertions.extracting
 import assertk.assertions.hasSize
 import assertk.assertions.hasToString
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotSameAs
 import assertk.assertions.isSameAs
 import assertk.assertions.isSuccess
+import assertk.assertions.isTrue
 import assertk.assertions.message
 import assertk.assertions.support.expected
 import kotlinx.coroutines.runBlocking
@@ -68,6 +72,24 @@ class CmdModeObjectInteropTest(
 //
 //            hasHeight(judo.tabpage.height - 4 - 1) // -1 for the separator!
 //        }
+    }
+
+    @Test fun `hsplit() and vsplit() can be set isHidden`() = runBlocking {
+        val trueValue = if (scriptType() == SupportedScriptTypes.PY) "True"
+            else "true"
+        mode.execute("""
+            h = hsplit(20)
+            h.hidden = $trueValue
+            v = vsplit(2)
+            v.hidden = $trueValue
+            print(h.hidden)
+            print(v.hidden)
+        """.trimIndent())
+
+        assertThat(judo.prints).all {
+            isNotEmpty()
+            extracting { it as Boolean }.each { it.isTrue() }
+        }
     }
 
     @Test fun `vsplit() returns an object supporting resize()`() = runBlocking {
@@ -208,6 +230,13 @@ class CmdModeObjectInteropTest(
         })
 
         assertThat(judo.prints).isEmpty()
+
+        mode.execute("print(newWin.onSubmit)")
+        assertThat(judo.prints).all {
+            hasSize(1)
+            each { it.isNotNull().isInstanceOf(Function::class) }
+        }
+        judo.prints.clear()
 
         judo.submit("mreynolds", fromMap = false)
         assertAll {

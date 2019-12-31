@@ -4,7 +4,6 @@ import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.SCROLL
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.search.BufferSearcher
-import java.lang.Math.abs
 
 /**
  * Core, non-rendering-dependent [IJudoWindow] implementations
@@ -24,6 +23,8 @@ abstract class BaseJudoWindow(
     override val id = ids.newWindow()
     override var width: Int = initialWidth
     override var height: Int = initialHeight
+
+    override var isWindowHidden: Boolean = false
 
     protected val search = BufferSearcher()
 

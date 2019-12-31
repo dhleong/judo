@@ -44,6 +44,17 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
     val isFocusable: Boolean
     var isFocused: Boolean
 
+    /**
+     * "hidden" windows are not focusable and do not render (IE:
+     * they effectively have 0 width and height). This allows us
+     * to create the overall layout as intended *once* and just
+     * hide windows that are not yet needed. This seems like a
+     * common use case for MUDs; it's less interesting to be
+     * constantly moving and resizing windows as you might when
+     * editing text/code.
+     */
+    var isWindowHidden: Boolean
+
     var currentBuffer: IJudoBuffer
 
     /** Must be -1 when cursor is not focused on status line */

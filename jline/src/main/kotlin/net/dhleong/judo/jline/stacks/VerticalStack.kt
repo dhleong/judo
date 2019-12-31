@@ -23,7 +23,7 @@ class VerticalStack(
 
             // reduce the size of other buffers to make room for the new item
             if (available < item.height) {
-                val otherHeightDelta = (item.height - available) / contents.size
+                val otherHeightDelta = (item.height - available) / visibleContentsCount.coerceAtLeast(1)
                 for (row in contents) {
                     row.resize(width, maxOf(
                         WINDOW_MIN_HEIGHT,
@@ -73,35 +73,13 @@ class VerticalStack(
         return -1
     }
 
-//    override fun resize(width: Int, height: Int) {
-//        var availableHeight = height
-//
-//        val last = contents.lastIndex
-//        for (i in contents.indices) {
-//            val item = contents[i]
-//            val requestedHeight = item.height
-//            val remainingRows = last - i
-//            val allottedHeight =
-//                if (remainingRows == 0) availableHeight
-//                else maxOf(
-//                    WINDOW_MIN_HEIGHT,
-//                    minOf(requestedHeight,
-//                        // leave room for the remaining rows
-//                        availableHeight - WINDOW_MIN_HEIGHT * remainingRows)
-//                )
-//            availableHeight -= allottedHeight
-//
-//            item.resize(width, allottedHeight)
-//        }
-//    }
-
     override fun resize(width: Int, height: Int) = doResize(
+        width, height,
         available = height,
         minDimension = WINDOW_MIN_HEIGHT,
         getDimension = { it.height },
         setDimension = { h -> resize(width, h) }
     )
-
 
     override fun focusUp(search: CountingStackSearch) = focus(search, -1, IStack::focusUp)
     override fun focusDown(search: CountingStackSearch) = focus(search, 1, IStack::focusDown)

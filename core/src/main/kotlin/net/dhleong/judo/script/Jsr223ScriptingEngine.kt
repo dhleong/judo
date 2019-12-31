@@ -198,16 +198,20 @@ class Jsr223JudoCore(
 }
 
 class Jsr223Window(
-    private val engine: Jsr223ScriptingEngine,
+    private val engine: ScriptingEngine,
     private val tabpage: IJudoTabpage,
     internal val window: IJudoWindow
 ) : IScriptWindow, IJudoWindow by window {
 
-    override val id: Int = window.id
-    override val width: Int = window.width
-    override val height: Int = window.visibleHeight
+    override val id: Int get() = window.id
+    override val width: Int get() = window.width
+    override val height: Int get() = window.visibleHeight
     override val buffer: IScriptBuffer
         get() = Jsr223Buffer(window, window.currentBuffer)
+
+    override var hidden: Boolean
+        get() = window.isWindowHidden
+        set(value) { window.isWindowHidden = value }
 
     @Suppress("UNCHECKED_CAST")
     override var onSubmit: Any?

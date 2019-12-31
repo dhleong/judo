@@ -1,7 +1,6 @@
 package net.dhleong.judo.jline
 
 import assertk.all
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.isTrue
 import net.dhleong.judo.MAX_INPUT_LINES
@@ -460,6 +459,56 @@ class JLineRendererTest {
         }
     }
 
+    @Test fun `Rendering with hidden windows`() {
+        val rightBuffer = bufferOf("""
+            Take my land
+        """.trimIndent())
+        val rightWindow = renderer.currentTabpage.vsplit(7, rightBuffer)
+            .apply { isWindowHidden = true }
+
+        renderer.currentTabpage.currentWindow = window
+        val topBuffer = bufferOf("""
+            Take my love
+        """.trimIndent())
+        val topWindow = renderer.currentTabpage.hsplit(1, topBuffer)
+            .apply { isWindowHidden = true }
+
+        renderer.currentTabpage.currentWindow = window
+        window.updateStatusLine(":prim", 5)
+
+        assertThat(display).all {
+            linesEqual("""
+                |____________________
+                |____________________
+                |____________________
+                |____________________
+                |:prim_______________
+                |____________________
+            """.trimMargin())
+
+            hasCursor(4, 5)
+        }
+
+        topWindow.isWindowHidden = false
+        assertThat(display).linesEqual("""
+                |Take my love________
+                |--------------------
+                |____________________
+                |____________________
+                |:prim_______________
+                |____________________
+            """.trimMargin())
+
+        rightWindow.isWindowHidden = false
+        assertThat(display).linesEqual("""
+                |Take my love _______
+                |------------ _______
+                |____________ Take my
+                |____________ land___
+                |:prim_______ -------
+                |____________ _______
+            """.trimMargin())
+    }
 }
 
 private fun JLineRenderer.updateInputLine(line: String, cursor: Int) {

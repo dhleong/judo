@@ -21,6 +21,7 @@ interface IScriptWindow {
     val id: Int
     val width: Int
     val height: Int
+    var hidden: Boolean
 
     val buffer: IScriptBuffer
 
