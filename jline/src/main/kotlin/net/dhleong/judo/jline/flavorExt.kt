@@ -3,6 +3,7 @@ package net.dhleong.judo.jline
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.transformBackground
 import net.dhleong.judo.theme.transformForeground
 import org.jline.utils.AttributedStyle
 
@@ -46,7 +47,7 @@ fun Flavor.toAttributedStyle(
         }
     }
     if (hasBackground) {
-        val bg = colorTheme.transformForeground(background)
+        val bg = colorTheme.transformBackground(background)
         style = if (bg is JudoColor.Default) {
             style.backgroundDefault()
         } else {
