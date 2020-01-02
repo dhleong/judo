@@ -6,6 +6,7 @@ import net.dhleong.judo.theme.ColorTheme
 import net.dhleong.judo.theme.transformBackground
 import net.dhleong.judo.theme.transformForeground
 import org.jline.utils.AttributedStyle
+import org.jline.utils.Colors
 
 // from AttributedStyle source, since they're not public...
 private const val F_BOLD = 0x00000001
@@ -84,8 +85,8 @@ internal fun JudoColor.toAnsiInt(): Int = when (this) {
     is JudoColor.Simple -> value.ansi
     is JudoColor.High256 -> value
     is JudoColor.FullRGB -> {
-        // convert to 256 colors (this is what JLine does)
-        16 + (red shr 3) * 36 + (green shr 3) * 6 + (blue shr 3)
+        // round to 256 colors
+        Colors.roundRgbColor(red, green, blue, 256)
     }
     JudoColor.Default -> throw IllegalArgumentException("Don't use toAnsiInt with JudoColor.Default")
 }
