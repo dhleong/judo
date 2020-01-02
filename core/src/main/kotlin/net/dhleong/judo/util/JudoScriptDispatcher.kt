@@ -80,7 +80,11 @@ class JudoScriptDispatcher : ExecutorCoroutineDispatcher() {
         return try {
             block()
         } finally {
-            lock.lock(this)
+            // we *were* locked, so if we aren't yet locked again,
+            // we need to regain the lock
+            if (!lock.holdsLock(this)) {
+                lock.lock(this)
+            }
         }
     }
 
