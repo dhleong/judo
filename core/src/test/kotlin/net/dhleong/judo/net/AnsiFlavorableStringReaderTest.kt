@@ -71,16 +71,12 @@ class AnsiFlavorableStringReaderTest {
             FlavorableStringBuilder(7).apply {
                 append("Take my ", flavor(
                     isBold = true,
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(6)
-                )
-                )
+                ))
                 append("love", flavor(
                     isBold = true,
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                )
-                )
+                ))
             }
         )
     }
@@ -98,7 +94,6 @@ class AnsiFlavorableStringReaderTest {
             FlavorableStringBuilder(7).apply {
                 append("Take my ", flavor(
                     isBold = true,
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(6)
                 ))
             },
@@ -106,7 +101,6 @@ class AnsiFlavorableStringReaderTest {
             FlavorableStringBuilder(4).apply {
                 append("love", flavor(
                     isBold = true,
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
                 ))
             }
@@ -131,7 +125,6 @@ class AnsiFlavorableStringReaderTest {
 
         val trailingFlavor = flavor(
             isBold = true,
-            hasForeground = true,
             foreground = JudoColor.Simple.from(2)
         )
 
@@ -155,9 +148,7 @@ class AnsiFlavorableStringReaderTest {
             hasLength(4)
             hasTrailingFlavor(
                 flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(7),
-                    hasBackground = true,
                     background = JudoColor.Simple.from(0)
                 )
             )
@@ -174,9 +165,7 @@ class AnsiFlavorableStringReaderTest {
             hasLength(4)
             hasTrailingFlavor(
                 flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(7),
-                    hasBackground = true,
                     background = JudoColor.Simple.from(0)
                 )
             )
@@ -189,12 +178,9 @@ class AnsiFlavorableStringReaderTest {
         ).isEqualTo(
             FlavorableStringBuilder(7).apply {
                 append("200color", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.High256(200),
-                    hasBackground = true,
                     background = JudoColor.High256(180)
-                )
-                )
+                ))
             }
         )
     }
@@ -205,10 +191,7 @@ class AnsiFlavorableStringReaderTest {
         assertThat(
             ansiCharsToFlavor(Flavor.default, s.toCharArray(), length)
         ).isEqualTo(
-            flavor(
-                hasForeground = true,
-                foreground = JudoColor.Simple.from(7)
-            )
+            flavor(foreground = JudoColor.Simple.from(7))
         )
     }
 
@@ -218,11 +201,9 @@ class AnsiFlavorableStringReaderTest {
         ).isEqualTo(
             FlavorableStringBuilder(7).apply {
                 append("W", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_WHITE)
                 ))
                 append("w", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple(JudoColor.Simple.Color.WHITE)
                 ))
             }
@@ -235,7 +216,6 @@ class AnsiFlavorableStringReaderTest {
         ).isEqualTo(
             FlavorableStringBuilder(9).apply {
                 append("RGB Color", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.FullRGB(250, 50, 20)
                 ))
             }
@@ -261,17 +241,12 @@ class AnsiFlavorableStringReaderTest {
         assertThat(line.parseAnsi()).isEqualTo(
             FlavorableStringBuilder(64).apply {
                 append("Take ", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(1)
-                )
-                )
+                ))
                 append("my", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(1),
-                    hasBackground = true,
                     background = JudoColor.Simple.from(2)
-                )
-                )
+                ))
             }
         )
 

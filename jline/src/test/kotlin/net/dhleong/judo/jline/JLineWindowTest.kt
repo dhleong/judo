@@ -110,22 +110,16 @@ class JLineWindowTest {
         val buffer = bufferOf(
             FlavorableStringBuilder(10).apply {
                 append("zoe ", flavor(
-                    hasBackground = true,
                     background = JudoColor.Simple.from(1)
-                )
-                )
+                ))
                 append("w", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                )
-                )
+                ))
             },
             FlavorableStringBuilder(10).apply {
                 append("wash", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(1)
-                )
-                )
+                ))
             }
         )
 
@@ -772,15 +766,11 @@ class JLineWindowTest {
         val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
                 append("  ", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(2)
-                )
-                )
+                ))
                 append("  ", flavor(
-                    hasForeground = true,
                     foreground = JudoColor.Simple.from(4)
-                )
-                )
+                ))
             })
         }
         assertThat(buffer.size).isEqualTo(1)
@@ -798,12 +788,9 @@ class JLineWindowTest {
         val buffer = emptyBuffer().apply {
             append(FlavorableStringBuilder.withDefaultFlavor(".").apply {
                 append("  ", flavor(
-                    hasBackground = true,
                     background = JudoColor.Simple.from(2)
-                )
-                )
+                ))
                 trailingFlavor = flavor(
-                    hasBackground = true,
                     background = JudoColor.Simple.from(5)
                 )
             })

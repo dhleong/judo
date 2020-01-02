@@ -51,15 +51,16 @@ operator fun Flavor.plus(flavor: Flavor?): Flavor {
         isStrikeThrough = isStrikeThrough || flavor?.isStrikeThrough ?: false,
         isHidden = isHidden || flavor?.isHidden ?: false,
 
-        hasForeground = hasForeground || flavor?.hasForeground ?: false,
-        hasBackground = hasBackground || flavor?.hasBackground ?: false,
-
-        foreground = flavor?.let { other ->
-            foreground + other.foreground
-        } ?: foreground,
-        background = flavor?.let { other ->
-            background + other.background
-        } ?: background
+        foreground = (
+            flavor?.let { other ->
+                foreground + other.foreground
+            } ?: foreground
+        ).takeIf { hasForeground || flavor?.hasForeground ?: false },
+        background = (
+            flavor?.let { other ->
+                background + other.background
+            } ?: background
+        ).takeIf { hasBackground || flavor?.hasBackground ?: false }
     )
 }
 
@@ -74,11 +75,8 @@ fun flavor(
     isStrikeThrough: Boolean = false,
     isHidden: Boolean = false,
 
-    hasForeground: Boolean = false,
-    hasBackground: Boolean = false,
-
-    foreground: JudoColor = JudoColor.Default,
-    background: JudoColor = JudoColor.Default
+    foreground: JudoColor? = null,
+    background: JudoColor? = null
 ): Flavor = when {
     // prefer IntFlavor where possible
     (
@@ -95,11 +93,11 @@ fun flavor(
         isStrikeThrough = isStrikeThrough,
         isHidden = isHidden,
 
-        hasForeground = hasForeground,
-        hasBackground = hasBackground,
+        hasForeground = foreground != null,
+        hasBackground = background != null,
 
-        foreground = foreground,
-        background = background
+        foreground = foreground ?: JudoColor.Default,
+        background = background ?: JudoColor.Default
     )
 
     // fallback to ExplicitFlavor
@@ -114,8 +112,8 @@ fun flavor(
         isStrikeThrough = isStrikeThrough,
         isHidden = isHidden,
 
-        hasForeground = hasForeground,
-        hasBackground = hasBackground
+        hasForeground = foreground != null,
+        hasBackground = background != null
     ), fg = foreground, bg = background)
 }
 
@@ -140,11 +138,8 @@ fun Flavor.copy(): Flavor = when {
         isStrikeThrough = isStrikeThrough,
         isHidden = isHidden,
 
-        hasForeground = hasForeground,
-        hasBackground = hasBackground,
-
-        foreground = foreground,
-        background = background
+        foreground = foreground.takeIf { hasForeground },
+        background = background.takeIf { hasBackground }
     )
 }
 
