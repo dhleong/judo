@@ -46,9 +46,4 @@ class JudoMainDispatcher(
             delay(1)
         }
     }
-
-    fun canDispatch(): Boolean {
-        println("canDispatch: ${myExecutor.queue.isEmpty()} / ${myExecutor.activeCount}")
-        return myExecutor.activeCount == 0
-    }
 }

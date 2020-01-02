@@ -11,6 +11,23 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.CoroutineContext
 
 /**
+ * Scripting unfortunately needs to execute on its own thread instead of the
+ * main thread. However, since the [net.dhleong.judo.script.ScriptingEngine]
+ * has no knowledge of coroutines it cannot easily participate in the suspension,
+ * and so we have cases where a script is calling into suspending code like
+ * [net.dhleong.judo.IJudoCore.feedKeys] from the Scripting Dispatcher, but
+ * can't suspend and needs to block the thread.
+ *
+ * In such cases, it is safe to access the [net.dhleong.judo.script.ScriptingEngine]
+ * from a new thread, since the other thread "accessing" it is blocked, and
+ * cannot run. It is important for this to be true, since suspending code
+ * can easily call into the engine again, for example when feeding keys via
+ * `normal()` into a lambda-based mapping.
+ *
+ * Single-threaded access to the engine is enforced using a [Mutex]. When we have
+ * to exit the scripting context and run suspending code, we temporarily unlock
+ * the [Mutex] so suspending code can then call back into the engine.
+ *
  * @author dhleong
  */
 class JudoScriptDispatcher : ExecutorCoroutineDispatcher() {
@@ -44,15 +61,19 @@ class JudoScriptDispatcher : ExecutorCoroutineDispatcher() {
         delegate.dispatchYield(context, block)
     }
 
-    fun <R> withLockBlocking(block: () -> R): R =
+    fun <R> withLockBlocking(block: suspend () -> R): R =
         runBlocking {
-            println("acquire lock...")
             lock.withLockReentrant(this@JudoScriptDispatcher) {
-                println("acquired lock!")
                 block()
             }
         }
 
+    /**
+     * When running suspending code from within the scripting context,
+     * we need to release the lock in case a script is triggering
+     * code that triggers feeding keys (eg: `normal()` from a mapping)
+     * so a new Script thread can execute if necessary
+     */
     suspend fun <R> withoutLock(block: suspend () -> R): R {
         require(lock.holdsLock(this))
         lock.unlock()

@@ -398,7 +398,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    override fun map(mode: String, from: String, to: () -> Unit, description: String) {
+    override fun map(mode: String, from: String, to: suspend () -> Unit, description: String) {
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")
@@ -658,9 +658,7 @@ class JudoCore(
 
     override suspend fun readKey(): Key {
         val producer = keyStrokeChannel!! // must be initialized by now
-        println("read... @${Thread.currentThread().name}")
         val key = producer.receive()
-        println("... read ${key.describe()} @${Thread.currentThread().name}")
         if (key.keyCode !in UNRECORDED_KEY_CODES) {
             undo.onKeyStroke(key)
         }
@@ -880,8 +878,7 @@ class JudoCore(
         while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
                 try {
-                    feedKey(readKey().also { println("feed ${it.describe()} to ${currentMode.name}") }, remap, fromMap)
-                    println("...fed in ${currentMode.name}")
+                    feedKey(readKey(), remap, fromMap)
                 } catch (e: ClosedReceiveChannelException) {
                     // should only happen in tests
                 }

@@ -116,7 +116,6 @@ class ScriptInputMode(
     suspend fun awaitResult(): String? = suspendCoroutine { cont ->
         GlobalScope.launch {
             while (!exitted) {
-                println("input: read key... @${Thread.currentThread()}")
                 val stroke = try {
                     judo.readKey()
                 } catch (e: ClosedReceiveChannelException) {
@@ -125,7 +124,6 @@ class ScriptInputMode(
                     cont.resume(null)
                     return@launch
                 }
-                println("input: ... read key @${Thread.currentThread()}")
                 judo.feedKey(stroke)
             }
 

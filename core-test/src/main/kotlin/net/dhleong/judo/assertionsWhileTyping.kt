@@ -56,7 +56,8 @@ suspend fun AssertionContext.yieldKeys(keys: String) {
         channel.send(k)
 
         // wait until the main thread is idle (ish)
-        awaitIdleMainThread()
+        yield()
+        judo.dispatcher.awaitDispatch()
     }
 
     // delay to ensure JudoCore has sufficient time to asynchronously
@@ -73,6 +74,7 @@ private suspend fun AssertionContext.awaitIdleMainThread() {
 
     // wait for the key to get dispatched
     judo.dispatcher.awaitDispatch()
+    judo.dispatcher.awaitIdle()
 
     // and one more hop to the main thread just inc ase
     suspendCoroutine<Unit> { cont ->

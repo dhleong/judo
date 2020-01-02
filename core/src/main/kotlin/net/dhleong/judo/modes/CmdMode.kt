@@ -1,5 +1,6 @@
 package net.dhleong.judo.modes
 
+import kotlinx.coroutines.withContext
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRenderer
 import net.dhleong.judo.alias.AliasProcesser
@@ -154,7 +155,9 @@ class CmdMode(
                 judo.map(
                     modeName,
                     fromKeys,
-                    dispatcher.wrapWithLock(fn),
+                    { withContext(dispatcher) {
+                        fn()
+                    } },
                     mapTo.toString()
                 )
             }

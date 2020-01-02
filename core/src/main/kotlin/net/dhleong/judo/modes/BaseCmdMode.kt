@@ -60,8 +60,6 @@ abstract class BaseCmdMode(
     protected abstract val registeredFns: MutableSet<String>
     protected abstract val registeredVars: MutableMap<String, JudoScriptingEntity>
 
-//    private val dispatcher = SingleThreadDispatcher("judo:cmd")
-
     internal val dispatcher = JudoScriptDispatcher()
 
     val mapping = KeyMapping(

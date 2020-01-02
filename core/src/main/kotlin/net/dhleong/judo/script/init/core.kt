@@ -67,10 +67,7 @@ fun ScriptInitContext.initCore() = with(mode) {
         """.trimMargin()
             }
         }
-    ) { args: Array<Any> ->
-        println("input($args)")
-        adaptSuspend {
-            println("...input")
+    ) { args: Array<Any> -> adaptSuspend {
         if (args.isNotEmpty()) {
             readInput(args[0] as String)
         } else {
