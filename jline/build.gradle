@@ -7,7 +7,7 @@ sourceCompatibility = 1.8
 
 dependencies {
     compile project(':core')
-    
+
     compile deps.kotlin.core
     compile deps.jline.terminal
     compile deps.jline.jansi
@@ -17,3 +17,11 @@ dependencies {
     testCompile deps.test.assertk
     testCompile deps.test.mockitok
 }
+
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
