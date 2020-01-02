@@ -142,7 +142,7 @@ class CmdMode(
 
             else -> {
                 val fn = try {
-                    engine.callableToFunction0<Unit>(mapTo)
+                    callableToFunction0<Unit>(mapTo)
                 } catch (e: Throwable) {
                     throw IllegalArgumentException(
                         "Unexpected map-to value $mapTo " +
@@ -154,7 +154,7 @@ class CmdMode(
                 judo.map(
                     modeName,
                     fromKeys,
-                    fn,
+                    dispatcher.wrapWithLock(fn),
                     mapTo.toString()
                 )
             }
@@ -163,22 +163,43 @@ class CmdMode(
         queueMap(modeName, fromKeys)
     }
 
+    private fun <R> callableToFunction0(fromScript: Any): () -> R =
+        dispatcher.wrapWithLock(engine.callableToFunction0(fromScript))
+
+    private fun callableToFunction1(fromScript: Any): Function1<Any?, Any?> {
+        val fn = engine.callableToFunction1(fromScript)
+        return { arg ->
+            dispatcher.withLockBlocking {
+                fn(arg)
+            }
+        }
+    }
+
+    private fun callableToFunctionN(fromScript: Any): Function1<Array<Any?>, Any?> {
+        val fn = engine.callableToFunctionN(fromScript)
+        return { arg ->
+            dispatcher.withLockBlocking {
+                fn(arg)
+            }
+        }
+    }
+
     internal fun defineEvent(eventName: String, handlerFromScript: Any) {
         val handler: EventHandler = when (val argCount = engine.callableArgsCount(handlerFromScript)) {
             0 -> {
-                val fn0 = engine.callableToFunction0<Any>(handlerFromScript)
+                val fn0 = callableToFunction0<Any>(handlerFromScript)
                 handler { fn0() }
             }
 
             1 -> {
-                val fn1 = engine.callableToFunction1(handlerFromScript)
+                val fn1 = callableToFunction1(handlerFromScript)
                 object : EventHandler {
                     override fun invoke(arg: Any?) { fn1(arg) }
                 }
             }
 
             else -> {
-                val fnN = engine.callableToFunctionN(handlerFromScript)
+                val fnN = callableToFunctionN(handlerFromScript)
 
                 object : EventHandler {
                     override fun invoke(rawArg: Any?) {

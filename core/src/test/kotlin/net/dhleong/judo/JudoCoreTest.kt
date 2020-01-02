@@ -338,6 +338,15 @@ class JudoCoreTest {
         yieldKeys(":print(input('test: '))<cr>hi<esc>")
         assertThat(renderer.outputLines).isEqualTo(listOf("None"))
     }
+
+    @Test(timeout = 10_000) fun `feed keys via normal() via map`() = runBlocking {
+        judo.cmdMode.execute("""
+            nnoremap("<space>p", lambda: normal(':print("mreynolds")<cr>'))
+        """.trimIndent())
+
+        judo.feedKeys("<space>p")
+        assertThat(renderer.outputLines).containsExactly("mreynolds")
+    }
 }
 
 private fun JudoCore.appendOutput(buffer: String) =

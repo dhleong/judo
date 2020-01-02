@@ -54,7 +54,6 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
-import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.flavor
@@ -181,8 +180,6 @@ class JudoCore(
 
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
-
-    private val ids = IdManager()
 
     private val debugLogFile = File("debug-log.txt")
 
@@ -661,7 +658,9 @@ class JudoCore(
 
     override suspend fun readKey(): Key {
         val producer = keyStrokeChannel!! // must be initialized by now
+        println("read... @${Thread.currentThread().name}")
         val key = producer.receive()
+        println("... read ${key.describe()} @${Thread.currentThread().name}")
         if (key.keyCode !in UNRECORDED_KEY_CODES) {
             undo.onKeyStroke(key)
         }
@@ -881,7 +880,8 @@ class JudoCore(
         while (job.isActive && !channel.isClosedForReceive) {
             redirectErrors("INTERNAL ERROR: ") {
                 try {
-                    feedKey(readKey(), remap, fromMap)
+                    feedKey(readKey().also { println("feed ${it.describe()} to ${currentMode.name}") }, remap, fromMap)
+                    println("...fed in ${currentMode.name}")
                 } catch (e: ClosedReceiveChannelException) {
                     // should only happen in tests
                 }
