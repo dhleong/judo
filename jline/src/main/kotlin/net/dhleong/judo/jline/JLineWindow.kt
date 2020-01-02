@@ -1,5 +1,6 @@
 package net.dhleong.judo.jline
 
+import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
@@ -114,7 +115,8 @@ class JLineWindow(
             buffer[i].splitAttributedLinesInto(
                 renderWorkspace,
                 windowWidth = width,
-                wordWrap = wordWrap
+                wordWrap = wordWrap,
+                colorTheme = settings[KEY_COLOR_THEME]
             )
         }
 
