@@ -54,7 +54,6 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
-import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.PrimaryJudoWindow
 import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.flavor
@@ -181,8 +180,6 @@ class JudoCore(
 
     private val opMode = OperatorPendingMode(this, buffer)
     private val normalMode = NormalMode(this, buffer, sendHistory, opMode)
-
-    private val ids = IdManager()
 
     private val debugLogFile = File("debug-log.txt")
 
@@ -401,7 +398,7 @@ class JudoCore(
         throw IllegalArgumentException("No such mode $mode")
     }
 
-    override fun map(mode: String, from: String, to: () -> Unit, description: String) {
+    override fun map(mode: String, from: String, to: suspend () -> Unit, description: String) {
         modes[mode]?.let { modeObj ->
             if (modeObj !is MappableMode) {
                 throw IllegalArgumentException("$mode does not support mapping")

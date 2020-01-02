@@ -45,7 +45,5 @@ class JudoMainDispatcher(
             // here to give it some time to do that first
             delay(1)
         }
-
-        awaitIdle()
     }
 }

@@ -35,3 +35,11 @@ buildConfig {
     version = config.version
     packageName = 'net.dhleong.judo'
 }
+
+test {
+    testLogging {
+        events "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+

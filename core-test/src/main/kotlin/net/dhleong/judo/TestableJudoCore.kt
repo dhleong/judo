@@ -81,7 +81,7 @@ class TestableJudoCore(
         }
     }
 
-    override fun map(mode: String, from: String, to: () -> Unit, description: String) {
+    override fun map(mode: String, from: String, to: suspend () -> Unit, description: String) {
         maps.add(listOf(mode, from, to, false))
         if (mode == normalMode.name) {
             normalMode.userMappings.map(Keys.parse(from), action { to() })

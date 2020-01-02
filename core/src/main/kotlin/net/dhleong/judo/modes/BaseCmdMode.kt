@@ -24,8 +24,8 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.script.JudoScriptInvocation
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.util.Clearable
+import net.dhleong.judo.util.JudoScriptDispatcher
 import net.dhleong.judo.util.PatternSpec
-import net.dhleong.judo.util.SingleThreadDispatcher
 import net.dhleong.judo.util.VisibleForTesting
 import net.dhleong.judo.util.hash
 import java.io.File
@@ -60,7 +60,7 @@ abstract class BaseCmdMode(
     protected abstract val registeredFns: MutableSet<String>
     protected abstract val registeredVars: MutableMap<String, JudoScriptingEntity>
 
-    private val dispatcher = SingleThreadDispatcher("judo:cmd")
+    internal val dispatcher = JudoScriptDispatcher()
 
     val mapping = KeyMapping(
         keys("<up>") to action { history.scroll(-1, clampCursor = false) },
