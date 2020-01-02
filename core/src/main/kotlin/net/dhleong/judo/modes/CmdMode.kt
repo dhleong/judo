@@ -9,10 +9,6 @@ import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.event.handler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
-import net.dhleong.judo.render.FlavorableStringBuilder
-import net.dhleong.judo.render.JudoColor
-import net.dhleong.judo.render.flavor.Flavor
-import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingEngine
@@ -283,10 +279,6 @@ class CmdMode(
         // TODO: current world URI?
 
         else -> null
-    }
-
-    internal fun recolor(kind: String, from: Any, to: Any) {
-        TODO("recolor")
     }
 
     private inline fun withCurrentScriptFile(file: File, block: () -> Unit) {

@@ -8,10 +8,10 @@ typealias ColorTransform = (JudoColor) -> JudoColor
  * @author dhleong
  */
 data class ColorSet(
-    val default: JudoColor?,
-    val simple: Map<JudoColor.Simple, JudoColor>?,
-    val transform256: ((Int) -> JudoColor)?,
-    val transformRgb: ((Int, Int, Int) -> JudoColor)?
+    val default: JudoColor? = null,
+    val simple: Map<JudoColor.Simple, JudoColor?>? = null,
+    val transform256: ((Int) -> JudoColor)? = null,
+    val transformRgb: ((Int, Int, Int) -> JudoColor)? = null
 ) : ColorTransform {
 
     override fun invoke(original: JudoColor): JudoColor = when (original) {
@@ -24,8 +24,8 @@ data class ColorSet(
 }
 
 data class ColorTheme(
-    val foreground: ColorTransform,
-    val background: ColorTransform
+    val foreground: ColorTransform? = null,
+    val background: ColorTransform? = null
 )
 
 fun ColorTheme?.transformForeground(color: JudoColor) =

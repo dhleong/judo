@@ -1,6 +1,7 @@
 package net.dhleong.judo.script.init
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.flavor.Flavor
@@ -8,6 +9,22 @@ import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.doc
 import net.dhleong.judo.script.registerFn
+import net.dhleong.judo.theme.ColorSet
+import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.ColorTransform
+
+enum class RecolorKind {
+    FOREGROUND,
+    BACKGROUND,
+    ALL,
+}
+
+fun String.toKind() = when (this) {
+    "FG", "fg" -> RecolorKind.FOREGROUND
+    "BG", "bg" -> RecolorKind.BACKGROUND
+    "ALL", "all" -> RecolorKind.ALL
+    else -> throw IllegalArgumentException("Invalid recolor kind '$this'")
+}
 
 /**
  * @author dhleong
@@ -62,7 +79,8 @@ fun ScriptInitContext.initColors() = with(mode) {
         }
 
         val (kindRaw, name, replacement) = args
-        recolor(kindRaw as String, name, replacement)
+        val kind = (kindRaw as String).toKind()
+        recolor(kind, name, replacement)
     }
 
     registerFn<Unit>(
@@ -76,8 +94,8 @@ fun ScriptInitContext.initColors() = with(mode) {
                 Revert a `recolor` setting; see `recolor` for arg meanings.
             """.trimIndent() }
         }
-    ) { kind: String, name: String ->
-        TODO()
+    ) { kind: String, name: Any ->
+        recolor(kind.toKind(), from = name, to = null)
     }
 }
 
@@ -147,3 +165,117 @@ private inline fun basicColorsLine(
 
     trailingFlavor = Flavor.default
 }
+
+private fun ScriptInitContext.recolor(kind: RecolorKind, from: Any, to: Any?) = with(judo) {
+    val old = state[KEY_COLOR_THEME] ?: ColorTheme()
+
+    val new = with(ColorTransformer(this@recolor)) {
+        when (kind) {
+            RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground?.update(from, to))
+            RecolorKind.BACKGROUND -> old.copy(background = old.background?.update(from, to))
+            RecolorKind.ALL -> ColorTheme(
+                background = old.background?.update(from, to),
+                foreground = old.foreground?.update(from, to)
+            )
+        }
+    }
+
+    state[KEY_COLOR_THEME] = new
+    redraw()
+}
+
+private class ColorTransformer(private val context: ScriptInitContext) {
+
+    fun ColorTransform?.update(from: Any, to: Any?): ColorTransform? {
+        val base = (this as? ColorSet) ?: ColorSet()
+        val fromSimpleColor = from.toSimpleColor()
+        if (fromSimpleColor != null) {
+            val old = base.simple ?: emptyMap()
+            return base.copy(simple = old + mapOf(fromSimpleColor to to?.toColor()))
+        }
+
+        return when (from) {
+            "simple" -> base.copy(
+                simple = mutableMapOf<JudoColor.Simple, JudoColor?>().also { m ->
+                    val replacement = to?.toColor()
+                    for (c in JudoColor.Simple.Color.values()) {
+                        m[JudoColor.Simple(c)] = replacement
+                    }
+                }
+            )
+
+            "256" -> base.copy(
+                transform256 = to?.to256Transform()
+            )
+
+            "rgb" -> base.copy(
+                transformRgb = to?.toRgbTransform()
+            )
+
+            else -> throw IllegalArgumentException("Unknown color transform from $from to $to")
+        }
+    }
+
+    private fun Any.to256Transform(): (Int) -> JudoColor {
+        toColor()?.let { color ->
+            return { color }
+        }
+
+        val fn = context.engine.callableToFunction1(this)
+        return { color ->
+            val result = fn(color)
+            result?.toColor()
+                ?: throw IllegalArgumentException("Invalid color: $result")
+        }
+    }
+
+    private fun Any.toRgbTransform(): (Int, Int, Int) -> JudoColor {
+        toColor()?.let { color ->
+            return { _, _, _ -> color }
+        }
+
+        val fn = context.engine.callableToFunctionN(this)
+        return { red, green, blue ->
+            val result = fn(arrayOf(red, green, blue))
+            result?.toColor()
+                ?: throw IllegalArgumentException("Invalid color: $result")
+        }
+    }
+}
+
+private fun Any.toSimpleColor(): JudoColor.Simple? =
+    if (this !is Int || this !in 0..15) null
+    else JudoColor.Simple.from(this)
+
+private fun Any.to256Color(): JudoColor.High256? =
+    if (this !is Int || this !in 16..255) null
+    else JudoColor.High256(this)
+
+private fun Any.toRgbColor(): JudoColor.FullRGB? =
+    if (this !is String || !isNotEmpty() || this[0] != '#') null
+    else when (this.length) {
+        4 -> {
+            val r = this[1]
+            val g = this[2]
+            val b = this[3]
+
+            "#$r$r$g$g$b$b".toRgbColor()
+        }
+
+        7 -> try {
+            val r = substring(1, 3).toInt(16)
+            val g = substring(3, 5).toInt(16)
+            val b = substring(5, 7).toInt(16)
+            JudoColor.FullRGB(r, g, b)
+        } catch (e: NumberFormatException) {
+            throw IllegalArgumentException("Invalid RGB color $this", e)
+        }
+
+        else -> throw IllegalArgumentException("Invalid RGB color $this")
+    }
+
+
+private fun Any.toColor(): JudoColor? =
+    toSimpleColor()
+        ?: to256Color()
+        ?: toRgbColor()
