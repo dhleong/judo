@@ -345,6 +345,10 @@ class JudoCoreTest {
         """.trimIndent())
 
         judo.feedKeys("<space>p")
+        judo.dispatcher.apply {
+            awaitDispatch()
+            awaitIdle()
+        }
         assertThat(renderer.outputLines).containsExactly("mreynolds")
     }
 }
