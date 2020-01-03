@@ -9,6 +9,7 @@ import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.doc
 import net.dhleong.judo.script.registerFn
+import net.dhleong.judo.theme.AppColors
 import net.dhleong.judo.theme.ColorSet
 import net.dhleong.judo.theme.ColorTheme
 import net.dhleong.judo.theme.ColorTransform
@@ -131,7 +132,7 @@ private fun ScriptInitContext.unrecolor(
     args: Array<Any>
 ) {
     if (args.isEmpty()) {
-        settings.remove(ColorTheme)
+        settings.remove(AppColors)
         judo.redraw()
         return
     }
@@ -210,7 +211,8 @@ private inline fun basicColorsLine(
 }
 
 private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
-    val old = state[ColorTheme] ?: ColorTheme()
+    val colors = state[AppColors] ?: AppColors()
+    val old = colors.output
 
     val new = when (kind) {
         RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
@@ -221,7 +223,7 @@ private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
         )
     }
 
-    state[ColorTheme] = new
+    state[AppColors] = colors.copy(output = new)
     context.judo.redraw()
 }
 

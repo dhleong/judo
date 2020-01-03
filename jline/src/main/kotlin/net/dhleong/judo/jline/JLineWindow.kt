@@ -7,7 +7,10 @@ import net.dhleong.judo.render.BaseJudoWindow
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.theme.AppColors
 import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.UiElement
+import net.dhleong.judo.theme.get
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -104,7 +107,8 @@ class JLineWindow(
 
         val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
-        val theme = buffer.settings[ColorTheme]
+        val theme = buffer.settings[AppColors]
+        val colors = theme?.output
 
         // iterating from oldest to newest
         for (i in end..start) {
@@ -116,7 +120,7 @@ class JLineWindow(
                 renderWorkspace,
                 windowWidth = width,
                 wordWrap = wordWrap,
-                colorTheme = theme
+                colorTheme = colors
             )
         }
 
@@ -196,15 +200,16 @@ class JLineWindow(
             }
 
             display.withLine(x, line, lineWidth = width) {
-                statusLineToRender.appendTo(this, colorTheme = theme)
+                statusLineToRender.appendTo(this, colorTheme = colors)
             }
         } else if (isFocusable) {
             // TODO faded out status? or just a background color?
 //            display.clearLine(x, line, 0, width)
 
             display.withLine(x, line, lineWidth = width) {
+                val style = theme[UiElement.Dividers].toAttributedStyle()
                 for (i in 0 until width) {
-                    append('-')
+                    append("-", style)
                 }
             }
         }

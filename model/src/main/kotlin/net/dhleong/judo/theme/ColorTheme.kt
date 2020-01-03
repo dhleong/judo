@@ -2,8 +2,15 @@ package net.dhleong.judo.theme
 
 import net.dhleong.judo.StateKind
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.flavor
 
 typealias ColorTransform = (JudoColor) -> JudoColor
+
+sealed class UiElement {
+    object Dividers : UiElement()
+    object Editor : UiElement()
+    object Echo : UiElement()
+}
 
 /**
  * @author dhleong
@@ -27,8 +34,18 @@ data class ColorSet(
 data class ColorTheme(
     val foreground: ColorTransform? = null,
     val background: ColorTransform? = null
+)
+
+data class UiTheme(
+    val elements: Map<UiElement, JudoColor?>? = null
+)
+
+data class AppColors(
+    val output: ColorTheme = ColorTheme(),
+    val foreground: UiTheme? = null,
+    val background: UiTheme? = null
 ) {
-    companion object Key : StateKind<ColorTheme>("net.dhleong.judo.colorTheme")
+    companion object Key : StateKind<AppColors>("net.dhleong.judo.colorTheme")
 }
 
 fun ColorTheme?.transformForeground(color: JudoColor) =
@@ -36,3 +53,15 @@ fun ColorTheme?.transformForeground(color: JudoColor) =
 
 fun ColorTheme?.transformBackground(color: JudoColor) =
     this?.background?.invoke(color) ?: color
+
+val AppColors?.fg: UiTheme? get() = this?.foreground
+val AppColors?.bg: UiTheme? get() = this?.background
+
+operator fun UiTheme?.get(element: UiElement) =
+    this?.elements?.get(element) ?: JudoColor.Default
+
+operator fun AppColors?.get(element: UiElement) = flavor(
+    foreground = fg[element].takeUnless { it is JudoColor.Default },
+    background = bg[element].takeUnless { it is JudoColor.Default }
+)
+

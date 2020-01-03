@@ -80,7 +80,23 @@ interface FlavorableCharSequence : CharSequence {
         endIndex: Int = startIndex + 1
     )
 
+    /**
+     * Replace [Flavor] over this entire Sequence
+     */
+    fun replaceFlavor(flavor: Flavor) = setFlavor(flavor, 0, length)
+
     fun removeTrailingNewline(): Boolean
+}
+
+/**
+ * Like [FlavorableCharSequence.replaceFlavor], but only if the flavor
+ * isn't already set on the first character in the line
+ */
+fun FlavorableCharSequence.lazyReplaceFlavor(flavor: Flavor) {
+    if (isEmpty()) return
+    if (getFlavor(0) != flavor) {
+        replaceFlavor(flavor)
+    }
 }
 
 inline fun FlavorableCharSequence.forEachChunk(
