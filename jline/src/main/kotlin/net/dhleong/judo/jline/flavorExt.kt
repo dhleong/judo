@@ -6,7 +6,7 @@ import net.dhleong.judo.theme.ColorTheme
 import net.dhleong.judo.theme.transformBackground
 import net.dhleong.judo.theme.transformForeground
 import org.jline.utils.AttributedStyle
-import org.jline.utils.Colors
+import kotlin.math.round
 
 // from AttributedStyle source, since they're not public...
 private const val F_BOLD = 0x00000001
@@ -86,8 +86,19 @@ internal fun JudoColor.toAnsiInt(): Int = when (this) {
     is JudoColor.High256 -> value
     is JudoColor.FullRGB -> {
         // round to 256 colors
-        Colors.roundRgbColor(red, green, blue, 256)
+        roundAnsiRgb(red, green, blue)
     }
     JudoColor.Default -> throw IllegalArgumentException("Don't use toAnsiInt with JudoColor.Default")
 }
 
+// from https://github.com/chalk/ansi-styles/issues/11
+@Suppress("NOTHING_TO_INLINE")
+private inline fun roundAnsiRgb(r8: Int, g8: Int, b8: Int): Int {
+    val r = applyDomain(r8, 0, 255, 0, 5)
+    val g = applyDomain(g8, 0, 255, 0, 5)
+    val b = applyDomain(b8, 0, 255, 0, 5)
+    return ((36 * r) + (6 * g) + b + 16).toInt()
+}
+@Suppress("NOTHING_TO_INLINE", "SameParameterValue")
+private inline fun applyDomain(v: Int, lb: Int, ub: Int, tlb: Int, tub: Int): Double =
+    round(((v - lb) / (ub - lb).toDouble()) * (tub - tlb) + tlb)
