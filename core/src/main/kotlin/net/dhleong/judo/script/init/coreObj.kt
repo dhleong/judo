@@ -28,6 +28,16 @@ class CoreScripting(
         context.mode.config(arrayOf(setting, value))
     }
 
+    @Doc("Echo some transient text to the screen locally.")
+    fun echo(vararg args: Any) {
+        context.judo.echo(*args)
+    }
+
+    @Doc("Print some output into the current buffer locally.")
+    fun print(vararg args: Any) {
+        context.judo.print(*args)
+    }
+
     @Doc("""
         Feed some text into the text completion system.
         NOTE: This does not yet guarantee that the provided words will
@@ -55,6 +65,34 @@ class CoreScripting(
     fun normal(keys: String) = normal(keys, true)
     fun normal(keys: String, remap: Boolean) = context.adaptSuspend {
         context.judo.feedKeys(keys, remap, mode = "normal")
+    }
+
+    @Doc("""
+        Force a redraw of the screen; clears any echo()'d output
+    """)
+    fun redraw() {
+        context.judo.redraw()
+    }
+
+    @Doc("""
+        Exit Judo.
+    """)
+    fun quit() {
+        context.judo.quit()
+    }
+
+    @Doc("""
+        Reload the last-loaded, non-MYJUDORC script file.
+    """)
+    fun reload() {
+        context.mode.reload()
+    }
+
+    @Doc("""
+        Send some text to the connected server.
+    """)
+    fun send(text: String) {
+        context.judo.send(text, true)
     }
 
 }

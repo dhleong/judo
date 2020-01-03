@@ -45,8 +45,12 @@ private fun List<Method>.extractJudoDoc() = doc {
     val docBody = StringBuilder()
     for (m in this@extractJudoDoc) {
         usage {
-            for (arg in m.parameters) {
-                arg(arg.name, arg.type.stringified())
+            if (m.parameterCount == 1 && m.isVarArgs) {
+                withVarArgs()
+            } else {
+                for (arg in m.parameters) {
+                    arg(arg.name, arg.type.stringified())
+                }
             }
 
             if (m.returnType != null && m.returnType?.simpleName != "void") {
@@ -60,6 +64,10 @@ private fun List<Method>.extractJudoDoc() = doc {
             docBody.append(doc.body.trimIndent())
         }
     }
+
+    if (docBody.isEmpty()) throw IllegalStateException(
+        "No documentation provided for ${first().name}"
+    )
 
     body { docBody.toString() }
 }
@@ -85,6 +93,10 @@ private fun ScriptInitContext.register(obj: ScriptingObject, f: DocumentedScript
         val m = methodByParamCount[args.size] ?: throw IllegalArgumentException(
             "No overload of ${f.name} accepts ${args.size} arguments"
         )
-        m.invoke(obj, *args)
+        if (m.isVarArgs) {
+            m.invoke(obj, args)
+        } else {
+            m.invoke(obj, *args)
+        }
     }
 }
