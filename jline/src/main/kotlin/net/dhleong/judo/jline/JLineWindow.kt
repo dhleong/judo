@@ -105,6 +105,7 @@ class JLineWindow(
 
         val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
+        val theme = buffer.settings[KEY_COLOR_THEME]
 
         // iterating from oldest to newest
         for (i in end..start) {
@@ -116,7 +117,7 @@ class JLineWindow(
                 renderWorkspace,
                 windowWidth = width,
                 wordWrap = wordWrap,
-                colorTheme = buffer.settings[KEY_COLOR_THEME]
+                colorTheme = theme
             )
         }
 
@@ -196,7 +197,7 @@ class JLineWindow(
             }
 
             display.withLine(x, line, lineWidth = width) {
-                statusLineToRender.appendTo(this)
+                statusLineToRender.appendTo(this, colorTheme = theme)
             }
         } else if (isFocusable) {
             // TODO faded out status? or just a background color?
