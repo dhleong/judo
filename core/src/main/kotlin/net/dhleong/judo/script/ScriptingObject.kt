@@ -85,18 +85,52 @@ fun ScriptInitContext.registerFrom(obj: ScriptingObject) {
 }
 
 private fun ScriptInitContext.register(obj: ScriptingObject, f: DocumentedScriptFunction) {
+    if (f.methods.size == 1) {
+        val m = f.methods.first()
+        if (registerSingle(obj, f, m)) {
+            return
+        }
+    }
+
     val methodByParamCount = List(f.methods.last().parameterCount + 1) { index ->
         f.methods.firstOrNull { it.parameterCount == index }
     }
 
     registerFn<Any>(f.name, f.doc) { args: Array<Any> ->
+        val firstMethod = methodByParamCount.first { it != null }
+        if (firstMethod!!.isVarArgs) {
+            return@registerFn firstMethod.invoke(obj, args)
+        }
+
+        if (args.size >= methodByParamCount.size) {
+            throw IllegalArgumentException("Unexpected number of arguments (${args.size})")
+        }
         val m = methodByParamCount[args.size] ?: throw IllegalArgumentException(
             "No overload of ${f.name} accepts ${args.size} arguments"
         )
-        if (m.isVarArgs) {
-            m.invoke(obj, args)
-        } else {
-            m.invoke(obj, *args)
-        }
+
+        m.invoke(obj, *args)
     }
+}
+
+private fun ScriptInitContext.registerSingle(
+    obj: ScriptingObject,
+    f: DocumentedScriptFunction,
+    m: Method
+): Boolean {
+    if (m.isVarArgs) return false
+
+    when (m.parameterCount) {
+        0 -> registerFn<Any>(f.name, f.doc) { m.invoke(obj) }
+        1 -> registerFn<Any>(f.name, f.doc) { arg: Any ->
+            m.invoke(obj, arg)
+        }
+        2 -> registerFn<Any>(f.name, f.doc) { arg0: Any, arg1: Any ->
+            m.invoke(obj, arg0, arg1)
+        }
+
+        else -> return false
+    }
+
+    return true
 }
