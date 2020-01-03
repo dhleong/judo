@@ -1,6 +1,5 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
@@ -105,7 +104,7 @@ class JLineWindow(
 
         val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
-        val theme = buffer.settings[KEY_COLOR_THEME]
+        val theme = buffer.settings[ColorTheme]
 
         // iterating from oldest to newest
         for (i in end..start) {

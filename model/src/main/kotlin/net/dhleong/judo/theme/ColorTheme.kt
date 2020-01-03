@@ -1,5 +1,6 @@
 package net.dhleong.judo.theme
 
+import net.dhleong.judo.StateKind
 import net.dhleong.judo.render.JudoColor
 
 typealias ColorTransform = (JudoColor) -> JudoColor
@@ -26,7 +27,9 @@ data class ColorSet(
 data class ColorTheme(
     val foreground: ColorTransform? = null,
     val background: ColorTransform? = null
-)
+) {
+    companion object Key : StateKind<ColorTheme>("net.dhleong.judo.colorTheme")
+}
 
 fun ColorTheme?.transformForeground(color: JudoColor) =
     this?.foreground?.invoke(color) ?: color

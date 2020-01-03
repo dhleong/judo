@@ -2,7 +2,6 @@ package net.dhleong.judo.script.init
 
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.IStateMap
-import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
 import net.dhleong.judo.render.flavor.Flavor
@@ -35,44 +34,30 @@ fun ScriptInitContext.initColors() = with(mode) {
         "recolor",
         recolorDocs("global")
     ) { args: Array<Any> ->
-        if (args.isEmpty()) {
-            judo.printColors()
-            return@registerFn
-        }
-
-        val (kindRaw, name, replacement) = args
-        val kind = (kindRaw as String).toKind()
-        ColorTransformer(judo.state).recolor(kind, name, replacement)
+        recolor(judo.state, args)
     }
 
     registerFn<Unit>(
         "recolorBuffer",
         recolorDocs("buffer")
     ) { args: Array<Any> ->
-        if (args.isEmpty()) {
-            judo.printColors()
-            return@registerFn
-        }
-
-        val (kindRaw, name, replacement) = args
-        val kind = (kindRaw as String).toKind()
         val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
-        ColorTransformer(buffer.settings).recolor(kind, name, replacement)
+        recolor(buffer.settings, args)
     }
 
     registerFn<Unit>(
         "unrecolor",
         unrecolorDocs("recolor")
-    ) { kind: String, name: Any ->
-        ColorTransformer(judo.state).recolor(kind.toKind(), from = name, to = null)
+    ) { args: Array<Any> ->
+        unrecolor(judo.state, args)
     }
 
     registerFn<Unit>(
         "unrecolorBuffer",
         unrecolorDocs("recolorBuffer")
-    ) { kind: String, name: Any ->
+    ) { args: Array<Any> ->
         val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
-        ColorTransformer(buffer.settings).recolor(kind.toKind(), from = name, to = null)
+        unrecolor(buffer.settings, args)
     }
 }
 
@@ -117,14 +102,44 @@ fun recolorDocs(themeLocation: String) = doc {
     """.trimIndent() }
 }
 
+private fun ScriptInitContext.recolor(settings: IStateMap, args: Array<Any>) {
+    if (args.isEmpty()) {
+        judo.printColors()
+        return
+    }
+
+    val (kindRaw, name, replacement) = args
+    val kind = (kindRaw as String).toKind()
+    ColorTransformer(settings).recolor(kind, name, replacement)
+}
+
 private fun unrecolorDocs(baseFn: String) = doc {
+    usage {  }
     usage {
         arg("kind", "String")
         arg("name", "String/Int")
     }
     body { """
-        Revert a `$baseFn` setting; see `$baseFn` for arg meanings.
+        With no args, clear all `$baseFn` settings.
+        
+        Otherwise, revert a single `$baseFn` setting; see `$baseFn` for arg meanings.
     """.trimIndent() }
+}
+
+private fun ScriptInitContext.unrecolor(
+    settings: IStateMap,
+    args: Array<Any>
+) {
+    if (args.isEmpty()) {
+        settings.remove(ColorTheme)
+        judo.redraw()
+        return
+    }
+
+    val kind = args[0] as String
+    val name = args[1]
+    ColorTransformer(settings).recolor(kind.toKind(), from = name, to = null)
+    judo.redraw()
 }
 
 internal fun IJudoCore.printColors() {
@@ -195,7 +210,7 @@ private inline fun basicColorsLine(
 }
 
 private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
-    val old = state[KEY_COLOR_THEME] ?: ColorTheme()
+    val old = state[ColorTheme] ?: ColorTheme()
 
     val new = when (kind) {
         RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
@@ -206,7 +221,7 @@ private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
         )
     }
 
-    state[KEY_COLOR_THEME] = new
+    state[ColorTheme] = new
     context.judo.redraw()
 }
 

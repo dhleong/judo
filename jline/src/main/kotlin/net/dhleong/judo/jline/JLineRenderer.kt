@@ -4,7 +4,6 @@ import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.JudoRendererEvent
 import net.dhleong.judo.JudoRendererInfo
-import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.OnRendererEventListener
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
@@ -15,6 +14,7 @@ import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.theme.ColorTheme
 import org.jline.terminal.Attributes
 import org.jline.terminal.Size
 import org.jline.terminal.Terminal
@@ -348,7 +348,7 @@ class JLineRenderer(
         for (i in renderedInput.indices) {
             val line = renderedInput[i]
             display.withLine(0, inputY + i, lineWidth = windowWidth) {
-                line.appendTo(this, colorTheme = settings[KEY_COLOR_THEME])
+                line.appendTo(this, colorTheme = settings[ColorTheme])
             }
         }
 
