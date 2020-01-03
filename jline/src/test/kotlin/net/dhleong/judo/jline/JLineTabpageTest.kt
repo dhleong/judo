@@ -1,9 +1,9 @@
 package net.dhleong.judo.jline
 
 import assertk.all
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.isSameAs
+import net.dhleong.judo.EmptyStateMap
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.emptyBuffer
@@ -62,7 +62,7 @@ class JLineTabpageTest {
             |____________
         """.trimMargin())
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.updateStatusLine("<status>".toFlavorable())
         window.appendLine("Take my love")
@@ -234,7 +234,7 @@ class JLineTabpageTest {
         primary.updateStatusLine("[status]")
         assertThat(primary).hasHeight(6)
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -257,7 +257,7 @@ class JLineTabpageTest {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -305,7 +305,7 @@ class JLineTabpageTest {
         assertThat(primary).hasHeight(8)
         tabpage.resize(tabpage.width, 8) // should not be a problem
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -322,7 +322,7 @@ class JLineTabpageTest {
         renderer.forceResize(20, tabpage.height)
         assertThat(primary).hasWidth(20)
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.vsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -339,7 +339,7 @@ class JLineTabpageTest {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 
@@ -368,7 +368,7 @@ class JLineTabpageTest {
         primary.appendLine("Take my land")
         primary.updateStatusLine("[status]")
 
-        val buffer = JudoBuffer(IdManager())
+        val buffer = JudoBuffer(IdManager(), EmptyStateMap)
         val window = tabpage.hsplit(2, buffer)
         window.appendLine("Take my love")
 

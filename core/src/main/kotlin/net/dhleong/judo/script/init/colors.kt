@@ -1,6 +1,7 @@
 package net.dhleong.judo.script.init
 
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.IStateMap
 import net.dhleong.judo.KEY_COLOR_THEME
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
@@ -32,46 +33,7 @@ fun String.toKind() = when (this) {
 fun ScriptInitContext.initColors() = with(mode) {
     registerFn<Unit>(
         "recolor",
-        doc {
-            usage {  }
-            usage {
-                arg("kind", "String")
-                arg("name", "String/Int")
-                arg("replacement", "String/Int/Fn")
-            }
-            body { """
-                If invoked with no arguments, prints a demo of the current
-                color theme to the current Buffer.
-                
-                Otherwise, update the current color theme to transform a specific color.
-                    kind - For either the "fg" (foreground), "bg" (background),
-                           or "all" (any time the color appears)
-                    name - The color name or ansi code. The 16 basic colors
-                           ("black," "bright-black," "red," "bright-red," etc)
-                           may use a String or their ANSI number. The "default"
-                           color must be specified by name. The extended 256-color
-                           set must be specified by ANSI number. RGB colors must be
-                           specified by "#RRGGBB" hex.
-                           Alternatively, the following special category names may be used:
-                           
-                               "simple" - matches all 16 basic colors
-                               "256" - matches all extended 256-color set colors
-                               "rgb" - matches all RGB colors
-                               
-                    replacement - How to replace the matched color. If a String or Int,
-                                  it is treated as a literal `name` (see above). If a
-                                  function, it must be either of the form:
-                                  
-                                      (name: String/Int) -> String/Int
-                                  
-                                  or:
-                                  
-                                      (kind: String, name: String/Int) -> String/Int
-                                  
-                                  `kind` and `name` or formatted as above, but `name` will
-                                  never be one of the special category names.
-            """.trimIndent() }
-        }
+        recolorDocs("global")
     ) { args: Array<Any> ->
         if (args.isEmpty()) {
             judo.printColors()
@@ -80,23 +42,89 @@ fun ScriptInitContext.initColors() = with(mode) {
 
         val (kindRaw, name, replacement) = args
         val kind = (kindRaw as String).toKind()
-        recolor(kind, name, replacement)
+        ColorTransformer(judo.state).recolor(kind, name, replacement)
+    }
+
+    registerFn<Unit>(
+        "recolorBuffer",
+        recolorDocs("buffer")
+    ) { args: Array<Any> ->
+        if (args.isEmpty()) {
+            judo.printColors()
+            return@registerFn
+        }
+
+        val (kindRaw, name, replacement) = args
+        val kind = (kindRaw as String).toKind()
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        ColorTransformer(buffer.settings).recolor(kind, name, replacement)
     }
 
     registerFn<Unit>(
         "unrecolor",
-        doc {
-            usage {
-                arg("kind", "String")
-                arg("name", "String/Int")
-            }
-            body { """
-                Revert a `recolor` setting; see `recolor` for arg meanings.
-            """.trimIndent() }
-        }
+        unrecolorDocs("recolor")
     ) { kind: String, name: Any ->
-        recolor(kind.toKind(), from = name, to = null)
+        ColorTransformer(judo.state).recolor(kind.toKind(), from = name, to = null)
     }
+
+    registerFn<Unit>(
+        "unrecolorBuffer",
+        unrecolorDocs("recolorBuffer")
+    ) { kind: String, name: Any ->
+        val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
+        ColorTransformer(buffer.settings).recolor(kind.toKind(), from = name, to = null)
+    }
+}
+
+fun recolorDocs(themeLocation: String) = doc {
+    usage {  }
+    usage {
+        arg("kind", "String")
+        arg("name", "String/Int")
+        arg("replacement", "String/Int/Fn")
+    }
+    body { """
+        If invoked with no arguments, prints a demo of the current
+        color theme to the current Buffer.
+        
+        Otherwise, update the $themeLocation color theme to transform a specific color.
+            kind - For either the "fg" (foreground), "bg" (background),
+                   or "all" (any time the color appears)
+            name - The color name or ansi code. The 16 basic colors
+                   ("black," "bright-black," "red," "bright-red," etc)
+                   may use a String or their ANSI number. The "default"
+                   color must be specified by name. The extended 256-color
+                   set must be specified by ANSI number. RGB colors must be
+                   specified by "#RRGGBB" hex.
+                   Alternatively, the following special category names may be used:
+                   
+                       "simple" - matches all 16 basic colors
+                       "256" - matches all extended 256-color set colors
+                       "rgb" - matches all RGB colors
+                       
+            replacement - How to replace the matched color. If a String or Int,
+                          it is treated as a literal `name` (see above). If a
+                          function, it must be either of the form:
+                          
+                              (name: String/Int) -> String/Int
+                          
+                          or:
+                          
+                              (kind: String, name: String/Int) -> String/Int
+                          
+                          `kind` and `name` or formatted as above, but `name` will
+                          never be one of the special category names.
+    """.trimIndent() }
+}
+
+private fun unrecolorDocs(baseFn: String) = doc {
+    usage {
+        arg("kind", "String")
+        arg("name", "String/Int")
+    }
+    body { """
+        Revert a `$baseFn` setting; see `$baseFn` for arg meanings.
+    """.trimIndent() }
 }
 
 internal fun IJudoCore.printColors() {
@@ -166,25 +194,29 @@ private inline fun basicColorsLine(
     trailingFlavor = Flavor.default
 }
 
-private fun ScriptInitContext.recolor(kind: RecolorKind, from: Any, to: Any?) = with(judo) {
+private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
     val old = state[KEY_COLOR_THEME] ?: ColorTheme()
 
-    val new = with(ColorTransformer(this@recolor)) {
-        when (kind) {
-            RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
-            RecolorKind.BACKGROUND -> old.copy(background = old.background.update(from, to))
-            RecolorKind.ALL -> ColorTheme(
-                background = old.background.update(from, to),
-                foreground = old.foreground.update(from, to)
-            )
-        }
+    val new = when (kind) {
+        RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
+        RecolorKind.BACKGROUND -> old.copy(background = old.background.update(from, to))
+        RecolorKind.ALL -> ColorTheme(
+            background = old.background.update(from, to),
+            foreground = old.foreground.update(from, to)
+        )
     }
 
     state[KEY_COLOR_THEME] = new
-    redraw()
+    context.judo.redraw()
 }
 
-private class ColorTransformer(private val context: ScriptInitContext) {
+@Suppress("FunctionName")
+private fun ScriptInitContext.ColorTransformer(state: IStateMap) = ColorTransformer(this, state)
+
+private class ColorTransformer(
+    internal val context: ScriptInitContext,
+    internal val state: IStateMap
+) {
 
     fun ColorTransform?.update(from: Any, to: Any?): ColorTransform? {
         val base = (this as? ColorSet) ?: ColorSet()

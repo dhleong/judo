@@ -1,5 +1,6 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.IStateMap
 import net.dhleong.judo.script.IJudoScrollable
 
 interface IJudoAppendable {
@@ -15,6 +16,8 @@ interface IJudoAppendable {
 }
 
 interface IJudoBuffer : IJudoAppendable {
+    val settings: IStateMap
+
     val id: Int
     val size: Int
     val lastIndex: Int

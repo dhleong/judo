@@ -116,7 +116,7 @@ class JLineWindow(
                 renderWorkspace,
                 windowWidth = width,
                 wordWrap = wordWrap,
-                colorTheme = settings[KEY_COLOR_THEME]
+                colorTheme = buffer.settings[KEY_COLOR_THEME]
             )
         }
 

@@ -14,6 +14,7 @@ class JLineBuffer(
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : JudoBuffer(
     ids,
+    renderer.settings,
     scrollbackSize
 ) {
     override fun append(text: FlavorableCharSequence) = renderer.inTransaction {
