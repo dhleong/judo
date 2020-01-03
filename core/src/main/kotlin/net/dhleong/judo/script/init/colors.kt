@@ -171,11 +171,11 @@ private fun ScriptInitContext.recolor(kind: RecolorKind, from: Any, to: Any?) = 
 
     val new = with(ColorTransformer(this@recolor)) {
         when (kind) {
-            RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground?.update(from, to))
-            RecolorKind.BACKGROUND -> old.copy(background = old.background?.update(from, to))
+            RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
+            RecolorKind.BACKGROUND -> old.copy(background = old.background.update(from, to))
             RecolorKind.ALL -> ColorTheme(
-                background = old.background?.update(from, to),
-                foreground = old.foreground?.update(from, to)
+                background = old.background.update(from, to),
+                foreground = old.foreground.update(from, to)
             )
         }
     }
