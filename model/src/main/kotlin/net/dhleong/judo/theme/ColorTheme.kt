@@ -9,7 +9,7 @@ typealias ColorTransform = (JudoColor) -> JudoColor
  */
 data class ColorSet(
     val default: JudoColor? = null,
-    val simple: Map<JudoColor.Simple, JudoColor?>? = null,
+    val simple: Map<JudoColor, JudoColor?>? = null,
     val transform256: ((Int) -> JudoColor)? = null,
     val transformRgb: ((Int, Int, Int) -> JudoColor)? = null
 ) : ColorTransform {

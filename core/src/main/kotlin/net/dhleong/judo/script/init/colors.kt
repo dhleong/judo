@@ -196,7 +196,7 @@ private class ColorTransformer(private val context: ScriptInitContext) {
 
         return when (from) {
             "simple" -> base.copy(
-                simple = mutableMapOf<JudoColor.Simple, JudoColor?>().also { m ->
+                simple = mutableMapOf<JudoColor, JudoColor?>().also { m ->
                     val replacement = to?.toColor()
                     for (c in JudoColor.Simple.Color.values()) {
                         m[JudoColor.Simple(c)] = replacement
@@ -243,9 +243,32 @@ private class ColorTransformer(private val context: ScriptInitContext) {
     }
 }
 
-private fun Any.toSimpleColor(): JudoColor.Simple? =
-    if (this !is Int || this !in 0..15) null
-    else JudoColor.Simple.from(this)
+private fun Any.toSimpleColor(): JudoColor? = when (this) {
+    is Int -> {
+        if (this !in 0..15) null
+        else JudoColor.Simple.from(this)
+    }
+
+    "default" -> JudoColor.Default
+
+    "black" -> JudoColor.Simple(JudoColor.Simple.Color.BLACK)
+    "bright-black" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_BLACK)
+    "red" -> JudoColor.Simple(JudoColor.Simple.Color.RED)
+    "bright-red" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_RED)
+    "green" -> JudoColor.Simple(JudoColor.Simple.Color.GREEN)
+    "bright-green" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_GREEN)
+    "yellow" -> JudoColor.Simple(JudoColor.Simple.Color.YELLOW)
+    "bright-yellow" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_YELLOW)
+    "blue" -> JudoColor.Simple(JudoColor.Simple.Color.BLUE)
+    "bright-blue" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_BLUE)
+    "magenta" -> JudoColor.Simple(JudoColor.Simple.Color.MAGENTA)
+    "bright-magenta" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_MAGENTA)
+    "cyan" -> JudoColor.Simple(JudoColor.Simple.Color.CYAN)
+    "bright-cyan" -> JudoColor.Simple(JudoColor.Simple.Color.BRIGHT_CYAN)
+    "white" -> JudoColor.Simple(JudoColor.Simple.Color.WHITE)
+
+    else -> null
+}
 
 private fun Any.to256Color(): JudoColor.High256? =
     if (this !is Int || this !in 16..255) null
