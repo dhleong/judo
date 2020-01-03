@@ -891,9 +891,16 @@ class JudoCore(
     }
 
     private fun IJudoBuffer.processOutput(line: FlavorableCharSequence) {
-        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) return
-
         outputCompletions.process(line)
+
+        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) {
+            // a multitrigger has consumed this line; normally, logging is done in
+            // processAndStripPrompt in case it got stripped by the prompt; since
+            // the prompt won't see this line, we have to do it here, instead:
+            maybeLog(line)
+            return
+        }
+
         triggers.process(line)
         processAndStripPrompt(line)
     }
@@ -1043,9 +1050,13 @@ class JudoCore(
             }
         }
 
-        if (result.endsWith('\n')) {
+        maybeLog(result)
+    }
+
+    private fun maybeLog(line: FlavorableCharSequence) {
+        if (line.endsWith('\n')) {
             // only log lines that have a newline
-            logging.log(result)
+            logging.log(line)
         }
     }
 
