@@ -3,6 +3,7 @@ package net.dhleong.judo.script
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import kotlin.reflect.jvm.kotlinFunction
 
 /**
  */
@@ -54,7 +55,9 @@ private fun List<Method>.extractJudoDoc() = doc {
             }
 
             if (m.returnType != null && m.returnType?.simpleName != "void") {
-                returns(m.returnType.stringified())
+                returns(m.returnType.stringified(
+                    isNullable = m.kotlinFunction?.returnType?.isMarkedNullable ?: false
+                ))
             }
         }
 
@@ -72,9 +75,12 @@ private fun List<Method>.extractJudoDoc() = doc {
     body { docBody.toString() }
 }
 
-private fun Type.stringified() = when (this) {
+private fun Type.stringified(isNullable: Boolean = false) = when (this) {
     is Class<*> -> this.simpleName
     else -> toString()
+}.let {
+    if (isNullable) "$it?"
+    else it
 }
 
 fun ScriptInitContext.registerFrom(obj: ScriptingObject) {

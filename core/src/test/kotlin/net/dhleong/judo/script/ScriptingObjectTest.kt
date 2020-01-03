@@ -10,6 +10,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.script.init.CoreScripting
+import net.dhleong.judo.script.init.UtilScripting
 import org.junit.Test
 
 /**
@@ -47,6 +48,14 @@ class ScriptingObjectTest {
             each {
                 it.hasReturnType("String")
             }
+        }
+    }
+
+    @Test fun `Extract nullable types`() {
+        val expandPathFn = DocumentedScriptFunction.extractFrom(UtilScripting::class.java)
+            .first { it.name == "expandpath" }
+        assertThat(expandPathFn.doc.invocations!!.first()).all {
+            hasReturnType("String?")
         }
     }
 }
