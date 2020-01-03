@@ -10,6 +10,16 @@ sealed class UiElement {
     object Dividers : UiElement()
     object Editor : UiElement()
     object Echo : UiElement()
+
+    companion object {
+        fun fromString(s: String): UiElement? = when (s) {
+            "dividers" -> Dividers
+            "editor" -> Editor
+            "echo" -> Echo
+
+            else -> null
+        }
+    }
 }
 
 /**

@@ -13,6 +13,8 @@ import net.dhleong.judo.theme.AppColors
 import net.dhleong.judo.theme.ColorSet
 import net.dhleong.judo.theme.ColorTheme
 import net.dhleong.judo.theme.ColorTransform
+import net.dhleong.judo.theme.UiElement
+import net.dhleong.judo.theme.UiTheme
 
 enum class RecolorKind {
     FOREGROUND,
@@ -87,6 +89,15 @@ fun recolorDocs(themeLocation: String) = doc {
                        "simple" - matches all 16 basic colors
                        "256" - matches all extended 256-color set colors
                        "rgb" - matches all RGB colors
+                    
+                   In addition, colors may be specified for some app UI elements:
+                   
+                       "dividers" - unfocused status bars and other window dividers
+                       "editor" - the input area
+                       "echo" - echo text
+                       
+                   When recoloring UI elements, you must provide a specific color, not
+                   a transformation function
                        
             replacement - How to replace the matched color. If a String or Int,
                           it is treated as a literal `name` (see above). If a
@@ -212,19 +223,52 @@ private inline fun basicColorsLine(
 
 private fun ColorTransformer.recolor(kind: RecolorKind, from: Any, to: Any?) {
     val colors = state[AppColors] ?: AppColors()
-    val old = colors.output
 
-    val new = when (kind) {
-        RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
-        RecolorKind.BACKGROUND -> old.copy(background = old.background.update(from, to))
-        RecolorKind.ALL -> ColorTheme(
-            background = old.background.update(from, to),
-            foreground = old.foreground.update(from, to)
-        )
+    val uiElement = from.toUiElement()
+    state[AppColors] = if (uiElement != null) {
+        val newColor = to?.toColor()
+        if (newColor == null && to != null) {
+            throw IllegalArgumentException("Invalid color $to")
+        }
+        when (kind) {
+            RecolorKind.FOREGROUND -> colors.copy(
+                foreground = colors.foreground + mapOf(uiElement to newColor)
+            )
+            RecolorKind.BACKGROUND -> colors.copy(
+                background = colors.background + mapOf(uiElement to newColor)
+            )
+            RecolorKind.ALL -> colors.copy(
+                foreground = colors.foreground + mapOf(uiElement to newColor),
+                background = colors.background + mapOf(uiElement to newColor)
+            )
+        }
+    } else {
+        val old = colors.output
+
+        val new = when (kind) {
+            RecolorKind.FOREGROUND -> old.copy(foreground = old.foreground.update(from, to))
+            RecolorKind.BACKGROUND -> old.copy(background = old.background.update(from, to))
+            RecolorKind.ALL -> ColorTheme(
+                background = old.background.update(from, to),
+                foreground = old.foreground.update(from, to)
+            )
+        }
+
+        colors.copy(output = new)
     }
 
-    state[AppColors] = colors.copy(output = new)
     context.judo.redraw()
+}
+
+private fun Any.toUiElement(): UiElement? {
+    if (this !is String) return null
+    return UiElement.fromString(this)
+}
+
+private operator fun UiTheme?.plus(change: Map<UiElement, JudoColor?>): UiTheme {
+    val oldMap = this?.elements
+    return if (oldMap == null) UiTheme(change)
+        else UiTheme(oldMap + change)
 }
 
 @Suppress("FunctionName")
