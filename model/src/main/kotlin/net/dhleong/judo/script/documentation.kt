@@ -3,19 +3,19 @@ package net.dhleong.judo.script
 /**
  * @author dhleong
  */
-class JudoScriptDoc(
+data class JudoScriptDoc(
     val invocations: List<JudoScriptInvocation>?,
     val text: String
 )
 
-class JudoScriptInvocation(
+data class JudoScriptInvocation(
     val args: List<JudoScriptArgument>,
     val returnType: String? = null,
     val canBeDecorator: Boolean = false,
     val hasVarArgs: Boolean = false
 )
 
-class JudoScriptArgument(
+data class JudoScriptArgument(
     val name: String,
     val type: String,
     val isOptional: Boolean = false,

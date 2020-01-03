@@ -30,6 +30,12 @@ dependencies {
     testCompile project(':core-test')
 }
 
+compileKotlin {
+    kotlinOptions {
+        javaParameters = true
+    }
+}
+
 buildConfig {
     appName = config.name
     version = config.version

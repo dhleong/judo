@@ -259,7 +259,7 @@ abstract class BaseCmdMode(
             }
         }
 
-    private fun printSettingValue(settingName: String) =
+    internal fun printSettingValue(settingName: String) =
         withSetting(settingName) { setting ->
             val value = judo.state[setting]
             val isDefaultFlag =
