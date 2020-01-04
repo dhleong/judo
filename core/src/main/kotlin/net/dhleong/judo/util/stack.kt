@@ -81,52 +81,79 @@ private fun Throwable.formatSingleStack(
 
 }.map { it.toFlavorable() }
 
+private class GroupCollapser(
+    private val matching: Regex,
+    private val groupName: String,
+    private val includeFirstLine: Boolean
+) {
+
+    private var lastMatched = false
+
+    suspend fun SequenceScope<String>.collapses(element: String): Boolean = when {
+        !matching.matches(element) -> {
+            lastMatched = false
+            false
+        }
+
+        !lastMatched -> {
+            lastMatched = true
+            if (includeFirstLine) yield(element)
+            yield(groupName)
+            true
+        }
+
+        else -> true
+    }
+}
+
+private fun createCollapsers() = listOf(
+    GroupCollapser(
+        matching = Regex("""^\tat kotlin[x]?\.coroutines.*"""),
+        groupName = "\t... coroutines ...",
+        includeFirstLine = false
+    ),
+
+    GroupCollapser(
+        matching = Regex("""^\tat net\.dhleong\.judo\.script\.F(n\d|IN|nBase).*"""),
+        groupName = "\t... functional ...",
+        includeFirstLine = true
+    )
+)
+
 private fun Sequence<String>.filterRelevantStackLines(): Sequence<String> =
     sequence {
-        var lastWasCoroutine = false
-        var lastWasFunctional = false
+        val collapsers = createCollapsers()
 
-        loop@ for (element in this@filterRelevantStackLines) {
-            val isCoroutineLib = element.matches(Regex(
-                """^\tat kotlin[x]?\.coroutines.*"""
-            ))
-            val isFunctional = !isCoroutineLib && element.matches(Regex(
-                """^\tat net\.dhleong\.judo\.script\.F(n\d|IN|nBase).*"""
-            ))
-            when {
-                isCoroutineLib && !lastWasCoroutine -> {
-                    lastWasCoroutine = true
-                    yield("\t... coroutines ...")
-                    continue@loop
-                }
+        for (element in this@filterRelevantStackLines) {
+            if (anyCollapses(collapsers, element)) continue
 
-                // ignore all the noisy coroutine libs
-                isCoroutineLib -> continue@loop
-
-                isFunctional && !lastWasFunctional -> {
-                    lastWasFunctional = true
-                    yield(element)
-                    yield("\t... functional ...")
-                    continue@loop
-                }
-
-                // ignore all the noisy functional stuff
-                isFunctional -> continue@loop
-
+            val drop = when {
                 // not useful line:
-                (
-                    element.matches(Regex("\\.invoke(Suspend)?"))
-                ) -> continue@loop
+                element.matches(Regex("\\.invoke(Suspend)?")) -> true
 
                 // also unnecessary
-                "BlockingKeySourceChannelAdapter" in element -> continue@loop
+                "BlockingKeySourceChannelAdapter" in element -> true
 
-                // reset state:
-                lastWasCoroutine -> lastWasCoroutine = false
-                lastWasFunctional -> lastWasFunctional = false
+                else -> false
             }
 
-            // default to the original element
-            yield(element)
+            if (!drop) {
+                // default to the original element
+                yield(element)
+            }
         }
     }
+
+private suspend fun SequenceScope<String>.anyCollapses(
+    collapsers: List<GroupCollapser>,
+    element: String
+): Boolean {
+    for (c in collapsers) {
+        with (c) {
+            if (collapses(element)) {
+                return true
+            }
+        }
+    }
+    return false
+}
