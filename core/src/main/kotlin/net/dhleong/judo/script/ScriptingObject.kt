@@ -3,11 +3,23 @@ package net.dhleong.judo.script
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
+import kotlin.reflect.KClass
 import kotlin.reflect.jvm.kotlinFunction
 
-/**
- */
+@Target(AnnotationTarget.FUNCTION)
 annotation class Doc(val body: String)
+
+@Target(AnnotationTarget.FUNCTION)
+annotation class SupportsDecorator
+
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class FnObject
+
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class PatternObject
+
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Flags(val type: KClass<out Enum<*>>)
 
 /**
  * Marker interface for objects that contain methods to be
@@ -45,12 +57,25 @@ class DocumentedScriptFunction(
 private fun List<Method>.extractJudoDoc() = doc {
     val docBody = StringBuilder()
     for (m in this@extractJudoDoc) {
-        usage {
+        val isDecorator = m.isAnnotationPresent(SupportsDecorator::class.java)
+        usage(decorator = isDecorator) {
             if (m.parameterCount == 1 && m.isVarArgs) {
                 withVarArgs()
             } else {
                 for (arg in m.parameters) {
-                    arg(arg.name, arg.type.stringified())
+                    val flagType = arg.getAnnotation(Flags::class.java)?.type?.javaObjectType
+                    when {
+                        flagType != null ->
+                            arg(arg.name, arg.type.stringified(), flags = flagType)
+
+                        arg.isAnnotationPresent(PatternObject::class.java) ->
+                            arg(arg.name, "String/Pattern")
+
+                        arg.isAnnotationPresent(FnObject::class.java) ->
+                            arg(arg.name, "Fn")
+
+                        else -> arg(arg.name, arg.type.stringified())
+                    }
                 }
             }
 
@@ -91,31 +116,61 @@ fun ScriptInitContext.registerFrom(obj: ScriptingObject) {
 }
 
 private fun ScriptInitContext.register(obj: ScriptingObject, f: DocumentedScriptFunction) {
-    if (f.methods.size == 1) {
+    val invocations = f.doc.invocations ?: throw IllegalStateException("No invocations for `${f.name}`?")
+    if (f.methods.size == 1 && invocations.none { inv -> inv.args.any { it.flags != null } }) {
         val m = f.methods.first()
         if (registerSingle(obj, f, m)) {
             return
         }
     }
 
-    val methodByParamCount = List(f.methods.last().parameterCount + 1) { index ->
-        f.methods.firstOrNull { it.parameterCount == index }
+    val callableByParamCount = MutableList(f.methods.last().parameterCount + 1) { index ->
+        val m = f.methods.firstOrNull { it.parameterCount == index }
+        m?.let {
+            if (m.isVarArgs) {
+                { args: Array<Any> -> m.invoke(obj, args) }
+            } else {
+                { args: Array<Any> -> m.invoke(obj, *args) }
+            }
+        }
+    }
+
+    // eagerly register an extra invocation for those with flags
+    for (m in invocations) {
+        val flagsIndex = m.args.indexOfFirst { it.flags != null }
+        if (flagsIndex != -1) {
+            if (callableByParamCount[m.args.size - 1] == null) {
+                val base = callableByParamCount[m.args.size]!!
+                callableByParamCount[m.args.size - 1] = { providedArgs ->
+                    // insert the empty flags string
+                    val args = Array(m.args.size) { index -> when (index) {
+                        in 0 until flagsIndex -> providedArgs[index]
+                        flagsIndex -> ""
+                        else -> providedArgs[index - 1]
+                    } }
+                    base(args)
+                }
+            }
+            break
+        }
     }
 
     registerFn<Any>(f.name, f.doc) { args: Array<Any> ->
-        val firstMethod = methodByParamCount.first { it != null }
-        if (firstMethod!!.isVarArgs) {
-            return@registerFn firstMethod.invoke(obj, args)
+        val firstMethod = callableByParamCount.first { it != null }
+        if (firstMethod != null && f.methods.first().isVarArgs) {
+            firstMethod(args)
+            return@registerFn
         }
 
-        if (args.size >= methodByParamCount.size) {
+        if (args.size >= callableByParamCount.size) {
             throw IllegalArgumentException("Unexpected number of arguments (${args.size})")
         }
-        val m = methodByParamCount[args.size] ?: throw IllegalArgumentException(
+        val m = callableByParamCount[args.size] ?: throw IllegalArgumentException(
             "No overload of ${f.name} accepts ${args.size} arguments"
         )
 
-        m.invoke(obj, *args)
+        // invoke:
+        m(args)
     }
 }
 
