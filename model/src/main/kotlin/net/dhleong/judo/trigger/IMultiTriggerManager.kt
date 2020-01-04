@@ -63,6 +63,7 @@ sealed class MultiTriggerResult {
     class Process(
         val processor: MultiTriggerProcessor,
         val lines: List<String>,
+        val flavoredLines: List<FlavorableCharSequence>,
         val result: MultiTriggerResult
     ) : MultiTriggerResult() {
         fun process() {

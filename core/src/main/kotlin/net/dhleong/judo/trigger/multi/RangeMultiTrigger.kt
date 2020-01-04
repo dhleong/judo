@@ -50,11 +50,16 @@ class RangeMultiTrigger(
             reading = false
             buffer.append(line)
 
-            val lines = buffer.consumeStringLines()
+            val flavoredLines = buffer.consumeLines()
+            val lines = flavoredLines.map {
+                if (options.color) it.toAnsi()
+                else it.toString()
+            }
 
             return MultiTriggerResult.Process(
                 processor,
                 lines,
+                flavoredLines,
                 options.consumeResult
             )
         }
@@ -81,12 +86,6 @@ class RangeMultiTrigger(
             }
         }
     }
-
-    private fun IJudoBuffer.consumeStringLines(): List<String> =
-        List(size) {
-            if (options.color) this[it].toAnsi()
-            else this[it].toString()
-        }.also { clear() }
 
     private fun IJudoBuffer.consumeLines(): List<FlavorableCharSequence> =
         List(size) { this[it] }

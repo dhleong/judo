@@ -9,6 +9,7 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.action
+import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.mapping.MapManager
 import net.dhleong.judo.mapping.MapRenderer
 import net.dhleong.judo.modes.NormalMode
@@ -60,6 +61,7 @@ class TestableJudoCore(
     override val multiTriggers = MultiTriggerManager()
     override val triggers = TriggerManager()
     override val prompts = PromptManager()
+    override val logging: ILogManager = mock { }
 
     val ids = IdManager()
     override val tabpage: IJudoTabpage = createTabpageMock(ids)

@@ -891,9 +891,12 @@ class JudoCore(
     }
 
     private fun IJudoBuffer.processOutput(line: FlavorableCharSequence) {
-        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) return
-
         outputCompletions.process(line)
+
+        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) {
+            return
+        }
+
         triggers.process(line)
         processAndStripPrompt(line)
     }
