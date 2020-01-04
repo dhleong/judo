@@ -115,8 +115,14 @@ private fun createCollapsers() = listOf(
 
     GroupCollapser(
         matching = Regex("""^\tat net\.dhleong\.judo\.script\.F(n\d|IN|nBase).*"""),
-        groupName = "\t... functional ...",
+        groupName = "\t... functional internals ...",
         includeFirstLine = true
+    ),
+
+    GroupCollapser(
+        matching = Regex("""^\tat (org.python.*|net\.dhleong\.judo\.script\.Jython.*)"""),
+        groupName = "\t... python internals ...",
+        includeFirstLine = false
     )
 )
 
@@ -128,11 +134,11 @@ private fun Sequence<String>.filterRelevantStackLines(): Sequence<String> =
             if (anyCollapses(collapsers, element)) continue
 
             val drop = when {
-                // not useful line:
+                // not useful lines:
                 element.matches(Regex("\\.invoke(Suspend)?")) -> true
-
-                // also unnecessary
                 "BlockingKeySourceChannelAdapter" in element -> true
+                element.startsWith("\tat sun.reflect") -> true
+                element.startsWith("\tat java.lang.reflect") -> true
 
                 else -> false
             }

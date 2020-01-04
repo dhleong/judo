@@ -2,6 +2,7 @@ package net.dhleong.judo.util
 
 import assertk.all
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsAll
 import assertk.assertions.doesNotContain
 import assertk.assertions.isFailure
@@ -44,8 +45,11 @@ class StackKtTest {
                 "Caused by: java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String",
                 "at net.dhleong.judo.util.StackKtTest\$setUp$1$2.invoke(StackKtTest.kt)",
                 "at net.dhleong.judo.script.Fn1.invoke(functional.kt)",
-                "... functional ..."
+                "... functional internals ...",
+                "... python internals ..."
             )
+
+            contains("... more")
         }
     }
 }
