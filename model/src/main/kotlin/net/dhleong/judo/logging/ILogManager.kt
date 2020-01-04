@@ -29,4 +29,9 @@ interface ILogManager {
     fun unconfigure()
 
     fun log(line: FlavorableCharSequence)
+    fun log(lines: List<FlavorableCharSequence>) {
+        for (l in lines) {
+            log(l)
+        }
+    }
 }

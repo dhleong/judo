@@ -76,6 +76,9 @@ fun IMultiTriggerManager.processMultiTriggers(
             }
             buffer.appendLine(input)
             judo.printRaw("ERROR: processing multi-trigger ${result.triggerId}: ${result.reason}")
+
+            // as for Process, these lines need to be logged
+            judo.logging.log(result.lines)
             return false // "unhandled"; allow other processing
         }
 
@@ -94,6 +97,10 @@ fun IMultiTriggerManager.processMultiTriggers(
                 buffer.deleteLast()
             }
             result.process()
+
+            // NOTE: since we consumed these lines, the logger has not
+            // seen them yet; pass them now
+            judo.logging.log(result.flavoredLines)
             return true
         }
 
