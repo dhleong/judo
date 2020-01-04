@@ -41,7 +41,10 @@ class StackKtTest {
                 "java.lang.IllegalArgumentException: Incorrect arguments to takeoff()",
                 "at net.dhleong.judo.script.Fn1.invoke(functional.kt)",
                 "... more",
-                "Caused by: java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String"
+                "Caused by: java.lang.ClassCastException: java.lang.Integer cannot be cast to java.lang.String",
+                "at net.dhleong.judo.util.StackKtTest\$setUp$1$2.invoke(StackKtTest.kt)",
+                "at net.dhleong.judo.script.Fn1.invoke(functional.kt)",
+                "... functional ..."
             )
         }
     }
@@ -54,3 +57,4 @@ private fun Throwable.formatStackTestable() = formatStack()
             .trim()
     }
     .toList()
+    .also { for (l in it) println(l) }

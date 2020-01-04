@@ -84,9 +84,14 @@ private fun Throwable.formatSingleStack(
 private fun Sequence<String>.filterRelevantStackLines(): Sequence<String> =
     sequence {
         var lastWasCoroutine = false
+        var lastWasFunctional = false
+
         loop@ for (element in this@filterRelevantStackLines) {
             val isCoroutineLib = element.matches(Regex(
-                """^kotlin[x]?\.coroutines.*"""
+                """^\tat kotlin[x]?\.coroutines.*"""
+            ))
+            val isFunctional = !isCoroutineLib && element.matches(Regex(
+                """^\tat net\.dhleong\.judo\.script\.F(n\d|IN|nBase).*"""
             ))
             when {
                 isCoroutineLib && !lastWasCoroutine -> {
@@ -98,6 +103,16 @@ private fun Sequence<String>.filterRelevantStackLines(): Sequence<String> =
                 // ignore all the noisy coroutine libs
                 isCoroutineLib -> continue@loop
 
+                isFunctional && !lastWasFunctional -> {
+                    lastWasFunctional = true
+                    yield(element)
+                    yield("\t... functional ...")
+                    continue@loop
+                }
+
+                // ignore all the noisy functional stuff
+                isFunctional -> continue@loop
+
                 // not useful line:
                 (
                     element.matches(Regex("\\.invoke(Suspend)?"))
@@ -106,7 +121,9 @@ private fun Sequence<String>.filterRelevantStackLines(): Sequence<String> =
                 // also unnecessary
                 "BlockingKeySourceChannelAdapter" in element -> continue@loop
 
+                // reset state:
                 lastWasCoroutine -> lastWasCoroutine = false
+                lastWasFunctional -> lastWasFunctional = false
             }
 
             // default to the original element
