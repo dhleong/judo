@@ -105,10 +105,13 @@ sealed class JudoScriptingEntity(
     class Function<R>(
         name: String,
         doc: JudoScriptDoc,
+        private val forceDispatchAsMultiArity: Boolean,
         val fn: kotlin.Function<R>
     ) : JudoScriptingEntity(name, doc) {
         val hasMultipleArities: Boolean
             get() {
+                if (forceDispatchAsMultiArity) return true
+
                 var minArity = Int.MAX_VALUE
                 var maxArity = Int.MIN_VALUE
                 val anyVarArg = doc.invocations?.any { usage ->

@@ -69,12 +69,12 @@ private fun List<Method>.extractJudoDoc() = doc {
                             arg(arg.name, arg.type.stringified(), flags = flagType)
 
                         arg.isAnnotationPresent(PatternObject::class.java) ->
-                            arg(arg.name, "String/Pattern")
+                            arg(arg.name, "String/Pattern", arg.type)
 
                         arg.isAnnotationPresent(FnObject::class.java) ->
-                            arg(arg.name, "Fn")
+                            arg(arg.name, "Fn", arg.type)
 
-                        else -> arg(arg.name, arg.type.stringified())
+                        else -> arg(arg.name, arg.type.stringified(), arg.type)
                     }
                 }
             }
@@ -124,54 +124,11 @@ private fun ScriptInitContext.register(obj: ScriptingObject, f: DocumentedScript
         }
     }
 
-    val callableByParamCount = MutableList(f.methods.last().parameterCount + 1) { index ->
-        val m = f.methods.firstOrNull { it.parameterCount == index }
-        m?.let {
-            if (m.isVarArgs) {
-                { args: Array<Any> -> m.invoke(obj, args) }
-            } else {
-                { args: Array<Any> -> m.invoke(obj, *args) }
-            }
-        }
+    if (registerDistinctArities(obj, f, invocations)) {
+        return
     }
 
-    // eagerly register an extra invocation for those with flags
-    for (m in invocations) {
-        val flagsIndex = m.args.indexOfFirst { it.flags != null }
-        if (flagsIndex != -1) {
-            if (callableByParamCount[m.args.size - 1] == null) {
-                val base = callableByParamCount[m.args.size]!!
-                callableByParamCount[m.args.size - 1] = { providedArgs ->
-                    // insert the empty flags string
-                    val args = Array(m.args.size) { index -> when (index) {
-                        in 0 until flagsIndex -> providedArgs[index]
-                        flagsIndex -> ""
-                        else -> providedArgs[index - 1]
-                    } }
-                    base(args)
-                }
-            }
-            break
-        }
-    }
-
-    registerFn<Any>(f.name, f.doc) { args: Array<Any> ->
-        val firstMethod = callableByParamCount.first { it != null }
-        if (firstMethod != null && f.methods.first().isVarArgs) {
-            firstMethod(args)
-            return@registerFn
-        }
-
-        if (args.size >= callableByParamCount.size) {
-            throw IllegalArgumentException("Unexpected number of arguments (${args.size})")
-        }
-        val m = callableByParamCount[args.size] ?: throw IllegalArgumentException(
-            "No overload of ${f.name} accepts ${args.size} arguments"
-        )
-
-        // invoke:
-        m(args)
-    }
+    registerSlow(obj, f, invocations)
 }
 
 private fun ScriptInitContext.registerSingle(
@@ -195,3 +152,151 @@ private fun ScriptInitContext.registerSingle(
 
     return true
 }
+
+/**
+ * Register a function with more than one overload of overlapping arities
+ */
+private fun ScriptInitContext.registerDistinctArities(
+    obj: ScriptingObject,
+    f: DocumentedScriptFunction,
+    invocations: List<JudoScriptInvocation>
+): Boolean {
+    // verify that all arities are distinct
+    f.methods.fold(-1) { lastCount, method ->
+        val count = method.parameterCount
+        if (count == lastCount) {
+            return false
+        }
+        count
+    }
+
+    val callableByParamCount = MutableList(f.methods.last().parameterCount + 1) { index ->
+        val m = f.methods.firstOrNull { it.parameterCount == index }
+        m?.let {
+            if (m.isVarArgs) {
+                { args: Array<Any> -> m.invoke(obj, args) }
+            } else {
+                { args: Array<Any> -> m.invoke(obj, *args) }
+            }
+        }
+    }
+
+    // eagerly register an extra invocation for those with flags
+    for (m in invocations) {
+        val flagsIndex = m.args.indexOfFirst { it.flags != null }
+        if (flagsIndex != -1) {
+            if (callableByParamCount[m.args.size - 1] != null) {
+                // an arity has an optional flags that overlaps with
+                // another arity
+                return false
+            }
+
+            val base = callableByParamCount[m.args.size]!!
+            callableByParamCount[m.args.size - 1] = { providedArgs ->
+                // insert the empty flags string
+                val args = Array(m.args.size) { index -> when (index) {
+                    in 0 until flagsIndex -> providedArgs[index]
+                    flagsIndex -> ""
+                    else -> providedArgs[index - 1]
+                } }
+                base(args)
+            }
+            break
+        }
+    }
+
+    registerFn<Any>(f.name, f.doc) { args: Array<Any> ->
+        val firstMethod = callableByParamCount.first { it != null }
+        if (firstMethod != null && f.methods.first().isVarArgs) {
+            firstMethod(args)
+            return@registerFn
+        }
+
+        if (args.size >= callableByParamCount.size) {
+            throw IllegalArgumentException("Unexpected number of arguments (${args.size})")
+        }
+        val m = callableByParamCount[args.size] ?: throw IllegalArgumentException(
+            "No overload of ${f.name} accepts ${args.size} arguments"
+        )
+
+        // invoke:
+        m(args)
+    }
+    return true
+}
+
+private class Invokable(
+    private val obj: ScriptingObject,
+    val arity: Int,
+    private val invocation: JudoScriptInvocation,
+    private val method: Method
+) {
+    fun matches(args: Array<Any?>): Boolean {
+        if (arity == args.size) {
+            for (i in args.indices) {
+                val arg = args[i] ?: continue
+                if (!invocation.args[i].typeClass!!.isAssignableFrom(arg.javaClass)) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        // TODO
+        return false
+    }
+
+    fun invoke(args: Array<Any?>): Any? {
+        return method.invoke(obj, *args)
+    }
+}
+
+private fun ScriptInitContext.registerSlow(
+    obj: ScriptingObject,
+    f: DocumentedScriptFunction,
+    invocations: List<JudoScriptInvocation>
+) {
+    val invokables = mutableListOf<Invokable>()
+
+    for ((i, inv) in invocations.withIndex()) {
+        val minArgs = inv.args.sumBy {
+            if (it.isOptional) 0 else 1
+        }
+        val maxArgs = inv.args.size
+
+        for (argCount in minArgs..maxArgs) {
+            invokables += Invokable(
+                obj,
+                arity = argCount,
+                invocation = inv,
+                method = f.methods[i]
+            )
+        }
+    }
+
+    registerFn<Any?>(f.name, f.doc, forceDispatchAsMultiArity = true) { args: Array<Any?> ->
+        var hasMatchingArgs = false
+        val invokable = invokables.asSequence()
+            .filter { it.arity == args.size }
+            .firstOrNull { inv ->
+                hasMatchingArgs = true
+                inv.matches(args)
+            }
+
+        if (!hasMatchingArgs) {
+            throw IllegalArgumentException(
+                "No overload of ${f.name} accepts ${args.size} arguments"
+            )
+        }
+
+        if (invokable == null) {
+            throw IllegalArgumentException(
+                "${f.name} does not accept args with types: ${args.map { it?.javaClass }}"
+            )
+        }
+
+        // invoke:
+        invokable.invoke(args)
+    }
+}
+

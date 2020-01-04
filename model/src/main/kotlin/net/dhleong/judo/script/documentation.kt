@@ -50,6 +50,10 @@ class InvocationBuilder(
         args += JudoScriptArgument(name, typeClass.displayName, isOptional, typeClass = typeClass)
     }
 
+    fun arg(name: String, typeDisplayName: String, typeClass: Class<*>, isOptional: Boolean = false) {
+        args += JudoScriptArgument(name, typeDisplayName, isOptional, typeClass = typeClass)
+    }
+
     fun returns(type: String) {
         returnType = type
     }

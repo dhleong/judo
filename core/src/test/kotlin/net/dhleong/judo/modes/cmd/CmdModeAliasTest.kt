@@ -43,7 +43,7 @@ class CmdModeAliasTest(
         mode.execute("""
             $funcDef
             ${fnCall("alias", "cool", Var("handleAlias"))}
-            """.trimIndent())
+        """.trimIndent())
 
         assertThat(judo.aliases.hasAliasFor("cool")).isTrue()
         assertThat(judo.aliases.process("this is cool").toString())

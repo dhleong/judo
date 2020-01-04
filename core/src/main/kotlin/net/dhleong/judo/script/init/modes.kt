@@ -8,7 +8,7 @@ import net.dhleong.judo.script.registerFn
  * @author dhleong
  */
 fun ScriptInitContext.initModes() {
-    registerFn(
+    registerFn<Unit>(
         "createUserMode",
         doc {
             usage { arg("modeName", "String") }
@@ -16,9 +16,8 @@ fun ScriptInitContext.initModes() {
                     Create a new mode with the given name. Mappings can be added to it
                     using the createMap function
                 """.trimIndent() }
-        },
-        judo::createUserMode
-    )
+        }
+    ) { modeName: String -> judo.createUserMode(modeName) }
 
     registerFn<Unit>(
         "enterMode",
