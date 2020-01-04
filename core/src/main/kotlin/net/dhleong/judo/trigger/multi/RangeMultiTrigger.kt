@@ -1,5 +1,6 @@
 package net.dhleong.judo.trigger.multi
 
+import net.dhleong.judo.EmptyStateMap
 import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
@@ -26,7 +27,11 @@ class RangeMultiTrigger(
 ) : MultiTrigger {
 
     private var reading = false
-    private val buffer = JudoBuffer(id = -1, scrollbackSize = options.maxLines)
+    private val buffer = JudoBuffer(
+        id = -1,
+        settings = EmptyStateMap,
+        scrollbackSize = options.maxLines
+    )
 
     override fun process(line: FlavorableCharSequence): MultiTriggerResult =
         if (reading) processEnd(line)

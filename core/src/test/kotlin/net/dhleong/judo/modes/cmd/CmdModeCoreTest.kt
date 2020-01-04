@@ -205,13 +205,13 @@ class CmdModeCoreTest(
     }
 
     @Test fun `Render help items in columns`() {
-        val colWidth = "createUserMode  ".length
+        val colWidth = "unrecolorBuffer  ".length
         renderer.settableWindowWidth = colWidth * 2
 
         mode.showHelp()
 
         assertThat(judo.prints)
-            .startsWith("alias           cmap            ")
+            .startsWith("alias            cmap             ")
     }
 
     @Test fun `Render help for vars`() {

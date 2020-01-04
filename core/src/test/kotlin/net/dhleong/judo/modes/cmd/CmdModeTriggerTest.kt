@@ -8,9 +8,9 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import kotlinx.coroutines.runBlocking
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.trigger.TriggerManager
@@ -211,22 +211,16 @@ class CmdModeTriggerTest(
         append("cool ", Flavor.default)
         append("st", flavor(
             isBold = true,
-            hasForeground = true,
             foreground = JudoColor.Simple.from(2)
-        )
-        )
+        ))
         append("or", flavor(
             isBold = true,
-            hasForeground = true,
             foreground = JudoColor.Simple.from(3)
-        )
-        )
+        ))
         append("y", flavor(
             isBold = true,
-            hasForeground = true,
             foreground = JudoColor.Simple.from(4)
-        )
-        )
+        ))
         append("\n")
     }
 }

@@ -1,18 +1,24 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.DelegateStateMap
+import net.dhleong.judo.IStateMap
 import net.dhleong.judo.util.CircularArrayList
 
 open class JudoBuffer(
     override val id: Int,
+    settings: IStateMap,
     scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
 
     constructor(
         ids: IdManager,
+        settings: IStateMap,
         scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
-    ) : this(ids.newBuffer(), scrollbackSize)
+    ) : this(ids.newBuffer(), settings, scrollbackSize)
 
     private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
+
+    override val settings: IStateMap = DelegateStateMap(settings)
 
     override val size: Int
         get() = contents.size

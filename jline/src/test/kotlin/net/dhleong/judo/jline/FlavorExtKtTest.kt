@@ -28,7 +28,7 @@ class FlavorExtKtTest {
                 red = 255,
                 green = 100,
                 blue = 0
-            ), hasForeground = true
+            )
         )
         val style = originalFlavor.toAttributedStyle()
 
@@ -45,7 +45,7 @@ class FlavorExtKtTest {
         val originalFlavor = flavor(
             background = JudoColor.High256(
                 235
-            ), hasBackground = true
+            )
         )
         val style = originalFlavor.toAttributedStyle()
 

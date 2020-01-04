@@ -21,47 +21,6 @@ val KEY_PERSIST_INPUT_HISTORY_PATH = StateKind<File>("net.dhleong.judo.persisten
 
 typealias OperatorFunc = suspend (IntRange) -> Unit
 
-@Suppress("unused")
-open class StateKind<E>(val name: String) {
-    override fun hashCode(): Int = name.hashCode()
-    override fun equals(other: Any?): Boolean =
-        other is StateKind<*> && other.name == name
-}
-
-/**
- * StateMap provides typesafe storage for whatever intermediate
- * state a motion or mode, etc. might need for communicating
- * with other motions or modes. The ;/, motions, for example,
- * need to know how to repeat the last f/F/t/T, and store that
- * in the StateMap.
- *
- * The StateMap is also a great place to store global settings
- */
-@Suppress("UNCHECKED_CAST")
-class StateMap() {
-    private val map = HashMap<StateKind<*>, Any>()
-
-    constructor(vararg pairs: Pair<StateKind<*>, Any>): this() {
-        map.putAll(pairs)
-    }
-
-    operator fun <E : Any> set(key: StateKind<E>, value: E) {
-        map[key] = value
-    }
-
-    operator fun <E : Any> get(key: StateKind<E>): E? =
-        map[key] as E?
-
-    operator fun <E : Any> get(key: Setting<E>): E =
-        map[key] as? E ?: key.default
-
-    operator fun <E : Any> contains(key: StateKind<E>): Boolean =
-        key in map
-
-    fun <E : Any> remove(key: StateKind<E>): E? =
-        map.remove(key) as E?
-}
-
 /**
  * @author dhleong
  */

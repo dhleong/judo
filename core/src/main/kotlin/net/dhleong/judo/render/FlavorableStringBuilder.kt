@@ -417,11 +417,14 @@ class FlavorableStringBuilder private constructor(
             it.appendImpl(string, 0, string.length)
         }
 
-        fun withDefaultFlavor(string: String) = fromString(string).apply {
-            beginFlavor(Flavor.default, 0)
-        }
+        fun withDefaultFlavor(string: String) = string.withFlavor(Flavor.default)
     }
 }
+
+fun String.withFlavor(flavor: Flavor) =
+    FlavorableStringBuilder.fromString(this).apply {
+        beginFlavor(flavor, 0)
+    }
 
 fun CharSequence.toFlavorable() = when (this) {
     is FlavorableCharSequence -> this

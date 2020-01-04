@@ -41,16 +41,16 @@ class TestableJudoRenderer(
             state.output[i].removeSuffix("\n") as FlavorableCharSequence
         }
 
-    override fun createBuffer(): IJudoBuffer = JudoBuffer(state.ids)
+    override fun createBuffer(): IJudoBuffer = JudoBuffer(state.ids, state.settings)
 }
 
 class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
 
     val settings = StateMap()
     val ids = IdManager()
-    val output = JudoBuffer(ids)
+    val output = JudoBuffer(ids, settings)
     val primaryWindow = object : PrimaryJudoWindow(ids, settings, output, windowWidth, windowHeight) {
-        override fun createBuffer(ids: IdManager): IJudoBuffer = JudoBuffer(ids)
+        override fun createBuffer(ids: IdManager): IJudoBuffer = JudoBuffer(ids, settings)
 
         override fun createWindow(
             ids: IdManager,

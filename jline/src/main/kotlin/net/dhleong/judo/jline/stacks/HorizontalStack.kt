@@ -4,6 +4,7 @@ import net.dhleong.judo.jline.IJLineWindow
 import net.dhleong.judo.jline.JLineDisplay
 import net.dhleong.judo.jline.toAttributedStyle
 import net.dhleong.judo.render.flavor.Flavor
+import net.dhleong.judo.theme.ColorTheme
 import org.jline.utils.AttributedString
 
 const val WINDOW_MIN_WIDTH = 2
@@ -95,8 +96,13 @@ class HorizontalStack(
 
 }
 
-private fun JLineDisplay.renderSeparator(x: Int, y: Int, height: Int) {
-    val flavor = Flavor.default.toAttributedStyle()
+private fun JLineDisplay.renderSeparator(
+    x: Int,
+    y: Int,
+    height: Int,
+    colorTheme: ColorTheme? = null
+) {
+    val flavor = Flavor.default.toAttributedStyle(colorTheme)
     val string = AttributedString(" ", flavor)
     for (i in y until y + height) {
         withLine(x, i) {

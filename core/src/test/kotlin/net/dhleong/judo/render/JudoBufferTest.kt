@@ -1,8 +1,8 @@
 package net.dhleong.judo.render
 
-import assertk.assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import net.dhleong.judo.EmptyStateMap
 import net.dhleong.judo.hasLines
 import org.junit.Test
 
@@ -11,7 +11,7 @@ import org.junit.Test
  */
 class JudoBufferTest {
     @Test fun `append() respects newlines`() {
-        val b = JudoBuffer(IdManager())
+        val b = JudoBuffer(IdManager(), EmptyStateMap)
         b.append("Take my")
         b.append(" love\n")
         b.append("Take my")
@@ -22,7 +22,7 @@ class JudoBufferTest {
     }
 
     @Test fun `append() splits on newlines`() {
-        val b = JudoBuffer(IdManager())
+        val b = JudoBuffer(IdManager(), EmptyStateMap)
         b.append("Take\nmy\nlove\n")
 
         assertThat(b).hasLines(

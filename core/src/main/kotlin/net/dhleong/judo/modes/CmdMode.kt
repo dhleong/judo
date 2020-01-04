@@ -13,6 +13,7 @@ import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.init.initAliases
+import net.dhleong.judo.script.init.initColors
 import net.dhleong.judo.script.init.initConnection
 import net.dhleong.judo.script.init.initConsts
 import net.dhleong.judo.script.init.initCore
@@ -86,6 +87,7 @@ class CmdMode(
             initCore()
 
             initAliases()
+            initColors()
             initConnection()
             initEvents()
             initFiles()

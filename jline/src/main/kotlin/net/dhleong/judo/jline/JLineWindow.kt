@@ -7,6 +7,10 @@ import net.dhleong.judo.render.BaseJudoWindow
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.theme.AppColors
+import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.UiElement
+import net.dhleong.judo.theme.get
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -103,6 +107,8 @@ class JLineWindow(
 
         val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
+        val theme = buffer.settings[AppColors]
+        val colors = theme?.output
 
         // iterating from oldest to newest
         for (i in end..start) {
@@ -113,7 +119,8 @@ class JLineWindow(
             buffer[i].splitAttributedLinesInto(
                 renderWorkspace,
                 windowWidth = width,
-                wordWrap = wordWrap
+                wordWrap = wordWrap,
+                colorTheme = colors
             )
         }
 
@@ -193,15 +200,16 @@ class JLineWindow(
             }
 
             display.withLine(x, line, lineWidth = width) {
-                statusLineToRender.appendTo(this)
+                statusLineToRender.appendTo(this, colorTheme = colors)
             }
         } else if (isFocusable) {
             // TODO faded out status? or just a background color?
 //            display.clearLine(x, line, 0, width)
 
             display.withLine(x, line, lineWidth = width) {
+                val style = theme[UiElement.Dividers].toAttributedStyle()
                 for (i in 0 until width) {
-                    append('-')
+                    append("-", style)
                 }
             }
         }
@@ -427,11 +435,13 @@ class JLineWindow(
 internal fun FlavorableCharSequence.splitAttributedLinesInto(
     target: MutableList<AttributedString>,
     windowWidth: Int,
-    wordWrap: Boolean
+    wordWrap: Boolean,
+    colorTheme: ColorTheme? = null
 ) {
     forEachRenderedLine(windowWidth, wordWrap) { start, end ->
         target.add(subSequence(start, end).toAttributedString(
-            widthForTrailingFlavor = windowWidth
+            widthForTrailingFlavor = windowWidth,
+            colorTheme = colorTheme
         ))
     }
 }

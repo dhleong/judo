@@ -1,8 +1,12 @@
 package net.dhleong.judo.jline
 
-import net.dhleong.judo.render.flavor.Flavor
 import net.dhleong.judo.render.JudoColor
+import net.dhleong.judo.render.flavor.Flavor
+import net.dhleong.judo.theme.ColorTheme
+import net.dhleong.judo.theme.transformBackground
+import net.dhleong.judo.theme.transformForeground
 import org.jline.utils.AttributedStyle
+import kotlin.math.round
 
 // from AttributedStyle source, since they're not public...
 private const val F_BOLD = 0x00000001
@@ -17,7 +21,9 @@ private const val F_FOREGROUND = 0x00000100
 private const val F_BACKGROUND = 0x00000200
 private const val F_HIDDEN = 0x00000400
 
-fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
+fun Flavor.toAttributedStyle(
+    colorTheme: ColorTheme? = null
+): AttributedStyle = createAttributedStyle(
     0 or isBold.toFlag(F_BOLD)
         or isFaint.toFlag(F_FAINT)
         or isItalic.toFlag(F_ITALIC)
@@ -34,17 +40,19 @@ fun Flavor.toAttributedStyle(): AttributedStyle = createAttributedStyle(
     // TODO do this without these extra allocations?
     var style = base
     if (hasForeground) {
-        style = if (foreground is JudoColor.Default) {
+        val fg = colorTheme.transformForeground(foreground)
+        style = if (fg is JudoColor.Default) {
             style.foregroundDefault()
         } else {
-            style.foreground(foreground.toAnsiInt())
+            style.foreground(fg.toAnsiInt())
         }
     }
     if (hasBackground) {
-        style = if (background is JudoColor.Default) {
+        val bg = colorTheme.transformBackground(background)
+        style = if (bg is JudoColor.Default) {
             style.backgroundDefault()
         } else {
-            style.background(background.toAnsiInt())
+            style.background(bg.toAnsiInt())
         }
     }
 
@@ -77,9 +85,20 @@ internal fun JudoColor.toAnsiInt(): Int = when (this) {
     is JudoColor.Simple -> value.ansi
     is JudoColor.High256 -> value
     is JudoColor.FullRGB -> {
-        // convert to 256 colors (this is what JLine does)
-        16 + (red shr 3) * 36 + (green shr 3) * 6 + (blue shr 3)
+        // round to 256 colors
+        roundAnsiRgb(red, green, blue)
     }
     JudoColor.Default -> throw IllegalArgumentException("Don't use toAnsiInt with JudoColor.Default")
 }
 
+// from https://github.com/chalk/ansi-styles/issues/11
+@Suppress("NOTHING_TO_INLINE")
+private inline fun roundAnsiRgb(r8: Int, g8: Int, b8: Int): Int {
+    val r = applyDomain(r8, 0, 255, 0, 5)
+    val g = applyDomain(g8, 0, 255, 0, 5)
+    val b = applyDomain(b8, 0, 255, 0, 5)
+    return ((36 * r) + (6 * g) + b + 16).toInt()
+}
+@Suppress("NOTHING_TO_INLINE", "SameParameterValue")
+private inline fun applyDomain(v: Int, lb: Int, ub: Int, tlb: Int, tub: Int): Double =
+    round(((v - lb) / (ub - lb).toDouble()) * (tub - tlb) + tlb)

@@ -10,10 +10,14 @@ import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.render.FlavorableCharSequence
-import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.lazyReplaceFlavor
+import net.dhleong.judo.render.withFlavor
+import net.dhleong.judo.theme.AppColors
+import net.dhleong.judo.theme.UiElement
+import net.dhleong.judo.theme.get
 import org.jline.terminal.Attributes
 import org.jline.terminal.Size
 import org.jline.terminal.Terminal
@@ -326,7 +330,9 @@ class JLineRenderer(
             tabpage.currentWindow.isFocusable -> input.cursorIndex
             else -> 0
         }
+        val theme = settings[AppColors]
 
+        input.line.lazyReplaceFlavor(theme[UiElement.Editor])
         val originalCursor = input.cursorIndex
         input.cursorIndex = rawInputCursor
         inputHelper.fitInputLinesToWindow(input, renderedInput)
@@ -347,7 +353,7 @@ class JLineRenderer(
         for (i in renderedInput.indices) {
             val line = renderedInput[i]
             display.withLine(0, inputY + i, lineWidth = windowWidth) {
-                line.appendTo(this)
+                line.appendTo(this, colorTheme = theme?.output)
             }
         }
 
@@ -371,8 +377,8 @@ class JLineRenderer(
         // prepare to draw the "Press ENTER" prompt
         echoPromptWorkspace.clear()
         val wordWrap = settings[WORD_WRAP]
-        val continueLine = FlavorableStringBuilder.withDefaultFlavor(
-            "Press ENTER or type command to continue"
+        val continueLine = "Press ENTER or type command to continue".withFlavor(
+            settings[AppColors][UiElement.Echo]
         )
         continueLine.splitAttributedLinesInto(echoPromptWorkspace, windowWidth, wordWrap)
         val continueLineHeight = echoPromptWorkspace.size

@@ -202,10 +202,7 @@ class CmdModeObjectInteropTest(
         assertThat(buffer[0]).all {
             hasToString("ANSI\n")
             hasFlavor(
-                flavor(
-                    hasForeground = true,
-                    foreground = JudoColor.Simple.from(3)
-                )
+                flavor(foreground = JudoColor.Simple.from(3))
             )
         }
     }
