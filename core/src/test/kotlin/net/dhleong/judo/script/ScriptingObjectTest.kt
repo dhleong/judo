@@ -9,9 +9,11 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import net.dhleong.judo.script.init.ConnectionScripting
 import net.dhleong.judo.script.init.CoreScripting
 import net.dhleong.judo.script.init.UtilScripting
 import org.junit.Test
+import kotlin.reflect.KClass
 
 /**
  * @author dhleong
@@ -19,9 +21,8 @@ import org.junit.Test
 class ScriptingObjectTest {
 
     @Test fun `Extract param names and types`() {
-        val inputFn = DocumentedScriptFunction.extractFrom(CoreScripting::class.java)
-            .first { it.name == "complete" }
-        assertThat(inputFn.doc.invocations).isNotNull().all {
+        val completeFn = CoreScripting::class["complete"]
+        assertThat(completeFn.doc.invocations).isNotNull().all {
             hasSize(1)
             each { invocation ->
                 invocation.transform("param") { it.args[0] }.all {
@@ -33,8 +34,7 @@ class ScriptingObjectTest {
     }
 
     @Test fun `Extract return types`() {
-        val allFns = DocumentedScriptFunction.extractFrom(CoreScripting::class.java)
-        val completeFn = allFns.first { it.name == "complete" }
+        val completeFn = CoreScripting::class["complete"]
         assertThat(completeFn.doc.invocations).isNotNull().all {
             hasSize(1)
             each {
@@ -42,23 +42,26 @@ class ScriptingObjectTest {
             }
         }
 
-        val inputFn = allFns.first { it.name == "input" }
-        assertThat(inputFn.doc.invocations).isNotNull().all {
-            hasSize(2)
+        val isConnectedFn = ConnectionScripting::class["isConnected"]
+        assertThat(isConnectedFn.doc.invocations).isNotNull().all {
+            hasSize(1)
             each {
-                it.hasReturnType("String")
+                it.hasReturnType("Boolean")
             }
         }
     }
 
     @Test fun `Extract nullable types`() {
-        val expandPathFn = DocumentedScriptFunction.extractFrom(UtilScripting::class.java)
-            .first { it.name == "expandpath" }
+        val expandPathFn = UtilScripting::class["expandpath"]
         assertThat(expandPathFn.doc.invocations!!.first()).all {
             hasReturnType("String?")
         }
     }
 }
+
+private operator fun KClass<out ScriptingObject>.get(name: String) =
+    DocumentedScriptFunction.extractFrom(this.javaObjectType)
+            .first { it.name == name }
 
 private fun Assert<JudoScriptInvocation>.hasReturnType(returnType: String) = given { actual ->
     if (actual.returnType == returnType) return

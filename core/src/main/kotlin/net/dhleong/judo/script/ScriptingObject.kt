@@ -76,7 +76,7 @@ private fun List<Method>.extractJudoDoc() = doc {
 }
 
 private fun Type.stringified(isNullable: Boolean = false) = when (this) {
-    is Class<*> -> this.simpleName
+    is Class<*> -> this.simpleName.capitalize()
     else -> toString()
 }.let {
     if (isNullable) "$it?"
