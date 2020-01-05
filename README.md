@@ -18,6 +18,7 @@ Here's a quick list of some features Judo provides:
 - Aliases, triggers, and Prompts (of course)
 - Intelligent tab-completion, based on previously-entered commands and output
   from the server
+- [Horizontal and vertical][16] [split windows][17]
 - Persist input history across sessions
 - Input history searching
 - Logging, including HTML formatting
@@ -165,3 +166,5 @@ comfortably on the home row.
 [13]: https://github.com/dhleong/judo/releases
 [14]: http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html
 [15]: https://javascript.info/
+[16]: https://user-images.githubusercontent.com/816150/71706550-b195c580-2db3-11ea-98c1-8ef161915c36.png
+[17]: https://github.com/dhleong/judo/blob/master/docs/Scripting.md#windows
