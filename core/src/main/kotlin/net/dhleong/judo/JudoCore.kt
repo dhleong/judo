@@ -41,7 +41,6 @@ import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
 import net.dhleong.judo.modes.OutputSearchMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
-import net.dhleong.judo.modes.ScriptExecutionException
 import net.dhleong.judo.modes.StatusBufferProvider
 import net.dhleong.judo.modes.UserCreatedMode
 import net.dhleong.judo.net.JudoConnection
@@ -69,6 +68,7 @@ import net.dhleong.judo.util.JudoMainDispatcher
 import net.dhleong.judo.util.SubstitutableInputHistory
 import net.dhleong.judo.util.VisibleForTesting
 import net.dhleong.judo.util.asChannel
+import net.dhleong.judo.util.formatStack
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -982,33 +982,16 @@ class JudoCore(
     }
 
     @Synchronized
-    private fun appendError(e: Throwable, prefix: String = "", isRoot: Boolean = true) {
-        if (isRoot) {
-            PrintWriter(FileOutputStream(debugLogFile, true)).use {
-                it.println("append error (${e.javaClass} / ${e.message}) @$prefix (root=$isRoot)")
-                it.println(prefix)
-                e.printStackTrace(it)
-            }
-        }
-
-        if (e is ScriptExecutionException) {
-            renderer.inTransaction {
-                primaryWindow.appendLine("${prefix}ScriptExecutionException:\n")
-                e.message?.split("\n")?.forEach {
-                    primaryWindow.appendLine(it)
-                }
-                if (e.cause !is InterruptedException) {
-                    e.appendStackTraceTo(primaryWindow)
-                }
-            }
-            return
+    private fun appendError(e: Throwable, prefix: String = "") {
+        PrintWriter(FileOutputStream(debugLogFile, true)).use {
+            it.println("append error (${e.javaClass} / ${e.message}) @$prefix")
+            it.println(prefix)
+            e.printStackTrace(it)
         }
 
         renderer.inTransaction {
-            primaryWindow.appendLine("$prefix${e.javaClass.name}: ${e.message}")
-            e.appendStackTraceTo(primaryWindow)
-            e.cause?.let {
-                appendError(it, "Caused by: ", isRoot = false)
+            for (line in e.formatStack(prefix)) {
+                primaryWindow.appendLine(line)
             }
         }
     }
@@ -1107,42 +1090,3 @@ class JudoCore(
     }
 }
 
-private fun Throwable.appendStackTraceTo(window: IJudoWindow) {
-    stackTrace.filterRelevant().map { "  $it" }.forEach {
-        window.appendLine(it)
-    }
-}
-
-private fun Array<StackTraceElement>.filterRelevant(): Sequence<StackTraceElement> =
-    sequence {
-        var lastWasCoroutine = false
-        loop@ for (element in this@filterRelevant) {
-            val isCoroutineLib = element.className.matches(Regex(
-                """^kotlin[x]?\.coroutines.*"""
-            ))
-            when {
-                isCoroutineLib && !lastWasCoroutine -> {
-                    lastWasCoroutine = true
-                    yield(StackTraceElement("...coroutines", "...", null, -1))
-                    continue@loop
-                }
-
-                // ignore all the noisy coroutine libs
-                isCoroutineLib -> continue@loop
-
-                // not useful line:
-                (
-                    element.lineNumber < 0
-                        && element.methodName in setOf("invoke", "invokeSuspend")
-                ) -> continue@loop
-
-                // also unnecessary
-                "BlockingKeySourceChannelAdapter" in element.className -> continue@loop
-
-                lastWasCoroutine -> lastWasCoroutine = false
-            }
-
-            // default to the original element
-            yield(element)
-        }
-    }
