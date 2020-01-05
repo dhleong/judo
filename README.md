@@ -166,5 +166,5 @@ comfortably on the home row.
 [13]: https://github.com/dhleong/judo/releases
 [14]: http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html
 [15]: https://javascript.info/
-[16]: https://user-images.githubusercontent.com/816150/71706550-b195c580-2db3-11ea-98c1-8ef161915c36.png
+[16]: https://user-images.githubusercontent.com/816150/71587617-6e560100-2aec-11ea-9d84-eeb2a68ba852.png
 [17]: https://github.com/dhleong/judo/blob/master/docs/Scripting.md#windows
