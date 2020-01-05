@@ -21,6 +21,9 @@ annotation class PatternObject
 @Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class Flags(val type: KClass<out Enum<*>>)
 
+@Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class Optional
+
 /**
  * Marker interface for objects that contain methods to be
  * exposed to Scripting
@@ -74,7 +77,10 @@ private fun List<Method>.extractJudoDoc() = doc {
                         arg.isAnnotationPresent(FnObject::class.java) ->
                             arg(arg.name, "Fn", arg.type)
 
-                        else -> arg(arg.name, arg.type.stringified(), arg.type)
+                        else -> arg(
+                            arg.name, arg.type.stringified(), arg.type,
+                            isOptional = arg.isAnnotationPresent(Optional::class.java)
+                        )
                     }
                 }
             }
@@ -174,9 +180,9 @@ private fun ScriptInitContext.registerDistinctArities(
         val m = f.methods.firstOrNull { it.parameterCount == index }
         m?.let {
             if (m.isVarArgs) {
-                { args: Array<Any> -> m.invoke(obj, args) }
+                { args: Array<Any?> -> m.invoke(obj, args) }
             } else {
-                { args: Array<Any> -> m.invoke(obj, *args) }
+                { args: Array<Any?> -> m.invoke(obj, *args) }
             }
         }
     }
@@ -193,19 +199,13 @@ private fun ScriptInitContext.registerDistinctArities(
 
             val base = callableByParamCount[m.args.size]!!
             callableByParamCount[m.args.size - 1] = { providedArgs ->
-                // insert the empty flags string
-                val args = Array(m.args.size) { index -> when (index) {
-                    in 0 until flagsIndex -> providedArgs[index]
-                    flagsIndex -> ""
-                    else -> providedArgs[index - 1]
-                } }
-                base(args)
+                base(providedArgs.withEmptyFlags(flagsIndex))
             }
             break
         }
     }
 
-    registerFn<Any>(f.name, f.doc) { args: Array<Any> ->
+    registerFn<Any>(f.name, f.doc) { args: Array<Any?> ->
         val firstMethod = callableByParamCount.first { it != null }
         if (firstMethod != null && f.methods.first().isVarArgs) {
             firstMethod(args)
@@ -225,29 +225,43 @@ private fun ScriptInitContext.registerDistinctArities(
     return true
 }
 
+private fun Array<Any?>.withEmptyFlags(flagsIndex: Int): Array<Any?> =
+    if (flagsIndex < 0) this
+    // insert the empty flags string
+    else Array(this.size + 1) { index -> when (index) {
+        in 0 until flagsIndex -> this[index]
+        flagsIndex -> ""
+        else -> this[index - 1]
+    } }
+
 private class Invokable(
     private val obj: ScriptingObject,
     val arity: Int,
+    private val flagsIndex: Int,
     private val invocation: JudoScriptInvocation,
     private val method: Method
 ) {
     fun matches(args: Array<Any?>): Boolean {
-        if (arity == args.size) {
-            for (i in args.indices) {
-                val arg = args[i] ?: continue
-                if (!invocation.args[i].typeClass!!.isAssignableFrom(arg.javaClass)) {
-                    return false
-                }
-            }
-            return true
-        }
+        for (i in args.indices) {
+            val arg = args[i] ?: continue
+            val expectedArg = invocation.args[i]
+            if (expectedArg.flags != null && arg !is String) return false
+            else if (expectedArg.flags != null) continue
 
-        // TODO
-        return false
+            val expectedArgType = expectedArg.typeClass
+                ?: throw IllegalStateException(
+                    "No declared type for arg `${expectedArg.name}` of `${method.name}`"
+                )
+
+            if (!expectedArgType.isAssignableFrom(arg.javaClass)) {
+                return false
+            }
+        }
+        return true
     }
 
     fun invoke(args: Array<Any?>): Any? {
-        return method.invoke(obj, *args)
+        return method.invoke(obj, *args.withEmptyFlags(flagsIndex))
     }
 }
 
@@ -263,11 +277,13 @@ private fun ScriptInitContext.registerSlow(
             if (it.isOptional) 0 else 1
         }
         val maxArgs = inv.args.size
+        val flagsIndex = inv.args.indexOfFirst { it.flags != null }
 
         for (argCount in minArgs..maxArgs) {
             invokables += Invokable(
                 obj,
                 arity = argCount,
+                flagsIndex = if (argCount != maxArgs) flagsIndex else -1,
                 invocation = inv,
                 method = f.methods[i]
             )
