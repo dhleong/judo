@@ -34,6 +34,8 @@ interface ScriptingObject
 
 fun ScriptingObject.extractFunctions() = DocumentedScriptFunction.extractFrom(this.javaClass)
 
+private typealias MethodInvocation = (Array<Any?>) -> Any?
+
 class DocumentedScriptFunction(
     val name: String,
     val doc: JudoScriptDoc,
@@ -145,11 +147,11 @@ private fun ScriptInitContext.registerSingle(
     if (m.isVarArgs) return false
 
     when (m.parameterCount) {
-        0 -> registerFn<Any>(f.name, f.doc) { m.invoke(obj) }
-        1 -> registerFn<Any>(f.name, f.doc) { arg: Any ->
+        0 -> registerFn<Any?>(f.name, f.doc) { m.invoke(obj) }
+        1 -> registerFn<Any?>(f.name, f.doc) { arg: Any? ->
             m.invoke(obj, arg)
         }
-        2 -> registerFn<Any>(f.name, f.doc) { arg0: Any, arg1: Any ->
+        2 -> registerFn<Any?>(f.name, f.doc) { arg0: Any?, arg1: Any? ->
             m.invoke(obj, arg0, arg1)
         }
 
@@ -176,7 +178,7 @@ private fun ScriptInitContext.registerDistinctArities(
         count
     }
 
-    val callableByParamCount = MutableList(f.methods.last().parameterCount + 1) { index ->
+    val callableByParamCount = MutableList<MethodInvocation?>(f.methods.last().parameterCount + 1) { index ->
         val m = f.methods.firstOrNull { it.parameterCount == index }
         m?.let {
             if (m.isVarArgs) {
@@ -205,11 +207,10 @@ private fun ScriptInitContext.registerDistinctArities(
         }
     }
 
-    registerFn<Any>(f.name, f.doc) { args: Array<Any?> ->
+    registerFn<Any?>(f.name, f.doc) { args: Array<Any?> ->
         val firstMethod = callableByParamCount.first { it != null }
         if (firstMethod != null && f.methods.first().isVarArgs) {
-            firstMethod(args)
-            return@registerFn
+            return@registerFn firstMethod(args)
         }
 
         if (args.size >= callableByParamCount.size) {
@@ -220,7 +221,7 @@ private fun ScriptInitContext.registerDistinctArities(
         )
 
         // invoke:
-        m(args)
+        return@registerFn m(args)
     }
     return true
 }

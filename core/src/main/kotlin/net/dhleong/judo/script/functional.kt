@@ -38,7 +38,8 @@ internal interface FIN : JudoCallable {
 @Suppress("UNCHECKED_CAST")
 private class FnN(name: String, engine: ScriptingEngine, val fn: Function1<Array<out Any?>, Any?>) : FnBase(name, engine) {
     override fun invoke(vararg args: Any) = safely {
-        fn.invoke(engine.toJava(args as Array<Any?>))
+        val r = fn.invoke(engine.toJava(args as Array<Any?>))
+        r
     }
 }
 
