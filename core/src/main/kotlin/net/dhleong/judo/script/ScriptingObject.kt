@@ -41,6 +41,11 @@ interface ScriptingObject {
      * declaration
      */
     val methodPrefix: String? get() = null
+
+    /**
+     * As with [methodPrefix], but as a suffix instead
+     */
+    val methodSuffix: String? get() = null
     val docVariables: Map<String, String>? get() = null
 }
 
@@ -54,7 +59,11 @@ class DocumentedScriptFunction(
     internal val methods: List<Method>
 ) {
     companion object {
-        private val IGNORED_METHODS = setOf("getDocVariables", "getMethodPrefix")
+        private val IGNORED_METHODS = setOf(
+            "getDocVariables",
+            "getMethodPrefix",
+            "getMethodSuffix"
+        )
 
         fun extractFrom(javaClass: Class<out ScriptingObject>) =
             javaClass.declaredMethods
@@ -463,11 +472,17 @@ private fun ScriptInitContext.registerFn(
     forceDispatchAsMultiArity: Boolean = false,
     fn: Function<Any?>
 ) {
-    val name = obj.methodPrefix?.let { prefix -> "$prefix${f.name}" }
-        ?: f.name
-    val doc = f.doc.let {
-        // TODO substitute vars
-        it
-    }
+    val nameBuilder = StringBuilder()
+    obj.methodPrefix?.let { nameBuilder.append(it) }
+    nameBuilder.append(f.name)
+    obj.methodSuffix?.let { nameBuilder.append(it) }
+
+    val name = nameBuilder.toString()
+    val doc = obj.docVariables?.let { vars ->
+        f.doc.copy(text = vars.entries.fold(f.doc.text) { text, (k, v) ->
+            text.replace("@{$k}", v)
+        })
+    } ?: f.doc
+
     registerFn(name, doc, forceDispatchAsMultiArity, fn)
 }
