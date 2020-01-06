@@ -226,42 +226,85 @@ private fun ScriptInitContext.registerDistinctArities(
 }
 
 private fun Array<Any?>.withEmptyFlags(flagsIndex: Int): Array<Any?> =
-    if (flagsIndex < 0) this
-    // insert the empty flags string
+    withValueAtIndex(atIndex = flagsIndex, value = "")
+
+private fun Array<Any?>.withValueAtIndex(atIndex: Int, value: Any?): Array<Any?> =
+    if (atIndex < 0) this
+    // insert the value
     else Array(this.size + 1) { index -> when (index) {
-        in 0 until flagsIndex -> this[index]
-        flagsIndex -> ""
+        in 0 until atIndex -> this[index]
+        atIndex -> value
         else -> this[index - 1]
     } }
 
-private class Invokable(
-    private val obj: ScriptingObject,
-    val arity: Int,
-    private val flagsIndex: Int,
-    private val invocation: JudoScriptInvocation,
-    private val method: Method
-) {
-    fun matches(args: Array<Any?>): Boolean {
-        for (i in args.indices) {
-            val arg = args[i] ?: continue
-            val expectedArg = invocation.args[i]
-            if (expectedArg.flags != null && arg !is String) return false
-            else if (expectedArg.flags != null) continue
 
-            val expectedArgType = expectedArg.typeClass
-                ?: throw IllegalStateException(
-                    "No declared type for arg `${expectedArg.name}` of `${method.name}`"
-                )
+private sealed class Invokable {
+    abstract val arity: Int
+    abstract fun invoke(args: Array<Any?>): Any?
+    abstract fun matches(args: Array<Any?>): Boolean
 
-            if (!expectedArgType.isAssignableFrom(arg.javaClass)) {
-                return false
-            }
-        }
-        return true
+    class Exact(
+        private val obj: ScriptingObject,
+        private val invocation: JudoScriptInvocation,
+        private val method: Method
+    ) : Invokable() {
+        override val arity: Int = invocation.args.size
+
+        override fun matches(args: Array<Any?>): Boolean =
+            invocation.typesMatch(args)
+
+        override fun invoke(args: Array<Any?>): Any? =
+            method.invoke(obj, *args)
     }
 
-    fun invoke(args: Array<Any?>): Any? {
-        return method.invoke(obj, *args.withEmptyFlags(flagsIndex))
+    class WithoutOptional(
+        private val obj: ScriptingObject,
+        private val invocation: JudoScriptInvocation,
+        private val method: Method,
+        private val optionalIndex: Int,
+        private val defaultValue: Any?
+    ) : Invokable() {
+        override val arity: Int = invocation.args.size - 1
+
+        override fun matches(args: Array<Any?>): Boolean =
+            invocation.typesMatch(args,
+                ignoreIndex = { i -> i == optionalIndex }
+            )
+
+        override fun invoke(args: Array<Any?>): Any? =
+            method.invoke(obj, *args.withValueAtIndex(optionalIndex, value = defaultValue))
+    }
+
+    class WithoutOptionalOrFlag(
+        private val obj: ScriptingObject,
+        private val invocation: JudoScriptInvocation,
+        private val method: Method,
+        private val optionalIndex: Int,
+        private val flagsIndex: Int
+    ) : Invokable() {
+        override val arity: Int = invocation.args.size - 2
+
+        override fun matches(args: Array<Any?>): Boolean =
+            invocation.typesMatch(args,
+                ignoreIndex = { i ->
+                    i == optionalIndex
+                        || i == flagsIndex
+                }
+            )
+
+        override fun invoke(args: Array<Any?>): Any? {
+            val actualArgs = arrayOfNulls<Any?>(invocation.args.size)
+            var argsOffset = 0
+            for (i in actualArgs.indices) {
+                actualArgs[i] = when (i) {
+                    flagsIndex ->  ""
+                    optionalIndex -> null
+                    else -> args[argsOffset++]
+                }
+            }
+
+            return method.invoke(obj, *actualArgs)
+        }
     }
 }
 
@@ -273,33 +316,40 @@ private fun ScriptInitContext.registerSlow(
     val invokables = mutableListOf<Invokable>()
 
     for ((i, inv) in invocations.withIndex()) {
-        val minArgs = inv.args.sumBy {
-            if (it.isOptional) 0 else 1
-        }
-        val maxArgs = inv.args.size
-        val flagsIndex = inv.args.indexOfFirst { it.flags != null }
+        val optionalCount = inv.args.filter { it.flags == null && it.isOptional }.count()
+        if (optionalCount > 1) throw IllegalStateException("${f.name} has more than one optional param")
 
-        for (argCount in minArgs..maxArgs) {
-            invokables += Invokable(
-                obj,
-                arity = argCount,
-                flagsIndex = if (argCount != maxArgs) flagsIndex else -1,
-                invocation = inv,
-                method = f.methods[i]
-            )
+        val flagsIndex = inv.args.indexOfFirst { it.flags != null }
+        val optionalIndex = inv.args.indexOfFirst {
+            it.flags == null
+                && it.isOptional
         }
+
+        val m = f.methods[i]
+        invokables += Invokable.Exact(obj, inv, m)
+
+        if (flagsIndex != -1) {
+            invokables += Invokable.WithoutOptional(obj, inv, m, flagsIndex, defaultValue = "")
+        }
+        if (optionalIndex != -1) {
+            invokables += Invokable.WithoutOptional(obj, inv, m, optionalIndex, defaultValue = null)
+        }
+        if (optionalIndex != -1 && flagsIndex != -1) {
+            invokables += Invokable.WithoutOptionalOrFlag(obj, inv, m, optionalIndex, flagsIndex)
+        }
+
     }
 
     registerFn<Any?>(f.name, f.doc, forceDispatchAsMultiArity = true) { args: Array<Any?> ->
-        var hasMatchingArgs = false
+        var hasMatchingArity = false
         val invokable = invokables.asSequence()
             .filter { it.arity == args.size }
             .firstOrNull { inv ->
-                hasMatchingArgs = true
+                hasMatchingArity = true
                 inv.matches(args)
             }
 
-        if (!hasMatchingArgs) {
+        if (!hasMatchingArity) {
             throw IllegalArgumentException(
                 "No overload of ${f.name} accepts ${args.size} arguments"
             )
@@ -316,3 +366,41 @@ private fun ScriptInitContext.registerSlow(
     }
 }
 
+private inline fun JudoScriptInvocation.typesMatch(
+    args: Array<Any?>,
+    ignoreIndex: (Int) -> Boolean = { false }
+): Boolean {
+    var candidateArgIndex = 0
+    for (i in this.args.indices) {
+        if (ignoreIndex(i)) {
+            continue
+        }
+
+        val arg = args[candidateArgIndex]
+        if (arg == null) {
+            ++candidateArgIndex
+            continue
+        }
+
+        val expectedArg = this.args[i]
+        if (expectedArg.flags != null && arg !is String) {
+            return false
+        } else if (expectedArg.flags != null) {
+            // TODO verify the input matches the flags
+            continue
+        }
+
+        val expectedArgType = expectedArg.typeClass
+            ?: throw IllegalStateException(
+                "No declared type for arg `${expectedArg.name}`; invocation=$this"
+            )
+
+        if (!expectedArgType.isAssignableFrom(arg.javaClass)) {
+            return false
+        }
+
+        ++candidateArgIndex
+    }
+
+    return true
+}
