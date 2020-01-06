@@ -2,7 +2,6 @@ package net.dhleong.judo.script.init
 
 import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.LabeledAs
-import net.dhleong.judo.script.Optional
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.registerFrom
@@ -26,7 +25,7 @@ fun ScriptInitContext.initKeymaps() {
     registerFrom(GlobalMapScripting(this))
 }
 
-@Suppress("unused")
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 class GlobalMapScripting(
     private val context: ScriptInitContext
 ) : ScriptingObject {
@@ -36,14 +35,16 @@ class GlobalMapScripting(
         If remap is provided and True, the outputKeys can trigger other mappings.
         Otherwise, they will be sent as-is.
     """)
+    fun createMap(modeName: String, inputKeys: String, @LabeledAs("String/Fn") output: Any) = createMap(
+        modeName, inputKeys, output, true
+    )
     fun createMap(
         modeName: String,
         inputKeys: String,
-        outputKeys: String,
-        @Optional remap: Boolean?
+        @LabeledAs("String/Fn") output: Any,
+        remap: Boolean
     ) = with(context) {
-        val doRemap = remap ?: true
-        mode.createMap(modeName, inputKeys, outputKeys, doRemap)
+        mode.createMap(modeName, inputKeys, output, remap)
     }
 
     @Doc("Delete a mapping in the specific mode with inputKeys")

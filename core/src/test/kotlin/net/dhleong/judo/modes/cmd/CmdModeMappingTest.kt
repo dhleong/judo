@@ -2,7 +2,9 @@ package net.dhleong.judo.modes.cmd
 
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.exactly
 import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.script.ScriptingEngine
@@ -50,6 +52,33 @@ class CmdModeMappingTest(
 
         assertThat(judo.maps)
             .containsExactly(listOf("custom", "a", "bc", true))
+    }
+
+    @Test fun `createMap supports omitting remap`() = runBlocking {
+        mode.execute(fnCall("createMap", "custom", "a", "bc"))
+
+        assertThat(judo.maps)
+            .containsExactly(listOf("custom", "a", "bc", true))
+    }
+
+    @Test fun `createMap supports lambda`() = runBlocking {
+        mode.execute(when (scriptType()) {
+            SupportedScriptTypes.JS -> """
+                createMap("custom", "a", function() {
+                    echo("Take my love");
+                })
+            """.trimIndent()
+
+            SupportedScriptTypes.PY -> """
+                createMap("custom", "a", lambda: echo("Take my love"))
+            """.trimIndent()
+        })
+
+        assertThat(judo.maps)
+            .exactly(1) { el ->
+                el.transform("mode") { it.first() as String }
+                    .isEqualTo("custom")
+            }
     }
 
     @Test fun `unmap removes mappings`() = runBlocking {

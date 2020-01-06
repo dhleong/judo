@@ -55,7 +55,7 @@ class DocumentedScriptFunction(
 ) {
     companion object {
         private val IGNORED_METHODS = setOf("getDocVariables", "getMethodPrefix")
-        
+
         fun extractFrom(javaClass: Class<out ScriptingObject>) =
             javaClass.declaredMethods
                 .filter { it.name !in IGNORED_METHODS }
