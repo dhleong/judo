@@ -24,7 +24,9 @@ class StackKtTest {
             register(JudoScriptingEntity.Function<String>("takeoff", doc {
                 usage { arg("maneuver", "String") }
                 body { "Leave port" }
-            }) { maneuver: String -> maneuver })
+            }, forceDispatchAsMultiArity = false) { maneuver: String ->
+                maneuver
+            })
         }
     }
 
