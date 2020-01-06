@@ -16,6 +16,9 @@ annotation class SupportsDecorator
 annotation class FnObject
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
+annotation class LabeledAs(val typeDisplayName: String)
+
+@Target(AnnotationTarget.VALUE_PARAMETER)
 annotation class PatternObject
 
 @Target(AnnotationTarget.VALUE_PARAMETER)
@@ -30,7 +33,16 @@ annotation class Optional
  *
  * @author dhleong
  */
-interface ScriptingObject
+interface ScriptingObject {
+    /**
+     * If non-null, all methods in this object will be registered
+     * with the returned String prefixed onto the method name. This
+     * allows for generating multiple similar methods from a single
+     * declaration
+     */
+    val methodPrefix: String? get() = null
+    val docVariables: Map<String, String>? get() = null
+}
 
 fun ScriptingObject.extractFunctions() = DocumentedScriptFunction.extractFrom(this.javaClass)
 
@@ -42,8 +54,11 @@ class DocumentedScriptFunction(
     internal val methods: List<Method>
 ) {
     companion object {
+        private val IGNORED_METHODS = setOf("getDocVariables", "getMethodPrefix")
+        
         fun extractFrom(javaClass: Class<out ScriptingObject>) =
             javaClass.declaredMethods
+                .filter { it.name !in IGNORED_METHODS }
                 .filter { (it.modifiers and Modifier.PUBLIC) != 0 }
                 .filter { "access$" !in it.name }
                 .groupBy { it.name }
@@ -78,6 +93,13 @@ private fun List<Method>.extractJudoDoc() = doc {
 
                         arg.isAnnotationPresent(FnObject::class.java) ->
                             arg(arg.name, "Fn", arg.type)
+
+                        arg.isAnnotationPresent(LabeledAs::class.java) ->
+                            arg(
+                                arg.name,
+                                arg.getAnnotation(LabeledAs::class.java).typeDisplayName,
+                                arg.type
+                            )
 
                         else -> arg(
                             arg.name, arg.type.stringified(), arg.type,
@@ -147,11 +169,11 @@ private fun ScriptInitContext.registerSingle(
     if (m.isVarArgs) return false
 
     when (m.parameterCount) {
-        0 -> registerFn<Any?>(f.name, f.doc) { m.invoke(obj) }
-        1 -> registerFn<Any?>(f.name, f.doc) { arg: Any? ->
+        0 -> registerFn(obj, f) { m.invoke(obj) }
+        1 -> registerFn(obj, f) { arg: Any? ->
             m.invoke(obj, arg)
         }
-        2 -> registerFn<Any?>(f.name, f.doc) { arg0: Any?, arg1: Any? ->
+        2 -> registerFn(obj, f) { arg0: Any?, arg1: Any? ->
             m.invoke(obj, arg0, arg1)
         }
 
@@ -207,7 +229,7 @@ private fun ScriptInitContext.registerDistinctArities(
         }
     }
 
-    registerFn<Any?>(f.name, f.doc) { args: Array<Any?> ->
+    registerFn(obj, f) { args: Array<Any?> ->
         val firstMethod = callableByParamCount.first { it != null }
         if (firstMethod != null && f.methods.first().isVarArgs) {
             return@registerFn firstMethod(args)
@@ -353,7 +375,7 @@ private fun ScriptInitContext.registerSlow(
 
     }
 
-    registerFn<Any?>(f.name, f.doc, forceDispatchAsMultiArity = true) { args: Array<Any?> ->
+    registerFn(obj, f, forceDispatchAsMultiArity = true) { args: Array<Any?> ->
         var hasMatchingArity = false
         val invokable = invokables.asSequence()
             .filter { it.arity == args.size }
@@ -433,4 +455,19 @@ private inline fun JudoScriptInvocation.typesMatch(
     // we didn't get to, and we got here because a previous candidateArg
     // matched a later invocation.arg type
     return candidateArgIndex == args.size
+}
+
+private fun ScriptInitContext.registerFn(
+    obj: ScriptingObject,
+    f: DocumentedScriptFunction,
+    forceDispatchAsMultiArity: Boolean = false,
+    fn: Function<Any?>
+) {
+    val name = obj.methodPrefix?.let { prefix -> "$prefix${f.name}" }
+        ?: f.name
+    val doc = f.doc.let {
+        // TODO substitute vars
+        it
+    }
+    registerFn(name, doc, forceDispatchAsMultiArity, fn)
 }
