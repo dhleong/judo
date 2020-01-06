@@ -46,6 +46,12 @@ interface ScriptingObject {
      * As with [methodPrefix], but as a suffix instead
      */
     val methodSuffix: String? get() = null
+
+    /**
+     * If provided, every `@{KEY}` for which `KEY` is a key in this
+     * map will be replaced with the associated value in every
+     * [Doc] text of every method on this object
+     */
     val docVariables: Map<String, String>? get() = null
 }
 
