@@ -239,13 +239,21 @@ private fun Array<Any?>.withValueAtIndex(atIndex: Int, value: Any?): Array<Any?>
 
 
 private sealed class Invokable {
+    protected abstract val invocation: JudoScriptInvocation
     abstract val arity: Int
     abstract fun invoke(args: Array<Any?>): Any?
     abstract fun matches(args: Array<Any?>): Boolean
 
+    open fun describe(): String = invocation.args.joinToString(",") {
+        "${it.name}:${it.typeClass?.name ?: it.type}".let { base ->
+            if (it.isOptional) "[$base]"
+            else base
+        }
+    }
+
     class Exact(
         private val obj: ScriptingObject,
-        private val invocation: JudoScriptInvocation,
+        override val invocation: JudoScriptInvocation,
         private val method: Method
     ) : Invokable() {
         override val arity: Int = invocation.args.size
@@ -259,12 +267,14 @@ private sealed class Invokable {
 
     class WithoutOptional(
         private val obj: ScriptingObject,
-        private val invocation: JudoScriptInvocation,
+        override val invocation: JudoScriptInvocation,
         private val method: Method,
         private val optionalIndex: Int,
         private val defaultValue: Any?
     ) : Invokable() {
         override val arity: Int = invocation.args.size - 1
+
+        override fun describe(): String = "${super.describe()} without #$optionalIndex"
 
         override fun matches(args: Array<Any?>): Boolean =
             invocation.typesMatch(args,
@@ -277,12 +287,14 @@ private sealed class Invokable {
 
     class WithoutOptionalOrFlag(
         private val obj: ScriptingObject,
-        private val invocation: JudoScriptInvocation,
+        override val invocation: JudoScriptInvocation,
         private val method: Method,
         private val optionalIndex: Int,
         private val flagsIndex: Int
     ) : Invokable() {
         override val arity: Int = invocation.args.size - 2
+
+        override fun describe(): String = "${super.describe()} without #$optionalIndex or #$flagsIndex"
 
         override fun matches(args: Array<Any?>): Boolean =
             invocation.typesMatch(args,
@@ -361,8 +373,15 @@ private fun ScriptInitContext.registerSlow(
             )
         }
 
-        // invoke:
-        invokable.invoke(args)
+        try {
+            // invoke:
+            invokable.invoke(args)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException(
+                "${args.toList()} does not match ${invokable.describe()}",
+                e
+            )
+        }
     }
 }
 
@@ -383,10 +402,16 @@ private inline fun JudoScriptInvocation.typesMatch(
         }
 
         val expectedArg = this.args[i]
-        if (expectedArg.flags != null && arg !is String) {
-            return false
-        } else if (expectedArg.flags != null) {
-            // TODO verify the input matches the flags
+        if (expectedArg.flags != null) {
+            @Suppress("ControlFlowWithEmptyBody")
+            if (arg is String && expectedArg.acceptsFlag(arg)) {
+                // arg match!
+                ++candidateArgIndex
+            } else {
+                // the arg here doesn't match the flags, but flags are optional, so
+                // try to match against the next param by falling through to continue:
+            }
+
             continue
         }
 
@@ -402,5 +427,9 @@ private inline fun JudoScriptInvocation.typesMatch(
         ++candidateArgIndex
     }
 
-    return true
+    // if all args were accepted then this matches; if candidateArgIndex
+    // is < args.size, that means there was at least one candidateArg that
+    // we didn't get to, and we got here because a previous candidateArg
+    // matched a later invocation.arg type
+    return candidateArgIndex == args.size
 }

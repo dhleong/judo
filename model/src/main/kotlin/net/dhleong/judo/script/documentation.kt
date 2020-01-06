@@ -22,8 +22,22 @@ data class JudoScriptArgument(
     val flags: Class<out Enum<*>>? = null,
     val typeClass: Class<*>? = null
 ) {
+
+    private val flagTypes = flags?.enumConstants
+        ?.asSequence()
+        ?.map { it.toString() }
+        ?.toSet()
+
     fun typeMatches(obj: Any): Boolean = typeClass?.isAssignableFrom(obj.javaClass)
         ?: throw IllegalStateException("No typeClass for arg `$name`")
+
+    fun acceptsFlag(arg: String): Boolean =
+        arg.splitToSequence(" ").all {
+            it.isValidFlag()
+        }
+
+    private fun String.isValidFlag() = flagTypes?.contains(this) ?: false
+
 }
 
 class InvocationBuilder(
