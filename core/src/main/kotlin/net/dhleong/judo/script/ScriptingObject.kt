@@ -146,7 +146,9 @@ private fun List<Method>.extractJudoDoc() = doc {
 }
 
 private fun Type.stringified(isNullable: Boolean = false) = when (this) {
-    is Class<*> -> this.simpleName.capitalize()
+    is Class<*> -> this.simpleName
+        .removePrefix("IScript")
+        .capitalize()
     else -> toString()
 }.let {
     if (isNullable) "$it?"
@@ -458,7 +460,8 @@ private inline fun JudoScriptInvocation.typesMatch(
                 "No declared type for arg `${expectedArg.name}`; invocation=$this"
             )
 
-        if (!expectedArgType.isAssignableFrom(arg.javaClass)) {
+        // NOTE: use the kotlin type mirror for instance to easily handle int vs Integer
+        if (!expectedArgType.kotlin.isInstance(arg)) {
             return false
         }
 

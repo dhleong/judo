@@ -276,7 +276,7 @@ class JythonScriptingEngine : ScriptingEngine {
     override fun wrapWindow(
         tabpage: IJudoTabpage,
         window: IJudoWindow
-    ): PyObject = JythonWindow.from(this, tabpage, window)
+    ): IScriptWindow = JythonWindow.from(this, tabpage, window)
 
     override fun onPreReadFile(file: File, inputStream: InputStream) {
         file.parentFile?.let { fileDir ->
@@ -638,8 +638,10 @@ internal fun createPyWindow(
 
 private class JythonWindow(
     private val window: IJudoWindow,
+    private val scriptWindow: IScriptWindow,
     private val base: PyObject
-) : JythonWrapperPyObject<IJudoWindow>(window, IJudoWindow::class.java) {
+) : JythonWrapperPyObject<IJudoWindow>(window, IJudoWindow::class.java),
+    IScriptWindow by scriptWindow {
 
     override fun __findattr_ex__(name: String?): PyObject = when (name) {
         "buffer" -> JythonBuffer.from(window.currentBuffer) // cache?
@@ -659,7 +661,7 @@ private class JythonWindow(
             window: IJudoWindow
         ): JythonWindow {
             val jsrRaw = Jsr223Window(engine, tabpage, window)
-            return JythonWindow(window, Py.java2py(jsrRaw))
+            return JythonWindow(window, jsrRaw, Py.java2py(jsrRaw))
         }
     }
 }

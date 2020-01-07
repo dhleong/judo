@@ -80,7 +80,7 @@ interface ScriptingEngine {
         }
 
     fun wrapCore(judo: IJudoCore): Any
-    fun wrapWindow(tabpage: IJudoTabpage, window: IJudoWindow): Any
+    fun wrapWindow(tabpage: IJudoTabpage, window: IJudoWindow): IScriptWindow
 
     /** Called just before a script file is reloaded */
     fun onPreReload() {}

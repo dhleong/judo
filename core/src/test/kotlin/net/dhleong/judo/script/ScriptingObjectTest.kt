@@ -12,6 +12,7 @@ import assertk.assertions.support.show
 import net.dhleong.judo.script.init.ConnectionScripting
 import net.dhleong.judo.script.init.CoreScripting
 import net.dhleong.judo.script.init.UtilScripting
+import net.dhleong.judo.script.init.WindowsScripting
 import org.junit.Test
 import kotlin.reflect.KClass
 
@@ -47,6 +48,14 @@ class ScriptingObjectTest {
             hasSize(1)
             each {
                 it.hasReturnType("Boolean")
+            }
+        }
+
+        val hsplitFn = WindowsScripting::class["hsplit"]
+        assertThat(hsplitFn.doc.invocations).isNotNull().all {
+            hasSize(3)
+            each {
+                it.hasReturnType("Window")
             }
         }
     }
