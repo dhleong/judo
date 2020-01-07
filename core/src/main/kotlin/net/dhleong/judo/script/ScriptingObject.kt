@@ -164,17 +164,25 @@ fun ScriptInitContext.registerFrom(obj: ScriptingObject) {
 
 private fun ScriptInitContext.register(obj: ScriptingObject, f: DocumentedScriptFunction) {
     val invocations = f.doc.invocations ?: throw IllegalStateException("No invocations for `${f.name}`?")
-    if (f.methods.size == 1 && invocations.none { inv -> inv.args.any { it.flags != null } }) {
+    val anyHaveFlags = invocations.any { inv -> inv.args.any { it.flags != null } }
+    if (f.methods.size == 1 && !anyHaveFlags) {
         val m = f.methods.first()
         if (registerSingle(obj, f, m)) {
             return
         }
     }
 
-    if (registerDistinctArities(obj, f, invocations)) {
-        return
+    // NOTE: if this method has invocations with both flags and an optional,
+    // we cannot use the distinct arity registration
+    val anyHaveOptions = invocations.any { inv -> inv.args.any { it.isOptional && it.flags == null } }
+    if (!(anyHaveFlags && anyHaveOptions)) {
+        if (registerDistinctArities(obj, f, invocations)) {
+            return
+        }
     }
 
+    // "slow" registration is the least efficient at dispatch, but it's the
+    // most flexible, able to handle same-arity/different-typed overloads
     registerSlow(obj, f, invocations)
 }
 
@@ -389,7 +397,6 @@ private fun ScriptInitContext.registerSlow(
         if (optionalIndex != -1 && flagsIndex != -1) {
             invokables += Invokable.WithoutOptionalOrFlag(obj, inv, m, optionalIndex, flagsIndex)
         }
-
     }
 
     registerFn(obj, f, forceDispatchAsMultiArity = true) { args: Array<Any?> ->
