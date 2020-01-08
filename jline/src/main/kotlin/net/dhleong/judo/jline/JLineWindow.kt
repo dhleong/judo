@@ -412,6 +412,13 @@ class JLineWindow(
             val b = currentBuffer
             val wordWrap = settings[WORD_WRAP]
 
+            if (b.size == 0) {
+                // easy case
+                scrollbackBottom = 0
+                scrollbackOffset = 0
+                return
+            }
+
             val (linesBefore, lastLineRenderHeight) = preState as ScrollAdjustmentState
             if (scrollbackBottom == 0 && scrollbackOffset == 0) {
                 // no need to maintain scroll position
@@ -430,6 +437,11 @@ class JLineWindow(
                 scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
             } else {
                 scrollbackBottom += linesAfter - linesBefore
+            }
+
+            if (scrollbackBottom < 0) {
+                scrollbackBottom = 0
+                scrollbackOffset = 0
             }
         } finally {
             renderer.finishUpdate()

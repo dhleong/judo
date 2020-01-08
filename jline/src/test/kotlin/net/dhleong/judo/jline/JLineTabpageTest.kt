@@ -432,6 +432,43 @@ class JLineTabpageTest {
             isSameAs(bottom)
         }
     }
+
+    @Test fun `Clear buffer of scrolled window`() {
+        primary.appendLine("Take my love take my land")
+        primary.updateStatusLine("[status]")
+        primary.scrollLines(1)
+        assertThat(display).linesEqual("""
+            |____________
+            |____________
+            |____________
+            |____________
+            |Take my love
+            |[status]____
+            |____________
+        """.trimMargin())
+
+        primary.currentBuffer.clear()
+        assertThat(display).linesEqual("""
+            |____________
+            |____________
+            |____________
+            |____________
+            |____________
+            |[status]____
+            |____________
+        """.trimMargin())
+
+        primary.appendLine("Take my land take me where")
+        assertThat(display).linesEqual("""
+            |____________
+            |____________
+            |Take my land
+            |take me ____
+            |where_______
+            |[status]____
+            |____________
+        """.trimMargin())
+    }
 }
 
 private fun PrimaryJudoWindow.updateStatusLine(line: String) {
