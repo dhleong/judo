@@ -190,7 +190,7 @@ class Jsr223JudoCore(
     override var buffer: Any
 //        get() = engine.toScript(judo.renderer.currentTabpage.currentWindow.currentBuffer)
         get() = judo.renderer.currentTabpage.currentWindow.let { w ->
-            Jsr223Buffer(w, w.currentBuffer)
+            Jsr223Buffer(w.currentBuffer)
         }
         set(_) {
             throw UnsupportedOperationException("TODO change buffer in Window")
@@ -207,7 +207,7 @@ class Jsr223Window(
     override val width: Int get() = window.width
     override val height: Int get() = window.visibleHeight
     override val buffer: IScriptBuffer
-        get() = Jsr223Buffer(window, window.currentBuffer)
+        get() = Jsr223Buffer(window.currentBuffer)
 
     override var hidden: Boolean
         get() = window.isWindowHidden
@@ -231,7 +231,6 @@ class Jsr223Window(
 }
 
 class Jsr223Buffer(
-    private val window: IJudoWindow,
     private val buffer: IJudoBuffer
 ) : IScriptBuffer {
     override val id: Int = buffer.id
@@ -240,7 +239,7 @@ class Jsr223Buffer(
         get() = buffer.size
 
     override fun append(line: String) {
-        line.appendAsFlavorableTo(window)
+        line.appendAsFlavorableTo(buffer)
     }
 
     override fun clear() {
