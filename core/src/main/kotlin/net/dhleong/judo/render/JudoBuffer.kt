@@ -3,6 +3,7 @@ package net.dhleong.judo.render
 import net.dhleong.judo.DelegateStateMap
 import net.dhleong.judo.IStateMap
 import net.dhleong.judo.util.CircularArrayList
+import java.util.concurrent.atomic.AtomicInteger
 
 open class JudoBuffer(
     override val id: Int,
@@ -17,6 +18,7 @@ open class JudoBuffer(
     ) : this(ids.newBuffer(), settings, scrollbackSize)
 
     private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
+    private val windows = mutableListOf<IJudoWindow>()
 
     override val settings: IStateMap = DelegateStateMap(settings)
 
@@ -28,12 +30,12 @@ open class JudoBuffer(
     override fun get(index: Int): FlavorableCharSequence = contents[index]
 
     @Synchronized
-    override fun append(text: FlavorableCharSequence) {
+    override fun append(text: FlavorableCharSequence) = notifyingChanges {
         text.splitAtNewlines(contents, continueIncompleteLines = true)
     }
 
     @Synchronized
-    override fun appendLine(line: FlavorableCharSequence) {
+    override fun appendLine(line: FlavorableCharSequence) = notifyingChanges {
         if (!line.endsWith('\n')) {
             line += '\n'
         }
@@ -41,27 +43,28 @@ open class JudoBuffer(
     }
 
     @Synchronized
-    override fun clear() {
+    override fun clear() = notifyingChanges{
         contents.clear()
     }
 
     @Synchronized
-    override fun deleteLast() =
+    override fun deleteLast() = notifyingChanges {
         contents.removeLast()
+    }
 
     @Synchronized
-    override fun replaceLastLine(result: FlavorableCharSequence) {
+    override fun replaceLastLine(result: FlavorableCharSequence) = notifyingChanges {
         contents[contents.lastIndex] = result
     }
 
     @Synchronized
-    override fun set(newContents: List<FlavorableCharSequence>) {
+    override fun set(newContents: List<FlavorableCharSequence>) = notifyingChanges {
         clear()
         newContents.forEach(this::appendLine)
     }
 
     @Synchronized
-    override fun set(index: Int, line: FlavorableCharSequence) {
+    override fun set(index: Int, line: FlavorableCharSequence) = notifyingChanges {
         val newLine = line.indexOf('\n')
         require(newLine == -1 || newLine == line.lastIndex) {
             "Line must not have any newline characters in it"
@@ -70,6 +73,44 @@ open class JudoBuffer(
             line += '\n'
         }
         contents[index] = line
+    }
+
+    override fun attachWindow(window: IJudoWindow) {
+        windows += window
+    }
+
+    override fun detachWindow(window: IJudoWindow) {
+        windows -= window
+    }
+
+    private val changeWorkspace = arrayListOf<Any?>()
+    private val changeDepth = AtomicInteger(0)
+    protected fun beginChange() {
+        if (changeDepth.getAndIncrement() > 0) return
+
+        changeWorkspace.ensureCapacity(windows.size)
+        for (i in changeWorkspace.size until windows.size) {
+            changeWorkspace.add(null)
+        }
+
+        for (i in windows.indices) {
+            changeWorkspace[i] = windows[i].onBufModifyPre()
+        }
+    }
+    protected fun endChange() {
+        if (changeDepth.decrementAndGet() > 0) return
+
+        for (i in windows.indices) {
+            windows[i].onBufModifyPost(changeWorkspace[i])
+        }
+        changeWorkspace.fill(null)
+    }
+
+    protected inline fun <R> notifyingChanges(block: () -> R): R = try {
+        beginChange()
+        block()
+    } finally {
+        endChange()
     }
 
     companion object {

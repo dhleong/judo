@@ -15,6 +15,7 @@ import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import kotlin.math.abs
+import kotlin.properties.Delegates
 
 /**
  * @author dhleong
@@ -34,7 +35,17 @@ class JLineWindow(
     isFocusable, statusLineOverlaysOutput
 ), IJLineWindow {
 
-    override var currentBuffer: IJudoBuffer = initialBuffer
+    override var currentBuffer: IJudoBuffer by Delegates.observable(
+        initialBuffer
+    ) { _, oldValue, newValue ->
+        oldValue.detachWindow(this)
+        newValue.attachWindow(this)
+    }
+
+    init {
+        initialBuffer.attachWindow(this)
+    }
+
     override var isFocused: Boolean = false
     override val visibleHeight
         get() = when {
@@ -76,14 +87,6 @@ class JLineWindow(
     private var scrollbackOffset = 0
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
-
-    override fun append(text: FlavorableCharSequence) = adjustingScrollingIfNecessary {
-        super.append(text)
-    }
-
-    override fun appendLine(line: FlavorableCharSequence) = adjustingScrollingIfNecessary {
-        super.appendLine(line)
-    }
 
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // synchronize on the buffer to protect against concurrent
@@ -382,37 +385,58 @@ class JLineWindow(
         }
     }
 
-    private inline fun adjustingScrollingIfNecessary(
-        block: () -> Unit
-    ) = renderer.inTransaction {
+    override fun onBufModifyPre(): Any? {
         val b = currentBuffer
         val wordWrap = settings[WORD_WRAP]
 
-        val linesBefore = b.size
-        val lastLineRenderHeight = when {
-            b.size > 0 -> b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
-            else -> 0
-        }
+        renderer.beginUpdate()
+        return ScrollAdjustmentState(
+            linesBefore = b.size,
+            lastLineRenderHeight = when {
+                b.size > 0 -> b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
+                else -> 0
+            }
+        )
+    }
 
-        block()
+    override fun onBufModifyPost(preState: Any?) {
+        try {
+            val b = currentBuffer
+            val wordWrap = settings[WORD_WRAP]
 
-        if (scrollbackBottom == 0 && scrollbackOffset == 0) {
-            // no need to maintain scroll position
-            return
-        }
-        if (linesBefore == 0) {
-            // could not have scrolled; quick reject
-            return
-        }
+            if (b.size == 0) {
+                // easy case
+                scrollbackBottom = 0
+                scrollbackOffset = 0
+                return
+            }
 
-        val linesAfter = b.size
+            val (linesBefore, lastLineRenderHeight) = preState as ScrollAdjustmentState
+            if (scrollbackBottom == 0 && scrollbackOffset == 0) {
+                // no need to maintain scroll position
+                return
+            }
+            if (linesBefore == 0) {
+                // could not have scrolled; quick reject
+                return
+            }
 
-        if (linesBefore == linesAfter) {
-            // appending to last line
-            val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
-            scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
-        } else {
-            scrollbackBottom += linesAfter - linesBefore
+            val linesAfter = b.size
+
+            if (linesBefore == linesAfter) {
+                // appending to last line
+                val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
+                scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
+            } else {
+                scrollbackBottom += linesAfter - linesBefore
+            }
+
+            if (scrollbackBottom < 0) {
+                scrollbackBottom = 0
+                scrollbackOffset = 0
+            }
+        } finally {
+            renderer.finishUpdate()
         }
     }
 
@@ -460,3 +484,8 @@ internal fun FlavorableCharSequence.splitLinesInto(
         target.add(subSequence(start, end))
     }
 }
+
+private data class ScrollAdjustmentState(
+    val linesBefore: Int,
+    val lastLineRenderHeight: Int
+)

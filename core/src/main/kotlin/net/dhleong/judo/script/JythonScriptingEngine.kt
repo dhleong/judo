@@ -523,7 +523,6 @@ internal fun createPyCore(
                     judo.renderer.currentTabpage.currentWindow
                 )
                 "buffer" -> JythonBuffer.from(
-                    judo.renderer.currentTabpage.currentWindow,
                     judo.renderer.currentTabpage.currentWindow.currentBuffer
                 )
                 else -> super.__findattr_ex__(name)
@@ -597,7 +596,7 @@ internal fun createPyWindow(
     return object : PyObject() {
         override fun __findattr_ex__(name: String?): PyObject? =
             when (name ?: "") {
-                "buffer" -> JythonBuffer.from(window, window.currentBuffer) // cache?
+                "buffer" -> JythonBuffer.from(window.currentBuffer) // cache?
                 "height" -> Py.java2py(window.visibleHeight)
                 "width" -> Py.java2py(window.width)
                 "id" -> Py.java2py(window.id)
@@ -643,7 +642,7 @@ private class JythonWindow(
 ) : JythonWrapperPyObject<IJudoWindow>(window, IJudoWindow::class.java) {
 
     override fun __findattr_ex__(name: String?): PyObject = when (name) {
-        "buffer" -> JythonBuffer.from(window, window.currentBuffer) // cache?
+        "buffer" -> JythonBuffer.from(window.currentBuffer) // cache?
 
         else -> base.__findattr_ex__(name)
     }
@@ -680,11 +679,8 @@ private class JythonBuffer(
         base.__findattr_ex__(name)
 
     companion object {
-        fun from(
-            window: IJudoWindow,
-            buffer: IJudoBuffer
-        ): PyObject {
-            val jsrBase = Jsr223Buffer(window, buffer)
+        fun from(buffer: IJudoBuffer): PyObject {
+            val jsrBase = Jsr223Buffer(buffer)
             val base = Py.java2py(jsrBase)
             return JythonBuffer(buffer, jsrBase, base)
         }

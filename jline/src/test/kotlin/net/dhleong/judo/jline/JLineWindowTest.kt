@@ -653,7 +653,7 @@ class JLineWindowTest {
             |captain mreynolds_______
             |first mate zoe__________
         """.trimMargin())
-        val w = windowOf(buffer, 24, 1, wrap = true)
+        val w = display.windowOf(buffer, wrap = true)
 
         w.render(display, 0, 0)
         assertThat(display).linesEqual("""
@@ -681,7 +681,7 @@ class JLineWindowTest {
             |Take my land
             |Take me where I cannot stand
         """.trimMargin())
-        val w = windowOf(buffer, 42, 2)
+        val w = display.windowOf(buffer)
 
         w.render(display, 0, 0)
         assertThat(display).linesEqual("""
@@ -724,7 +724,7 @@ class JLineWindowTest {
             append(FlavorableStringBuilder.withDefaultFlavor("Take me where"))
         }
         assertThat(buffer.size).isEqualTo(1)
-        val w = windowOf(buffer, 42, 2)
+        val w = display.windowOf(buffer)
 
         w.render(display, 0, 0)
         assertThat(display).linesEqual("""
@@ -760,6 +760,46 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `Maintain scrollback on buffer line delete`() {
+        val display = JLineDisplay(15, 5)
+        val buffer = bufferOf("""
+            Take my love, take my land, take me where 
+            I cannot stand; I don't care,
+            I'm still free
+        """.trimIndent())
+        val w = display.windowOf(buffer, wrap = true)
+
+        w.scrollLines(2)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |_______________
+            |Take my love,__
+            |take my land,__
+            |take me where__
+            |I_cannot stand;
+        """.trimMargin())
+
+        w.appendLine("You can't take the skies from me")
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |_______________
+            |Take my love,__
+            |take my land,__
+            |take me where__
+            |I_cannot stand;
+        """.trimMargin())
+
+        buffer.deleteLast()
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |_______________
+            |Take my love,__
+            |take my land,__
+            |take me where__
+            |I_cannot stand;
+        """.trimMargin())
+    }
+
     @Test fun `Don't squash significant whitespace`() {
         // see #62
         val display = JLineDisplay(10, 1)
@@ -774,7 +814,7 @@ class JLineWindowTest {
             })
         }
         assertThat(buffer.size).isEqualTo(1)
-        val w = windowOf(buffer, 10, 1)
+        val w = display.windowOf(buffer)
 
         w.render(display, 0, 0)
         assertThat(display).ansiLinesEqual("""
@@ -796,7 +836,7 @@ class JLineWindowTest {
             })
         }
         assertThat(buffer.size).isEqualTo(1)
-        val w = windowOf(buffer, 10, 1)
+        val w = display.windowOf(buffer)
 
         w.render(display, 0, 0)
         assertThat(display).ansiLinesEqual("""
@@ -825,6 +865,14 @@ class JLineWindowTest {
     ).also {
         it.isFocused = focused
     }
+
+    private fun JLineDisplay.windowOf(
+        buffer: JudoBuffer,
+        wrap: Boolean = false
+    ) = windowOf(
+        buffer, this.width, this.height,
+        wrap = wrap
+    )
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =
@@ -837,4 +885,3 @@ private fun Assert<IJudoWindow>.hasScrollback(lines: Int) = given { actual ->
     if (actual.getScrollback() == lines) return
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
 }
-
