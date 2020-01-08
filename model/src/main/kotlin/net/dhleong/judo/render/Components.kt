@@ -30,6 +30,9 @@ interface IJudoBuffer : IJudoAppendable {
 
     fun set(newContents: List<FlavorableCharSequence>)
     operator fun set(index: Int, line: FlavorableCharSequence)
+
+    fun attachWindow(window: IJudoWindow)
+    fun detachWindow(window: IJudoWindow)
 }
 
 interface IJudoWindow : IJudoAppendable, IJudoScrollable {
@@ -85,6 +88,16 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
 
     fun updateStatusLine(line: FlavorableCharSequence, cursor: Int = -1)
     fun searchForKeyword(word: CharSequence, direction: Int)
+
+    /**
+     * Called by the currentBuffer before a change is applied to it.
+     * Useful if you need to do some prep for maintaining scroll position,
+     * for example
+     *
+     * @return Any state object, passed back to you in [onBufModifyPost]
+     */
+    fun onBufModifyPre(): Any? = null
+    fun onBufModifyPost(preState: Any?) {}
 }
 
 interface IJudoTabpage {
