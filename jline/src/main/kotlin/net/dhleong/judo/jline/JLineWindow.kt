@@ -88,14 +88,6 @@ class JLineWindow(
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
 
-//    override fun append(text: FlavorableCharSequence) = adjustingScrollingIfNecessary {
-//        super.append(text)
-//    }
-//
-//    override fun appendLine(line: FlavorableCharSequence) = adjustingScrollingIfNecessary {
-//        super.appendLine(line)
-//    }
-
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // synchronize on the buffer to protect against concurrent
         // modification
