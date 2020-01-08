@@ -397,6 +397,7 @@ class JLineWindow(
         val b = currentBuffer
         val wordWrap = settings[WORD_WRAP]
 
+        renderer.beginUpdate()
         return ScrollAdjustmentState(
             linesBefore = b.size,
             lastLineRenderHeight = when {
@@ -407,61 +408,31 @@ class JLineWindow(
     }
 
     override fun onBufModifyPost(preState: Any?) {
-        val b = currentBuffer
-        val wordWrap = settings[WORD_WRAP]
+        try {
+            val b = currentBuffer
+            val wordWrap = settings[WORD_WRAP]
 
-        val (linesBefore, lastLineRenderHeight) = preState as ScrollAdjustmentState
-        if (scrollbackBottom == 0 && scrollbackOffset == 0) {
-            // no need to maintain scroll position
-            return
-        }
-        if (linesBefore == 0) {
-            // could not have scrolled; quick reject
-            return
-        }
+            val (linesBefore, lastLineRenderHeight) = preState as ScrollAdjustmentState
+            if (scrollbackBottom == 0 && scrollbackOffset == 0) {
+                // no need to maintain scroll position
+                return
+            }
+            if (linesBefore == 0) {
+                // could not have scrolled; quick reject
+                return
+            }
 
-        val linesAfter = b.size
+            val linesAfter = b.size
 
-        if (linesBefore == linesAfter) {
-            // appending to last line
-            val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
-            scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
-        } else {
-            scrollbackBottom += linesAfter - linesBefore
-        }
-    }
-
-    private inline fun adjustingScrollingIfNecessary(
-        block: () -> Unit
-    ) = renderer.inTransaction {
-        val b = currentBuffer
-        val wordWrap = settings[WORD_WRAP]
-
-        val linesBefore = b.size
-        val lastLineRenderHeight = when {
-            b.size > 0 -> b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
-            else -> 0
-        }
-
-        block()
-
-        if (scrollbackBottom == 0 && scrollbackOffset == 0) {
-            // no need to maintain scroll position
-            return
-        }
-        if (linesBefore == 0) {
-            // could not have scrolled; quick reject
-            return
-        }
-
-        val linesAfter = b.size
-
-        if (linesBefore == linesAfter) {
-            // appending to last line
-            val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
-            scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
-        } else {
-            scrollbackBottom += linesAfter - linesBefore
+            if (linesBefore == linesAfter) {
+                // appending to last line
+                val newRenderHeight = b[b.lastIndex].computeRenderedLinesCount(width, wordWrap)
+                scrollbackOffset += (newRenderHeight - lastLineRenderHeight)
+            } else {
+                scrollbackBottom += linesAfter - linesBefore
+            }
+        } finally {
+            renderer.finishUpdate()
         }
     }
 
