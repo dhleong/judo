@@ -1,5 +1,6 @@
 package net.dhleong.judo.util
 
+import net.dhleong.judo.render.BufferStorage
 import java.util.ConcurrentModificationException
 
 private const val MAX_SIZE_INCREMENT = 2048
@@ -8,7 +9,7 @@ private const val MAX_SIZE_INCREMENT = 2048
  * Size-limited FIFO array-list
  * @author dhleong
  */
-class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
+class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorage<E> {
 
     private val maxCapacity: Int
     private var array: Array<Any?>
@@ -110,7 +111,7 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun removeLast(): E {
+    override fun removeLast(): E {
         if (actualSize == 0) throw NoSuchElementException()
         val newEnd = actualIndexOf(actualSize - 1)
         val last = array[newEnd]

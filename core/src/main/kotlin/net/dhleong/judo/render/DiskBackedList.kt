@@ -14,7 +14,10 @@ import java.io.RandomAccessFile
 class DiskBackedList(
     private val file: File,
     private val maxCapacity: Int = JudoBuffer.DEFAULT_SCROLLBACK_SIZE
-) : AbstractList<FlavorableCharSequence>(), Closeable {
+) : AbstractMutableList<FlavorableCharSequence>(),
+    BufferStorage<FlavorableCharSequence>,
+    Closeable
+{
 
     private val loadedLines = CircularArrayList<FlavorableCharSequence>(
         maxCapacity = maxCapacity,
@@ -90,6 +93,44 @@ class DiskBackedList(
 
     override fun close() {
         raf.close()
+    }
+
+    override fun add(index: Int, element: FlavorableCharSequence) {
+        throw UnsupportedOperationException()
+    }
+
+    override fun add(element: FlavorableCharSequence): Boolean {
+        if (addedLines.size == maxCapacity) {
+            TODO("move addedLines[0] to loadedLines[0]")
+        }
+        addedLines += element
+        // TODO write to disk
+        return true
+    }
+
+    override fun removeAt(index: Int): FlavorableCharSequence {
+        throw UnsupportedOperationException()
+    }
+
+    override fun set(index: Int, element: FlavorableCharSequence): FlavorableCharSequence =
+        if (index < linesInFile) {
+            TODO("modify disk-backed line and persist")
+        } else {
+            val actualIndex = index - linesInFile
+            val old = addedLines[actualIndex]
+            addedLines[actualIndex] = element
+
+            // TODO persist?
+            old
+        }
+
+    override fun removeLast(): FlavorableCharSequence {
+        if (addedLines.isNotEmpty()) {
+            // TODO persist?
+            return addedLines.removeLast()
+        }
+
+        throw UnsupportedOperationException("Unable to remove old, persisted lines")
     }
 
 }

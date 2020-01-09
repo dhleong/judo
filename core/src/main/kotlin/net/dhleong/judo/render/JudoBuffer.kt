@@ -17,7 +17,7 @@ open class JudoBuffer(
         scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
     ) : this(ids.newBuffer(), settings, scrollbackSize)
 
-    private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
+    private val contents: BufferStorage<FlavorableCharSequence> = CircularArrayList(scrollbackSize)
     private val windows = mutableListOf<IJudoWindow>()
 
     override val settings: IStateMap = DelegateStateMap(settings)
