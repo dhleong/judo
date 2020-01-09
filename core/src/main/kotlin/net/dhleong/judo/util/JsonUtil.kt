@@ -4,8 +4,8 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.Moshi
-import okio.Okio
 import okio.Source
+import okio.buffer
 
 /**
  * @author dhleong
@@ -29,7 +29,7 @@ object Json {
     inline fun <reified T> adapter() = moshi.adapter<T>(T::class.java)!!
 
     inline fun <reified T> read(json: Source): T =
-        adapter<T>().fromJson(Okio.buffer(json))!!
+        adapter<T>().fromJson(json.buffer())!!
 
     fun write(value: Any) =
         moshi.adapter(value.javaClass)
