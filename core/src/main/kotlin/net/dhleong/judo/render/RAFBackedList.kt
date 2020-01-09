@@ -82,6 +82,7 @@ class RAFBackedList(
             raf.seek(--startOffset)
         }
 
+        lastLineEndOffset = startOffset
         val bytes = ByteArray((lineEnd - startOffset).toInt())
         raf.read(bytes)
         return String(bytes, Charsets.UTF_8)

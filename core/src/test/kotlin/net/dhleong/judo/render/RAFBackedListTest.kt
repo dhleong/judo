@@ -41,4 +41,12 @@ class RAFBackedListTest {
         }
     }
 
+    @Test(timeout = 200) fun `read nth line`() {
+        assertThat(list[list.lastIndex - 4]).isNotNull().transform { it.toString() }.all {
+            hasLength(763)
+            startsWith("Ut lacinia nibh odio,")
+            endsWith(", tristique porta purus lobortis eget.\n")
+        }
+    }
+
 }
