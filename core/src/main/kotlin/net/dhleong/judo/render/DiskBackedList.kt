@@ -1,11 +1,14 @@
 package net.dhleong.judo.render
 
+import net.dhleong.judo.net.toAnsi
 import net.dhleong.judo.util.CircularArrayList
 import okio.buffer
+import okio.sink
 import okio.source
-import java.io.Closeable
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.RandomAccessFile
 
 /**
@@ -15,8 +18,7 @@ class DiskBackedList(
     private val file: File,
     private val maxCapacity: Int = JudoBuffer.DEFAULT_SCROLLBACK_SIZE
 ) : AbstractMutableList<FlavorableCharSequence>(),
-    BufferStorage<FlavorableCharSequence>,
-    Closeable
+    BufferStorage<FlavorableCharSequence>
 {
 
     private val loadedLines = CircularArrayList<FlavorableCharSequence>(
@@ -27,24 +29,22 @@ class DiskBackedList(
     )
     private val addedLines = CircularArrayList<FlavorableCharSequence>(maxCapacity)
 
-    private val raf = RandomAccessFile(file, "rw")
-
-    private val linesInFile by lazy {
-        var count = 0
-        FileInputStream(file).source().buffer().use {
-            while (true) {
-                val end = it.indexOf('\n'.toByte())
-                if (end < 0) break
-                it.skip(end + 1)
-                ++count
-            }
+    private var knownLinesInFile: Int = -1
+    private val linesInFile: Int get() = synchronized(this) {
+        val known = knownLinesInFile
+        if (known >= 0) known
+        else {
+            val counted = countLinesInFile()
+            knownLinesInFile = counted
+            counted
         }
-        count.coerceAtMost(maxCapacity)
     }
 
     override val size: Int
+        @Synchronized
         get() = (linesInFile + addedLines.size).coerceAtMost(maxCapacity)
 
+    @Synchronized
     override fun get(index: Int): FlavorableCharSequence =
         if (index < linesInFile) {
             getLineInFile(index)
@@ -75,46 +75,58 @@ class DiskBackedList(
     }
 
     private fun readNextLineBackwards(): String {
-        // TODO can we do this in a buffer?
+        // TODO can/should we do this in a buffer?
         val lineEnd = lastLineEndOffset
         var startOffset = lastLineEndOffset - 1
-        raf.seek(startOffset)
-        while (startOffset > 0) {
-            val b = raf.read()
-            if (b == '\n'.toInt()) break
-            raf.seek(--startOffset)
+
+        RandomAccessFile(file, "rw").use { raf ->
+            raf.seek(startOffset)
+            while (startOffset > 0) {
+                val b = raf.read()
+                if (b == '\n'.toInt()) break
+                raf.seek(--startOffset)
+            }
+
+            lastLineEndOffset = startOffset
+            val bytes = ByteArray((lineEnd - startOffset).toInt())
+            raf.read(bytes)
+            return String(bytes, Charsets.UTF_8)
         }
-
-        lastLineEndOffset = startOffset
-        val bytes = ByteArray((lineEnd - startOffset).toInt())
-        raf.read(bytes)
-        return String(bytes, Charsets.UTF_8)
-    }
-
-    override fun close() {
-        raf.close()
     }
 
     override fun add(index: Int, element: FlavorableCharSequence) {
         throw UnsupportedOperationException()
     }
 
+    @Synchronized
     override fun add(element: FlavorableCharSequence): Boolean {
         if (addedLines.size == maxCapacity) {
             TODO("move addedLines[0] to loadedLines[0]")
         }
         addedLines += element
-        // TODO write to disk
+
+        // TODO we should not do this on *every* write
+        flush()
         return true
+    }
+
+    @Synchronized
+    override fun clear() {
+        knownLinesInFile = 0
+        loadedLines.clear()
+        addedLines.clear()
+        file.delete()
+        lastLineEndOffset = 0
     }
 
     override fun removeAt(index: Int): FlavorableCharSequence {
         throw UnsupportedOperationException()
     }
 
+    @Synchronized
     override fun set(index: Int, element: FlavorableCharSequence): FlavorableCharSequence =
         if (index < linesInFile) {
-            TODO("modify disk-backed line and persist")
+            TODO("modify lines on disk?")
         } else {
             val actualIndex = index - linesInFile
             val old = addedLines[actualIndex]
@@ -124,6 +136,7 @@ class DiskBackedList(
             old
         }
 
+    @Synchronized
     override fun removeLast(): FlavorableCharSequence {
         if (addedLines.isNotEmpty()) {
             // TODO persist?
@@ -133,4 +146,76 @@ class DiskBackedList(
         throw UnsupportedOperationException("Unable to remove old, persisted lines")
     }
 
+    @Synchronized
+    fun flush() {
+        val linesFromOld = (maxCapacity - addedLines.size).coerceAtMost(linesInFile)
+        val oldLineIndex = linesInFile - linesFromOld
+        val offset = try {
+            FileInputStream(file).source().buffer().use {
+                var count = 0
+                var offset = 0L
+                while (count < oldLineIndex) {
+                    val index = it.indexOf('\n'.toByte())
+                    if (index == -1L) break
+                    offset += index
+                    ++count
+                }
+                offset
+            }
+        } catch (e: FileNotFoundException) {
+            -1L
+        }
+
+        val tmpFile = File(file.absolutePath + ".swp")
+        if (offset >= 0) {
+            FileOutputStream(tmpFile).channel.use { output ->
+                FileInputStream(file).channel.use { input ->
+                    input.transferTo(offset, Long.MAX_VALUE, output)
+                }
+            }
+        }
+
+        var bytesWritten = 0L
+        FileOutputStream(tmpFile, true).sink().buffer().use { output ->
+            for (l in addedLines) {
+                l.toAnsi().byteInputStream().source().use {
+                    bytesWritten += output.writeAll(it)
+
+                    // it should in general, but make certain:
+                    if (!l.endsWith('\n')) {
+                        ++bytesWritten
+                        output.writeByte('\n'.toInt())
+                    }
+                }
+            }
+        }
+        loadedLines.clear()
+
+        for (i in addedLines.indices.reversed()) {
+            loadedLines.add(addedLines[i])
+        }
+        lastLineEndOffset = tmpFile.length() - bytesWritten
+        tmpFile.renameTo(file)
+        knownLinesInFile = linesFromOld + addedLines.size
+
+        addedLines.clear()
+    }
+
+    @Synchronized
+    private fun countLinesInFile(): Int =
+        try {
+            var count = 0
+            FileInputStream(file).source().buffer().use {
+                while (true) {
+                    val end = it.indexOf('\n'.toByte())
+                    if (end < 0) break
+                    it.skip(end + 1)
+                    ++count
+                }
+            }
+            count.coerceAtMost(maxCapacity)
+        } catch (e: FileNotFoundException) {
+            // doesn't exist? no lines
+            0
+        }
 }
