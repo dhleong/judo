@@ -11,7 +11,7 @@ import java.io.RandomAccessFile
 /**
  * @author dhleong
  */
-class RAFBackedList(
+class DiskBackedList(
     private val file: File,
     private val maxCapacity: Int = JudoBuffer.DEFAULT_SCROLLBACK_SIZE
 ) : AbstractList<FlavorableCharSequence>(), Closeable {

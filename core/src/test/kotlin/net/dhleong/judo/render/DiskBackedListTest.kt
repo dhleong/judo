@@ -17,12 +17,12 @@ private const val LIST_SIZE = 38272
 /**
  * @author dhleong
  */
-class RAFBackedListTest {
+class DiskBackedListTest {
 
-    private lateinit var list: RAFBackedList
+    private lateinit var list: DiskBackedList
 
     @Before fun setUp() {
-        list = RAFBackedList(File("../lorem.txt"), maxCapacity = LIST_SIZE)
+        list = DiskBackedList(File("../lorem.txt"), maxCapacity = LIST_SIZE)
     }
 
     @After fun tearDown() {
