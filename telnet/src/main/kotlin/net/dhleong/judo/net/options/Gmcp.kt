@@ -11,7 +11,7 @@ import net.dhleong.judo.net.indexOf
 import net.dhleong.judo.net.indexOfFirst
 import net.dhleong.judo.net.write
 import net.dhleong.judo.util.Json
-import okio.Okio
+import okio.source
 import java.io.ByteArrayOutputStream
 import java.io.EOFException
 
@@ -53,10 +53,10 @@ class GmcpHandler(
             else {
                 try {
                     Json.read<Any>(
-                        Okio.source(event.toInputStream(
+                        event.toInputStream(
                             packageEnd + 1,
                             event.length - packageEnd - 1
-                        ))
+                        ).source()
                     )
                 } catch (e: EOFException) {
                     null
