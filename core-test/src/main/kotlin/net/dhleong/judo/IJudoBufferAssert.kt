@@ -1,8 +1,10 @@
 package net.dhleong.judo
 
 import assertk.Assert
+import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
+import assertk.assertions.matches
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.render.FlavorableCharSequence
@@ -15,6 +17,20 @@ fun Assert<IJudoBuffer>.hasLines(vararg expectedStrings: String) = given { actua
     val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
     assertThat(actualStrings, "buffer lines").isEqualTo(expectedStrings.toList())
 }
+
+fun Assert<IJudoBuffer>.matchesLinesExactly(vararg expectedLines: Any) = given { actual ->
+    val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
+    assertThat(actualStrings, "buffer lines").hasSize(expectedLines.size)
+
+    for ((i, line) in actualStrings.withIndex()) {
+        when (val expected = expectedLines[i]) {
+            is String -> assertThat(line, "line[$i]").isEqualTo(expected)
+            is Regex -> assertThat(line, "line[$i]").matches(expected)
+            else -> throw IllegalArgumentException("Not sure how to match $expected")
+        }
+    }
+}
+
 fun Assert<IJudoBuffer>.hasLinesSomewhere(vararg expectedStrings: String) = given { actual ->
     val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
     val firstIndex = actualStrings.indexOf(expectedStrings[0])

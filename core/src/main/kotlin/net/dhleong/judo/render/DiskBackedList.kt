@@ -213,7 +213,13 @@ class DiskBackedList(
             FileInputStream(file).source().buffer().use {
                 while (true) {
                     val end = it.indexOf('\n'.toByte())
-                    if (end < 0) break
+                    if (end < 0) {
+                        if (!it.exhausted()) {
+                            // one more line that doesn't end with \n
+                            ++count
+                        }
+                        break
+                    }
                     it.skip(end + 1)
                     ++count
                 }

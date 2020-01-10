@@ -21,6 +21,7 @@ import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoTabpage
 import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.render.JudoBuffer
 import net.dhleong.judo.trigger.MultiTriggerManager
 import net.dhleong.judo.trigger.TriggerManager
 import net.dhleong.judo.util.InputHistory
@@ -65,6 +66,9 @@ class TestableJudoCore(
 
     val ids = IdManager()
     override val tabpage: IJudoTabpage = createTabpageMock(ids)
+    override val primaryWindow: IJudoWindow = createWindowMock(
+        ids, 0, 0, JudoBuffer(ids, state)
+    )
 
     private val buffer = InputBuffer()
     private val normalMode = NormalMode(

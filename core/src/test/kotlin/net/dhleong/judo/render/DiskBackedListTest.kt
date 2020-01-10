@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import assertk.all
 import assertk.assertThat
+import assertk.assertions.containsExactly
 import assertk.assertions.endsWith
 import assertk.assertions.hasLength
 import assertk.assertions.hasSize
@@ -36,6 +37,23 @@ class DiskBackedListTest {
             hasLength(763)
             startsWith("Ut lacinia nibh odio,")
             endsWith(", tristique porta purus lobortis eget.\n")
+        }
+    }
+
+    @Test fun `Support reading all persisted lines`() {
+        val f = File("manually-persisted.tmp")
+        f.deleteOnExit()
+        f.writeText("""
+            Take my love
+            Take my land
+        """.trimIndent())
+
+        assertThat(DiskBackedList(f)).all {
+            hasSize(2)
+            containsExactly(
+                "Take my love".toFlavorable(),
+                "Take my land".toFlavorable()
+            )
         }
     }
 

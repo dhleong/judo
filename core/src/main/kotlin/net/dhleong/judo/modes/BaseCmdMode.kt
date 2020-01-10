@@ -205,7 +205,7 @@ abstract class BaseCmdMode(
             ?: judo.connection?.hashedFile("output-history")
             ?: throw IllegalStateException("You must be connected to use persistOutput() without args")
 
-        judo.tabpage.currentWindow.currentBuffer.setPersistent(destination)
+        judo.primaryWindow.currentBuffer.setPersistent(destination)
     }
 
     private fun JudoConnection.hashedFile(

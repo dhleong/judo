@@ -223,7 +223,7 @@ class JudoCore(
     private var keyStrokeChannel: Channel<Key>? = null
 
     private val outputBuffer: IJudoBuffer
-    private val primaryWindow: PrimaryJudoWindow
+    override val primaryWindow: PrimaryJudoWindow
     override val tabpage: IJudoTabpage = renderer.currentTabpage
 
     init {
