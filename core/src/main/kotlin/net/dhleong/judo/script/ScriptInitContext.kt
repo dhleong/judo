@@ -24,8 +24,13 @@ internal fun <T> ScriptInitContext.registerConst(name: String, doc: JudoScriptDo
     registerVar(JudoScriptingEntity.Constant(name, doc, value))
 }
 
-internal fun <R> ScriptInitContext.registerFn(name: String, doc: JudoScriptDoc, fn: Function<R>) {
-    registerVar(JudoScriptingEntity.Function(name, doc, fn))
+internal fun <R> ScriptInitContext.registerFn(
+    name: String,
+    doc: JudoScriptDoc,
+    forceDispatchAsMultiArity: Boolean = false,
+    fn: Function<R>
+) {
+    registerVar(JudoScriptingEntity.Function(name, doc, forceDispatchAsMultiArity, fn))
     myRegisteredFns.add(name)
 }
 

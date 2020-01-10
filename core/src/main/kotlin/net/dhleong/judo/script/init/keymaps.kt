@@ -1,109 +1,94 @@
 package net.dhleong.judo.script.init
 
+import net.dhleong.judo.script.Doc
+import net.dhleong.judo.script.LabeledAs
 import net.dhleong.judo.script.ScriptInitContext
-import net.dhleong.judo.script.doc
-import net.dhleong.judo.script.registerFn
+import net.dhleong.judo.script.ScriptingObject
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initKeymaps() {
+fun ScriptInitContext.initKeymaps() = sequence {
+    val context = this@initKeymaps
+
     // mapping functions
-    sequenceOf(
+    yieldAll(sequenceOf(
         "" to "",
         "c" to "cmd",
         "i" to "insert",
         "n" to "normal"
-    ).forEach { (letter, modeName) ->
+    ).map { (letter, modeName) ->
+        PrefixedMapScripting(
+            context, letter, modeName
+        )
+    })
 
-        registerFn<Unit>(
-            "${letter}map",
-            doc {
-                usage {
-                    arg("inputKeys", "String")
-                    arg("output", "String/Fn")
-                }
-                usage { /* no args to list */ }
+    yield(GlobalMapScripting(context))
+}
 
-                body { "Create a mapping in a specific mode from inputKeys to outputKeys" }
-            }
-        ) { args: Array<Any> ->
-            when (args.size) {
-                0 -> judo.printMappings(modeName)
-                1 -> {
-                    // special case; map(mode)
-                    judo.printMappings(args[0] as String)
-                }
-                else -> {
-                    mode.createMap(modeName, args[0] as String, args[1], true)
-                }
-            }
-        }
+@Suppress("unused", "MemberVisibilityCanBePrivate")
+class GlobalMapScripting(
+    private val context: ScriptInitContext
+) : ScriptingObject {
 
-        registerFn<Unit>(
-            "${letter}noremap",
-            doc {
-                usage {
-                    arg("inputKeys", "String")
-                    arg("output", "String/Fn")
-                }
-                usage { /* no args to list */ }
-
-                body { "Create a mapping in a specific mode from inputKeys to outputKeys" }
-            }
-        ) { inputKeys: String, output: Any ->
-            mode.createMap(modeName, inputKeys, output, false)
-        }
-
-        registerFn<Unit>(
-            "${letter}unmap",
-            doc {
-                usage {
-                    arg("inputKeys", "String")
-                }
-
-                body { "Delete a mapping in the specific mode with inputKeys" }
-            }
-        ) { inputKeys: String ->
-            judo.unmap(modeName, inputKeys)
-        }
+    @Doc("""
+        Create a mapping in a specific mode from inputKeys to outputKeys.
+        If remap is provided and True, the outputKeys can trigger other mappings.
+        Otherwise, they will be sent as-is.
+    """)
+    fun createMap(modeName: String, inputKeys: String, @LabeledAs("String/Fn") output: Any) = createMap(
+        modeName, inputKeys, output, true
+    )
+    fun createMap(
+        modeName: String,
+        inputKeys: String,
+        @LabeledAs("String/Fn") output: Any,
+        remap: Boolean
+    ) = with(context) {
+        mode.createMap(modeName, inputKeys, output, remap)
     }
 
-    registerFn<Unit>(
-        "createMap",
-        doc {
-            usage {
-                arg("modeName", "String")
-                arg("inputKeys", "String")
-                arg("outputKeys", "String")
-                arg("remap", "Boolean", isOptional = true)
-            }
-            body {
-                """
-                    Create a mapping in a specific mode from inputKeys to outputKeys.
-                    If remap is provided and True, the outputKeys can trigger other mappings.
-                    Otherwise, they will be sent as-is.
-                """.trimIndent()
-            }
-        }
-    ) { args: Array<Any> ->
-        val remap =
-            if (args.size == 4) args[3] as Boolean
-            else false
-        mode.createMap(args[0] as String, args[1] as String, args[2], remap)
-    }
-
-    registerFn<Unit>(
-        "deleteMap",
-        doc {
-            usage {
-                arg("modeName", "String")
-                arg("inputKeys", "String")
-            }
-            body { "Delete a mapping in the specific mode with inputKeys" }
-        }
-    ) { modeName: String, inputKeys: String ->
+    @Doc("Delete a mapping in the specific mode with inputKeys")
+    fun deleteMap(modeName: String, inputKeys: String) = with(context) {
         judo.unmap(modeName, inputKeys)
     }
 }
 
+@Suppress("unused")
+class PrefixedMapScripting(
+    private val context: ScriptInitContext,
+    override val methodPrefix: String,
+    private val modeName: String
+) : ScriptingObject {
+
+    @Doc("""
+        Create a mapping in a specific mode from inputKeys to output
+    """)
+    fun map() = context.judo.printMappings(modeName)
+    fun map(modeName: String) = context.judo.printMappings(modeName)
+    fun map(
+        inputKeys: String,
+        // TODO union type?
+        @LabeledAs("String/Fn") output: Any
+    ) = with(context) {
+        mode.createMap(modeName, inputKeys, output, remap = true)
+    }
+
+    @Doc("""
+        Create a mapping in a specific mode from inputKeys to output
+    """)
+    fun noremap(
+        inputKeys: String,
+        // TODO union type?
+        @LabeledAs("String/Fn") output: Any
+    ) = with(context) {
+        mode.createMap(modeName, inputKeys, output, remap = false)
+    }
+
+    @Doc("""
+        Delete a mapping in the specific mode with inputKeys
+    """)
+    fun unmap(inputKeys: String) = with(context) {
+        judo.unmap(modeName, inputKeys)
+    }
+}

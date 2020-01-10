@@ -214,6 +214,24 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `scripting vsplit() handles percentage`() = runBlocking {
+        renderer.forceResize(20, 5)
+        judo.cmdMode.execute("""
+            newWin = vsplit(0.5)
+            newWin.buffer.set([str(newWin.width)])
+        """.trimIndent())
+
+        // NOTE: no mappings to print; this is to ensure
+        // that we print without error
+        assertThat(display).linesEqual("""
+            |_________ __________
+            |_________ __________
+            |_________ 10________
+            |---------   [NORMAL]
+            |_________ __________
+        """.trimMargin())
+    }
+
     @Test fun `Render prompts`() {
         judo.prompts.define("^HP: $1", "HP $1")
         judo.onIncomingBuffer("HP: 42".toFlavorable())

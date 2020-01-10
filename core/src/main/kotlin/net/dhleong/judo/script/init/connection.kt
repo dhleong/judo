@@ -1,57 +1,36 @@
 package net.dhleong.judo.script.init
 
 import net.dhleong.judo.net.createURI
+import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.ScriptInitContext
-import net.dhleong.judo.script.doc
-import net.dhleong.judo.script.registerFn
+import net.dhleong.judo.script.ScriptingObject
+import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initConnection() {
-    registerFn<Unit>(
-        "connect",
-        doc {
-            usage {
-                arg("uri", "String")
-            }
+fun ScriptInitContext.initConnection() =
+    sequenceOf(ConnectionScripting(this))
 
-            usage {
-                arg("host", "String")
-                arg("port", "Int")
-            }
+@Suppress("unused")
+class ConnectionScripting(
+    private val context: ScriptInitContext
+) : ScriptingObject {
 
-            body { "Connect to a server." }
-        }
-    ) { args: Array<Any> -> when (args.size) {
-        1 -> judo.connect(createURI(args[0] as String))
-        2 -> judo.connect(createURI("${args[0]}:${args[1]}"))
-    } }
+    @Doc("Connect to a server.")
+    fun connect(uri: String) = context.judo.connect(createURI(uri))
+    fun connect(host: String, port: Int) =
+        context.judo.connect(createURI("$host:$port"))
 
-    registerFn(
-        "disconnect",
-        doc {
-            usage { }
-            body { "Disconnect from the server." }
-        },
-        judo::disconnect
-    )
+    @Doc("Disconnect from the server.")
+    fun disconnect() {
+        context.judo.disconnect()
+    }
 
-    registerFn(
-        "isConnected",
-        doc {
-            usage { returns("Boolean") }
-            body { "Check if connected." }
-        },
-        judo::isConnected
-    )
+    @Doc("Check if connected.")
+    fun isConnected() = context.judo.isConnected()
 
-    registerFn(
-        "reconnect",
-        doc {
-            usage { }
-            body { "Repeat the last connect()" }
-        },
-        judo::reconnect
-    )
+    @Doc("Repeat the last connect()")
+    fun reconnect() = context.judo.reconnect()
+
 }

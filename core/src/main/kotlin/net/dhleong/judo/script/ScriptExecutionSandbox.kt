@@ -1,6 +1,7 @@
 package net.dhleong.judo.script
 
 import net.dhleong.judo.modes.ScriptExecutionException
+import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -50,7 +51,15 @@ class ScriptExecutionSandbox {
             executor.submit(block).get()
         } catch (e: ExecutionException) {
             if (e.cause !is ThreadDeath) {
-                val cause = e.cause ?: e
+                var cause = e.cause ?: e
+                while (cause is RuntimeException && cause.cause != null) {
+                    cause = cause.cause ?: throw IllegalStateException()
+                }
+
+                if (cause is InvocationTargetException) {
+                    cause.cause?.let { throw it }
+                }
+
                 throw ScriptExecutionException(cause.message ?: "", cause)
             }
         } finally {

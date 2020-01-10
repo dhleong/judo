@@ -3,27 +3,41 @@ package net.dhleong.judo.script
 /**
  * @author dhleong
  */
-class JudoScriptDoc(
+data class JudoScriptDoc(
     val invocations: List<JudoScriptInvocation>?,
     val text: String
 )
 
-class JudoScriptInvocation(
+data class JudoScriptInvocation(
     val args: List<JudoScriptArgument>,
     val returnType: String? = null,
     val canBeDecorator: Boolean = false,
     val hasVarArgs: Boolean = false
 )
 
-class JudoScriptArgument(
+data class JudoScriptArgument(
     val name: String,
     val type: String,
     val isOptional: Boolean = false,
     val flags: Class<out Enum<*>>? = null,
     val typeClass: Class<*>? = null
 ) {
+
+    private val flagTypes = flags?.enumConstants
+        ?.asSequence()
+        ?.map { it.toString() }
+        ?.toSet()
+
     fun typeMatches(obj: Any): Boolean = typeClass?.isAssignableFrom(obj.javaClass)
         ?: throw IllegalStateException("No typeClass for arg `$name`")
+
+    fun acceptsFlag(arg: String): Boolean =
+        arg.splitToSequence(" ").all {
+            it.isValidFlag()
+        }
+
+    private fun String.isValidFlag() = flagTypes?.contains(this) ?: false
+
 }
 
 class InvocationBuilder(
@@ -48,6 +62,10 @@ class InvocationBuilder(
 
     fun arg(name: String, typeClass: Class<*>, isOptional: Boolean = false) {
         args += JudoScriptArgument(name, typeClass.displayName, isOptional, typeClass = typeClass)
+    }
+
+    fun arg(name: String, typeDisplayName: String, typeClass: Class<*>, isOptional: Boolean = false) {
+        args += JudoScriptArgument(name, typeDisplayName, isOptional, typeClass = typeClass)
     }
 
     fun returns(type: String) {
