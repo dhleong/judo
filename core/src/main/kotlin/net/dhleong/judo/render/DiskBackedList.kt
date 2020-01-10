@@ -158,28 +158,12 @@ class DiskBackedList(
         throw UnsupportedOperationException("Unable to remove old, persisted lines")
     }
 
-    private val flushWorkspace = mutableListOf<FlavorableCharSequence>()
-
     @Synchronized
     fun flush(maxLinesToFlush: Int = Int.MAX_VALUE) {
         val linesToFlush = addedLines.size.coerceAtMost(maxLinesToFlush)
         val linesFromOld = (maxCapacity - linesToFlush).coerceAtMost(linesInFile)
         val oldLineIndex = linesInFile - linesFromOld
-        val offset = try {
-            FileInputStream(file).source().buffer().use {
-                var count = 0
-                var offset = 0L
-                while (count < oldLineIndex) {
-                    val index = it.indexOf('\n'.toByte())
-                    if (index == -1L) break
-                    offset += index
-                    ++count
-                }
-                offset
-            }
-        } catch (e: FileNotFoundException) {
-            -1L
-        }
+        val offset = file.offsetOfNth('\n', oldLineIndex)
 
         val tmpFile = File(file.absolutePath + ".swp")
         if (offset >= 0) {
@@ -193,18 +177,16 @@ class DiskBackedList(
         var bytesWritten = 0L
         FileOutputStream(tmpFile, true).sink().buffer().use { output ->
             for ((lineIndex, l) in addedLines.withIndex()) {
-                if (lineIndex < linesToFlush) {
-                    l.toAnsi().byteInputStream().source().use {
-                        bytesWritten += output.writeAll(it)
+                if (lineIndex >= linesToFlush) break
 
-                        // it should in general, but make certain:
-                        if (!l.endsWith('\n')) {
-                            ++bytesWritten
-                            output.writeByte('\n'.toInt())
-                        }
+                l.toAnsi().byteInputStream().source().use {
+                    bytesWritten += output.writeAll(it)
+
+                    // it should in general, but make certain:
+                    if (!l.endsWith('\n')) {
+                        ++bytesWritten
+                        output.writeByte('\n'.toInt())
                     }
-                } else {
-                    flushWorkspace += l
                 }
             }
         }
@@ -237,4 +219,22 @@ class DiskBackedList(
             // doesn't exist? no lines
             0
         }
+}
+
+private fun File.offsetOfNth(char: Char, nth: Int): Long = try {
+    var count = 0
+    var offset = 0L
+
+    FileInputStream(this).source().buffer().use {
+        while (count < nth) {
+            val index = it.indexOf(char.toByte())
+            if (index == -1L) break
+            offset += index
+            ++count
+        }
+    }
+
+    offset
+} catch (e: FileNotFoundException) {
+    -1L
 }
