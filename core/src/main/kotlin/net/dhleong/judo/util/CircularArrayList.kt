@@ -64,8 +64,10 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
         throw UnsupportedOperationException()
     }
 
-    override fun removeAt(index: Int): E {
-        throw UnsupportedOperationException()
+    override fun removeAt(index: Int): E = when (index) {
+        0 -> removeFirst()
+        lastIndex -> removeLast()
+        else -> throw UnsupportedOperationException()
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -108,6 +110,20 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
                 throw UnsupportedOperationException()
             }
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun removeFirst(): E {
+        if (actualSize == 0) throw NoSuchElementException()
+        else if (actualSize == 1) {
+            return get(0).also { clear() }
+        }
+
+        val newStart = actualIndexOf(1)
+        val first = array[newStart]
+        start = newStart
+        --actualSize
+        return first as E
     }
 
     @Suppress("UNCHECKED_CAST")

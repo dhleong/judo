@@ -32,11 +32,23 @@ class DiskBackedList(
     private var knownLinesInFile: Int = -1
     private val linesInFile: Int get() = synchronized(this) {
         val known = knownLinesInFile
-        if (known >= 0) known
+        val actualLinesInFile = if (known >= 0) known
         else {
             val counted = countLinesInFile()
             knownLinesInFile = counted
             counted
+        }
+
+        // it's possible to have >maxCapacity by combining addedLines and the lines
+        // on disk. to ensure we load from addedLines as we approach this point
+        // (creating a sort of composite CircularArrayList) we reduce the number
+        // of lines we claim are in the file
+        val addedLines = addedLines.size
+        val extra = maxCapacity - addedLines - actualLinesInFile
+        if (extra >= 0) {
+            actualLinesInFile
+        } else {
+            actualLinesInFile + extra
         }
     }
 
@@ -146,9 +158,12 @@ class DiskBackedList(
         throw UnsupportedOperationException("Unable to remove old, persisted lines")
     }
 
+    private val flushWorkspace = mutableListOf<FlavorableCharSequence>()
+
     @Synchronized
-    fun flush() {
-        val linesFromOld = (maxCapacity - addedLines.size).coerceAtMost(linesInFile)
+    fun flush(maxLinesToFlush: Int = Int.MAX_VALUE) {
+        val linesToFlush = addedLines.size.coerceAtMost(maxLinesToFlush)
+        val linesFromOld = (maxCapacity - linesToFlush).coerceAtMost(linesInFile)
         val oldLineIndex = linesInFile - linesFromOld
         val offset = try {
             FileInputStream(file).source().buffer().use {
@@ -177,28 +192,32 @@ class DiskBackedList(
 
         var bytesWritten = 0L
         FileOutputStream(tmpFile, true).sink().buffer().use { output ->
-            for (l in addedLines) {
-                l.toAnsi().byteInputStream().source().use {
-                    bytesWritten += output.writeAll(it)
+            for ((lineIndex, l) in addedLines.withIndex()) {
+                if (lineIndex < linesToFlush) {
+                    l.toAnsi().byteInputStream().source().use {
+                        bytesWritten += output.writeAll(it)
 
-                    // it should in general, but make certain:
-                    if (!l.endsWith('\n')) {
-                        ++bytesWritten
-                        output.writeByte('\n'.toInt())
+                        // it should in general, but make certain:
+                        if (!l.endsWith('\n')) {
+                            ++bytesWritten
+                            output.writeByte('\n'.toInt())
+                        }
                     }
+                } else {
+                    flushWorkspace += l
                 }
             }
         }
-        loadedLines.clear()
 
-        for (i in addedLines.indices.reversed()) {
-            loadedLines.add(addedLines[i])
+        // TODO preserve some loadedLines?
+        loadedLines.clear()
+        for (i in 0 until linesToFlush) {
+            loadedLines.add(addedLines.removeFirst())
         }
+
         lastLineEndOffset = tmpFile.length() - bytesWritten
         tmpFile.renameTo(file)
-        knownLinesInFile = linesFromOld + addedLines.size
-
-        addedLines.clear()
+        knownLinesInFile = linesFromOld + linesToFlush
     }
 
     @Synchronized
