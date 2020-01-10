@@ -52,4 +52,20 @@ class FilesScripting(
     fun persistInput() = context.mode.persistInput()
     fun persistInput(path: String) = context.judo.persistInput(File(path))
 
+    @Doc("""
+        Enable output persistence for the current world, optionally providing
+        the path to save the history. If not provided, it will pick
+        a path in the ~/.config/judo directory with a filename based on the
+        currently-connected world (which means this should be called AFTER a
+        call to connect()). 
+        This will immediately attempt to import output history from the given
+        file, and writes the new history on disconnect. Persistence is also
+        disabled on disconnect, so you'll need to call this again the next time
+        you connect.
+    """)
+    fun persistOutput() = context.mode.persistOutput()
+    fun persistOutput(path: String) {
+        context.mode.persistOutput(File(path))
+    }
+
 }
