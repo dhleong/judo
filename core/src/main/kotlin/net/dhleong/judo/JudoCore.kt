@@ -720,6 +720,7 @@ class JudoCore(
             parsedPrompts.clear()
             primaryWindow.promptWindow.currentBuffer.clear()
             tabpage.unsplit()
+            primaryWindow.currentBuffer.setNotPersistent()
 
             print("Disconnected from $connection")
             if (reason is IOException) {

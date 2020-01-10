@@ -2,6 +2,7 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.IStateMap
 import net.dhleong.judo.script.IJudoScrollable
+import java.io.File
 
 interface IJudoAppendable {
     /**
@@ -30,6 +31,9 @@ interface IJudoBuffer : IJudoAppendable {
 
     fun set(newContents: List<FlavorableCharSequence>)
     operator fun set(index: Int, line: FlavorableCharSequence)
+
+    fun setPersistent(file: File)
+    fun setNotPersistent()
 
     fun attachWindow(window: IJudoWindow)
     fun detachWindow(window: IJudoWindow)

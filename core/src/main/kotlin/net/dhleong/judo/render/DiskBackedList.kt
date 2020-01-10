@@ -152,6 +152,10 @@ class DiskBackedList(
         throw UnsupportedOperationException("Unable to remove old, persisted lines")
     }
 
+    override fun save() {
+        flush()
+    }
+
     @Synchronized
     fun flush(maxLinesToFlush: Int = Int.MAX_VALUE) {
         val linesToFlush = addedLines.size.coerceAtMost(maxLinesToFlush)

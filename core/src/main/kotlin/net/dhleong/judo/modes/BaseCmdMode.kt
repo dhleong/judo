@@ -216,6 +216,11 @@ abstract class BaseCmdMode(
     open fun readFile(file: File, inputStream: InputStream) {
         if (file != userConfigFile) {
             lastReadFile = file
+
+            // STOPSHIP this should be opt-in
+            judo.tabpage.currentWindow.currentBuffer.setPersistent(
+                File(file.parent, ".${file.nameWithoutExtension}.judo.swp")
+            )
         }
 
         val context = file.absolutePath

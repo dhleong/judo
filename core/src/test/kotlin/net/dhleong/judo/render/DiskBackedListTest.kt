@@ -51,7 +51,7 @@ class DiskBackedListTest {
         ).map { it.toFlavorable() }
             .forEach {
                 list.add(it)
-                list.flush()
+                list.save()
             }
 
         val fromDisk = DiskBackedList(f)
