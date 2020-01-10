@@ -12,7 +12,6 @@ import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.script.JudoScriptingEntity
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingEngine
-import net.dhleong.judo.script.init.initConsts
 import net.dhleong.judo.script.initObjects
 import net.dhleong.judo.script.registerFrom
 import net.dhleong.judo.util.PatternSpec
@@ -72,8 +71,6 @@ class CmdMode(
             completionSource, myRegisteredFns, myRegisteredVars
         )
         with(context) {
-            initConsts()
-
             for (obj in initObjects()) {
                 registerFrom(obj)
             }
