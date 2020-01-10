@@ -190,11 +190,8 @@ class DiskBackedList(
         }
 
         // shift the flushed lines from addedLines to loadedLines
-        for (i in linesToFlush - 1 downTo 0) {
-            loadedLines.add(0, addedLines[i])
-        }
         for (i in 0 until linesToFlush) {
-            addedLines.removeFirst()
+            loadedLines.add(0, addedLines.removeFirst())
         }
 
         lastLineEndOffset -= bytesWritten

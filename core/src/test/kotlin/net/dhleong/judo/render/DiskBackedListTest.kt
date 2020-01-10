@@ -39,8 +39,8 @@ class DiskBackedListTest {
         }
     }
 
-    @Test fun `Persist changes`() {
-        val f = File(".tmp")
+    @Test fun `Persist changes one by one`() {
+        val f = File("one-by-one.tmp")
         f.deleteOnExit()
 
         val list = DiskBackedList(f)
@@ -53,6 +53,27 @@ class DiskBackedListTest {
                 list.add(it)
                 list.save()
             }
+
+        val fromDisk = DiskBackedList(f)
+        assertThat(fromDisk).all {
+            hasSize(3)
+            transform("nth(2)") { it[2].toString().trim() }
+                .isEqualTo("Take me where I cannot stand")
+        }
+    }
+
+    @Test fun `Persist changes in batch`() {
+        val f = File("batch.tmp")
+        f.deleteOnExit()
+
+        val list = DiskBackedList(f)
+        sequenceOf(
+            "Take my love",
+            "Take my land",
+            "Take me where I cannot stand"
+        ).map { it.toFlavorable() }
+            .forEach { list.add(it) }
+        list.save()
 
         val fromDisk = DiskBackedList(f)
         assertThat(fromDisk).all {
