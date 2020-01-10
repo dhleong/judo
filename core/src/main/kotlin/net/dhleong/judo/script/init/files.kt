@@ -3,15 +3,14 @@ package net.dhleong.judo.script.init
 import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
-import net.dhleong.judo.script.registerFrom
 import java.io.File
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initFiles() {
-    registerFrom(FilesScripting(this))
-}
+fun ScriptInitContext.initFiles() = sequenceOf(
+    FilesScripting(this)
+)
 
 @Suppress("unused")
 class FilesScripting(

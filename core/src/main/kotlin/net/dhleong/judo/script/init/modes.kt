@@ -3,14 +3,13 @@ package net.dhleong.judo.script.init
 import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initModes() {
-    registerFrom(ModesScripting(this))
-}
+fun ScriptInitContext.initModes() = sequenceOf(
+    ModesScripting(this)
+)
 
 @Suppress("unused")
 class ModesScripting(

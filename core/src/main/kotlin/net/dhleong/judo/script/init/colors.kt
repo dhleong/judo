@@ -10,7 +10,6 @@ import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.LabeledAs
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
-import net.dhleong.judo.script.registerFrom
 import net.dhleong.judo.theme.AppColors
 import net.dhleong.judo.theme.ColorSet
 import net.dhleong.judo.theme.ColorTheme
@@ -34,15 +33,15 @@ fun String.toKind() = when (this) {
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initColors() {
-    registerFrom(ColorScripting(
+fun ScriptInitContext.initColors() = sequenceOf(
+    ColorScripting(
         this,
         themeLocation = "global",
         baseFn = "recolor",
         settings = { judo.state }
-    ))
+    ),
 
-    registerFrom(ColorScripting(
+    ColorScripting(
         this,
         methodSuffix = "Buffer",
         themeLocation = "buffer",
@@ -51,8 +50,8 @@ fun ScriptInitContext.initColors() {
             val buffer = judo.renderer.currentTabpage.currentWindow.currentBuffer
             buffer.settings
          }
-    ))
-}
+    )
+)
 
 @Suppress("unused")
 class ColorScripting(

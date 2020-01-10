@@ -9,7 +9,6 @@ import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.SupportsDecorator
 import net.dhleong.judo.script.compilePatternSpec
-import net.dhleong.judo.script.registerFrom
 import net.dhleong.judo.trigger.MultiTriggerOptions
 import net.dhleong.judo.trigger.MultiTriggerType
 import net.dhleong.judo.util.Json
@@ -18,9 +17,9 @@ import net.dhleong.judo.util.PatternProcessingFlags
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initMultiTriggers() {
-    registerFrom(MultiTriggerScripting(this))
-}
+fun ScriptInitContext.initMultiTriggers() = sequenceOf(
+    MultiTriggerScripting(this)
+)
 
 @Suppress("unused")
 class MultiTriggerScripting(

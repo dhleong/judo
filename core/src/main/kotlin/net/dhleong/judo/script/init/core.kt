@@ -4,19 +4,13 @@ import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.adaptSuspend
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initCore() {
-    registerFrom(CoreScripting(this))
-}
+fun ScriptInitContext.initCore() =
+    sequenceOf(CoreScripting(this))
 
-
-/**
- * @author dhleong
- */
 @Suppress("unused")
 class CoreScripting(
     private val context: ScriptInitContext

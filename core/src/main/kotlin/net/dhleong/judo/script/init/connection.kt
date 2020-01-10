@@ -9,9 +9,8 @@ import net.dhleong.judo.script.registerFrom
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initConnection() {
-    registerFrom(ConnectionScripting(this))
-}
+fun ScriptInitContext.initConnection() =
+    sequenceOf(ConnectionScripting(this))
 
 @Suppress("unused")
 class ConnectionScripting(

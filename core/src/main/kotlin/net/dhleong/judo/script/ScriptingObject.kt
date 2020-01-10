@@ -156,7 +156,7 @@ private fun Type.stringified(isNullable: Boolean = false) = when (this) {
 }
 
 fun ScriptInitContext.registerFrom(obj: ScriptingObject) {
-    DocumentedScriptFunction.extractFrom(obj.javaClass)
+    obj.extractFunctions()
         .forEach { f ->
             register(obj, f)
         }

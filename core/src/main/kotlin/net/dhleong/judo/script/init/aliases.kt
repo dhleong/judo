@@ -7,14 +7,12 @@ import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.SupportsDecorator
 import net.dhleong.judo.script.compilePatternSpec
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initAliases() {
-    registerFrom(AliasScripting(this))
-}
+fun ScriptInitContext.initAliases() =
+    sequenceOf(AliasScripting(this))
 
 @Suppress("unused")
 class AliasScripting(

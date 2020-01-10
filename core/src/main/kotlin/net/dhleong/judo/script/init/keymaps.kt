@@ -4,25 +4,26 @@ import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.LabeledAs
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initKeymaps() {
+fun ScriptInitContext.initKeymaps() = sequence {
+    val context = this@initKeymaps
+
     // mapping functions
-    sequenceOf(
+    yieldAll(sequenceOf(
         "" to "",
         "c" to "cmd",
         "i" to "insert",
         "n" to "normal"
-    ).forEach { (letter, modeName) ->
-        registerFrom(PrefixedMapScripting(
-            this, letter, modeName
-        ))
-    }
+    ).map { (letter, modeName) ->
+        PrefixedMapScripting(
+            context, letter, modeName
+        )
+    })
 
-    registerFrom(GlobalMapScripting(this))
+    yield(GlobalMapScripting(context))
 }
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")

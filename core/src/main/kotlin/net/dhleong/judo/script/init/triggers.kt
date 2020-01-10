@@ -8,15 +8,14 @@ import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.SupportsDecorator
 import net.dhleong.judo.script.compilePatternSpec
-import net.dhleong.judo.script.registerFrom
 import net.dhleong.judo.util.PatternProcessingFlags
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initTriggers() {
-    registerFrom(TriggerScripting(this))
-}
+fun ScriptInitContext.initTriggers() = sequenceOf(
+    TriggerScripting(this)
+)
 
 @Suppress("unused")
 class TriggerScripting(

@@ -5,14 +5,13 @@ import net.dhleong.judo.script.FnObject
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
 import net.dhleong.judo.script.SupportsDecorator
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initEvents() {
-    registerFrom(EventsScripting(this))
-}
+fun ScriptInitContext.initEvents() = sequenceOf(
+    EventsScripting(this)
+)
 
 @Suppress("unused")
 class EventsScripting(

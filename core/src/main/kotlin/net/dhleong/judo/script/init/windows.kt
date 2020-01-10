@@ -7,14 +7,13 @@ import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.IScriptWindow
 import net.dhleong.judo.script.ScriptInitContext
 import net.dhleong.judo.script.ScriptingObject
-import net.dhleong.judo.script.registerFrom
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initWindows() {
-    registerFrom(WindowsScripting(this))
-}
+fun ScriptInitContext.initWindows() = sequenceOf(
+    WindowsScripting(this)
+)
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class WindowsScripting(
