@@ -21,6 +21,13 @@ class DiskBackedList(
     BufferStorage<FlavorableCharSequence>
 {
 
+    init {
+        val parent = file.absoluteFile.parentFile
+        if (!(parent.isDirectory || parent.mkdirs())) {
+            throw IllegalArgumentException("Unable to persist to ${file.absolutePath}")
+        }
+    }
+
     private val loadedLines = CircularArrayList<FlavorableCharSequence>(
         maxCapacity = maxCapacity,
         initialCapacity = 128   // scrolling back is probably not super common,
