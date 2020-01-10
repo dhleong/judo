@@ -74,6 +74,24 @@ class CircularArrayListTest {
             .containsExactly(13, 14, 15, 16, 17, 18, 19, 20, 21, 22)
     }
 
+    @Test fun `insert at beginning`() {
+        val list = CircularArrayList<Int>(6, 4)
+        list.addAll(listOf(1, 2, 3, 4))
+
+        // insert
+        list.add(0, 5)
+        assertThat(list.capacity).isEqualTo(6)
+        assertThat(list.size).isEqualTo(5)
+        assertThat(list)
+            .containsExactly(5, 1, 2, 3, 4)
+
+        arrayOf(6, 7, 8).forEach { list.add(0, it) }
+        assertThat(list.capacity).isEqualTo(6)
+        assertThat(list.size).isEqualTo(6)
+        assertThat(list)
+            .containsExactly(8, 7, 6, 5, 1, 2)
+    }
+
     @Test fun get() {
         val list1 = CircularArrayList<Int>(
             arrayOf(1, 2, 3, 4, 5),

@@ -47,21 +47,52 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
         get() = actualSize
 
     override fun add(element: E): Boolean {
-        ensureCapacity(actualSize + 1)
+        ensureCapacity(actualSize + 1) {
+            if (start == array.lastIndex) {
+                start = 0
+            } else {
+                ++start
+            }
+        }
+
+        if (end >= array.size) {
+            end = 0
+        }
         array[end] = element
 
         ++end
         return true
     }
 
+    override fun add(index: Int, element: E) {
+        when (index) {
+            size -> add(element)
+            0 -> addFirst(element)
+            else -> throw UnsupportedOperationException()
+        }
+    }
+
+    private fun addFirst(element: E) {
+        ensureCapacity(actualSize + 1) {
+            if (end == 0) {
+                end = array.lastIndex
+            } else {
+                --end
+            }
+        }
+
+        --start
+        if (start < 0) {
+            start = array.lastIndex
+        }
+        array[start] = element
+
+    }
+
     override fun clear() {
         actualSize = 0
         start = 0
         end = 0
-    }
-
-    override fun add(index: Int, element: E) {
-        throw UnsupportedOperationException()
     }
 
     override fun removeAt(index: Int): E = when (index) {
@@ -169,29 +200,22 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
         }
     }
 
-    private fun ensureCapacity(desiredCapacity: Int) {
+    private inline fun ensureCapacity(desiredCapacity: Int, onCircle: () -> Unit) {
         if (array.size >= desiredCapacity) {
             actualSize = desiredCapacity
             return
         }
 
         if (array.size < maxCapacity) {
-            val newArraySize = minOf(maxCapacity,
+            val newArraySize = minOf(
+                maxCapacity,
                 if (array.size < MAX_SIZE_INCREMENT) array.size * 2
                 else array.size + MAX_SIZE_INCREMENT
             )
             array = array.copyOf(newArraySize)
             actualSize = desiredCapacity
         } else if (array.size == maxCapacity) {
-            if (start == array.lastIndex) {
-                start = 0
-            } else {
-                ++start
-            }
-        }
-
-        if (end >= array.size) {
-            end = 0
+            onCircle()
         }
     }
 }
