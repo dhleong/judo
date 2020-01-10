@@ -113,12 +113,9 @@ class DiskBackedList(
     @Synchronized
     override fun add(element: FlavorableCharSequence): Boolean {
         if (addedLines.size == maxCapacity) {
-            TODO("move addedLines[0] to loadedLines[0]")
+            loadedLines.add(0, addedLines.removeFirst())
         }
         addedLines += element
-
-        // TODO we should not do this on *every* write
-        flush()
         return true
     }
 
@@ -140,18 +137,15 @@ class DiskBackedList(
         if (index < linesInFile) {
             TODO("modify lines on disk?")
         } else {
+            // TODO auto-persist?
             val actualIndex = index - linesInFile
-            val old = addedLines[actualIndex]
-            addedLines[actualIndex] = element
-
-            // TODO persist?
-            old
+            addedLines.set(actualIndex, element)
         }
 
     @Synchronized
     override fun removeLast(): FlavorableCharSequence {
         if (addedLines.isNotEmpty()) {
-            // TODO persist?
+            // TODO auto-persist?
             return addedLines.removeLast()
         }
 

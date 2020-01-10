@@ -49,7 +49,10 @@ class DiskBackedListTest {
             "Take my land",
             "Take me where I cannot stand"
         ).map { it.toFlavorable() }
-            .forEach { list.add(it) }
+            .forEach {
+                list.add(it)
+                list.flush()
+            }
 
         val fromDisk = DiskBackedList(f)
         assertThat(fromDisk).all {
