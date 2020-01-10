@@ -1,28 +1,30 @@
 package net.dhleong.judo.script.init
 
+import net.dhleong.judo.script.Doc
 import net.dhleong.judo.script.ScriptInitContext
-import net.dhleong.judo.script.doc
-import net.dhleong.judo.script.registerConst
+import net.dhleong.judo.script.ScriptingObject
 
 /**
  * @author dhleong
  */
-fun ScriptInitContext.initConsts() = with(engine) {
-    registerConst(
-        "MYJUDORC",
-        doc {
-            body {
-                "Path to the Judo config file"
-            }
-        },
-        userConfigFile.absolutePath
-    )
+fun ScriptInitContext.initConsts() =
+    sequenceOf(ConstScripting(this))
 
-    registerConst(
-        "judo",
-        doc {
-            body { "Reference to the core Judo scripting object" }
-        },
-        wrapCore(judo)
-    )
+@Suppress("PropertyName", "unused")
+class ConstScripting(
+    private val context: ScriptInitContext
+) : ScriptingObject {
+
+    @Doc("""
+        Path to the Judo config file
+    """)
+    val MYJUDORC: String = context.userConfigFile.absolutePath
+
+    @Doc("""
+         Reference to the core Judo scripting object
+    """)
+    val judo: Any = with (context.engine) {
+        wrapCore(context.judo)
+    }
+
 }

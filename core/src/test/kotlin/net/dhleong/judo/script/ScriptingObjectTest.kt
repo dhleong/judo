@@ -5,11 +5,15 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.each
 import assertk.assertions.hasSize
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isGreaterThanOrEqualTo
 import assertk.assertions.isNotNull
+import assertk.assertions.size
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import net.dhleong.judo.script.init.ConnectionScripting
+import net.dhleong.judo.script.init.ConstScripting
 import net.dhleong.judo.script.init.CoreScripting
 import net.dhleong.judo.script.init.UtilScripting
 import net.dhleong.judo.script.init.WindowsScripting
@@ -66,11 +70,20 @@ class ScriptingObjectTest {
             hasReturnType("String?")
         }
     }
+
+    @Test fun `Extract consts (but not as functions)`() {
+        val functions = ConstScripting::class.java.extractFunctions()
+        assertThat(functions).isEmpty()
+
+        val consts = ConstScripting::class.java.extractConsts()
+        assertThat(consts).size().isGreaterThanOrEqualTo(2)
+    }
+
 }
 
 private operator fun KClass<out ScriptingObject>.get(name: String) =
-    DocumentedScriptFunction.extractFrom(this.javaObjectType)
-            .first { it.name == name }
+    javaObjectType.extractFunctions()
+        .first { it.name == name }
 
 private fun Assert<JudoScriptInvocation>.hasReturnType(returnType: String) = given { actual ->
     if (actual.returnType == returnType) return

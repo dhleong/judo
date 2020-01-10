@@ -4,9 +4,12 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Type
 import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.kotlinFunction
 
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY)
 annotation class Doc(val body: String)
 
 @Target(AnnotationTarget.FUNCTION)
@@ -55,7 +58,11 @@ interface ScriptingObject {
     val docVariables: Map<String, String>? get() = null
 }
 
-fun ScriptingObject.extractFunctions() = DocumentedScriptFunction.extractFrom(this.javaClass)
+fun ScriptingObject.extractConsts() =
+    javaClass.extractConsts()
+
+fun ScriptingObject.extractFunctions() =
+    javaClass.extractFunctions()
 
 private typealias MethodInvocation = (Array<Any?>) -> Any?
 
@@ -71,16 +78,19 @@ class DocumentedScriptFunction(
             "getMethodSuffix"
         )
 
-        fun extractFrom(javaClass: Class<out ScriptingObject>) =
+        internal fun extractFrom(javaClass: Class<out ScriptingObject>) =
             javaClass.declaredMethods
                 .filter { it.name !in IGNORED_METHODS }
                 .filter { (it.modifiers and Modifier.PUBLIC) != 0 }
                 .filter { "access$" !in it.name }
                 .groupBy { it.name }
-                .map { (fnName, methods) ->
+                .mapNotNull { (fnName, methods) ->
                     if ("\$default" in fnName) {
                         throw UnsupportedOperationException("Kotlin default parameters are unsupported")
                     }
+
+                    // if there's no kotlinFn, it's a property
+                    methods[0].kotlinFunction ?: return@mapNotNull null
 
                     val sortedMethods = methods.sortedBy { it.parameterCount }
                     val doc = sortedMethods.extractJudoDoc()
@@ -88,6 +98,32 @@ class DocumentedScriptFunction(
                 }
     }
 }
+
+class DocumentedScriptConst(
+    val name: String,
+    val doc: JudoScriptDoc,
+    val get: (obj: ScriptingObject) -> Any
+)
+
+fun Class<out ScriptingObject>.extractFunctions() =
+    DocumentedScriptFunction.extractFrom(this)
+
+fun Class<out ScriptingObject>.extractConsts() =
+    kotlin.declaredMemberProperties
+        .filter { it.visibility == KVisibility.PUBLIC }
+        .filter { it.isFinal }
+        .map { prop ->
+            DocumentedScriptConst(
+                name = prop.name,
+                doc = doc { body {
+                    prop.findAnnotation<Doc>()?.body
+                        ?: throw IllegalStateException("No doc on property ${prop.name}")
+                } }
+            ) { target ->
+                prop.getter.call(target)
+                    ?: throw IllegalStateException("No value returned for property ${prop.name}")
+            }
+        }
 
 private fun List<Method>.extractJudoDoc() = doc {
     val docBody = StringBuilder()
@@ -156,6 +192,11 @@ private fun Type.stringified(isNullable: Boolean = false) = when (this) {
 }
 
 fun ScriptInitContext.registerFrom(obj: ScriptingObject) {
+    obj.extractConsts()
+        .forEach { c ->
+            registerConst(c.name, c.doc, c.get(obj))
+        }
+
     obj.extractFunctions()
         .forEach { f ->
             register(obj, f)
