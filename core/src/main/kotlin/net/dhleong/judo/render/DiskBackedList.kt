@@ -176,25 +176,35 @@ class DiskBackedList(
         val offset = file.offsetOfNth('\n', oldLineIndex)
 
         val tmpFile = File(file.absolutePath + ".swp")
-        if (offset >= 0) {
+        val tmpFileLength = if (offset >= 0) {
             FileOutputStream(tmpFile).channel.use { output ->
                 FileInputStream(file).channel.use { input ->
                     input.transferTo(offset, Long.MAX_VALUE, output)
                 }
             }
-        }
+        } else 0
 
-        var bytesWritten = 0L
+        val endsWithNewline =
+            if (tmpFileLength == 0L) true
+            else tmpFile.source().buffer().use {
+                it.skip(tmpFileLength - 1)
+                it.readByte() == '\n'.toByte()
+            }
+        var needsNewline = !endsWithNewline
+
         FileOutputStream(tmpFile, true).sink().buffer().use { output ->
             for ((lineIndex, l) in addedLines.withIndex()) {
                 if (lineIndex >= linesToFlush) break
 
                 l.toAnsi().byteInputStream().source().use {
-                    bytesWritten += output.writeAll(it)
+                    if (needsNewline) {
+                        needsNewline = false
+                        output.writeByte('\n'.toInt())
+                    }
+                    output.writeAll(it)
 
                     // it should in general, but make certain:
                     if (!l.endsWith('\n')) {
-                        ++bytesWritten
                         output.writeByte('\n'.toInt())
                     }
                 }
@@ -206,7 +216,6 @@ class DiskBackedList(
             loadedLines.add(0, addedLines.removeFirst())
         }
 
-        lastLineEndOffset -= bytesWritten
         tmpFile.renameTo(file)
         knownLinesInFile = linesFromOld + linesToFlush
     }

@@ -1,7 +1,6 @@
 package net.dhleong.judo
 
 import assertk.Assert
-import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import assertk.assertions.matches
@@ -20,7 +19,11 @@ fun Assert<IJudoBuffer>.hasLines(vararg expectedStrings: String) = given { actua
 
 fun Assert<IJudoBuffer>.matchesLinesExactly(vararg expectedLines: Any) = given { actual ->
     val actualStrings = (0..actual.lastIndex).map { actual[it].toString() }
-    assertThat(actualStrings, "buffer lines").hasSize(expectedLines.size)
+    if (actualStrings.size != expectedLines.size) {
+        expected("${expectedLines.size} buffer lines but was ${actualStrings.size}: " +
+            show(actualStrings)
+        )
+    }
 
     for ((i, line) in actualStrings.withIndex()) {
         when (val expected = expectedLines[i]) {

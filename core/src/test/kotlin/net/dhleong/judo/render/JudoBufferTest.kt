@@ -38,30 +38,49 @@ class JudoBufferTest {
         val f = File(".JudoBufferTest.persist.judo")
         f.deleteOnExit()
         f.delete()
+        f.writeText("""
+            Take my love
+            Take my land
+        """.trimIndent())
 
         val b = JudoBuffer(IdManager(), EmptyStateMap).apply {
             setPersistent(f)
-            append("Take my love\n")
-            append("Take my land\n")
 
-            assertThat(this).hasLines(
+            assertThat(this).matchesLinesExactly(
                 "Take my love\n",
-                "Take my land\n"
+                "Take my land\n",
+                Regex("""\^\^\^ Loaded 2 lines .*\n"""),
+                "\n"
             )
 
             setNotPersistent()
+
+            // re-connect
+            setPersistent(f)
         }
 
-        assertThat(b).hasLines(
-            "Take my love\n",
-            "Take my land\n"
-        )
-
-        b.setPersistent(f)
         assertThat(b).matchesLinesExactly(
             "Take my love\n",
             "Take my land\n",
             Regex("""\^\^\^ Loaded 2 lines .*\n"""),
+            "\n",
+            Regex("""\^\^\^ Loaded 4 lines .*\n"""),
+            "\n"
+        )
+
+        b.apply {
+            setNotPersistent()
+            setPersistent(f)
+        }
+
+        assertThat(b).matchesLinesExactly(
+            "Take my love\n",
+            "Take my land\n",
+            Regex("""\^\^\^ Loaded 2 lines .*\n"""),
+            "\n",
+            Regex("""\^\^\^ Loaded 4 lines .*\n"""),
+            "\n",
+            Regex("""\^\^\^ Loaded 6 lines .*\n"""),
             "\n"
         )
     }
