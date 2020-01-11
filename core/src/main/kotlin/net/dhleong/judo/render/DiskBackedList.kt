@@ -107,8 +107,9 @@ class DiskBackedList(
             }
 
             lastLineEndOffset = startOffset
-            val bytes = ByteArray((lineEnd - startOffset).toInt())
-            raf.read(bytes)
+            val bytes = ByteArray((lineEnd - startOffset).toInt() + 1)
+            raf.read(bytes, 0, bytes.size - 1)
+            bytes[bytes.lastIndex] = '\n'.toByte()
             return String(bytes, Charsets.UTF_8)
         }
     }

@@ -53,8 +53,8 @@ class CmdModePersistTest(
         mode.execute("persistOutput('${file.absolutePath}')")
         val buffer = judo.primaryWindow.currentBuffer
         assertThat(buffer).matchesLinesExactly(
-            "Take my love",
-            "Take my land",
+            "Take my love\n",
+            "Take my land\n",
             Regex("""^\^\^\^ Loaded 2 lines at .*\n"""),
             "\n" // blank line
         )

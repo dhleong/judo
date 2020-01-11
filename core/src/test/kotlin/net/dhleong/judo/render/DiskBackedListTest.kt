@@ -51,8 +51,8 @@ class DiskBackedListTest {
         assertThat(DiskBackedList(f)).all {
             hasSize(2)
             containsExactly(
-                "Take my love".toFlavorable(),
-                "Take my land".toFlavorable()
+                "Take my love\n".toFlavorable(),
+                "Take my land\n".toFlavorable()
             )
         }
     }
@@ -86,12 +86,22 @@ class DiskBackedListTest {
 
         val list = DiskBackedList(f)
         sequenceOf(
-            "Take my love",
-            "Take my land",
-            "Take me where I cannot stand"
+            "Take my love\n",
+            "Take my land\n",
+            "Take me where I cannot stand\n"
         ).map { it.toFlavorable() }
             .forEach { list.add(it) }
         list.save()
+
+        // list should be unchanged
+        assertThat(list.map { it.toString() }).all {
+            hasSize(3)
+            containsExactly(
+                "Take my love\n",
+                "Take my land\n",
+                "Take me where I cannot stand\n"
+            )
+        }
 
         val fromDisk = DiskBackedList(f)
         assertThat(fromDisk).all {

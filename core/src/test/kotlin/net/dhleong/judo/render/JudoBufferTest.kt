@@ -4,7 +4,9 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import net.dhleong.judo.EmptyStateMap
 import net.dhleong.judo.hasLines
+import net.dhleong.judo.matchesLinesExactly
 import org.junit.Test
+import java.io.File
 
 /**
  * @author dhleong
@@ -29,6 +31,38 @@ class JudoBufferTest {
             "Take\n",
             "my\n",
             "love\n"
+        )
+    }
+
+    @Test fun `Persist and unpersist`() {
+        val f = File(".JudoBufferTest.persist.judo")
+        f.deleteOnExit()
+        f.delete()
+
+        val b = JudoBuffer(IdManager(), EmptyStateMap).apply {
+            setPersistent(f)
+            append("Take my love\n")
+            append("Take my land\n")
+
+            assertThat(this).hasLines(
+                "Take my love\n",
+                "Take my land\n"
+            )
+
+            setNotPersistent()
+        }
+
+        assertThat(b).hasLines(
+            "Take my love\n",
+            "Take my land\n"
+        )
+
+        b.setPersistent(f)
+        assertThat(b).matchesLinesExactly(
+            "Take my love\n",
+            "Take my land\n",
+            Regex("""\^\^\^ Loaded 2 lines .*\n"""),
+            "\n"
         )
     }
 }
