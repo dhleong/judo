@@ -15,7 +15,7 @@ import net.dhleong.judo.render.PrimaryJudoWindow
  */
 
 class TestableJudoRenderer(
-    private val state: RendererState = RendererState()
+    internal val state: RendererState = RendererState()
 ) : JudoRenderer by createRendererProxy(state) {
 
     var settableWindowWidth: Int
