@@ -84,6 +84,38 @@ class JudoBufferTest {
             "\n"
         )
     }
+
+    @Test fun `Connect and reconnect a lot`() {
+        val f = File(".JudoBufferTest.reconnect.judo")
+        f.deleteOnExit()
+        f.delete()
+        f.writeText("""
+            Take my love
+            Take my land
+        """.trimIndent())
+
+        JudoBuffer(IdManager(), EmptyStateMap).apply {
+            for (i in 0 until 50) {
+                setPersistent(f)
+
+                // read from the buffer
+                for (j in 0 until size) {
+                    get(j)
+                }
+
+                appendLine("Connected.".toFlavorable())
+                appendLine("Take me where I cannot stand".toFlavorable())
+
+                // read from the buffer
+                for (j in 0 until size) {
+                    get(j)
+                }
+
+                setNotPersistent()
+                appendLine("Disconnected.".toFlavorable())
+            }
+        }
+    }
 }
 
 fun JudoBuffer.append(text: String) =

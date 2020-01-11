@@ -71,7 +71,14 @@ class DiskBackedList(
         if (index < linesInFile) {
             getLineInFile(index)
         } else {
-            addedLines[index - linesInFile]
+            val addedIndex = index - linesInFile
+            if (addedIndex < 0) throw IllegalStateException("$index < $linesInFile")
+            else if (addedIndex >= addedLines.size) {
+                throw IndexOutOfBoundsException(
+                    "$index (as $linesInFile -> $addedIndex >= ${addedLines.size} added) of $size"
+                )
+            }
+            addedLines[addedIndex]
         }
 
     private var lastLineEndOffset = file.length() - 1
@@ -79,7 +86,9 @@ class DiskBackedList(
     private fun getLineInFile(index: Int): FlavorableCharSequence {
         val virtualIndex = linesInFile - index - 1
         if (virtualIndex >= maxCapacity) {
-            throw IndexOutOfBoundsException()
+            throw IndexOutOfBoundsException(
+                "$index (as $linesInFile -> $virtualIndex >= $maxCapacity max) of $size"
+            )
         }
 
         if (virtualIndex >= loadedLines.size) {

@@ -103,7 +103,8 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
 
     @Suppress("UNCHECKED_CAST")
     override operator fun get(index: Int): E =
-        array[actualIndexOf(index)] as E
+        array[actualIndexOf(index)] as? E
+            ?: throw IllegalStateException("Requesting $index of $size but it's null")
 
     @Suppress("UNCHECKED_CAST")
     override operator fun set(index: Int, element: E): E {
@@ -211,7 +212,19 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
                 if (array.size < MAX_SIZE_INCREMENT) array.size * 2
                 else array.size + MAX_SIZE_INCREMENT
             )
-            array = array.copyOf(newArraySize)
+            val old = array
+            val new = array.copyOf(newArraySize)
+            if (start >= end) {
+                old.copyInto(new, 0, startIndex = start)
+                old.copyInto(new,
+                    destinationOffset = old.size - start,
+                    startIndex = 0,
+                    endIndex = end
+                )
+                start = 0
+                end = actualSize
+            }
+            array = new
             actualSize = desiredCapacity
         } else if (array.size == maxCapacity) {
             onCircle()

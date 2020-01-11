@@ -1,7 +1,9 @@
 package net.dhleong.judo.util
 
+import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsExactly
+import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -226,7 +228,32 @@ class CircularArrayListTest {
         list3.add(6)
         assertThat(list3.size).isEqualTo(4)
         assertThat(list3).containsExactly(3, 4, 5, 6)
+    }
 
+    @Test fun `Add first and remove before increasing size`() {
+        val list = CircularArrayList<Int>(
+            initialCapacity = 2,
+            maxCapacity = 4
+        )
+
+        list.add(0, 2)
+        list.add(0, 1)
+        assertThat(list).containsExactly(1, 2)
+
+        list.add(0, 0)
+        assertThat(list).all {
+            hasSize(3)
+            containsExactly(0, 1, 2)
+        }
+
+        list.removeFirst()
+        list.removeFirst()
+        assertThat(list).containsExactly(2)
+
+        list.add(3)
+        list.add(4)
+        list.add(5)
+        assertThat(list).containsExactly(2, 3, 4, 5)
     }
 
     @Test fun slice() {
