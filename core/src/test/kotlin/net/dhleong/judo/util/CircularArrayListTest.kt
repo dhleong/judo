@@ -152,6 +152,44 @@ class CircularArrayListTest {
         assertThat(list3.lastIndex).isEqualTo(3)
     }
 
+    @Test fun removeFirst() {
+        val list1 = CircularArrayList<Int>(
+            arrayOf(1),
+            0, 1, size = 1
+        )
+        assertThat(list1.removeFirst()).isEqualTo(1)
+        assertThat(list1.size).isEqualTo(0)
+        assertThat(list1).containsExactly()
+
+        list1.add(2)
+        assertThat(list1.size).isEqualTo(1)
+        assertThat(list1).containsExactly(2)
+
+        val list2 = CircularArrayList<Int>(
+            arrayOf(1, 2, 3, 4, 5),
+            0, 4, size = 4
+        )
+        assertThat(list2.removeFirst()).isEqualTo(1)
+        assertThat(list2.size).isEqualTo(3)
+        assertThat(list2).containsExactly(2, 3, 4)
+
+        list2.add(6)
+        assertThat(list2.size).isEqualTo(4)
+        assertThat(list2).containsExactly(2, 3, 4, 6)
+
+        val list3 = CircularArrayList<Int>(
+            arrayOf(1, 2, 3, 4, 5),
+            2, 1, size = 4
+        )
+        assertThat(list3.removeFirst()).isEqualTo(3)
+        assertThat(list3.size).isEqualTo(3)
+        assertThat(list3).containsExactly(4, 5, 1)
+
+        list3.add(6)
+        assertThat(list3.size).isEqualTo(4)
+        assertThat(list3).containsExactly(4, 5, 1, 6)
+    }
+
     @Test fun removeLast() {
         val list1 = CircularArrayList<Int>(
             arrayOf(1),

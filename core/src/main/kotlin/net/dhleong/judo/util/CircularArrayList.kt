@@ -150,9 +150,8 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorag
             return get(0).also { clear() }
         }
 
-        val newStart = actualIndexOf(1)
-        val first = array[newStart]
-        start = newStart
+        val first = array[start]
+        start = actualIndexOf(1)
         --actualSize
         return first as E
     }
