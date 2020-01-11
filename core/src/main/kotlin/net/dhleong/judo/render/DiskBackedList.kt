@@ -252,17 +252,20 @@ class DiskBackedList(
 private fun File.offsetOfNth(char: Char, nth: Int, afterChar: Boolean = false): Long = try {
     var count = 0
     var offset = 0L
+    var found = false
 
     FileInputStream(this).source().buffer().use {
         while (count < nth) {
             val index = it.indexOf(char.toByte())
             if (index == -1L) break
+
+            found = true
             offset += index
             ++count
         }
     }
 
-    if (afterChar) offset + 1
+    if (found && afterChar) offset + 1
     else offset
 } catch (e: FileNotFoundException) {
     -1L
