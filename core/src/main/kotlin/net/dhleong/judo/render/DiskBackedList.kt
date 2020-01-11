@@ -37,14 +37,17 @@ class DiskBackedList(
     private val addedLines = CircularArrayList<FlavorableCharSequence>(maxCapacity)
 
     private var knownLinesInFile: Int = -1
-    private val linesInFile: Int get() = synchronized(this) {
+    private val countedLinesInFile: Int get() = synchronized(this) {
         val known = knownLinesInFile
-        val actualLinesInFile = if (known >= 0) known
-        else {
-            val counted = countLinesInFile()
-            knownLinesInFile = counted
-            counted
-        }
+        return if (known >= 0) known
+            else {
+                val counted = countLinesInFile()
+                knownLinesInFile = counted
+                counted
+            }
+    }
+    private val linesInFile: Int get() = synchronized(this) {
+        val actualLinesInFile = countedLinesInFile
 
         // it's possible to have >maxCapacity by combining addedLines and the lines
         // on disk. to ensure we load from addedLines as we approach this point
@@ -172,8 +175,8 @@ class DiskBackedList(
     fun flush(maxLinesToFlush: Int = Int.MAX_VALUE) {
         val linesToFlush = addedLines.size.coerceAtMost(maxLinesToFlush)
         val linesFromOld = (maxCapacity - linesToFlush).coerceAtMost(linesInFile)
-        val oldLineIndex = linesInFile - linesFromOld
-        val offset = file.offsetOfNth('\n', oldLineIndex)
+        val oldLineIndex = countedLinesInFile - linesFromOld
+        val offset = file.offsetOfNth('\n', oldLineIndex, afterChar = true)
 
         val tmpFile = File(file.absolutePath + ".swp")
         val tmpFileLength = if (offset >= 0) {
@@ -217,6 +220,7 @@ class DiskBackedList(
         }
 
         tmpFile.renameTo(file)
+        lastLineEndOffset += offset
         knownLinesInFile = linesFromOld + linesToFlush
     }
 
@@ -245,7 +249,7 @@ class DiskBackedList(
         }
 }
 
-private fun File.offsetOfNth(char: Char, nth: Int): Long = try {
+private fun File.offsetOfNth(char: Char, nth: Int, afterChar: Boolean = false): Long = try {
     var count = 0
     var offset = 0L
 
@@ -258,7 +262,8 @@ private fun File.offsetOfNth(char: Char, nth: Int): Long = try {
         }
     }
 
-    offset
+    if (afterChar) offset + 1
+    else offset
 } catch (e: FileNotFoundException) {
     -1L
 }

@@ -111,6 +111,30 @@ class DiskBackedListTest {
         }
     }
 
+    @Test fun `Persist as circled list, dropping old persisted lines`() {
+        val f = File(".DBLTest.circled.judo")
+        f.deleteOnExit()
+        f.delete()
+        f.writeText("""
+            Take my love
+            Take my land
+        """.trimIndent())
+
+        val fromDisk = DiskBackedList(f, maxCapacity = 2)
+        fromDisk.add("Take me where".toFlavorable())
+        fromDisk.flush()
+
+        assertThat(f.readLines().map { it.parseAnsi().toString() }).containsExactly(
+            "Take my land",
+            "Take me where"
+        )
+
+        val reconstituted = DiskBackedList(f)
+        assertThat(reconstituted).containsExactly(
+            "Take my land\n".toFlavorable(),
+            "Take me where\n".toFlavorable()
+        )
+    }
 }
 
 private fun lorem() = DiskBackedList(
