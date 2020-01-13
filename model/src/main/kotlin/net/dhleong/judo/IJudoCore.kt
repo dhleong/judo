@@ -11,6 +11,7 @@ import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.prompt.IPromptManager
 import net.dhleong.judo.register.IRegisterManager
 import net.dhleong.judo.render.IJudoTabpage
+import net.dhleong.judo.render.IJudoWindow
 import net.dhleong.judo.script.IJudoScrollable
 import net.dhleong.judo.trigger.IMultiTriggerManager
 import net.dhleong.judo.trigger.ITriggerManager
@@ -38,7 +39,9 @@ interface IJudoCore : IJudoScrollable {
     val multiTriggers: IMultiTriggerManager
     val state: StateMap
     val renderer: JudoRenderer
+
     val tabpage: IJudoTabpage
+    val primaryWindow: IJudoWindow
 
     fun echo(vararg objects: Any?)
     fun print(vararg objects: Any?)

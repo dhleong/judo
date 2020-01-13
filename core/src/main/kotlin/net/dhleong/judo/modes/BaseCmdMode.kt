@@ -20,6 +20,7 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
+import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.script.JudoScriptInvocation
 import net.dhleong.judo.script.JudoScriptingEntity
@@ -193,15 +194,28 @@ abstract class BaseCmdMode(
     }
 
     fun persistInput() {
-        judo.connection?.let {
-            val fileName = hash(it.toString())
-            val historyDir = File(userConfigDir, "input-history")
-            judo.persistInput(File(historyDir, fileName))
-            return
-        }
+        val file = judo.connection?.hashedFile("input-history")
+            ?: throw IllegalStateException("You must be connected to use persistInputt() without args")
 
-        throw IllegalStateException("You must be connected to use persistInput() without args")
+        judo.persistInput(file)
     }
+
+    fun persistOutput(file: File? = null) {
+        val destination = file
+            ?: judo.connection?.hashedFile("output-history")
+            ?: throw IllegalStateException("You must be connected to use persistOutput() without args")
+
+        judo.primaryWindow.currentBuffer.setPersistent(destination)
+    }
+
+    private fun JudoConnection.hashedFile(
+        dirName: String
+    ): File {
+        val fileName = hash(toString())
+        val dir = File(userConfigDir, dirName)
+        return File(dir, fileName)
+    }
+
 
     fun readFile(file: File) {
         if (!(file.exists() && file.canRead())) {

@@ -2,13 +2,16 @@ package net.dhleong.judo.render
 
 import net.dhleong.judo.DelegateStateMap
 import net.dhleong.judo.IStateMap
+import net.dhleong.judo.render.flavor.flavor
 import net.dhleong.judo.util.CircularArrayList
+import java.io.File
+import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
 open class JudoBuffer(
     override val id: Int,
     settings: IStateMap,
-    scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
+    private val scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
 ) : IJudoBuffer {
 
     constructor(
@@ -17,7 +20,7 @@ open class JudoBuffer(
         scrollbackSize: Int = DEFAULT_SCROLLBACK_SIZE
     ) : this(ids.newBuffer(), settings, scrollbackSize)
 
-    private val contents = CircularArrayList<FlavorableCharSequence>(scrollbackSize)
+    private var contents: BufferStorage<FlavorableCharSequence> = CircularArrayList(scrollbackSize)
     private val windows = mutableListOf<IJudoWindow>()
 
     override val settings: IStateMap = DelegateStateMap(settings)
@@ -73,6 +76,32 @@ open class JudoBuffer(
             line += '\n'
         }
         contents[index] = line
+    }
+
+    override fun setPersistent(file: File) {
+        val old = contents
+        if (old is DiskBackedList) {
+            throw IllegalStateException("Buffer#$id is already persistent")
+        }
+
+        val newList = DiskBackedList(file, maxCapacity = scrollbackSize)
+        contents = newList
+
+        if (newList.isNotEmpty()) {
+            appendLine("^^^ Loaded ${newList.size} lines at ${Date()}\n".withFlavor(flavor(
+                isInverse = true
+            )))
+            appendLine("".toFlavorable())
+        }
+    }
+
+    override fun setNotPersistent() {
+        contents.save()
+        val old = contents
+        if (old !is CircularArrayList) {
+            contents = CircularArrayList(scrollbackSize)
+            contents.addAll(old)
+        }
     }
 
     override fun attachWindow(window: IJudoWindow) {

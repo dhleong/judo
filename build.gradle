@@ -37,6 +37,7 @@ ext.vs = [
     jline: '3.11.0',
     jython: '2.7.1',
     moshi: '1.8.0',
+    okio: '2.4.3',
 ]
 
 ext.deps = [
@@ -55,6 +56,7 @@ ext.deps = [
     jython: "org.python:jython-standalone:${vs.jython}",
 
     moshi: "com.squareup.moshi:moshi:${vs.moshi}",
+    okio: "com.squareup.okio:okio:${vs.okio}",
 
     test: [
         assertk: 'com.willowtreeapps.assertk:assertk-jvm:0.20',

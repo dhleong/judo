@@ -24,6 +24,7 @@ dependencies {
     compile deps.guava
     compile deps.jython
     compile deps.moshi
+    compile deps.okio
 
     testCompile deps.test.junit
     testCompile deps.test.assertk

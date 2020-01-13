@@ -223,7 +223,7 @@ class JudoCore(
     private var keyStrokeChannel: Channel<Key>? = null
 
     private val outputBuffer: IJudoBuffer
-    private val primaryWindow: PrimaryJudoWindow
+    override val primaryWindow: PrimaryJudoWindow
     override val tabpage: IJudoTabpage = renderer.currentTabpage
 
     init {
@@ -720,6 +720,7 @@ class JudoCore(
             parsedPrompts.clear()
             primaryWindow.promptWindow.currentBuffer.clear()
             tabpage.unsplit()
+            primaryWindow.currentBuffer.setNotPersistent()
 
             print("Disconnected from $connection")
             if (reason is IOException) {

@@ -65,6 +65,9 @@ class TestableJudoCore(
 
     val ids = IdManager()
     override val tabpage: IJudoTabpage = createTabpageMock(ids)
+    override val primaryWindow: IJudoWindow
+        get() = (renderer as? TestableJudoRenderer)?.state?.primaryWindow
+            ?: renderer.currentTabpage.currentWindow
 
     private val buffer = InputBuffer()
     private val normalMode = NormalMode(

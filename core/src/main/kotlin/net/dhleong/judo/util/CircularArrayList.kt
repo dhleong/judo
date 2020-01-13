@@ -1,5 +1,6 @@
 package net.dhleong.judo.util
 
+import net.dhleong.judo.render.BufferStorage
 import java.util.ConcurrentModificationException
 
 private const val MAX_SIZE_INCREMENT = 2048
@@ -8,7 +9,7 @@ private const val MAX_SIZE_INCREMENT = 2048
  * Size-limited FIFO array-list
  * @author dhleong
  */
-class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
+class CircularArrayList<E> : AbstractMutableList<E>, Collection<E>, BufferStorage<E> {
 
     private val maxCapacity: Int
     private var array: Array<Any?>
@@ -46,11 +47,46 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
         get() = actualSize
 
     override fun add(element: E): Boolean {
-        ensureCapacity(actualSize + 1)
+        ensureCapacity(actualSize + 1) {
+            if (start == array.lastIndex) {
+                start = 0
+            } else {
+                ++start
+            }
+        }
+
+        if (end >= array.size) {
+            end = 0
+        }
         array[end] = element
 
         ++end
         return true
+    }
+
+    override fun add(index: Int, element: E) {
+        when (index) {
+            size -> add(element)
+            0 -> addFirst(element)
+            else -> throw UnsupportedOperationException()
+        }
+    }
+
+    private fun addFirst(element: E) {
+        ensureCapacity(actualSize + 1) {
+            if (end == 0) {
+                end = array.lastIndex
+            } else {
+                --end
+            }
+        }
+
+        --start
+        if (start < 0) {
+            start = array.lastIndex
+        }
+        array[start] = element
+
     }
 
     override fun clear() {
@@ -59,17 +95,16 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
         end = 0
     }
 
-    override fun add(index: Int, element: E) {
-        throw UnsupportedOperationException()
-    }
-
-    override fun removeAt(index: Int): E {
-        throw UnsupportedOperationException()
+    override fun removeAt(index: Int): E = when (index) {
+        0 -> removeFirst()
+        lastIndex -> removeLast()
+        else -> throw UnsupportedOperationException()
     }
 
     @Suppress("UNCHECKED_CAST")
     override operator fun get(index: Int): E =
-        array[actualIndexOf(index)] as E
+        array[actualIndexOf(index)] as? E
+            ?: throw IllegalStateException("Requesting $index of $size but it's null")
 
     @Suppress("UNCHECKED_CAST")
     override operator fun set(index: Int, element: E): E {
@@ -110,7 +145,20 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun removeLast(): E {
+    fun removeFirst(): E {
+        if (actualSize == 0) throw NoSuchElementException()
+        else if (actualSize == 1) {
+            return get(0).also { clear() }
+        }
+
+        val first = array[start]
+        start = actualIndexOf(1)
+        --actualSize
+        return first as E
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun removeLast(): E {
         if (actualSize == 0) throw NoSuchElementException()
         val newEnd = actualIndexOf(actualSize - 1)
         val last = array[newEnd]
@@ -152,29 +200,34 @@ class CircularArrayList<E> : AbstractMutableList<E>, Collection<E> {
         }
     }
 
-    private fun ensureCapacity(desiredCapacity: Int) {
+    private inline fun ensureCapacity(desiredCapacity: Int, onCircle: () -> Unit) {
         if (array.size >= desiredCapacity) {
             actualSize = desiredCapacity
             return
         }
 
         if (array.size < maxCapacity) {
-            val newArraySize = minOf(maxCapacity,
+            val newArraySize = minOf(
+                maxCapacity,
                 if (array.size < MAX_SIZE_INCREMENT) array.size * 2
                 else array.size + MAX_SIZE_INCREMENT
             )
-            array = array.copyOf(newArraySize)
+            val old = array
+            val new = array.copyOf(newArraySize)
+            if (start >= end) {
+                old.copyInto(new, 0, startIndex = start)
+                old.copyInto(new,
+                    destinationOffset = old.size - start,
+                    startIndex = 0,
+                    endIndex = end
+                )
+                start = 0
+                end = actualSize
+            }
+            array = new
             actualSize = desiredCapacity
         } else if (array.size == maxCapacity) {
-            if (start == array.lastIndex) {
-                start = 0
-            } else {
-                ++start
-            }
-        }
-
-        if (end >= array.size) {
-            end = 0
+            onCircle()
         }
     }
 }
