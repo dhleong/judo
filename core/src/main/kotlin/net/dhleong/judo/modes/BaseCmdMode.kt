@@ -4,6 +4,7 @@ import kotlinx.coroutines.withContext
 import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.MOUSE
 import net.dhleong.judo.Setting
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource

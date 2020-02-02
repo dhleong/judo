@@ -2,9 +2,12 @@ package net.dhleong.judo.jline
 
 import net.dhleong.judo.BlockingKeySource
 import net.dhleong.judo.CursorType
+import net.dhleong.judo.IStateMap
 import net.dhleong.judo.JudoRendererEvent
 import net.dhleong.judo.JudoRendererInfo
+import net.dhleong.judo.MOUSE
 import net.dhleong.judo.OnRendererEventListener
+import net.dhleong.judo.StateKind
 import net.dhleong.judo.StateMap
 import net.dhleong.judo.WORD_WRAP
 import net.dhleong.judo.inTransaction
@@ -44,9 +47,20 @@ const val KEY_TIMEOUT = -2
 class JLineRenderer(
     private val ids: IdManager,
     override var settings: StateMap,
-    private val enableMouse: Boolean = false,
+    private val enableMouse: Boolean = settings[MOUSE],
     private val renderSurface: JLineDisplay = JLineDisplay(0, 0)
 ) : IJLineRenderer, BlockingKeySource {
+
+    private val mouseEnabledListener = object : IStateMap.Listener<Boolean> {
+        override fun onChanged(key: StateKind<Boolean>, newValue: Boolean) = inTransaction {
+            if (newValue) {
+                terminal.trackMouse(Terminal.MouseTracking.Normal)
+            } else {
+                terminal.trackMouse(Terminal.MouseTracking.Off)
+            }
+            terminal.flush()
+        }
+    }
 
     private val terminal = TerminalBuilder.terminal()!!
     private val window = Display(terminal, true)
@@ -126,6 +140,8 @@ class JLineRenderer(
                 capabilities.add(JudoRendererInfo.Capabilities.COLOR_256)
             }
         }
+
+        settings.addListener(MOUSE, mouseEnabledListener)
     }
 
     override fun validate() {

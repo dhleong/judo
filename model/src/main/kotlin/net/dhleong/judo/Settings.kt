@@ -15,6 +15,9 @@ val ALL_SETTINGS = mutableMapOf<String, Setting<*>>()
 val CLIPBOARD = declareSetting("clipboard", "",
     "If set to 'unnamed', cuts and pastes will default to the * register")
 
+val MOUSE = declareSetting("mouse", false,
+    "If true, mouse scroll events will be handled")
+
 val WORD_WRAP = declareSetting("wordwrap", true,
     "If false, output will go up to the edge of the window and words will be split.")
 

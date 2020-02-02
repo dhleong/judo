@@ -8,6 +8,13 @@ open class StateKind<E>(val name: String) {
 }
 
 interface IStateMap {
+    interface Listener<E : Any> {
+        fun onChanged(key: StateKind<E>, newValue: E)
+    }
+
+    fun <E : Any> addListener(key: StateKind<E>, listener: Listener<E>)
+    fun <E : Any> removeListener(key: StateKind<E>, listener: Listener<E>)
+
     operator fun <E : Any> set(key: StateKind<E>, value: E)
 
     operator fun <E : Any> get(key: StateKind<E>): E?
@@ -19,6 +26,14 @@ interface IStateMap {
 }
 
 object EmptyStateMap : IStateMap {
+    override fun <E : Any> addListener(key: StateKind<E>, listener: IStateMap.Listener<E>) {
+        // nop
+    }
+
+    override fun <E : Any> removeListener(key: StateKind<E>, listener: IStateMap.Listener<E>) {
+        // nop
+    }
+
     override fun <E : Any> set(key: StateKind<E>, value: E) {}
 
     override fun <E : Any> get(key: StateKind<E>): E? = null
@@ -39,14 +54,33 @@ object EmptyStateMap : IStateMap {
  */
 @Suppress("UNCHECKED_CAST")
 class StateMap() : IStateMap {
-    private val map = HashMap<StateKind<*>, Any>()
+    private val map = mutableMapOf<StateKind<*>, Any>()
+    private val listeners = mutableMapOf<StateKind<*>, MutableSet<IStateMap.Listener<*>>>()
 
     constructor(vararg pairs: Pair<StateKind<*>, Any>): this() {
         map.putAll(pairs)
     }
 
+    override fun <E : Any> addListener(key: StateKind<E>, listener: IStateMap.Listener<E>) {
+        val set = listeners[key] ?: mutableSetOf<IStateMap.Listener<*>>().also {
+            listeners[key] = it
+        }
+
+        set += listener
+    }
+
+    override fun <E : Any> removeListener(key: StateKind<E>, listener: IStateMap.Listener<E>) {
+        val set = listeners[key] ?: return
+        set -= listener
+    }
+
     override operator fun <E : Any> set(key: StateKind<E>, value: E) {
         map[key] = value
+
+        val set = listeners[key] ?: return
+        for (l in set) {
+            (l as IStateMap.Listener<E>).onChanged(key, value)
+        }
     }
 
     override operator fun <E : Any> get(key: StateKind<E>): E? =
