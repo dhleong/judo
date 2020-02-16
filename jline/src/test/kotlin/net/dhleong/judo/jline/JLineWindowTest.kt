@@ -388,57 +388,56 @@ class JLineWindowTest {
         """.trimIndent())
         val w = windowOf(buffer, 10, 3, wrap = true)
 
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |reynolds__
-            |of _______
-            |serenity__
-        """.trimMargin())
-
         assertScroll(w, display) {
-            scroll(1) rendersLines """
+            rendersLines("""
+                |reynolds__
+                |of _______
+                |serenity__
+            """.trimMargin())
+
+            scrollLines(1) rendersLines """
                 |mal_______
                 |reynolds__
                 |of _______
             """.trimMargin()
 
-            scroll(1) rendersLines """
+            scrollLines(1) rendersLines """
                 |captain___
                 |mal_______
                 |reynolds__
             """.trimMargin()
 
-            scroll(1) rendersLines """
+            scrollLines(1) rendersLines """
                 |__________
                 |captain___
                 |mal_______
             """.trimMargin()
 
-            scroll(1) rendersLines """
+            scrollLines(1) rendersLines """
                 |__________
                 |__________
                 |captain___
             """.trimMargin()
 
-            scroll(-1) rendersLines """
+            scrollLines(-1) rendersLines """
                 |__________
                 |captain___
                 |mal_______
             """.trimMargin()
 
-            scroll(-1) rendersLines """
+            scrollLines(-1) rendersLines """
                 |captain___
                 |mal_______
                 |reynolds__
             """.trimMargin()
 
-            scroll(-1) rendersLines """
+            scrollLines(-1) rendersLines """
                 |mal_______
                 |reynolds__
                 |of________
             """.trimMargin()
 
-            scroll(-1) rendersLines """
+            scrollLines(-1) rendersLines """
                 |reynolds__
                 |of________
                 |serenity__
@@ -524,33 +523,25 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 3)
         assertThat(w).hasScrollback(0)
 
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |captain___
-            |reynolds__
-        """.trimMargin())
+        assertScroll(w, display) {
+            rendersLines("""
+                |__________
+                |captain___
+                |reynolds__
+            """.trimMargin())
 
-        w.scrollPages(1)
-        assertThat(w).hasScrollback(1)
+            scrollPages(1) rendersLines """
+                |__________
+                |__________
+                |captain___
+            """.trimMargin()
+            assertThat(w).hasScrollback(1)
 
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |__________
-            |captain___
-        """.trimMargin())
+            // prevent scrolling any further (at least one line of content on screen)
+            scrollPages(1).rendersNoChange()
+            assertThat(w).hasScrollback(1)
+        }
 
-        // prevent scrolling any further (at least one line of content on screen)
-        w.scrollPages(1)
-        assertThat(w).hasScrollback(1)
-
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |__________
-            |captain___
-        """.trimMargin())
     }
 
     @Test fun `Prevent scrolling past visible buffer content when wrapped`() {
@@ -562,33 +553,24 @@ class JLineWindowTest {
         val w = windowOf(buffer, 10, 3, wrap = true)
         assertThat(w).hasScrollback(0)
 
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |captain___
-            |reynolds__
-        """.trimMargin())
+        assertScroll(w, display) {
+            rendersLines("""
+                |__________
+                |captain___
+                |reynolds__
+            """.trimMargin())
 
-        w.scrollPages(1)
-        assertThat(w).hasScrollback(0)
+            scrollPages(1) rendersLines """
+                |__________
+                |__________
+                |captain___
+            """.trimMargin()
+            assertThat(w).hasScrollback(0)
 
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |__________
-            |captain___
-        """.trimMargin())
-
-        // prevent scrolling any further (at least one line of content on screen)
-        w.scrollPages(1)
-        assertThat(w).hasScrollback(0)
-
-        w.render(display, 0, 0)
-        assertThat(display).linesEqual("""
-            |__________
-            |__________
-            |captain___
-        """.trimMargin())
+            // prevent scrolling any further (at least one line of content on screen)
+            scrollPages(1).rendersNoChange()
+            assertThat(w).hasScrollback(0)
+        }
     }
 
     @Test fun `scrollToLine in wrapped buffer`() {
@@ -1030,12 +1012,28 @@ private class ScrollAssertHelper(
 ) {
     object PendingScrollAssert
 
-    fun scroll(amount: Int): PendingScrollAssert {
+    private lateinit var lastAssertion: String
+
+    fun scrollLines(amount: Int): PendingScrollAssert {
         window.scrollLines(amount)
         return PendingScrollAssert
     }
 
+    fun scrollPages(amount: Int): PendingScrollAssert {
+        window.scrollPages(amount)
+        return PendingScrollAssert
+    }
+
     infix fun PendingScrollAssert.rendersLines(lines: String) {
+        this@ScrollAssertHelper.rendersLines(lines)
+    }
+
+    fun PendingScrollAssert.rendersNoChange() {
+        rendersLines(lastAssertion)
+    }
+
+    fun rendersLines(lines: String) {
+        lastAssertion = lines
         window.render(display, 0, 0)
         assertThat(display).linesEqual(lines)
     }
