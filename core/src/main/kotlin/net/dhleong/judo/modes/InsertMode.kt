@@ -46,7 +46,12 @@ class InsertMode(
         keys("<ctrl b>") to { core -> core.scrollPages(1) },
         keys("<ctrl f>") to { core -> core.scrollPages(-1) },
 
-        keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
+        keys("<ctrl r>") to { core -> core.enterMode("rsearch") },
+
+        // output-normal mode:
+
+        keys("<ctrl-w>N") to { core -> core.enterMode("output-normal") },
+        keys("<ctrl-BACKSLASH><ctrl-n>") to { core -> core.enterMode("output-normal") }
     )
     private val keymaps = KeyMapHelper(judo, mapping, userMappings)
 

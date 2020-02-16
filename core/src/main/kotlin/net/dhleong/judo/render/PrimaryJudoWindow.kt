@@ -26,6 +26,7 @@ abstract class PrimaryJudoWindow(
             promptWindow.isFocused = value
         }
     override val isFocusable = true // primary window is ALWAYS focusable
+    override var isOutputFocused: Boolean = false
 
     override var isWindowHidden: Boolean
         get() = false

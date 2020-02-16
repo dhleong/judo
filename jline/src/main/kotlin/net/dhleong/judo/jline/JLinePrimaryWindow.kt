@@ -32,6 +32,12 @@ class JLinePrimaryWindow(
             (promptWindow as IJLineWindow).lastResizeRequest
         )
 
+    override var isOutputFocused: Boolean
+        get() = super.isOutputFocused
+        set(value) = renderer.inTransaction {
+            super.isOutputFocused = value
+        }
+
     override fun createBuffer(ids: IdManager): IJudoBuffer = renderer.createBuffer()
 
     override fun createWindow(

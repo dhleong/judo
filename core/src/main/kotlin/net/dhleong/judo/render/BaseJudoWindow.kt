@@ -24,6 +24,7 @@ abstract class BaseJudoWindow(
     override var width: Int = initialWidth
     override var height: Int = initialHeight
 
+    override var isOutputFocused: Boolean = false
     override var isWindowHidden: Boolean = false
 
     protected val search = BufferSearcher()

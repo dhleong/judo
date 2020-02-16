@@ -53,6 +53,7 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
 
     val isFocusable: Boolean
     var isFocused: Boolean
+    var isOutputFocused: Boolean
 
     /**
      * "hidden" windows are not focusable and do not render (IE:

@@ -340,9 +340,10 @@ class JLineRenderer(
             ?: throw IllegalStateException("Current tabpage is not JLine: $currentTabpage")
 
         val win = tabpage.currentWindow
-        val isCursorOnStatus = win.isFocusable && win.isFocused && win.statusCursor != -1
+        val isCursorOnStatus = win.isFocusable && win.isFocused && !win.isOutputFocused && win.statusCursor != -1
         val rawInputCursor = when {
             isCursorOnStatus -> 0
+            tabpage.currentWindow.isOutputFocused -> 0
             tabpage.currentWindow.isFocusable -> input.cursorIndex
             else -> 0
         }
