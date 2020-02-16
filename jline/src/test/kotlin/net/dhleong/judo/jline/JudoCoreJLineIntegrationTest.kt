@@ -173,7 +173,7 @@ class JudoCoreJLineIntegrationTest {
             |__________
         """.trimMargin())
 
-        judo.feedKeys("<ctrl-f>")
+        judo.feedKeys("<ctrl-b>")
         assertThat(display).linesEqual("""
             |Take me___
             |where I___
