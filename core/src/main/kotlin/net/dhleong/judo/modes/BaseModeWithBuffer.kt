@@ -6,8 +6,6 @@ import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
-import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.normalizeForMotion
 
@@ -57,41 +55,6 @@ abstract class BaseModeWithBuffer(
     protected suspend fun rangeOf(motion: Motion) =
         motion.calculate(judo, buffer)
             .normalizeForMotion(motion)
-
-    /** @return True if we handled it as a mapping (or might yet) */
-    protected suspend fun tryMappings(
-        key: Key, allowRemap: Boolean,
-        input: MutableKeys,
-        originalMaps: KeyMapping, remaps: KeyMapping?
-    ): Boolean {
-
-        input.push(key)
-
-        if (allowRemap && remaps != null) {
-            remaps.match(input)?.let {
-                input.clear()
-                it.invoke(judo)
-                return true
-            }
-
-            if (remaps.couldMatch(input)) {
-                return true
-            }
-        }
-
-        originalMaps.match(input)?.let {
-            input.clear()
-            it.invoke(judo)
-            return true
-        }
-
-        if (originalMaps.couldMatch(input)) {
-            return true
-        }
-
-        input.clear() // no possible matches; clear input queue
-        return false
-    }
 
     protected fun performTabCompletionFrom(key: Key, suggester: CompletionSuggester) {
         if (key.hasShift()) {

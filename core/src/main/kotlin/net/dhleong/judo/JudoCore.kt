@@ -39,6 +39,7 @@ import net.dhleong.judo.modes.InsertMode
 import net.dhleong.judo.modes.MappableMode
 import net.dhleong.judo.modes.NormalMode
 import net.dhleong.judo.modes.OperatorPendingMode
+import net.dhleong.judo.modes.OutputNormalMode
 import net.dhleong.judo.modes.OutputSearchMode
 import net.dhleong.judo.modes.ReverseInputSearchMode
 import net.dhleong.judo.modes.StatusBufferProvider
@@ -188,6 +189,7 @@ class JudoCore(
         InsertMode(this, buffer, completions, sendHistory),
         normalMode,
         opMode,
+        OutputNormalMode(this),
         OutputSearchMode(this, outputCompletions),
         CmdMode(
             this, cmdBuffer, renderer, cmdHistory, completions,

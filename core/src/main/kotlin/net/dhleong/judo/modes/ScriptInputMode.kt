@@ -10,8 +10,8 @@ import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
@@ -43,7 +43,9 @@ class ScriptInputMode(
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())
     )
-    private val input = MutableKeys()
+
+    private val keymaps = KeyMapHelper(judo, mapping)
+
     private val suggester = CompletionSuggester(completions)
 
     private var exitted = false
@@ -89,7 +91,7 @@ class ScriptInputMode(
         }
 
         // handle key mappings
-        if (tryMappings(key, remap, input, mapping, null)) {
+        if (keymaps.tryMappings(key, remap)) {
             return
         }
 

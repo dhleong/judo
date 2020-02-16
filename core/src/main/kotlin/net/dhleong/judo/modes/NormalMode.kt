@@ -7,8 +7,8 @@ import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.ALL_MOTIONS
@@ -210,6 +210,9 @@ class NormalMode(
         keys("<ctrl-c>") to action { clearBuffer() },
         keys("<ctrl-s>") to { core -> core.enterMode("rsearch") },
 
+        keys("<ctrl-w>N") to { core -> core.enterMode("output-normal") },
+        keys("<ctrl-BACKSLASH><ctrl-n>") to { core -> core.enterMode("output-normal") },
+
         // window commands
 
         keys("<ctrl-w>k") to withCount { count -> judo.renderer.focusUp(count) },
@@ -234,6 +237,8 @@ class NormalMode(
     }.map { (keys, motion) ->
         keys to motionActionWithCount(motion)
     })
+
+    private val keymaps = KeyMapHelper(judo, mapping, userMappings)
 
     private fun continueSearch(direction: Int) {
         judo.state[KEY_LAST_SEARCH_STRING]?.let {
@@ -281,13 +286,12 @@ class NormalMode(
     }
 
 
-    private val input = MutableKeys()
     private val count = CountReadingBuffer()
 
     private var fromOpMode = false
 
     override fun onEnter() {
-        input.clear()
+        keymaps.clearInput()
 
         if (!fromOpMode) {
             buffer.cursor = maxOf(0, buffer.cursor - 1)
@@ -311,7 +315,7 @@ class NormalMode(
         }
 
         // handle key mappings
-        if (tryMappings(key, remap, input, mapping, userMappings)) {
+        if (keymaps.tryMappings(key, remap)) {
             // executed; clear the count
             count.clear()
             return
@@ -324,7 +328,7 @@ class NormalMode(
     override fun clearBuffer() {
         super.clearBuffer()
         count.clear()
-        input.clear()
+        keymaps.clearInput()
         buffer.undoMan.clear()
         history.resetHistoryOffset()
     }

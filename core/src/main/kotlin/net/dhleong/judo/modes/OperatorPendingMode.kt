@@ -8,8 +8,8 @@ import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
@@ -40,7 +40,8 @@ class OperatorPendingMode(
         }
     )
 
-    private val input = MutableKeys()
+    private val keymaps = KeyMapHelper(judo, mapping)
+
     private val count = CountReadingBuffer()
 
     override fun onEnter() {
@@ -53,7 +54,7 @@ class OperatorPendingMode(
         currentFullLineMotionKey = fullLineMotionKey
         fullLineMotionKey = 0.toChar()
 
-        input.clear()
+        keymaps.clearInput()
         judo.setCursorType(CursorType.UNDERSCORE_BLINK)
     }
 
@@ -70,7 +71,7 @@ class OperatorPendingMode(
             return
         }
 
-        if (tryMappings(key, remap, input, mapping, null)) {
+        if (keymaps.tryMappings(key, remap)) {
             return
         }
 

@@ -7,8 +7,8 @@ import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
@@ -48,7 +48,7 @@ class InsertMode(
 
         keys("<ctrl r>") to { core -> core.enterMode("rsearch") }
     )
-    private val input = MutableKeys()
+    private val keymaps = KeyMapHelper(judo, mapping, userMappings)
 
     private val suggester = CompletionSuggester(completions)
 
@@ -91,7 +91,7 @@ class InsertMode(
         suggester.reset()
 
         // handle key mappings
-        if (tryMappings(key, remap, input, mapping, userMappings)) {
+        if (keymaps.tryMappings(key, remap)) {
             // user mappings end the current change set
             if (buffer.undoMan.isInChange) {
                 // the mapping might have cancelled the change
@@ -122,7 +122,7 @@ class InsertMode(
     override fun clearBuffer() {
         super.clearBuffer()
         suggester.reset()
-        input.clear()
+        keymaps.clearInput()
         history.resetHistoryOffset()
         buffer.undoMan.clear()
     }

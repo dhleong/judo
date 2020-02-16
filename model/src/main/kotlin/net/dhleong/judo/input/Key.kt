@@ -26,6 +26,8 @@ class Key private constructor(
         const val CODE_ESCAPE = 27
         const val CODE_TAB = '\t'.toInt()
 
+        const val CODE_BACKSLASH = 92
+
         const val CODE_LEFT = 128
         const val CODE_UP = 129
         const val CODE_RIGHT = 130
@@ -136,6 +138,7 @@ class Key private constructor(
             return when (key) {
                 " ", "20", "space" -> ' '.toInt()
                 "bs", "backspace" -> CODE_BACKSPACE
+                "backslash" -> CODE_BACKSLASH
                 "cr" -> CODE_ENTER
                 "esc" -> CODE_ESCAPE
                 "tab" -> CODE_TAB

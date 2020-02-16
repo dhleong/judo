@@ -2,6 +2,7 @@ package net.dhleong.judo.input
 
 import assertk.all
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.containsExactly
 import assertk.assertions.extracting
 import assertk.assertions.isEqualTo
@@ -33,6 +34,18 @@ class KeysTest {
         assertThat(keys(">"))
             .extracting { it.char }
             .containsExactly('>')
+
+        assertThat(keys("\\"))
+            .extracting { it.char }
+            .containsExactly('\\')
+
+        assertThat(keys("<ctrl-BACKSLASH>"))
+            .extracting { it.char }
+            .contains('\\')
+
+        assertThat(keys("<ctrl-BACKSLASH><ctrl-n>"))
+            .extracting { it.char }
+            .contains('\\')
     }
 
     @Test fun parseSequentialSpecial() {

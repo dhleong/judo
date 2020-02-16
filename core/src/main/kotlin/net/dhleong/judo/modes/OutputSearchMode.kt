@@ -6,8 +6,8 @@ import net.dhleong.judo.complete.CompletionSuggester
 import net.dhleong.judo.complete.RecencyCompletionSource
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
@@ -34,7 +34,8 @@ class OutputSearchMode(
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())
     )
-    private val input = MutableKeys()
+
+    private val keymaps = KeyMapHelper(judo, mapping)
 
     private val suggester = CompletionSuggester(completions)
 
@@ -67,7 +68,7 @@ class OutputSearchMode(
         suggester.reset()
 
         // handle key mappings
-        if (tryMappings(key, remap, input, mapping, null)) {
+        if (keymaps.tryMappings(key, remap)) {
             return
         }
 
@@ -92,7 +93,7 @@ class OutputSearchMode(
 
     override fun clearBuffer() {
         super.clearBuffer()
-        input.clear()
+        keymaps.clearInput()
         suggester.reset()
     }
 

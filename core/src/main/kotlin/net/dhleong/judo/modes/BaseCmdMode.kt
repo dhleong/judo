@@ -4,7 +4,6 @@ import kotlinx.coroutines.withContext
 import net.dhleong.judo.ALL_SETTINGS
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.JudoRendererInfo
-import net.dhleong.judo.MOUSE
 import net.dhleong.judo.Setting
 import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.complete.CompletionSource
@@ -14,8 +13,8 @@ import net.dhleong.judo.event.EventHandler
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
+import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.MutableKeys
 import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.logging.ILogManager
@@ -71,7 +70,10 @@ abstract class BaseCmdMode(
         keys("<ctrl a>") to motionAction(toStartMotion()),
         keys("<ctrl e>") to motionAction(toEndMotion())
     )
-    private val input = MutableKeys()
+
+    private val keymaps by lazy {
+        KeyMapHelper(judo, mapping, userMappings)
+    }
 
     protected var lastReadFile: File? = null
 
@@ -111,7 +113,7 @@ abstract class BaseCmdMode(
         suggester.reset()
 
         // handle key mappings
-        if (tryMappings(key, remap, input, mapping, userMappings)) {
+        if (keymaps.tryMappings(key, remap)) {
             return
         }
 
@@ -500,7 +502,7 @@ abstract class BaseCmdMode(
 
     override fun clearBuffer() {
         super.clearBuffer()
-        input.clear()
+        keymaps.clearInput()
         suggester.reset()
         history.resetHistoryOffset()
     }
