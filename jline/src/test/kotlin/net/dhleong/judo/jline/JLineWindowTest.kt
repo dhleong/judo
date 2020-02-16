@@ -308,6 +308,144 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `Mixed line wrap scrolling`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain mreynolds
+            jayne
+            first mate zoe
+            kaywinnet
+            lee
+            frye
+        """.trimIndent())
+        val w = windowOf(buffer, 10, 3, wrap = true)
+
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |kaywinnet_
+            |lee_______
+            |frye______
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |first mate
+            |zoe_______
+            |kaywinnet_
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |jayne_____
+            |first mate
+            |zoe_______
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |mreynolds_
+            |jayne_____
+            |first mate
+        """.trimMargin())
+
+        w.scrollLines(1)
+        w.scrollLines(1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |__________
+            |captain___
+            |mreynolds_
+        """.trimMargin())
+
+        // ... and back
+        w.scrollLines(-1)
+        w.scrollLines(-1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |mreynolds_
+            |jayne_____
+            |first mate
+        """.trimMargin())
+
+        w.scrollLines(-1)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |jayne_____
+            |first mate
+            |zoe_______
+        """.trimMargin())
+
+    }
+
+    @Test fun `Step-by-step scroll through multi-wrap line`() {
+        val display = JLineDisplay(10, 3)
+        val buffer = bufferOf("""
+            captain mal reynolds of serenity
+        """.trimIndent())
+        val w = windowOf(buffer, 10, 3, wrap = true)
+
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |reynolds__
+            |of _______
+            |serenity__
+        """.trimMargin())
+
+        assertScroll(w, display) {
+            scroll(1) rendersLines """
+                |mal_______
+                |reynolds__
+                |of _______
+            """.trimMargin()
+
+            scroll(1) rendersLines """
+                |captain___
+                |mal_______
+                |reynolds__
+            """.trimMargin()
+
+            scroll(1) rendersLines """
+                |__________
+                |captain___
+                |mal_______
+            """.trimMargin()
+
+            scroll(1) rendersLines """
+                |__________
+                |__________
+                |captain___
+            """.trimMargin()
+
+            scroll(-1) rendersLines """
+                |__________
+                |captain___
+                |mal_______
+            """.trimMargin()
+
+            scroll(-1) rendersLines """
+                |captain___
+                |mal_______
+                |reynolds__
+            """.trimMargin()
+
+            scroll(-1) rendersLines """
+                |mal_______
+                |reynolds__
+                |of________
+            """.trimMargin()
+
+            scroll(-1) rendersLines """
+                |reynolds__
+                |of________
+                |serenity__
+            """.trimMargin()
+        }
+    }
+
     @Test fun `scrollToBottom clears offsets`() {
         val display = JLineDisplay(10, 3)
         val buffer = bufferOf("""
@@ -884,4 +1022,29 @@ private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =
 private fun Assert<IJudoWindow>.hasScrollback(lines: Int) = given { actual ->
     if (actual.getScrollback() == lines) return
     expected("scrollback=${show(lines)} but was ${show(actual.getScrollback())}")
+}
+
+private class ScrollAssertHelper(
+    val window: JLineWindow,
+    val display: JLineDisplay
+) {
+    object PendingScrollAssert
+
+    fun scroll(amount: Int): PendingScrollAssert {
+        window.scrollLines(amount)
+        return PendingScrollAssert
+    }
+
+    infix fun PendingScrollAssert.rendersLines(lines: String) {
+        window.render(display, 0, 0)
+        assertThat(display).linesEqual(lines)
+    }
+}
+
+private inline fun assertScroll(
+    window: JLineWindow,
+    display: JLineDisplay,
+    block: ScrollAssertHelper.() -> Unit
+) {
+    ScrollAssertHelper(window, display).block()
 }
