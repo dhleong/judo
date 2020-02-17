@@ -2,6 +2,7 @@ package net.dhleong.judo.motions
 
 import net.dhleong.judo.DUMMY_JUDO_CORE
 import net.dhleong.judo.IJudoCore
+import net.dhleong.judo.input.IBufferWithCursor
 import net.dhleong.judo.input.InputBuffer
 import java.util.EnumSet
 
@@ -26,7 +27,7 @@ interface Motion {
     val isTextObject: Boolean
         get() = flags.contains(Flags.TEXT_OBJECT)
 
-    suspend fun applyTo(core: IJudoCore, buffer: InputBuffer) {
+    suspend fun applyTo(core: IJudoCore, buffer: IBufferWithCursor) {
         val end = calculate(
             core, buffer.toChars(), buffer.cursor
         ).last

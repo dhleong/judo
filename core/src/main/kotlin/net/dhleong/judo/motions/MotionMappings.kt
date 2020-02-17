@@ -57,3 +57,8 @@ val ALL_MOTIONS = arrayListOf(
     keys(";") to repeatFindMotion(1),
     keys(",") to repeatFindMotion(-1)
 )
+
+val LINEWISE_MOTIONS = listOf(
+    keys("k") to verticalLineMotion(-1),
+    keys("j") to verticalLineMotion(1)
+)

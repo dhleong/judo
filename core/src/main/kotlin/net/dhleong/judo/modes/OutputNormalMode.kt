@@ -11,7 +11,9 @@ import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.Keys
 import net.dhleong.judo.input.keys
+import net.dhleong.judo.modes.output.OutputBufferCharSequence
 import net.dhleong.judo.motions.ALL_MOTIONS
+import net.dhleong.judo.motions.LINEWISE_MOTIONS
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.repeat
 
@@ -33,9 +35,10 @@ class OutputNormalMode(
             core.exitMode()
             core.feedKeys("I")
         },
+
         keys("<ctrl b>") to { core -> core.scrollPages(1) },
         keys("<ctrl f>") to { core -> core.scrollPages(-1) }
-    ) + ALL_MOTIONS.filter { (_, motion) ->
+    ) + (ALL_MOTIONS + LINEWISE_MOTIONS).filter { (_, motion) ->
         // text object motions can't be used as an action
         !motion.isTextObject
     }.map { (keys, motion) ->
@@ -79,12 +82,12 @@ class OutputNormalMode(
         { applyMotion(repeat(motion, count.toRepeatCount())) }
 
     private suspend fun applyMotion(motion: Motion) {
-        judo.tabpage.currentWindow.getScrollback()
-        motion.calculate(judo, "", 0) // FIXME TODO
-//        motion.applyTo(judo, buffer)
-//        if (clampCursor) {
-//            clampCursor(buffer)
-//        }
+        val win = judo.tabpage.currentWindow
+        val buffer = OutputBufferCharSequence(win)
+
+        motion.applyTo(judo, buffer)
+
+        buffer.applyCursorTo(win)
     }
 
 }

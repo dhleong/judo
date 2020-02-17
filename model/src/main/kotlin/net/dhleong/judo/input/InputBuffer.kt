@@ -13,8 +13,8 @@ import kotlin.properties.Delegates
 class InputBuffer(
     private val registers: IRegisterManager? = null,
     val undoMan: UndoManager = UndoManager()
-) {
-    var cursor: Int by Delegates.observable(0) { _, _, newValue ->
+) : IBufferWithCursor {
+    override var cursor: Int by Delegates.observable(0) { _, _, newValue ->
         if (newValue < 0 || newValue > size) {
             throw IllegalArgumentException(
                 "Illegal cursor position: $newValue (size=$size)")
@@ -75,11 +75,11 @@ class InputBuffer(
         ++cursor
     }
 
-    fun toChars(): CharSequence = buffer
+    override fun toChars(): CharSequence = buffer
 
     override fun toString() = buffer.toString()
 
-    val size: Int
+    override val size: Int
         get() = buffer.length
 
     /**
@@ -122,13 +122,13 @@ class InputBuffer(
     fun deleteWithCursor(range: IntRange, clampCursor: Boolean = true): Boolean {
         normalizeRange(range)?.let { (normalized, newCursor) ->
             delete(normalized)
-            if (clampCursor) {
+            cursor = if (clampCursor) {
                 // NOTE: lastIndex is -1 when size == 0
-                cursor = maxOf(0, minOf(buffer.lastIndex, newCursor))
+                maxOf(0, minOf(buffer.lastIndex, newCursor))
             } else {
                 // don't clamp *within* buffer, but also don't allow going completely
                 // outside of it. that is the path to errors
-                cursor = minOf(buffer.length, newCursor)
+                minOf(buffer.length, newCursor)
             }
             return true
         }
