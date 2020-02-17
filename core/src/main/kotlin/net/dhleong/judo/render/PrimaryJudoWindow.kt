@@ -27,6 +27,12 @@ abstract class PrimaryJudoWindow(
         }
     override val isFocusable = true // primary window is ALWAYS focusable
     override var isOutputFocused: Boolean = false
+    override var cursorCol: Int
+        get() = outputWindow.cursorCol
+        set(value) { outputWindow.cursorCol = value }
+    override var cursorLine: Int
+        get() = outputWindow.cursorLine
+        set(value) { outputWindow.cursorLine = value }
 
     override var isWindowHidden: Boolean
         get() = false

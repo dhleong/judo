@@ -340,10 +340,11 @@ class JLineRenderer(
             ?: throw IllegalStateException("Current tabpage is not JLine: $currentTabpage")
 
         val win = tabpage.currentWindow
-        val isCursorOnStatus = win.isFocusable && win.isFocused && !win.isOutputFocused && win.statusCursor != -1
+        val isWinFocused = win.isFocusable && win.isFocused
+        val isCursorInOutput = isWinFocused && win.isOutputFocused
+        val isCursorOnStatus = !isCursorInOutput && isWinFocused && win.statusCursor != -1
         val rawInputCursor = when {
-            isCursorOnStatus -> 0
-            tabpage.currentWindow.isOutputFocused -> 0
+            isCursorOnStatus || isCursorInOutput -> 0
             tabpage.currentWindow.isFocusable -> input.cursorIndex
             else -> 0
         }
@@ -374,15 +375,27 @@ class JLineRenderer(
             }
         }
 
-        if (isCursorOnStatus) {
-            val windowX = tabpage.getXPositionOf(win)
-            val windowY = tabpage.getYPositionOf(win)
-            val windowBottom = windowY + win.height - 1
-            display.cursorRow = windowBottom
-            display.cursorCol = windowX + win.statusCursor
-        } else {
-            display.cursorRow = windowHeight - renderedInput.size + input.cursorRow
-            display.cursorCol = input.cursorCol
+        when {
+            isCursorOnStatus -> {
+                val windowX = tabpage.getXPositionOf(win)
+                val windowY = tabpage.getYPositionOf(win)
+                val windowBottom = windowY + win.height - 1
+                display.cursorRow = windowBottom
+                display.cursorCol = windowX + win.statusCursor
+            }
+
+            isCursorInOutput -> {
+                val windowX = tabpage.getXPositionOf(win)
+                val windowY = tabpage.getYPositionOf(win)
+                val windowBottom = windowY + win.height - 1
+                display.cursorCol = windowX + win.cursorCol
+                display.cursorRow = windowBottom - win.cursorLine - 1
+            }
+
+            else -> {
+                display.cursorRow = windowHeight - renderedInput.size + input.cursorRow
+                display.cursorCol = input.cursorCol
+            }
         }
     }
 

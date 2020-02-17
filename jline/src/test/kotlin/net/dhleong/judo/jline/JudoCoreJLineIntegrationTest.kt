@@ -393,6 +393,25 @@ class JudoCoreJLineIntegrationTest {
         """.trimMargin())
     }
 
+    @Test fun `Output-normal mode`() = assertionsWhileTyping {
+        judo.print("Take me where I cannot stand")
+        yieldKeys("<c-w>N")
+
+        assertThat(display).all {
+             linesEqual("""
+                |Take me where I_____
+                |cannot stand________
+                |__________[O-NORMAL]
+                |____________________
+            """.trimMargin())
+            hasCursor(1, 0)
+        }
+
+        // TODO
+//        yieldKeys("e")
+//        assertThat(display).hasCursor(1, 5)
+    }
+
     private inline fun assertionsWhileTyping(
         crossinline block: suspend AssertionContext.() -> Unit
     ) = assertionsWhileTyping(judo, block)

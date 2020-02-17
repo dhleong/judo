@@ -55,6 +55,10 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
     var isFocused: Boolean
     var isOutputFocused: Boolean
 
+    /** counted from the *bottom* of the window */
+    var cursorLine: Int
+    var cursorCol: Int
+
     /**
      * "hidden" windows are not focusable and do not render (IE:
      * they effectively have 0 width and height). This allows us

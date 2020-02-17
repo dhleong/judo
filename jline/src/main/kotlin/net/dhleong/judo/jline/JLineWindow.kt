@@ -66,6 +66,12 @@ class JLineWindow(
                 }
             }
         }
+    override var cursorCol: Int
+        get() = super.cursorCol
+        set(value) = renderer.inTransaction { super.cursorCol = value }
+    override var cursorLine: Int
+        get() = super.cursorLine
+        set(value) = renderer.inTransaction { super.cursorLine = value }
 
     override var lastResizeRequest: Long = ids.newTimestamp()
 

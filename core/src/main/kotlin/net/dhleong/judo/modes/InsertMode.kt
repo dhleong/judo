@@ -50,8 +50,8 @@ class InsertMode(
 
         // output-normal mode:
 
-        keys("<ctrl-w>N") to { core -> core.enterMode("output-normal") },
-        keys("<ctrl-BACKSLASH><ctrl-n>") to { core -> core.enterMode("output-normal") }
+        keys("<ctrl-w>N") to { core -> core.enterMode("o-normal") },
+        keys("<ctrl-BACKSLASH><ctrl-n>") to { core -> core.enterMode("o-normal") }
     )
     private val keymaps = KeyMapHelper(judo, mapping, userMappings)
 
