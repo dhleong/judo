@@ -61,6 +61,14 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
             isFocusable: Boolean,
             statusLineOverlaysOutput: Boolean
         ): IJudoWindow = createWindowMock(ids, initialWidth, initialHeight, initialBuffer, isFocusable)
+
+        override fun computeCursorLocationInBuffer(): Pair<Int, Int> {
+            TODO("not implemented")
+        }
+
+        override fun setCursorFromBufferLocation(line: Int, col: Int) {
+            TODO("not implemented")
+        }
     }
 
     val tabpage = object : IJudoTabpage by DumbProxy() {
@@ -68,6 +76,7 @@ class RendererState(var windowWidth: Int = 90, var windowHeight: Int = 30) {
     }
     var inputLine: Pair<FlavorableCharSequence, Int> =
         FlavorableStringBuilder.EMPTY to 0
+
 }
 
 private fun createRendererProxy(state: RendererState): JudoRenderer {
