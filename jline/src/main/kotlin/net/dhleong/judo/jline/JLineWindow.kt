@@ -95,6 +95,8 @@ class JLineWindow(
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
     private var lastRenderStart: Int = -1
     private var lastRenderEnd: Int = -1
+    private var lastRenderBlankLines: Int = -1
+
     /**
      * Parallel array to [renderWorkspace] attributing each rendered line to its source
      * buffer line
@@ -229,7 +231,7 @@ class JLineWindow(
             }
         }
 
-        cursorLine = height - 1 - renderedLine - lastRenderStart
+        cursorLine = height - 1 - lastRenderBlankLines - renderedLine - lastRenderStart
         cursorCol = renderedCol
     }
 
@@ -289,6 +291,7 @@ class JLineWindow(
             blankLinesNeeded -= 1
         }
 
+        lastRenderBlankLines = blankLinesNeeded
         for (i in 0 until blankLinesNeeded) {
             yield("")
         }
