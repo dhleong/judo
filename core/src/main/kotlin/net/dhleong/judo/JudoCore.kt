@@ -863,7 +863,8 @@ class JudoCore(
             buffer.cursor = originalCursor
 
             if (bufferToRestore != null) {
-                (currentMode as? BaseModeWithBuffer)?.buffer?.set(bufferToRestore)
+                val buffer = (currentMode as? BaseModeWithBuffer)?.buffer
+                (buffer as? InputBuffer)?.set(bufferToRestore)
             }
         }
 

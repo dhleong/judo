@@ -1,10 +1,12 @@
 package net.dhleong.judo.jline
 
+import assertk.Assert
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.each
 import assertk.assertions.hasLength
 import assertk.assertions.hasSize
+import assertk.assertions.isEqualTo
 import com.nhaarman.mockito_kotlin.mock
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.AssertionContext
@@ -16,6 +18,7 @@ import net.dhleong.judo.assertionsWhileTyping
 import net.dhleong.judo.bufferOf
 import net.dhleong.judo.cmdMode
 import net.dhleong.judo.emptyBuffer
+import net.dhleong.judo.register.IRegister
 import net.dhleong.judo.render.IdManager
 import net.dhleong.judo.render.parseAnsi
 import net.dhleong.judo.render.toFlavorable
@@ -409,13 +412,20 @@ class JudoCoreJLineIntegrationTest {
             hasCursor(2, 0)
         }
 
-        yieldKeys("e")
-        assertThat(display).hasCursor(2, 5)
+        yieldKeys("w")
+        assertThat(display).hasCursor(2, 7)
+
+        yieldKeys("ye")
+        assertThat(judo.registers.unnamed).hasContent("stand")
     }
 
     private inline fun assertionsWhileTyping(
         crossinline block: suspend AssertionContext.() -> Unit
     ) = assertionsWhileTyping(judo, block)
 
+}
+
+private fun Assert<IRegister>.hasContent(content: String) = given { actual ->
+    assertThat(actual.value.toString(), "$actual value").isEqualTo(content)
 }
 

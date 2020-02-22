@@ -101,9 +101,11 @@ class OutputSearchMode(
      * Insert a key stroke at the current cursor position
      */
     private fun insertChar(key: Key) {
-        val wasEmpty = buffer.isEmpty()
-        buffer.type(key)
-        if (buffer.isEmpty() && wasEmpty) {
+        val b = buffer as InputBuffer // guaranteed by constructor
+
+        val wasEmpty = b.isEmpty()
+        b.type(key)
+        if (b.isEmpty() && wasEmpty) {
             exitMode()
         }
     }

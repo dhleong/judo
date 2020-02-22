@@ -29,6 +29,10 @@ class OutputBufferCharSequence(
 
     override fun toChars(): CharSequence = this
 
+    override fun clear() {
+        buffer.clear()
+    }
+
     override fun get(index: Int): Char {
         val lineNr = index / CHARS_PER_LINE
         val col = index % CHARS_PER_LINE
@@ -39,6 +43,9 @@ class OutputBufferCharSequence(
         return line[col]
     }
 
+    override fun get(range: IntRange): CharSequence =
+        subSequence(range.first, range.last + 1)
+
     override fun subSequence(startIndex: Int, endIndex: Int): CharSequence {
         val startLineNr = startIndex / CHARS_PER_LINE
         val endLineNr = endIndex / CHARS_PER_LINE
@@ -46,8 +53,8 @@ class OutputBufferCharSequence(
             // easy case
             val line = buffer[startLineNr]
             val startCol = (startIndex % CHARS_PER_LINE).coerceAtMost(line.length)
-            val endCol = startIndex % CHARS_PER_LINE.coerceAtMost(line.length)
-            return line.subSequence(startCol, endCol)
+            val endCol = (endIndex % CHARS_PER_LINE).coerceAtMost(line.length)
+            return line.subSequence(startCol, endCol).trim('\n')
         }
 
         TODO()

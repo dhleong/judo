@@ -26,20 +26,20 @@ class InputBuffer(
     fun beginChangeSet() = undoMan.beginChangeSet(this)
     inline fun inChangeSet(block: () -> Unit) = undoMan.inChangeSet(this, block)
 
-    fun clear() {
+    override fun clear() {
         buffer.setLength(0)
         cursor = 0
     }
 
     fun get(index: Int): Char = buffer[index]
 
-    fun get(range: IntRange): CharSequence =
+    override fun get(range: IntRange): CharSequence =
         normalizeRange(range)?.let { buffer.substring(it.first) }
             ?: ""
 
     fun isEmpty() = buffer.isEmpty()
 
-    val lastIndex: Int
+    override val lastIndex: Int
         get() = buffer.lastIndex
 
     /**

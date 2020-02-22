@@ -27,7 +27,7 @@ import kotlin.coroutines.suspendCoroutine
 class ScriptInputMode(
     judo: IJudoCore,
     completions: CompletionSource,
-    buffer: InputBuffer,
+    override val buffer: InputBuffer,
     private val history: IInputHistory,
     val prompt: String = ""
 ) : BaseModeWithBuffer(judo, buffer),

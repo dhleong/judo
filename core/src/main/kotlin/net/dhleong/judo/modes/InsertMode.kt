@@ -4,6 +4,7 @@ import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.complete.CompletionSource
 import net.dhleong.judo.complete.CompletionSuggester
+import net.dhleong.judo.input.IBufferWithCursor
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
@@ -21,7 +22,7 @@ import net.dhleong.judo.render.toFlavorable
  */
 class InsertMode(
     judo: IJudoCore,
-    buffer: InputBuffer,
+    override val buffer: InputBuffer,
     completions: CompletionSource,
     private val history: IInputHistory
 ) : BaseModeWithBuffer(judo, buffer),
@@ -118,7 +119,7 @@ class InsertMode(
     override fun renderInputBuffer() = buffer.toString().toFlavorable()
     override fun getCursor(): Int = buffer.cursor
 
-    override fun clampCursor(buffer: InputBuffer) {
+    override fun clampCursor(buffer: IBufferWithCursor) {
         if (buffer.cursor > buffer.size) {
             buffer.cursor = maxOf(0, buffer.size)
         }

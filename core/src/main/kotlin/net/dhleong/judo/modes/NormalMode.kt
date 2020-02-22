@@ -14,7 +14,6 @@ import net.dhleong.judo.input.keys
 import net.dhleong.judo.motions.ALL_MOTIONS
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.charMotion
-import net.dhleong.judo.motions.normalizeForMotion
 import net.dhleong.judo.motions.repeat
 import net.dhleong.judo.motions.toEndMotion
 import net.dhleong.judo.motions.toStartMotion
@@ -28,7 +27,7 @@ import net.dhleong.judo.util.VisibleForTesting
 
 class NormalMode(
     judo: IJudoCore,
-    buffer: InputBuffer,
+    override val buffer: InputBuffer,
     @VisibleForTesting
     internal val history: IInputHistory,
     private val opMode: OperatorPendingMode
@@ -255,27 +254,8 @@ class NormalMode(
         { applyMotion(repeat(motion, count.toRepeatCount())) }
 
     private fun withOperator(action: OperatorFunc) {
-        // save now before we clear when leaving normal mode
-        val repeats = count.toRepeatCount()
-
-        judo.state[KEY_OPFUNC] = { originalRange ->
-
-            action(originalRange)
-
-            if (repeats > 1) {
-                judo.state[KEY_LAST_OP]?.let { lastOp ->
-                    // TODO repeat
-                    val range = repeat(lastOp.toRepeatable(), repeats - 1)
-                        .calculate(judo, buffer)
-                        .normalizeForMotion(lastOp)
-
-                    action(range)
-                }
-            }
-        }
-
         fromOpMode = true
-        judo.enterMode("op")
+        withOperator(judo, count, buffer, action)
     }
 
     private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {

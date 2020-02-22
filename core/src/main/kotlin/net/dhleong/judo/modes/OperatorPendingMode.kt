@@ -5,7 +5,7 @@ import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.StateKind
 import net.dhleong.judo.input.CountReadingBuffer
-import net.dhleong.judo.input.InputBuffer
+import net.dhleong.judo.input.IBufferWithCursor
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapHelper
@@ -24,7 +24,7 @@ val KEY_LAST_OP = StateKind<Motion>("net.dhleong.judo.modes.op.lastOp")
  */
 class OperatorPendingMode(
     judo: IJudoCore,
-    buffer: InputBuffer
+    buffer: IBufferWithCursor
 ) : BaseModeWithBuffer(judo, buffer) {
 
     override val name = "op"
@@ -92,4 +92,32 @@ class OperatorPendingMode(
         count.clear()
     }
 
+}
+
+fun withOperator(
+    judo: IJudoCore,
+    count: CountReadingBuffer,
+    buffer: IBufferWithCursor,
+    action: OperatorFunc,
+    enterOperatorPendingMode: IJudoCore.() -> Unit = { enterMode("op") }
+) {
+    // save now before we clear when leaving normal mode
+    val repeats = count.toRepeatCount()
+
+    judo.state[KEY_OPFUNC] = { originalRange ->
+
+        action(originalRange)
+
+        if (repeats > 1) {
+            judo.state[KEY_LAST_OP]?.let { lastOp ->
+                val range = repeat(lastOp.toRepeatable(), repeats - 1)
+                    .calculate(judo, buffer)
+                    .normalizeForMotion(lastOp)
+
+                action(range)
+            }
+        }
+    }
+
+    judo.enterOperatorPendingMode()
 }

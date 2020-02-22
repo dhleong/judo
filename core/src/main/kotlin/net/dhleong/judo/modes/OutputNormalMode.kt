@@ -3,13 +3,14 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.CursorType
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
+import net.dhleong.judo.OperatorFunc
 import net.dhleong.judo.inTransaction
 import net.dhleong.judo.input.CountReadingBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
 import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
-import net.dhleong.judo.input.Keys
+import net.dhleong.judo.input.action
 import net.dhleong.judo.input.keys
 import net.dhleong.judo.modes.output.OutputBufferCharSequence
 import net.dhleong.judo.motions.ALL_MOTIONS
@@ -26,7 +27,9 @@ class OutputNormalMode(
 
     override val name: String = "o-normal"
 
-    private val mapping = KeyMapping(listOf<Pair<Keys, KeyAction>>(
+    private lateinit var buffer: OutputBufferCharSequence
+
+    private val mapping = KeyMapping(listOf(
         keys("i") to { core ->
             core.exitMode()
             core.feedKeys("i")
@@ -34,6 +37,18 @@ class OutputNormalMode(
         keys("I") to { core ->
             core.exitMode()
             core.feedKeys("I")
+        },
+
+        keys("y") to action {
+            // TODO bell on error?
+            withOperator('y') { range ->
+                judo.registers.current.value =
+                    buffer.get(range).toString()
+            }
+        },
+        keys("Y") to action {
+//            judo.registers.current.value = buffer.toString()
+            TODO("yank full line")
         },
 
         keys("<ctrl b>") to { core -> core.scrollPages(1) },
@@ -47,9 +62,17 @@ class OutputNormalMode(
 
     private val count = CountReadingBuffer()
 
+    private var fromOpMode = false
+
     private val keymaps = KeyMapHelper(judo, mapping)
 
     override fun onEnter() {
+        if (!fromOpMode) {
+            val win = judo.tabpage.currentWindow
+            buffer = OutputBufferCharSequence(win)
+        }
+        fromOpMode = false
+
         judo.renderer.inTransaction {
             val win = judo.renderer.currentTabpage.currentWindow
             win.apply {
@@ -83,11 +106,26 @@ class OutputNormalMode(
 
     private suspend fun applyMotion(motion: Motion) {
         val win = judo.tabpage.currentWindow
-        val buffer = OutputBufferCharSequence(win)
 
         motion.applyTo(judo, buffer)
 
         buffer.applyCursorTo(win)
+    }
+
+    @Suppress("SameParameterValue")
+    private fun withOperator(fullLineMotionKey: Char, action: OperatorFunc) {
+        withOperator(action, fullLineMotionKey)
+    }
+
+    private fun withOperator(action: OperatorFunc, fullLineMotionKey: Char? = null) {
+        fromOpMode = true
+        withOperator(judo, count, buffer, action) {
+            val mode = OperatorPendingMode(judo, buffer)
+            if (fullLineMotionKey != null) {
+                mode.fullLineMotionKey = fullLineMotionKey
+            }
+            enterMode(mode)
+        }
     }
 
 }

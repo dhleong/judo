@@ -3,6 +3,7 @@ package net.dhleong.judo.modes
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.Mode
 import net.dhleong.judo.complete.CompletionSuggester
+import net.dhleong.judo.input.IBufferWithCursor
 import net.dhleong.judo.input.InputBuffer
 import net.dhleong.judo.input.Key
 import net.dhleong.judo.input.KeyAction
@@ -17,7 +18,7 @@ typealias KeyActionOnRange = suspend (IJudoCore, IntRange) -> Unit
 
 abstract class BaseModeWithBuffer(
     val judo: IJudoCore,
-    val buffer: InputBuffer
+    open val buffer: IBufferWithCursor
 ) : Mode {
 
     open fun clearBuffer() {
@@ -39,7 +40,7 @@ abstract class BaseModeWithBuffer(
         }
     }
 
-    protected open fun clampCursor(buffer: InputBuffer) {
+    protected open fun clampCursor(buffer: IBufferWithCursor) {
          if (buffer.cursor > buffer.lastIndex) {
              buffer.cursor = maxOf(0, buffer.lastIndex)
          }
@@ -69,12 +70,20 @@ abstract class BaseModeWithBuffer(
             suggester.initialize(buffer.toChars(), buffer.cursor)
         }
 
-        suggester.updateWithNextSuggestion(buffer)
+        val b = buffer
+        require(b is InputBuffer) {
+            "provided [buffer] is ${b.javaClass}, but must be InputBuffer for tab completion"
+        }
+        suggester.updateWithNextSuggestion(b)
     }
 
     private fun rewindTabCompletion(suggester: CompletionSuggester) {
         if (!suggester.isInitialized()) return // nop
 
-        suggester.updateWithPrevSuggestion(buffer)
+        val b = buffer
+        require(b is InputBuffer) {
+            "provided [buffer] is ${b.javaClass}, but must be InputBuffer for tab completion"
+        }
+        suggester.updateWithPrevSuggestion(b)
     }
 }

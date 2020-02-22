@@ -38,7 +38,7 @@ import java.io.InputStream
 
 abstract class BaseCmdMode(
     judo: IJudoCore,
-    buffer: InputBuffer,
+    override val buffer: InputBuffer,
     private val rendererInfo: JudoRendererInfo,
     @VisibleForTesting
     internal val history: IInputHistory,
