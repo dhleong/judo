@@ -220,7 +220,7 @@ class JLineWindow(
 
             ++renderedLine
 
-            // TODO whitespace from word wrap
+            // adjust for whitespace from word wrap
             if (wordWrap) {
                 val previousOffset = bufferLineOffset
                 bufferLineOffset = bufferLine.indexOf(
