@@ -98,6 +98,9 @@ interface IJudoWindow : IJudoAppendable, IJudoScrollable {
     fun updateStatusLine(line: FlavorableCharSequence, cursor: Int = -1)
     fun searchForKeyword(word: CharSequence, direction: Int)
 
+    fun computeCursorLocationInBuffer(): Pair<Int, Int>
+    fun setCursorFromBufferLocation(line: Int, col: Int)
+
     /**
      * Called by the currentBuffer before a change is applied to it.
      * Useful if you need to do some prep for maintaining scroll position,

@@ -964,6 +964,27 @@ class JLineWindowTest {
         """.trimMargin())
     }
 
+    @Test fun `computeCursorLocationIn wrapped Buffer`() {
+        val display = JLineDisplay(20, 2)
+        val buffer = bufferOf("""
+            Take me where I cannot stand
+        """.trimIndent())
+        val w = display.windowOf(buffer, wrap = true)
+        w.render(display, 0, 0)
+        assertThat(display).linesEqual("""
+            |Take me where I_____
+            |cannot stand________
+        """.trimMargin())
+
+        w.cursorCol = 0
+        w.cursorLine = 0
+
+        assertThat(w).hasCursorLocationInBuffer(
+            line = 0,
+            col = 16
+        )
+    }
+
     private fun windowOf(
         buffer: JudoBuffer,
         width: Int,
@@ -993,6 +1014,11 @@ class JLineWindowTest {
         buffer, this.width, this.height,
         wrap = wrap
     )
+}
+
+private fun Assert<JLineWindow>.hasCursorLocationInBuffer(line: Int, col: Int) = given { actual ->
+    val actualCursor = actual.computeCursorLocationInBuffer()
+    assertThat(actualCursor, "cursorLocationInBuffer").isEqualTo(line to col)
 }
 
 private fun buildAnsi(block: AttributedStringBuilder.() -> Unit) =

@@ -407,9 +407,8 @@ class JudoCoreJLineIntegrationTest {
             hasCursor(1, 0)
         }
 
-        // TODO
-//        yieldKeys("e")
-//        assertThat(display).hasCursor(1, 5)
+        yieldKeys("e")
+        assertThat(display).hasCursor(1, 5)
     }
 
     private inline fun assertionsWhileTyping(

@@ -93,6 +93,13 @@ class JLineWindow(
     private var scrollbackOffset = 0
 
     private var renderWorkspace = ArrayList<AttributedString>(initialHeight + 8)
+    private var lastRenderStart: Int = -1
+    private var lastRenderEnd: Int = -1
+    /**
+     * Parallel array to [renderWorkspace] attributing each rendered line to its source
+     * buffer line
+     */
+    private var renderedLines = ArrayList<Int>(initialHeight + 8)
 
     override fun render(display: JLineDisplay, x: Int, y: Int) {
         // synchronize on the buffer to protect against concurrent
@@ -104,6 +111,134 @@ class JLineWindow(
     }
 
     private fun renderWith(buffer: IJudoBuffer, display: JLineDisplay, x: Int, y: Int) {
+
+        val theme = buffer.settings[AppColors]
+        val colors = theme?.output
+
+        var line = y
+        for (text in render(buffer)) {
+            if (text !is AttributedString) {
+                display.clearLine(
+                    x, line,
+                    fromRelativeX = 0,
+                    toRelativeX = width
+                )
+            } else {
+                display.withLine(x, line, lineWidth = width) {
+                    append(text)
+                }
+            }
+
+            ++line
+        }
+
+        if (isFocusable && isFocused) {
+            val statusLineToRender = echoLine ?: let {
+                statusWorkspace.clear()
+                statusHelper.fitInputLinesToWindow(status, statusWorkspace)
+
+                // NOTE we assume only ever 1 status output line
+                statusWorkspace[0]
+            }
+
+            display.withLine(x, line, lineWidth = width) {
+                statusLineToRender.appendTo(this, colorTheme = colors)
+            }
+        } else if (isFocusable) {
+            // TODO faded out status? or just a background color?
+//            display.clearLine(x, line, 0, width)
+
+            display.withLine(x, line, lineWidth = width) {
+                val style = theme[UiElement.Dividers].toAttributedStyle()
+                for (i in 0 until width) {
+                    append("-", style)
+                }
+            }
+        }
+    }
+
+//    override fun renderVisibleLines(): List<CharSequence> {
+//        return render(currentBuffer).toList()
+//    }
+
+    override fun computeCursorLocationInBuffer(): Pair<Int, Int> {
+        updateRenderCache()
+
+        val index = lastRenderEnd - 1 - cursorLine
+        if (index < lastRenderStart) return 0 to 0
+
+        val lineNr = renderedLines[index]
+        val line = currentBuffer[lineNr]
+        val wordWrap = settings[WORD_WRAP]
+
+        var bufferCol = cursorCol
+        val firstIndexOfLine = renderedLines.indexOf(lineNr)
+        if (firstIndexOfLine < index) {
+            for (i in firstIndexOfLine..index) {
+                // take into account whitespace pruning for wordWrap
+                if (i > firstIndexOfLine && wordWrap) {
+                    bufferCol = line.indexOf(renderWorkspace[i][0], startIndex = bufferCol + 1)
+                }
+
+                if (i < index) {
+                    bufferCol += renderWorkspace[i].length
+                }
+            }
+        }
+
+        return lineNr to bufferCol
+    }
+
+    override fun setCursorFromBufferLocation(line: Int, col: Int) = renderer.inTransaction {
+        if (renderedLines.isEmpty()) {
+            updateRenderCache()
+        }
+
+        val firstRenderedLine = renderedLines[0]
+        val lastRenderedLine = renderedLines.last()
+        if (line < firstRenderedLine) {
+            scrollLines(line - firstRenderedLine)
+            updateRenderCache()
+        } else if (line > lastRenderedLine) {
+            scrollLines(lastRenderedLine - line)
+            updateRenderCache()
+        }
+
+        val wordWrap = settings[WORD_WRAP]
+        val bufferLine = currentBuffer[line]
+
+        val firstIndexOfLine = renderedLines.indexOf(line)
+        var renderedLine = firstIndexOfLine
+        var renderedCol = col
+        var bufferLineOffset = 0
+        while (renderedCol > width) {
+            val renderedLength = renderWorkspace[renderedLine].length
+            renderedCol -= renderedLength
+            bufferLineOffset += renderedLength
+
+            ++renderedLine
+
+            // TODO whitespace from word wrap
+            if (wordWrap) {
+                val previousOffset = bufferLineOffset
+                bufferLineOffset = bufferLine.indexOf(
+                    renderWorkspace[renderedLine][0],
+                    startIndex = bufferLineOffset
+                )
+                renderedCol -= bufferLineOffset - previousOffset
+            }
+        }
+
+        cursorLine = height - 1 - renderedLine - lastRenderStart
+        cursorCol = renderedCol
+    }
+
+    private fun updateRenderCache() {
+        render(currentBuffer).last()
+    }
+
+    private fun render(buffer: IJudoBuffer): Sequence<CharSequence> = sequence {
+
         val displayHeight =
             if (isFocusable && !statusLineOverlaysOutput) height - 1 // make room for status line
             else height
@@ -113,6 +248,7 @@ class JLineWindow(
         val end = maxOf(0, start - displayHeight)
 
         renderWorkspace.clear()
+        renderedLines.clear()
 
         val isSearching = search.resultLine > -1
         var workspaceSearchIndex = -1
@@ -125,12 +261,19 @@ class JLineWindow(
                 workspaceSearchIndex = renderWorkspace.size
             }
 
+            val before = renderWorkspace.size
+
             buffer[i].splitAttributedLinesInto(
                 renderWorkspace,
                 windowWidth = width,
                 wordWrap = wordWrap,
                 colorTheme = colors
             )
+
+            val renderedCount = renderWorkspace.size - before
+            for (j in 0 until renderedCount) {
+                renderedLines.add(i)
+            }
         }
 
         var displayEnd = renderWorkspace.size - scrollbackOffset
@@ -147,11 +290,7 @@ class JLineWindow(
         }
 
         for (i in 0 until blankLinesNeeded) {
-            display.clearLine(
-                x, y + i,
-                fromRelativeX = 0,
-                toRelativeX = width
-            )
+            yield("")
         }
 
         // highlight search results:
@@ -189,38 +328,10 @@ class JLineWindow(
             }
         }
 
-        var line = y + blankLinesNeeded
+        lastRenderStart = displayStart
+        lastRenderEnd = displayEnd
         for (i in displayStart until displayEnd) {
-            val text = renderWorkspace[i]
-            display.withLine(x, line, lineWidth = width) {
-                append(text)
-            }
-
-            ++line
-        }
-
-        if (isFocusable && isFocused) {
-            val statusLineToRender = echoLine ?: let {
-                statusWorkspace.clear()
-                statusHelper.fitInputLinesToWindow(status, statusWorkspace)
-
-                // NOTE we assume only ever 1 status output line
-                statusWorkspace[0]
-            }
-
-            display.withLine(x, line, lineWidth = width) {
-                statusLineToRender.appendTo(this, colorTheme = colors)
-            }
-        } else if (isFocusable) {
-            // TODO faded out status? or just a background color?
-//            display.clearLine(x, line, 0, width)
-
-            display.withLine(x, line, lineWidth = width) {
-                val style = theme[UiElement.Dividers].toAttributedStyle()
-                for (i in 0 until width) {
-                    append("-", style)
-                }
-            }
+            yield(renderWorkspace[i])
         }
     }
 

@@ -1,6 +1,7 @@
 package net.dhleong.judo.modes.output
 
 import net.dhleong.judo.input.IBufferWithCursor
+import net.dhleong.judo.modes.output.OutputBufferCharSequence.Companion.CHARS_PER_LINE
 import net.dhleong.judo.render.IJudoBuffer
 import net.dhleong.judo.render.IJudoWindow
 
@@ -17,12 +18,7 @@ class OutputBufferCharSequence(
 
     constructor(win: IJudoWindow) : this(
         win.currentBuffer,
-        (
-            win.currentBuffer.lastIndex
-            - win.getScrollback()
-            - win.cursorLine
-        ) * CHARS_PER_LINE
-            + win.cursorCol
+        win.computeCursor()
     )
 
     override val length: Int
@@ -61,12 +57,12 @@ class OutputBufferCharSequence(
         val bufferLine = cursor / CHARS_PER_LINE
         val cursorCol = cursor % CHARS_PER_LINE
 
-        val bufferLineFromEnd = buffer.size - bufferLine
-        val bufferLineInScrollback = bufferLineFromEnd - win.getScrollback()
-
-        // FIXME: this won't handle wrapped lines... at all
-        win.cursorLine = bufferLineInScrollback
-        win.cursorCol = cursorCol.coerceAtMost(win.width)
+        win.setCursorFromBufferLocation(bufferLine, cursorCol)
     }
 
+}
+
+private fun IJudoWindow.computeCursor(): Int {
+    val (line, col) = computeCursorLocationInBuffer()
+    return line * CHARS_PER_LINE + col
 }

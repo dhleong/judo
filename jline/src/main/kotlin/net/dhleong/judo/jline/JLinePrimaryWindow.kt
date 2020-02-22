@@ -75,6 +75,12 @@ class JLinePrimaryWindow(
         (promptWindow as IJLineWindow).render(display, x, y + outputWindow.height)
     }
 
+    override fun computeCursorLocationInBuffer(): Pair<Int, Int> =
+        outputWindow.computeCursorLocationInBuffer()
+
+    override fun setCursorFromBufferLocation(line: Int, col: Int) =
+        outputWindow.setCursorFromBufferLocation(line, col)
+
     override fun scrollLines(count: Int) = clearingEcho { outputWindow.scrollLines(count) }
     override fun scrollPages(count: Int) = clearingEcho { outputWindow.scrollPages(count) }
     override fun scrollBySetting(count: Int) = clearingEcho { outputWindow.scrollBySetting(count) }
