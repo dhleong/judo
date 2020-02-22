@@ -543,7 +543,7 @@ class JLineWindow(
             }
 
             val (linesBefore, lastLineRenderHeight) = preState as ScrollAdjustmentState
-            if (scrollbackBottom == 0 && scrollbackOffset == 0) {
+            if (scrollbackBottom == 0 && scrollbackOffset == 0 && !isOutputFocused) {
                 // no need to maintain scroll position
                 return
             }
