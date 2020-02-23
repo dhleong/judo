@@ -57,7 +57,14 @@ class OutputBufferCharSequence(
             return line.subSequence(startCol, endCol).trim('\n')
         }
 
-        TODO()
+        val lower = minOf(startLineNr, endLineNr)
+        val upper = maxOf(startLineNr, endLineNr)
+        val lines = upper - lower
+        val sequence = StringBuilder(buffer[lower].length * lines)
+        for (lineNr in lower..upper) {
+            sequence.append(buffer[lineNr])
+        }
+        return sequence
     }
 
     fun applyCursorTo(win: IJudoWindow) {

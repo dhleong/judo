@@ -397,26 +397,34 @@ class JudoCoreJLineIntegrationTest {
     }
 
     @Test fun `Output-normal mode`() = assertionsWhileTyping {
-        renderer.forceResize(20, 5)
+        renderer.forceResize(20, 6)
+        judo.print("Take my land")
         judo.print("Take me where I cannot stand")
         yieldKeys("<c-w>N")
 
         assertThat(display).all {
              linesEqual("""
                  |____________________
+                 |Take my land________
                  |Take me where I_____
                  |cannot stand________
                  |__________[O-NORMAL]
                  |____________________
             """.trimMargin())
-            hasCursor(2, 0)
+            hasCursor(3, 0)
         }
 
         yieldKeys("w")
-        assertThat(display).hasCursor(2, 7)
+        assertThat(display).hasCursor(3, 7)
 
         yieldKeys("ye")
         assertThat(judo.registers.unnamed).hasContent("stand")
+
+        yieldKeys("yk")
+        assertThat(judo.registers.unnamed).hasTrimmedContent("""
+            Take my land
+            Take me where I cannot stand
+        """.trimIndent())
     }
 
     private inline fun assertionsWhileTyping(
@@ -427,5 +435,9 @@ class JudoCoreJLineIntegrationTest {
 
 private fun Assert<IRegister>.hasContent(content: String) = given { actual ->
     assertThat(actual.value.toString(), "$actual value").isEqualTo(content)
+}
+
+private fun Assert<IRegister>.hasTrimmedContent(content: String) = given { actual ->
+    assertThat(actual.value.toString().trim(), "$actual value").isEqualTo(content)
 }
 

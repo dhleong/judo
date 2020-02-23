@@ -12,6 +12,7 @@ import net.dhleong.judo.input.KeyMapHelper
 import net.dhleong.judo.input.KeyMapping
 import net.dhleong.judo.input.action
 import net.dhleong.judo.motions.ALL_MOTIONS
+import net.dhleong.judo.motions.LINEWISE_MOTIONS
 import net.dhleong.judo.motions.Motion
 import net.dhleong.judo.motions.normalizeForMotion
 import net.dhleong.judo.motions.repeat
@@ -24,7 +25,8 @@ val KEY_LAST_OP = StateKind<Motion>("net.dhleong.judo.modes.op.lastOp")
  */
 class OperatorPendingMode(
     judo: IJudoCore,
-    buffer: IBufferWithCursor
+    buffer: IBufferWithCursor,
+    private val includeLinewiseMotions: Boolean = false
 ) : BaseModeWithBuffer(judo, buffer) {
 
     override val name = "op"
@@ -35,10 +37,16 @@ class OperatorPendingMode(
     private var currentFullLineMotionKey: Char = 0.toChar()
 
     private val mapping = KeyMapping(
-        ALL_MOTIONS.map { (keys, motion) ->
+        gatherMotions().map { (keys, motion) ->
             keys to opFuncActionWith(motion)
         }
     )
+
+    private fun gatherMotions() =
+        ALL_MOTIONS + (
+            if (includeLinewiseMotions) LINEWISE_MOTIONS
+            else emptyList()
+        )
 
     private val keymaps = KeyMapHelper(judo, mapping)
 
@@ -83,7 +91,7 @@ class OperatorPendingMode(
         judo.state[KEY_LAST_OP] = lastOp
 
         val range = lastOp
-            .calculate(judo, buffer)
+            .calculateLinewise(judo, buffer)
             .normalizeForMotion(motion)
 
         judo.exitMode()
@@ -111,7 +119,7 @@ fun withOperator(
         if (repeats > 1) {
             judo.state[KEY_LAST_OP]?.let { lastOp ->
                 val range = repeat(lastOp.toRepeatable(), repeats - 1)
-                    .calculate(judo, buffer)
+                    .calculateLinewise(judo, buffer)
                     .normalizeForMotion(lastOp)
 
                 action(range)

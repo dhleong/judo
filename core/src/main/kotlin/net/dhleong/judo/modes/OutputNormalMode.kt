@@ -120,7 +120,7 @@ class OutputNormalMode(
     private fun withOperator(action: OperatorFunc, fullLineMotionKey: Char? = null) {
         fromOpMode = true
         withOperator(judo, count, buffer, action) {
-            val mode = OperatorPendingMode(judo, buffer)
+            val mode = OperatorPendingMode(judo, buffer, includeLinewiseMotions = true)
             if (fullLineMotionKey != null) {
                 mode.fullLineMotionKey = fullLineMotionKey
             }

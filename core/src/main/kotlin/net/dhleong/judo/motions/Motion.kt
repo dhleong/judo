@@ -3,6 +3,7 @@ package net.dhleong.judo.motions
 import net.dhleong.judo.DUMMY_JUDO_CORE
 import net.dhleong.judo.IJudoCore
 import net.dhleong.judo.input.IBufferWithCursor
+import net.dhleong.judo.modes.output.OutputBufferCharSequence
 import java.util.EnumSet
 
 /**
@@ -15,16 +16,20 @@ typealias MotionCalculator =
 interface Motion {
     enum class Flags {
         INCLUSIVE,
+        LINEWISE,
         TEXT_OBJECT
     }
 
     val flags: EnumSet<Flags>
 
     val isInclusive: Boolean
-        get() = flags.contains(Flags.INCLUSIVE)
+        get() = Flags.INCLUSIVE in flags
+
+    val isLinewise: Boolean
+        get() = Flags.LINEWISE in flags
 
     val isTextObject: Boolean
-        get() = flags.contains(Flags.TEXT_OBJECT)
+        get() = Flags.TEXT_OBJECT in flags
 
     suspend fun applyTo(core: IJudoCore, buffer: IBufferWithCursor) {
         val end = calculate(
@@ -38,6 +43,11 @@ interface Motion {
         calculate(core, buffer.toChars(), buffer.cursor)
 
     suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange
+
+    suspend fun calculateLinewise(core: IJudoCore, buffer: IBufferWithCursor) =
+        calculateLinewise(core, buffer.toChars(), buffer.cursor)
+    suspend fun calculateLinewise(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+        calculate(core, buffer, cursor)
 
     /** NOTE: Use ONLY when ABSOLUTELY SURE the motion won't need readKey */
     suspend fun calculate(input: CharSequence, cursor: Int) =
@@ -75,6 +85,37 @@ internal fun createMotion(
     override val flags: EnumSet<Motion.Flags> = EnumSet(flags)
     override suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
         calculate(core, buffer, cursor)
+}
+
+internal fun createLinewiseMotion(
+    flag: Motion.Flags,
+    calculate: (buffer: CharSequence, cursor: Int) -> IntRange
+) = createLinewiseMotion(listOf(flag)) { _, buffer, cursor ->
+    calculate(buffer, cursor)
+}
+internal fun createLinewiseMotion(
+    flags: List<Motion.Flags>,
+    calculate: MotionCalculator
+): Motion = object : Motion {
+    override val flags: EnumSet<Motion.Flags> = EnumSet(flags + Motion.Flags.LINEWISE)
+    override suspend fun calculate(core: IJudoCore, buffer: CharSequence, cursor: Int): IntRange =
+        calculate(core, buffer, cursor)
+
+    override suspend fun calculateLinewise(
+        core: IJudoCore,
+        buffer: CharSequence,
+        cursor: Int
+    ): IntRange {
+        val baseRange = calculate(core, buffer, cursor)
+        var start = baseRange.first
+        var end = baseRange.last
+
+        // expand to fill the lines:
+        start = (start / OutputBufferCharSequence.CHARS_PER_LINE) * OutputBufferCharSequence.CHARS_PER_LINE
+        end = (end / OutputBufferCharSequence.CHARS_PER_LINE) * OutputBufferCharSequence.CHARS_PER_LINE
+
+        return start..end
+    }
 }
 
 internal infix fun Motion.repeatWith(repeatable: Motion): Motion {

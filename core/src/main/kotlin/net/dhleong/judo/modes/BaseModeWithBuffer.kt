@@ -54,7 +54,7 @@ abstract class BaseModeWithBuffer(
         { applyMotion(motion) }
 
     protected suspend fun rangeOf(motion: Motion) =
-        motion.calculate(judo, buffer)
+        motion.calculateLinewise(judo, buffer)
             .normalizeForMotion(motion)
 
     protected fun performTabCompletionFrom(key: Key, suggester: CompletionSuggester) {
