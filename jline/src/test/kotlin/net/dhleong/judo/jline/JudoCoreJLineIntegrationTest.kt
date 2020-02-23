@@ -420,11 +420,38 @@ class JudoCoreJLineIntegrationTest {
         yieldKeys("ye")
         assertThat(judo.registers.unnamed).hasContent("stand")
 
+        // linewise motion action
         yieldKeys("yk")
         assertThat(judo.registers.unnamed).hasTrimmedContent("""
             Take my land
             Take me where I cannot stand
         """.trimIndent())
+    }
+
+    @Test fun `Output-normal mode won't explode scrolling out of bounds`() = assertionsWhileTyping {
+        judo.print("Take my land")
+        yieldKeys("<c-w>N")
+
+        assertThat(display).all {
+            linesEqual("""
+                 |____________________
+                 |Take my land________
+                 |__________[O-NORMAL]
+                 |____________________
+            """.trimMargin())
+            hasCursor(1, 0)
+        }
+
+        yieldKeys("j")
+        assertThat(display).all {
+            linesEqual("""
+                 |____________________
+                 |Take my land________
+                 |__________[O-NORMAL]
+                 |____________________
+            """.trimMargin())
+            hasCursor(1, 0)
+        }
     }
 
     private inline fun assertionsWhileTyping(
