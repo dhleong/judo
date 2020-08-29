@@ -13,7 +13,7 @@ import kotlin.properties.Delegates
 class InputBuffer(
     private val registers: IRegisterManager? = null,
     val undoMan: UndoManager = UndoManager()
-) : IBufferWithCursor {
+) : IBufferWithCursor, TextDocument {
     override var cursor: Int by Delegates.observable(0) { _, _, newValue ->
         if (newValue < 0 || newValue > size) {
             throw IllegalArgumentException(
@@ -31,16 +31,20 @@ class InputBuffer(
         cursor = 0
     }
 
-    fun get(index: Int): Char = buffer[index]
+    override fun get(charOffset: Int): Char = buffer[charOffset]
+    override fun get(startOffset: Int, endOffset: Int): CharSequence = get(startOffset..endOffset)
 
     override fun get(range: IntRange): CharSequence =
         normalizeRange(range)?.let { buffer.substring(it.first) }
             ?: ""
 
-    fun isEmpty() = buffer.isEmpty()
+    override fun isEmpty() = buffer.isEmpty()
 
     override val lastIndex: Int
         get() = buffer.lastIndex
+
+    override val length: Int
+        get() = buffer.length
 
     /**
      * Type the given Key into the buffer at the current cursor
@@ -182,6 +186,25 @@ class InputBuffer(
             result
         }
     }
+
+    override fun deleteRange(startOffset: Int, endOffset: Int): CharSequence {
+        val toDelete = this[startOffset, endOffset]
+        delete(startOffset..endOffset)
+        return toDelete
+    }
+
+    override fun insert(text: CharSequence, charOffset: Int) {
+        this.insert(charOffset, text)
+    }
+
+    override fun set(contents: CharSequence) {
+        set(contents.toString(), clampCursor = true)
+    }
+
+    override fun startOfLine(charOffset: Int): Int = 0
+    override fun endOfLine(charOffset: Int): Int = length
+    override fun lineIndex(charOffset: Int): Int = 0
+    override fun linesCount(): Int = if (isEmpty()) 0 else 1
 
     private fun amendBackspaceUndo(index: Int, char: Char) {
         inChangeSet {
