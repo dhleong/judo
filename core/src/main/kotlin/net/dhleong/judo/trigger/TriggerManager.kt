@@ -5,7 +5,6 @@ import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.asFlavorableBuilder
 import net.dhleong.judo.util.PatternSpec
-import java.io.File
 
 /**
  * @author dhleong
