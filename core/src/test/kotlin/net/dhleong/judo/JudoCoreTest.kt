@@ -4,12 +4,16 @@ import assertk.all
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly
+import assertk.assertions.doesNotContain
+import assertk.assertions.each
 import assertk.assertions.exists
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEmpty
+import assertk.assertions.none
 import assertk.assertions.text
 import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.timeout
 import kotlinx.coroutines.runBlocking
 import net.dhleong.judo.input.IInputHistory
 import net.dhleong.judo.modes.BlockingEchoMode
@@ -332,6 +336,17 @@ class JudoCoreTest {
             "help news"
         ))
         assertThat(judo.buffer.toString()).isNotEmpty()
+    }
+
+    @Test(timeout = 5000) fun `Don't cause recursion from triggers that send`() = runBlocking {
+        judo.connection = mock {  }
+        judo.triggers.define("You can't take") {
+            judo.send("the skies", fromMap = true)
+        }
+        judo.appendOutput("You can't take them\n")
+        assertThat(renderer.outputLines).each {
+            it.doesNotContain("recursion")
+        }
     }
 
     @Test(timeout = 10_000) fun `esc cancels input() and returns null`() = assertionsWhileTyping(judo) {
