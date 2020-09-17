@@ -105,33 +105,33 @@ version = verify(File("build.gradle")
                 ).valueElse(echoAndDie("No version!?"))
 versionTag = git.Tag(version)
 
-# verify(versionTag.exists())\
-#     .then(echoAndDie("Version `%s` already exists!" % version))
+verify(versionTag.exists())\
+    .then(echoAndDie("Version `%s` already exists!" % version))
 
 #
 # Make sure all the tests pass
 #
 
-# gradlew = gradle.Gradle()
-# verify(gradlew).executes('test').orElse(die())
+gradlew = gradle.Gradle()
+verify(gradlew).executes('test').orElse(die())
 
 #
 # Build the release notes
 #
 
-# contents = verify(notes.contents()).valueElse(buildDefaultNotes)
-# notes.delete()
-#
-# verify(Edit(notes, withContent=contents).didCreate())\
-#         .orElse(echoAndDie("Aborted due to empty message"))
-#
-# releaseNotes = notes.contents()
+contents = verify(notes.contents()).valueElse(buildDefaultNotes)
+notes.delete()
+
+verify(Edit(notes, withContent=contents).didCreate())\
+        .orElse(echoAndDie("Aborted due to empty message"))
+
+releaseNotes = notes.contents()
 
 #
 # Do the actual build
 #
 
-# verify(gradlew).executes('jar').orElse(die())
+verify(gradlew).executes('jar').orElse(die())
 
 jarFile = File('judo/build/libs/judo-%s.jar' % version)
 verify(jarFile).exists().orElse(echoAndDie("Failed to build %s" % jarFile.path))
@@ -142,14 +142,14 @@ verify(jarFile).exists().orElse(echoAndDie("Failed to build %s" % jarFile.path))
 
 print("Uploading to Github...")
 
-# verify(versionTag).create()
-# verify(versionTag).push("origin")
+verify(versionTag).create()
+verify(versionTag).push("origin")
 
 gitRelease = github.Release(version)
-# verify(gitRelease).create(body=releaseNotes)
+verify(gitRelease).create(body=releaseNotes)
 
-# print("Uploading", jarFile.path)
-# verify(gitRelease).uploadFile(jarFile.path, 'application/octet-stream')
+print("Uploading", jarFile.path)
+verify(gitRelease).uploadFile(jarFile.path, 'application/octet-stream')
 
 #
 # Update homebrew repo
