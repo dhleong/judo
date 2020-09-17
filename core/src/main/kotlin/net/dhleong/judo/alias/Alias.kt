@@ -20,6 +20,8 @@ internal class RegexAliasSpec(
 
     override fun matcher(input: CharSequence): PatternMatcher =
         RegexAliasMatcher(pattern.matcher(input), groupNames)
+
+    override fun toString(): String = "RegexAliasSpec($original)"
 }
 
 internal class RegexAliasMatcher(

@@ -24,7 +24,6 @@ class TriggerManager : ITriggerManager {
         aliases.define(inputSpec, toAliasProcessor(parser))
     }
 
-
     override fun process(input: FlavorableCharSequence) {
         val toProcess = input.asFlavorableBuilder()
 

@@ -3,12 +3,17 @@ package net.dhleong.judo.alias
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.FlavorableStringBuilder
 import net.dhleong.judo.util.PatternSpec
+import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 private const val MAX_ITERATIONS = 50
+private const val MAX_RECURSION = 10
 
 class AliasManager : IAliasManager {
 
     internal val aliases = mutableListOf<Alias>()
+
+    private val recursionDepth = AtomicInteger(0)
 
     override fun clear() =
         aliases.clear()
@@ -44,6 +49,11 @@ class AliasManager : IAliasManager {
     override fun process(input: FlavorableCharSequence): FlavorableCharSequence {
         val builder = FlavorableStringBuilder(input)
 
+        if (recursionDepth.getAndIncrement() > MAX_RECURSION) {
+            recursionDepth.set(0)
+            throw AliasProcessingException("Excessive recursion detected", input)
+        }
+
         // keep looping as long as *some* alias was applied,
         //  in case there was a recursive alias
         var iteration = 0
@@ -55,6 +65,8 @@ class AliasManager : IAliasManager {
         if (iteration >= MAX_ITERATIONS) {
             throw AliasProcessingException("Infinite recursion detected", input)
         }
+
+        recursionDepth.decrementAndGet()
 
         return builder
     }

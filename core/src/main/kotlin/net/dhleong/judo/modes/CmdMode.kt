@@ -219,7 +219,7 @@ class CmdMode(
 
     internal fun defineTrigger(trigger: PatternSpec, handler: Any) {
         queueTrigger(trigger.original)
-        val fn = engine.callableToFunctionN(handler)
+        val fn = callableToFunctionN(handler)
         judo.triggers.define(trigger) { args ->
             @Suppress("UNCHECKED_CAST")
             fn(args as Array<Any?>)
