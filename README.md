@@ -1,4 +1,4 @@
-judo [![Build Status](https://img.shields.io/travis/dhleong/judo/master.svg?style=flat)](https://travis-ci.org/dhleong/judo)
+judo [![Build Status](https://img.shields.io/travis/dhleong/judo/main.svg?style=flat)](https://travis-ci.org/dhleong/judo)
 ====
 
 *A more elegant way to play in the [MUD][1]*
@@ -167,4 +167,4 @@ comfortably on the home row.
 [14]: http://www.oracle.com/technetwork/java/javase/overview/java8-2100321.html
 [15]: https://javascript.info/
 [16]: https://user-images.githubusercontent.com/816150/71587617-6e560100-2aec-11ea-9d84-eeb2a68ba852.png
-[17]: https://github.com/dhleong/judo/blob/master/docs/Scripting.md#windows
+[17]: https://github.com/dhleong/judo/blob/main/docs/Scripting.md#windows
