@@ -516,7 +516,11 @@ class JudoCore(
             // always output what we sent
             // except... don't print if the server has told us not to
             // (EG: passwords)
-            print(toSend) // TODO color?
+            if (fromMap) {
+                printUnprocessed(toSend) // TODO color?
+            } else {
+                print(toSend) // TODO color?
+            }
         }
 
         if (!fromMap && text.isNotEmpty()) {
