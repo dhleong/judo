@@ -11,7 +11,6 @@ class WindowSizeHandler(
     private var height: Int = 0
 ) : TelnetOptionHandler(
     TELNET_TELOPT_NAWS,
-    sendWill = true,
     acceptRemoteDo = true
 ) {
 
