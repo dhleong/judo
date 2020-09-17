@@ -162,7 +162,7 @@ jarSha = sha256(jarFile.path)
 
 homebrewConfig = github.Config("dhleong/homebrew-judo")
 formulaFile = github.RepoFile("/Formula/judo.rb", config=homebrewConfig)
-oldContents = str(formulaFile.read())
+oldContents = formulaFile.read().decode('utf-8')
 
 newContents = oldContents
 newContents = re.sub('url "[^"]+"', 'url "%s"' % jarUrl, newContents)
