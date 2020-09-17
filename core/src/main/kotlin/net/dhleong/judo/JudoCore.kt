@@ -894,12 +894,14 @@ class JudoCore(
     private fun IJudoBuffer.processOutput(line: FlavorableCharSequence) {
         outputCompletions.process(line)
 
-        if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) {
-            return
-        }
+        redirectErrors("PROCESSING ERROR:") {
+            if (multiTriggers.processMultiTriggers(this, this@JudoCore, line)) {
+                return
+            }
 
-        triggers.process(line)
-        processAndStripPrompt(line)
+            triggers.process(line)
+            processAndStripPrompt(line)
+        }
     }
 
     private fun activateMode(mode: Mode) = renderer.inTransaction {

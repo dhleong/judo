@@ -5,6 +5,7 @@ import net.dhleong.judo.alias.AliasProcesser
 import net.dhleong.judo.render.FlavorableCharSequence
 import net.dhleong.judo.render.asFlavorableBuilder
 import net.dhleong.judo.util.PatternSpec
+import java.io.File
 
 /**
  * @author dhleong
@@ -23,7 +24,6 @@ class TriggerManager : ITriggerManager {
     override fun define(inputSpec: PatternSpec, parser: TriggerProcessor) {
         aliases.define(inputSpec, toAliasProcessor(parser))
     }
-
 
     override fun process(input: FlavorableCharSequence) {
         val toProcess = input.asFlavorableBuilder()
