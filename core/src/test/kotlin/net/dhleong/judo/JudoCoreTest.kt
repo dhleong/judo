@@ -321,16 +321,16 @@ class JudoCoreTest {
             .isEqualTo("Normal")
     }
 
-    @Test fun `Complete empty buffer after submit input`() = runBlocking {
+    @Test fun `Complete empty buffer after submit input`() = assertionsWhileTyping(judo) {
         judo.connection = mock {  }
-        judo.feedKeys("ihelp news<cr>")
-        judo.feedKeys("h<tab> n<tab><cr>")
+        yieldKeys("ihelp news<cr>")
+        yieldKeys("h<tab> n<tab><cr>")
         assertThat(renderer.outputLines).containsExactly(
             "help news",
             "help news"
         )
 
-        judo.feedKeys("<tab>")
+        yieldKeys("<tab>")
         assertThat(renderer.outputLines).isEqualTo(listOf(
             "help news",
             "help news"
