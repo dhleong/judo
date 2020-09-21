@@ -15,6 +15,7 @@ import net.dhleong.judo.script.ScriptingEngine
 import net.dhleong.judo.script.initObjects
 import net.dhleong.judo.script.registerFrom
 import net.dhleong.judo.util.PatternSpec
+import net.dhleong.judo.util.withProfiling
 import java.io.File
 import java.io.InputStream
 
@@ -39,12 +40,14 @@ class CmdMode(
     userConfigDir, userConfigFile
 ) {
     private val engine by lazy {
-        engineFactory.create().apply {
-            onPreRegister()
-            init()
-            onPostRegister()
+        withProfiling("engine init") {
+            engineFactory.create().apply {
+                onPreRegister()
+                init()
+                onPostRegister()
 
-            completionSource.process("help")
+                completionSource.process("help")
+            }
         }
     }
 
@@ -64,7 +67,7 @@ class CmdMode(
             return myRegisteredVars
         }
 
-    private fun ScriptingEngine.init() {
+    private fun ScriptingEngine.init() = withProfiling("cmd init") {
         val context = ScriptInitContext(
             judo, this,
             userConfigFile, this@CmdMode,

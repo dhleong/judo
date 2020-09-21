@@ -10,6 +10,7 @@ import net.dhleong.judo.net.CompositeConnectionFactory
 import net.dhleong.judo.net.JudoConnection
 import net.dhleong.judo.net.TelnetConnection
 import net.dhleong.judo.render.IdManager
+import net.dhleong.judo.util.Profiling
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -24,6 +25,7 @@ val USER_CONFIG_DIR: File = File(
 ).absoluteFile
 
 fun main(args: Array<String>) {
+    val startup = Profiling()
     var closed = false
 
     // prevent OSX from showing the title bar and dock icon
@@ -46,6 +48,8 @@ fun main(args: Array<String>) {
         hasDebug -> DebugLevel.NORMAL
         else -> DebugLevel.OFF
     }
+
+    Profiling.isEnabled = argsList.remove("--debug=profiling") || hasAllDebug
 
     val connections: JudoConnection.Factory = CompositeConnectionFactory(listOf(
         // normal telnet
@@ -104,6 +108,8 @@ fun main(args: Array<String>) {
         if (!init.perform(judo)) {
             closed = true
         }
+
+        startup.stop("startup")
     }
 
     // if they want to use the clipboard as the unnamed register, warm it up;
