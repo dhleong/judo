@@ -19,7 +19,9 @@ import net.dhleong.judo.trigger.ITriggerManager
 import net.dhleong.judo.util.PatternMatcher
 import net.dhleong.judo.util.PatternProcessingFlags
 import net.dhleong.judo.util.PatternSpec
+import net.dhleong.judo.util.withProfiling
 import org.python.core.JyAttribute
+import org.python.core.Options
 import org.python.core.Py
 import org.python.core.PyCallIter
 import org.python.core.PyException
@@ -32,6 +34,7 @@ import org.python.core.PyNone
 import org.python.core.PyObject
 import org.python.core.PyObjectDerived
 import org.python.core.PyStringMap
+import org.python.core.PySystemState
 import org.python.core.PyTuple
 import org.python.core.PyType
 import org.python.core.StdoutWrapper
@@ -43,9 +46,11 @@ import org.python.util.PythonInterpreter
 import java.io.File
 import java.io.InputStream
 import java.util.EnumSet
+import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
+import kotlin.system.measureTimeMillis
 
 private const val INTERRUPTED = Int.MIN_VALUE
 
@@ -64,7 +69,17 @@ class JythonScriptingEngine : ScriptingEngine {
         override fun toString(): String = "PY ScriptingFactory (Jython)"
     }
 
-    private val python = PythonInterpreter()
+    init {
+        Options.importSite = false
+
+        withProfiling("init py systemstate") {
+            PySystemState.initialize()
+        }
+    }
+
+    private val python = withProfiling("create python interpreter") {
+        PythonInterpreter()
+    }
     private val keepModules = HashSet<String>()
     private val globals = PyGlobals()
 
@@ -184,7 +199,7 @@ class JythonScriptingEngine : ScriptingEngine {
         }
     }
 
-    override fun readFile(fileName: String, stream: InputStream) {
+    override fun readFile(fileName: String, stream: InputStream) = withProfiling("read $fileName") {
         wrapExceptions {
             python.execfile(stream, fileName)
         }
@@ -280,11 +295,10 @@ class JythonScriptingEngine : ScriptingEngine {
 
     override fun onPreReadFile(file: File, inputStream: InputStream) {
         file.parentFile?.let { fileDir ->
-            python.exec(
-                """
+            python.exec("""
                 import sys
                 sys.path.insert(0, '${fileDir.absolutePath}')
-                """.trimIndent())
+            """.trimIndent())
         }
     }
 
@@ -365,6 +379,7 @@ class JythonScriptingEngine : ScriptingEngine {
             ) { args -> callable.call(*args) }
         }
     }
+
 }
 
 @Suppress("NOTHING_TO_INLINE", "RedundantLambdaArrow")
@@ -780,6 +795,7 @@ class InterfaceAdapter : PyObjectAdapter {
 
         fun init() {
             if (!isInitialized) {
+                isInitialized = true
                 Py.getAdapter().addPostClass(InterfaceAdapter())
             }
         }

@@ -21,6 +21,7 @@ allprojects {
 
         kotlinOptions {
             jvmTarget = '1.8'
+            freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
 //            freeCompilerArgs += ["-Xinline-classes"]
         }
     }
@@ -35,7 +36,7 @@ ext.vs = [
 
     guava: '22.0',
     jline: '3.11.0',
-    jython: '2.7.1',
+    jython: '2.7.2',
     moshi: '1.8.0',
     okio: '2.4.3',
 ]
