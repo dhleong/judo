@@ -79,8 +79,7 @@ uses a good deal more memory than Vim which inspired it).
 
 You can easily install a build on macOS using [Homebrew][12]:
 
-    brew tap dhleong/judo
-    brew install judo
+    brew install dhleong/tap/judo
 
 Then, simply use the installed `judo` binary as described below.
 
