@@ -160,7 +160,7 @@ print("Updating homebrew...")
 jarUrl = 'https://github.com/dhleong/judo/releases/download/%s/judo-%s.jar' % (version, version)
 jarSha = sha256(jarFile.path)
 
-homebrewConfig = github.Config("dhleong/homebrew-judo")
+homebrewConfig = github.Config("dhleong/homebrew-tap")
 formulaFile = github.RepoFile("/Formula/judo.rb", config=homebrewConfig)
 oldContents = formulaFile.read().decode('utf-8')
 
